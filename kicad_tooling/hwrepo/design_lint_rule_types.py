@@ -325,6 +325,7 @@ DesignLintRuleId = Literal[
     "pcb.drc_duplicate_net_settings_section",
     "pcb.drc_conflicting_netclass_definitions",
     "pcb.drc_unresolved_netclass_assignment",
+    "pcb.drc_malformed_netclass_assignment",
     "pcb.drc_duplicate_severity_key",
     "pcb.drc_invalid_severity_value",
     "pcb.drc_nonstring_severity_value",

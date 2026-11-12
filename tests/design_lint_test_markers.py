@@ -413,6 +413,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_mcp_parity_oscillator_output_paths.py",
                 "tests/test_design_lint_mcp_parity_pcb_drc_exclusions.py",
                 "tests/test_design_lint_mcp_parity_pcb_duplicate_object_uuid.py",
+                "tests/test_design_lint_mcp_parity_pcb_drc_malformed_netclass_assignment.py",
             }
         ),
     }

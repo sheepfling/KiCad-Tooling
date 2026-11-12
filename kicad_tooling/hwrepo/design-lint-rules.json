@@ -14158,6 +14158,61 @@
       ]
     },
     {
+      "rule_id": "pcb.drc_malformed_netclass_assignment",
+      "title": "Malformed PCB netclass assignment shapes need review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_drc_malformed_netclass_assignment_review.py#source_bound_pcb_malformed_netclass_assignment_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0.8 .kicad_pro net_settings.netclass_assignments JSON shape with exact net, JSON type, malformed array member indexes, and member kinds retained",
+      "predicate": "For PCB and PCB-only projects configured for exact KiCad 10.0.8, inspect one source-hashed project file containing one root net_settings object and one netclass_assignments member. Review a non-object assignment map and per-net values other than a legacy string or an array of nonempty strings. Preserve the JSON type and malformed array member indexes/kinds. Treat empty legacy strings and empty arrays as controls. Skip duplicate assignment-map members, conflicting duplicate net values, ambiguous or repeated root settings, and unsupported versions.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.8 only; digest-pinned native fixtures show malformed map, number, and mixed-array shapes produce the same clearance result as explicit Default while a valid Narrow array control does not. Other patches remain unmeasured."
+      ],
+      "limitations": [
+        "This rule identifies source shapes outside the measured legacy-string and current-string-array forms. It does not infer the intended class, repair the setting, or establish that the resulting board is electrically defective.",
+        "The native comparison covers only the synthetic two-track board, N1/N2 assignments, Default and Narrow clearances, and the pinned KiCad 10.0.8 image. It does not run DRC on adopter projects or inspect copper continuity.",
+        "Syntactically invalid project files, missing or repeated netclass_assignments members, conflicting repeated net keys, repeated root net_settings objects, and unmeasured KiCad patches are outside this predicate. The default is REVIEW; project policy may promote, disable, or exactly ignore the finding."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_drc_malformed_netclass_assignment.test_non_string_array_member_is_source_bound",
+        "tests.test_pcb_drc_malformed_netclass_assignment.test_non_string_assignment_is_source_bound",
+        "tests.test_pcb_drc_malformed_netclass_assignment.test_malformed_assignment_map_is_source_bound",
+        "tests.test_pcb_drc_malformed_netclass_assignment.test_malformed_fixture_source_hashes_are_reviewed",
+        "tests.test_design_lint_mcp_parity_pcb_drc_malformed_netclass_assignment.test_malformed_netclass_assignment_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_malformed_netclass_assignment_native.test_malformed_shapes_fall_back_like_default_and_repeat_with_narrow_control",
+        "tests.test_pcb_drc_malformed_netclass_assignment.test_non_object_assignment_map_json_types_are_reviewed",
+        "tests.test_pcb_drc_malformed_netclass_assignment.test_non_legacy_per_net_json_types_are_reviewed"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_drc_malformed_netclass_assignment.test_legacy_and_current_assignment_forms_are_controls",
+        "tests.test_pcb_drc_malformed_netclass_assignment.test_empty_legacy_string_is_a_valid_no_assignment_control",
+        "tests.test_design_lint_mcp_parity_pcb_drc_malformed_netclass_assignment.test_malformed_netclass_assignment_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_malformed_netclass_assignment_native.test_malformed_shapes_fall_back_like_default_and_repeat_with_narrow_control"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_drc_malformed_netclass_assignment.test_malformed_member_kinds_and_indexes_are_stable",
+        "tests.test_pcb_drc_malformed_netclass_assignment.test_malformed_assignments_are_sorted_by_exact_net_name",
+        "tests.test_pcb_drc_malformed_netclass_assignment.test_duplicate_equal_malformed_assignment_is_reported_once"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_malformed_netclass_assignment_review.py#source_bound_pcb_malformed_netclass_assignment_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_malformed_netclass_assignment_review.py#project_pcb_malformed_netclass_assignment_evidence",
+        "kicad_tooling/hwrepo/pcb_drc_duplicate_net_settings_sections.py#configured_pcb_malformed_netclass_assignments",
+        "kicad_tooling/hwrepo/pcb_drc_netclass_settings_review.py#source_bound_pcb_netclass_settings_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#read_source_bound_pcb_project_settings",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#verify_source_bound_pcb_project_settings_unchanged",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request",
+        "kicad_tooling/hwrepo/design_lint_candidate_inputs.py#DesignLintCandidateInputs",
+        "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_evaluation"
+      ]
+    },
+    {
       "rule_id": "pcb.duplicate_object_uuid",
       "title": "PCB object UUID repeats within one board source",
       "theme": "pcb",

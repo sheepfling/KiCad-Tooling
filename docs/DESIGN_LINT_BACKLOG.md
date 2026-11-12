@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 353 rules are implemented with synthetic regression coverage.
+The following 354 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 353 active rules.
+The catalog currently contains 354 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -739,6 +739,7 @@ skipped under prerelease policy.
 - `pcb.drc_duplicate_net_settings_section`
 - `pcb.drc_conflicting_netclass_definitions`
 - `pcb.drc_unresolved_netclass_assignment`
+- `pcb.drc_malformed_netclass_assignment`
 - `pcb.duplicate_object_uuid`
 - `pcb.drc_duplicate_severity_key`
 - `pcb.drc_unknown_severity_key`
@@ -4334,7 +4335,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 353 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 354 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -25364,6 +25365,54 @@ acceptance threads while new lint features proceed:
   wheel passed its separate-project rehearsal. Package publishing and preview
   jobs were skipped under prerelease policy.
 
+#### LINT-433 — Review malformed PCB netclass assignment shapes
+
+- **Priority:** P1 PCB-settings integrity. KiCad 10.0.8 can ignore or fail to
+  apply malformed assignment JSON without a native DRC error, allowing the
+  board to use its default clearance in the measured cases.
+- **Rule:** [`pcb.drc_malformed_netclass_assignment`][malformed-netclass-rule]
+- **Status:** Implemented as a default-REVIEW rule for exact KiCad 10.0.8 PCB
+  and PCB-only projects.
+- **Predicate:** Require one source-hashed project file with one root
+  `net_settings` object and one `netclass_assignments` member. Review a
+  non-object assignment map or a per-net value that is neither a legacy string
+  nor an array of nonempty strings. Preserve the observed JSON type and exact
+  malformed array member indexes and types. Keep empty legacy strings and
+  empty arrays quiet. Skip repeated root settings, repeated assignment-map
+  members, and conflicting duplicate net keys.
+- **Native evidence:** On the tooling-owned two-track fixture, an array
+  containing `Narrow` and `null`, a numeric per-net assignment, and an array
+  assignment map each produce the same DRC violation types as explicit
+  `Default`. The valid `Narrow` array control has no clearance violation.
+  The focused pinned KiCad 10.0.8 Docker regression repeats all cases and
+  confirms stable output. This is limited to these settings, class values,
+  geometry, patch, and image.
+- **Boundary:** This is a source-shape review, not a class-selection rule. It
+  does not infer the intended class, assess the applied clearance, inspect
+  copper, or establish an electrical defect. Invalid JSON syntax, missing or
+  repeated assignment-map members, conflicting repeated net keys, and other
+  KiCad patches are unmeasured or handled by separate checks.
+- **Synthetic evidence:** Separate fixtures cover malformed array members,
+  scalar JSON values, and a non-object assignment map. Valid scalar, empty
+  legacy string, current string-array, empty-array, and explicit-Default
+  controls stay quiet. Tests
+  cover source hashes, stale input, version and project-kind bounds, duplicate
+  conflict precedence, stable member evidence, net-key ordering, and CLI/MCP
+  parity.
+- **Selection:** Run
+  `tests/test_pcb_drc_malformed_netclass_assignment.py` and
+  `tests/test_design_lint_mcp_parity_pcb_drc_malformed_netclass_assignment.py`
+  with `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.drc_malformed_netclass_assignment")`.
+  Run `tests/test_pcb_drc_malformed_netclass_assignment_native.py` with
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, `native_kicad`, and the same rule selector.
+- **Focused validation (2026-11-12):** Source and CLI/MCP selection passed 33
+  tests; the pinned Docker fault/control selection passed 1 test; the catalog
+  gate passed 572 tests. Full scoped prerelease acceptance passed 436 tests
+  with 8,922 deselected, including Linux and Windows Pyright, wheel and sdist
+  builds, installed-wheel checks, and external/adapted template rehearsals.
+  Hosted acceptance for the tag is pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -25381,6 +25430,7 @@ quality, or first-article continuity.
 [thomson-kicad-review]: <https://github.com/holla2040/ThomsonLint/blob/main/docs/KiCad_Review_Guide.md>
 [happy-crystal-detector]: https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/scripts/signal_detectors.py#L818-L950
 [happy-datasheets]: <https://github.com/aklofas/kicad-happy#-datasheets--sync-and-extract>
+[malformed-netclass-rule]: DESIGN_LINT.md#review-malformed-pcb-netclass-assignment-shapes
 [happy-lb001]: https://github.com/aklofas/kicad-happy/blob/a6bba1add1e18b89e3aa0824b9769ed1d9d79174/skills/kicad/scripts/signal_detectors.py#L4367-L4440
 [happy-value-syntax-v301]: https://github.com/aklofas/kicad-happy/blob/7d9d4d9fef87ac2d3eb16cfc5cdc9a0869f417f4/CHANGELOG.md
 [happy-changelog]: https://github.com/aklofas/kicad-happy/blob/main/CHANGELOG.md

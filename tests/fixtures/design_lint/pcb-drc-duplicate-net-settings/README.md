@@ -100,6 +100,23 @@ The KiCad 10.0.8 [`NET_SETTINGS` parser][net-settings-source] iterates the
 class-name array and stores each name; its [legacy schema migration][net-settings-migration]
 wraps an old scalar assignment in an array.
 
+## Malformed netclass assignment shapes
+
+The malformed-shape cases probe supported KiCad 10.0.8 behavior on the same
+two-track board. An array containing `Narrow` and `null`, a numeric per-net
+assignment, and a non-object assignment map each produce the same clearance
+result as the explicit `Default` control. The valid `Narrow` array remains free
+of a clearance violation. The native regression repeats each fault and both
+controls and checks that the DRC result is stable. This evidence is limited to
+these JSON shapes, class values, board geometry, and the pinned image; it does
+not establish the intended class on another project.
+
+The parser source shows that KiCad reads `netclass_assignments` only as an
+object and then converts each iterated assignment value to a string. A legacy
+schema migration wraps scalar strings in arrays. The lint reports malformed
+source shape for review; it does not select a class or claim every malformed
+value has the same behavior.
+
 Native image:
 `ghcr.io/kicad/kicad:10.0.8-amd64@sha256:05f6ac957e351bbbd9e1f9c996be997f61948ed9f94e0c3cab336bfcaf60161c`.
 This observation is limited to these values, geometry, KiCad version, and image; it does not choose
@@ -128,6 +145,9 @@ an intended value or establish an electrical board defect.
 | `fault-netclass-assignment-array-mixed.kicad_pro`       | `567b9e54335359274b2fe1a42dacdf5542fcf87ec44fdee78c2219ed4e48c76d` |
 | `control-netclass-assignment-array-narrow.kicad_pro`    | `8945d702eb8f5b7e1b1fb7b78d24798445b48858daf36a3a8e2ba10491d5fa88` |
 | `control-netclass-assignment-array-empty.kicad_pro`     | `6f94553a84c3b85ad642bf7cc12e4a198d824f9c35bb87c0044ecbe61735d0ca` |
+| `fault-netclass-assignment-array-nonstring.kicad_pro`   | `30dc2a9893349267ee687712d42f46bf3e34f228f863560fd280699356820c78` |
+| `fault-netclass-assignment-value-number.kicad_pro`      | `d25e8ef51e4057815a4b8c0c560e1f28a0309969df891000a8b84df7b7117c87` |
+| `fault-netclass-assignment-map-array.kicad_pro`         | `f7b10a8cad4c0e305b61e50b43009ea25e9d52a077e96421d9a8fcec62dc026c` |
 
 Run the focused source, CLI/MCP, and pinned native regressions with:
 
@@ -164,4 +184,16 @@ python -I -m pytest -q \
 KICAD_RUN_NATIVE_PCB_FIXTURES=1 python -I -m pytest -q \
   tests/test_pcb_drc_unresolved_netclass_assignment_native.py \
   -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.drc_unresolved_netclass_assignment")'
+```
+
+Run the malformed-assignment source and CLI/MCP regressions with:
+
+```sh
+python -I -m pytest -q \
+  tests/test_pcb_drc_malformed_netclass_assignment.py \
+  tests/test_design_lint_mcp_parity_pcb_drc_malformed_netclass_assignment.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.drc_malformed_netclass_assignment")'
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 python -I -m pytest -q \
+  tests/test_pcb_drc_malformed_netclass_assignment_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.drc_malformed_netclass_assignment")'
 ```

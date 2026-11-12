@@ -87,6 +87,31 @@ class PcbUnresolvedNetClassAssignment:
             raise ValueError("PCB netclass assignment list must retain its unresolved class")
 
 
+@dataclass(frozen=True, slots=True)
+class PcbMalformedNetClassAssignment:
+    """Netclass assignment whose JSON shape is outside KiCad's measured forms."""
+
+    net_name: str | None
+    observed_json_type: str
+    malformed_member_indexes: tuple[int, ...] = ()
+    malformed_member_kinds: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        allowed_json_types = {"array", "boolean", "null", "number", "object", "string"}
+        if self.observed_json_type not in allowed_json_types:
+            raise ValueError("PCB netclass assignment must retain a JSON type")
+        if self.net_name is not None and not self.net_name:
+            raise ValueError("PCB netclass assignment net name cannot be empty")
+        if len(self.malformed_member_indexes) != len(self.malformed_member_kinds):
+            raise ValueError("PCB netclass assignment member evidence must align")
+        if tuple(sorted(set(self.malformed_member_indexes))) != self.malformed_member_indexes:
+            raise ValueError("PCB netclass assignment member indexes must be unique and ordered")
+        if any(index < 0 for index in self.malformed_member_indexes):
+            raise ValueError("PCB netclass assignment member indexes cannot be negative")
+        if self.observed_json_type != "array" and self.malformed_member_indexes:
+            raise ValueError("Only array assignments can have malformed member indexes")
+
+
 def _validate_pcb_settings_document(
     document: str,
     *,
@@ -315,3 +340,95 @@ def configured_pcb_unresolved_netclass_assignments(
                 )
             )
     return tuple(unresolved)
+
+
+def _pcb_json_type(value: object) -> str:
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "boolean"
+    if isinstance(value, (int, float)):
+        return "number"
+    if isinstance(value, str):
+        return "string"
+    if isinstance(value, (JsonObjectPairs, dict)):
+        return "object"
+    if isinstance(value, list):
+        return "array"
+    raise TypeError(f"unsupported decoded JSON value type: {type(value).__name__}")
+
+
+def _pcb_json_member_kind(value: object) -> str:
+    if value == "":
+        return "empty-string"
+    return _pcb_json_type(value)
+
+
+def _malformed_pcb_netclass_assignment(
+    net_name: str | None,
+    assignment: JsonValue,
+) -> PcbMalformedNetClassAssignment | None:
+    if isinstance(assignment, str):
+        return None
+    if not isinstance(assignment, list):
+        return PcbMalformedNetClassAssignment(
+            net_name=net_name,
+            observed_json_type=_pcb_json_type(assignment),
+        )
+
+    assignment_members = cast(list[JsonValue], assignment)
+    malformed_members = tuple(
+        (index, _pcb_json_member_kind(value))
+        for index, value in enumerate(assignment_members)
+        if not isinstance(value, str) or not value
+    )
+    if not malformed_members:
+        return None
+    return PcbMalformedNetClassAssignment(
+        net_name=net_name,
+        observed_json_type="array",
+        malformed_member_indexes=tuple(index for index, _ in malformed_members),
+        malformed_member_kinds=tuple(kind for _, kind in malformed_members),
+    )
+
+
+def configured_pcb_malformed_netclass_assignments(
+    document: str,
+) -> tuple[PcbMalformedNetClassAssignment, ...]:
+    """Find unsupported JSON shapes in unique PCB netclass assignment settings."""
+    _validate_pcb_settings_document(document, allow_source_bound_duplicates=True)
+    project = json.loads(document, object_pairs_hook=retain_json_object_pairs)
+    if not isinstance(project, JsonObjectPairs):
+        return ()
+
+    net_settings_members = tuple(value for key, value in project.pairs if key == "net_settings")
+    if len(net_settings_members) != 1 or not isinstance(net_settings_members[0], JsonObjectPairs):
+        return ()
+    assignment_maps = tuple(
+        value for key, value in net_settings_members[0].pairs if key == "netclass_assignments"
+    )
+    if len(assignment_maps) != 1:
+        return ()
+
+    assignment_map = assignment_maps[0]
+    if not isinstance(assignment_map, JsonObjectPairs):
+        return (
+            PcbMalformedNetClassAssignment(
+                net_name=None,
+                observed_json_type=_pcb_json_type(assignment_map),
+            ),
+        )
+
+    assignments_by_net: dict[str, list[JsonValue]] = {}
+    for net_name, value in assignment_map.pairs:
+        assignments_by_net.setdefault(net_name, []).append(json_value_from_object_pairs(value))
+
+    malformed: list[PcbMalformedNetClassAssignment] = []
+    for net_name, values in sorted(assignments_by_net.items()):
+        normalized = tuple(canonical_json_value(value) for value in values)
+        if not net_name or len(set(normalized)) != 1:
+            continue
+        candidate = _malformed_pcb_netclass_assignment(net_name, values[0])
+        if candidate is not None:
+            malformed.append(candidate)
+    return tuple(malformed)

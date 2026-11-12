@@ -904,15 +904,15 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 353 active rules.
+The catalog currently contains 354 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
 each assigned class absent from the complete project class list, preserving
 the full array in evidence. A mixed array can still have a valid declared
 class applied, so an unresolved entry prompts review without claiming that
-the whole assignment falls back to `Default`. Malformed value shapes remain
-outside this rule.
+the whole assignment falls back to `Default`. Malformed value shapes are
+reviewed separately by `pcb.drc_malformed_netclass_assignment`.
 
 ### Placed schematic symbol has no embedded definition
 
@@ -5859,6 +5859,27 @@ check the assignment or class definition. It does not infer the intended class,
 run DRC on adopter boards, or establish a board defect. Projects may select
 `review`, `block`, or `off`, or record an exact-fingerprint ignore. The
 synthetic sources and native boundary are documented in
+[`tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/`](../tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/README.md).
+
+## Review malformed PCB netclass assignment shapes
+
+`pcb.drc_malformed_netclass_assignment` prompts for exact KiCad 10.0.8
+PCB/PCB-only projects when the unique `net_settings.netclass_assignments` value
+is not an object, or when a per-net assignment is neither a legacy string nor
+an array of nonempty class-name strings. Evidence retains the settings source
+hash, observed JSON type, exact net name when present, and invalid member
+indexes and types. Empty legacy strings and empty arrays are quiet controls.
+Repeated root settings or assignment maps and conflicting duplicate net keys
+remain outside this check.
+
+In the digest-pinned two-track fixture, an array containing a valid `Narrow`
+name and `null`, a numeric per-net value, and an array in place of the
+assignment map each produce the same clearance result as explicit `Default`.
+The valid `Narrow` array control does not. This is a bounded KiCad 10.0.8
+import observation; the review asks someone to inspect the saved setting. It
+does not choose a class or infer an electrical defect. Projects may select
+`review`, `block`, or `off`, or record an exact-fingerprint ignore. Fixture
+hashes, native image, and focused pytest selectors are recorded in
 [`tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/`](../tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/README.md).
 
 ## Review invalid PCB DRC severity strings
