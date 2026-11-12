@@ -802,7 +802,15 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc711):** LINT-423 now
+- **Latest published lint-gate checkpoint (v0.5.3rc712):** LINT-424 now
+  reviews repeated PCB object UUIDs using source-bound evidence. The tooling-owned
+  fault/control boards were accepted by digest-pinned KiCad 10.0.0 and 10.0.5;
+  native DRC records point both fault tracks to the same UUID. Local scoped
+  acceptance passed 419 tests with 8,825 deselected, including both Docker
+  fixtures, hash-seed reports, package checks, and an external-template
+  playtest. Hosted acceptance passed in run `43262713982`; package and preview
+  jobs were skipped under prerelease policy.
+- **Previous lint-gate checkpoint (v0.5.3rc711):** LINT-423 now
   detects repeated schematic object UUIDs across unique hierarchical source
   files and reports each occurrence with source-bound evidence. Local scoped
   acceptance passed 412 tests with 8,809 deselected, including the digest-pinned
@@ -24959,6 +24967,10 @@ acceptance threads while new lint features proceed:
   repository-wide mdrepo, Linux and Windows Pyright, wheel and sdist builds,
   installed-wheel execution, and the separate KiCad template checkout playtest
   passed.
+- **Hosted acceptance (2026-11-12):** Annotated tag `v0.5.3rc712` passed GitHub
+  Actions run `43262713982` on commit `9a6a2323dcf5ee97b475d0f3aeb664f7de17c04c`.
+  The focused lint gate and installed-wheel rehearsal passed; package and
+  preview orchestration were skipped under prerelease policy.
 
 ## Completion and release gate
 
