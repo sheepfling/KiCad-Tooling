@@ -5701,12 +5701,17 @@ and the exact project-configured KiCad patch version. The check reads the
 string or marker/comment-pair forms.
 
 The prompt asks an engineer to confirm that the exception is still intentional.
-It does not assert that the excluded violation still exists or that the
-exception is wrong. KiCad hides excluded violations unless the Exclusions view
-is enabled; an absent comment is identified in the prompt. This check does not
-run DRC, resolve the marker against current board objects, or inspect copper
-geometry. Project policy can select `review`, `block`, `off`, or an
-exact-fingerprint ignore. Tooling-owned synthetic settings are in
+When the selected native summary contains a digest-matched DRC report, the
+finding also says whether the report contains an excluded violation with the
+same rule key, saved comment, and participating item UUIDs. A missing or
+unbound report is reported as unavailable; it is never treated as a clean
+match. If no matching violation is present, the finding asks the reviewer to
+check whether the saved marker is stale.
+
+This comparison does not run DRC, compare the saved marker coordinates, prove
+that an exception is wrong, or inspect copper geometry. Repeated marker
+identities can remain ambiguous. Project policy can select `review`, `block`,
+`off`, or an exact-fingerprint ignore. Tooling-owned synthetic settings are in
 [`tests/fixtures/design_lint/pcb-drc-exclusions/`](../tests/fixtures/design_lint/pcb-drc-exclusions/README.md).
 
 KiCad documents individual exclusions and their optional comments in the

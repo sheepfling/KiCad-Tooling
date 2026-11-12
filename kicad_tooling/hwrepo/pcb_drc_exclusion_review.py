@@ -11,6 +11,10 @@ from .contracts import repo_path
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .evidence import digest
+from .pcb_drc_exclusion_native import (
+    PcbDrcExclusionMatchStatus,
+    source_bound_pcb_drc_exclusion_matches,
+)
 from .pcb_drc_project_settings import PcbDrcExclusion, pcb_drc_exclusions
 from .project_models import (
     ProjectConfig,
@@ -24,12 +28,14 @@ _PCB_DRC_EXCLUSION_RULE_ID: DesignLintRuleId = "pcb.drc_exclusion_present"
 
 @dataclass(frozen=True, slots=True)
 class PcbDrcExclusionFindingEvidence:
-    """Retain one parsed exclusion with its exact project-source identity."""
+    """Retain one parsed exclusion with project and optional native identity."""
 
     source_path: str
     source_sha256: str
     kicad_version: str
     exclusion: PcbDrcExclusion
+    native_match_status: PcbDrcExclusionMatchStatus = "UNAVAILABLE"
+    native_drc_report_sha256: str | None = None
 
 
 def _exclusion_marker_sha256(source: PcbDrcExclusionFindingEvidence) -> str:
@@ -53,10 +59,26 @@ def _candidate_message(source: PcbDrcExclusionFindingEvidence) -> str:
         if not source.exclusion.comment.strip()
         else "with a saved comment"
     )
-    return (
+    base = (
         f"A saved per-violation DRC exclusion targets {_exclusion_rule_key(source)!r} "
         f"{comment_state}; confirm the individual violation and its exception are still intentional."
     )
+    if source.native_match_status == "UNMATCHED":
+        return (
+            f"{base} The source-matched native DRC report contains no excluded violation with "
+            "the same rule key, comment, and board-item UUIDs; review whether this saved marker "
+            "is stale."
+        )
+    if source.native_match_status == "AMBIGUOUS":
+        return (
+            f"{base} Multiple saved markers share the same rule key, comment, and board-item "
+            "UUIDs, so their current native matches cannot be assigned individually."
+        )
+    if source.native_match_status == "MATCHED":
+        return (
+            f"{base} The source-matched native DRC report contains a matching excluded violation."
+        )
+    return f"{base} A source-matched native DRC exclusion match is unavailable."
 
 
 def project_pcb_drc_exclusion_evidence(
@@ -73,6 +95,12 @@ def project_pcb_drc_exclusion_evidence(
             "exclusion_marker_sha256": (_exclusion_marker_sha256(source),),
             "serialized_marker": (source.exclusion.marker,),
             "exclusion_comment": (source.exclusion.comment,),
+            "native_match_status": (source.native_match_status,),
+            "native_drc_report_sha256": (
+                ()
+                if source.native_drc_report_sha256 is None
+                else (source.native_drc_report_sha256,)
+            ),
         },
     )
 
@@ -115,6 +143,7 @@ def source_bound_pcb_drc_exclusion_candidates(
     root: Path,
     config: ProjectConfig,
     source_hashes: SourceHashInventory,
+    native_summary: Path | None = None,
 ) -> tuple[Candidate, ...]:
     """Prompt to recheck each saved per-violation DRC exclusion in KiCad 10.0."""
     if config.kind not in {ProjectKind.PCB, ProjectKind.PCB_ONLY}:
@@ -145,13 +174,27 @@ def source_bound_pcb_drc_exclusion_candidates(
     if digest(settings_file) != expected_hash:
         raise ValueError("KiCad project settings changed during design-lint inspection")
 
+    native_matches = (
+        source_bound_pcb_drc_exclusion_matches(
+            native_summary,
+            exclusions,
+            expected_kicad_version=config.kicad_version,
+        )
+        if native_summary is not None
+        else ()
+    )
+    match_by_marker = {item.marker: item for item in native_matches}
+
     candidates: list[Candidate] = []
     for exclusion in exclusions:
+        native_match = match_by_marker.get(exclusion.marker)
         source_evidence = PcbDrcExclusionFindingEvidence(
             source_path=relative,
             source_sha256=expected_hash,
             kicad_version=config.kicad_version,
             exclusion=exclusion,
+            native_match_status=("UNAVAILABLE" if native_match is None else native_match.status),
+            native_drc_report_sha256=(None if native_match is None else native_match.report_sha256),
         )
         candidates.append(PcbDrcExclusionCandidate.from_source_evidence(source_evidence))
     return tuple(candidates)

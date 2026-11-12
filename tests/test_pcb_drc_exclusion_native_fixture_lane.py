@@ -11,6 +11,10 @@ from typing import Any
 import pytest
 
 from kicad_tooling.ci_hosted_kicad10_images import KICAD_10_PCB_DRC_EXCLUSION_TOOLCHAINS
+from kicad_tooling.hwrepo.contracts import read_kicad_drc_findings
+from kicad_tooling.hwrepo.evidence import digest
+from kicad_tooling.hwrepo.pcb_drc_exclusion_native import match_pcb_drc_exclusions
+from kicad_tooling.hwrepo.pcb_drc_project_settings import pcb_drc_exclusions
 from tests.native_kicad_support import execute_kicad_cli
 
 FIXTURES = Path(__file__).parent / "fixtures/design_lint"
@@ -56,7 +60,8 @@ def _run_case(
     output = work / "output"
     inputs.mkdir(parents=True)
     output.mkdir()
-    shutil.copyfile(BOARD_FIXTURE / f"{case}.kicad_pcb", inputs / "board.kicad_pcb")
+    board_case = "control" if case == "control" else "fault"
+    shutil.copyfile(BOARD_FIXTURE / f"{board_case}.kicad_pcb", inputs / "board.kicad_pcb")
     shutil.copyfile(BOARD_FIXTURE / "board.kicad_dru", inputs / "board.kicad_dru")
     shutil.copyfile(SETTINGS_FIXTURE / f"{case}.kicad_pro", inputs / "board.kicad_pro")
     report = output / "drc.json"
@@ -70,7 +75,6 @@ def _run_case(
             "--format",
             "json",
             "--severity-all",
-            "--severity-exclusions",
             "--exit-code-violations",
             "--output",
             str(report),
@@ -87,7 +91,9 @@ def _run_case(
 
 
 @pytest.mark.design_lint_rule("pcb.drc_exclusion_present")
-def test_native_pcb_drc_reports_saved_exclusion_markers(tmp_path: Path) -> None:
+def test_native_pcb_drc_matches_saved_exclusions_and_identifies_stale_marker(
+    tmp_path: Path,
+) -> None:
     expected_comments = {
         "Synthetic reviewed USB_D_P edge-clearance exception.",
         "Synthetic reviewed USB_D_N edge-clearance exception.",
@@ -98,7 +104,7 @@ def test_native_pcb_drc_reports_saved_exclusion_markers(tmp_path: Path) -> None:
                 _run_case(image=image, version=version, case=case, repeat=repeat, root=tmp_path)
                 for repeat in ("first", "repeat")
             )
-            for case in ("fault", "control")
+            for case in ("fault", "stale", "control")
         }
         fault, fault_repeat = reports["fault"]
         control, control_repeat = reports["control"]
@@ -120,3 +126,28 @@ def test_native_pcb_drc_reports_saved_exclusion_markers(tmp_path: Path) -> None:
         assert not any(
             kind == "copper_edge_clearance" for kind, _severity, _comment in control_violations
         )
+
+        for repeat in ("first", "repeat"):
+            for case in ("fault", "stale"):
+                settings = (SETTINGS_FIXTURE / f"{case}.kicad_pro").read_text(encoding="utf-8")
+                exclusions = pcb_drc_exclusions(settings)
+                report_path = tmp_path / f"{version}-{case}-{repeat}" / "output" / "drc.json"
+                matches = match_pcb_drc_exclusions(
+                    exclusions,
+                    read_kicad_drc_findings(report_path),
+                    expected_kicad_version=version,
+                    report_sha256=digest(report_path),
+                )
+                actual = {item.marker: item.status for item in matches}
+                assert len(actual) == 2
+                if case == "fault":
+                    assert set(actual.values()) == {"MATCHED"}
+                else:
+                    assert any(
+                        marker.endswith("0000000000ff") and status == "UNMATCHED"
+                        for marker, status in actual.items()
+                    )
+                    assert any(
+                        marker.endswith("000000000002") and status == "MATCHED"
+                        for marker, status in actual.items()
+                    )

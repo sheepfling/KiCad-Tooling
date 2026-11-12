@@ -87,6 +87,8 @@ def test_saved_exclusions_report_rule_key_comment_and_source_binding(tmp_path: P
         "exclusion_marker_sha256": (marker_sha256,),
         "serialized_marker": (marker,),
         "exclusion_comment": ("",),
+        "native_match_status": ("UNAVAILABLE",),
+        "native_drc_report_sha256": (),
     }
     assert "with a saved comment" in by_rule["clearance"].message
     assert by_rule["clearance"].evidence["exclusion_comment"] == (

@@ -13541,29 +13541,36 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
-      "evidence_adapter": "Exact source-hashed KiCad 10.0 .kicad_pro DRC exclusion marker, optional comment, and configured patch version",
-      "predicate": "For a PCB or PCB-only project configured for KiCad 10.0.x settings schema 2, emit one review candidate for each persisted per-violation DRC exclusion, whether or not it has a comment.",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0 .kicad_pro DRC exclusion marker and optional comment, configured patch version, and digest-bound native DRC match status when available",
+      "predicate": "For a PCB or PCB-only project configured for KiCad 10.0.x settings schema 2, emit one review candidate for each persisted per-violation DRC exclusion, whether or not it has a comment. When a digest-bound native DRC report is available, include whether the rule key, saved comment, and participating item UUIDs match an excluded violation.",
       "supported_kicad_versions": [
         "KiCad 10.0.x project JSON board.design_settings.drc_exclusions with settings schema version 2; exact configured patch version is recorded and unsupported schema versions are rejected"
       ],
       "limitations": [
         "A saved exclusion is a review prompt, not proof that the violation is still present or that its exception is wrong; a saved comment is evidence but not approval.",
-        "The lint service reads project settings only and does not run DRC or resolve arbitrary project markers. A separate synthetic regression confirms two saved markers match two known board violations on the pinned KiCad patches; it does not enumerate live exclusions in arbitrary projects.",
+        "Native matching is available only when the DRC JSON digest matches its validation summary and the report identifies the configured KiCad patch. Matching compares rule key, exact comment, and participating item UUIDs; it does not compare marker coordinates. Duplicate marker identities can be ambiguous, and missing or unsupported evidence remains UNAVAILABLE.",
+        "The lint service consumes retained native DRC evidence and does not run DRC. Synthetic regressions cover two matched markers, one stale UUID marker, and a no-exclusion control; they do not estimate field false-positive rates.",
         "The rule does not establish electrical correctness, manufacturing readiness, or project-authored intent. A project may disable or exactly ignore a reviewed candidate."
       ],
       "fault_fixtures": [
         "tests.test_pcb_drc_exclusion_review.test_saved_exclusions_report_rule_key_comment_and_source_binding",
         "tests.test_design_lint_mcp_parity_pcb_drc_exclusions.test_saved_drc_exclusions_match_between_cli_and_mcp",
-        "tests.test_pcb_drc_exclusion_native_fixture_lane.test_native_pcb_drc_reports_saved_exclusion_markers"
+        "tests.test_design_lint_mcp_parity_pcb_drc_exclusions.test_saved_drc_exclusion_native_match_status_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_exclusion_native_fixture_lane.test_native_pcb_drc_matches_saved_exclusions_and_identifies_stale_marker",
+        "tests.test_pcb_drc_exclusion_native_matching.test_source_bound_lint_localizes_unmatched_saved_marker"
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_drc_exclusion_review.test_empty_or_absent_exclusion_lists_are_valid_controls",
         "tests.test_pcb_drc_exclusion_review.test_non_pcb_and_other_minor_versions_are_out_of_scope",
         "tests.test_pcb_drc_exclusion_review.test_unknown_settings_schema_fails_closed",
-        "tests.test_pcb_drc_exclusion_native_fixture_lane.test_native_pcb_drc_reports_saved_exclusion_markers"
+        "tests.test_pcb_drc_exclusion_native_fixture_lane.test_native_pcb_drc_matches_saved_exclusions_and_identifies_stale_marker",
+        "tests.test_pcb_drc_exclusion_native_matching.test_exact_current_native_matches_remain_distinct_from_missing_report",
+        "tests.test_pcb_drc_exclusion_native_matching.test_absent_native_drc_report_is_unavailable_not_a_clean_match",
+        "tests.test_pcb_drc_exclusion_native_matching.test_excluded_native_record_without_item_uuids_is_unavailable"
       ],
       "metamorphic_fixtures": [
-        "tests.test_pcb_drc_exclusion_review.test_exclusion_order_does_not_change_candidate_identity"
+        "tests.test_pcb_drc_exclusion_review.test_exclusion_order_does_not_change_candidate_identity",
+        "tests.test_pcb_drc_exclusion_native_matching.test_partial_duplicate_marker_identity_is_reported_as_ambiguous"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_PCB_FIXTURES"
@@ -13571,6 +13578,9 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_drc_exclusion_review.py#source_bound_pcb_drc_exclusion_candidates",
         "kicad_tooling/hwrepo/pcb_drc_project_settings.py#pcb_drc_exclusions",
+        "kicad_tooling/hwrepo/pcb_drc_exclusion_native.py#source_bound_pcb_drc_exclusion_matches",
+        "kicad_tooling/hwrepo/pcb_drc_exclusion_native.py#native_pcb_drc_report_matches",
+        "kicad_tooling/hwrepo/native_drc_findings.py#parse_native_drc",
         "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_summary",
         "kicad_tooling/hwrepo/design_lint_evaluation_candidates.py#scan_evaluation_candidates"
       ]

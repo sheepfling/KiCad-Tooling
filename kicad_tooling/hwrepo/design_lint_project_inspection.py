@@ -44,6 +44,7 @@ from .native_netlist_evidence import (
 )
 from .native_project_validation_models import ValidationSummary
 from .native_summary_binding import validate_native_toolchain
+from .pcb_drc_exclusion_native import native_pcb_drc_report_matches
 from .pcb_drc_exclusion_review import source_bound_pcb_drc_exclusion_candidates
 from .pcb_drc_global_severity_review import (
     downgraded_electrical_drc_check_candidates,
@@ -189,7 +190,12 @@ def inspect_design_lint_request(
             *downgraded_signal_integrity_drc_check_candidates(root, config, coach.source_hashes),
             *downgraded_electrical_drc_check_candidates(root, config, coach.source_hashes),
             *downgraded_miscellaneous_drc_check_candidates(root, config, coach.source_hashes),
-            *source_bound_pcb_drc_exclusion_candidates(root, config, coach.source_hashes),
+            *source_bound_pcb_drc_exclusion_candidates(
+                root,
+                config,
+                coach.source_hashes,
+                native_summary=native_summary,
+            ),
         )
         schematic_source_candidates = (
             *source_bound_schematic_erc_catalog_coverage_candidates(
@@ -414,6 +420,20 @@ def inspect_design_lint_request(
             raise ValueError("Declared project source changed during design-lint inspection")
         if not native_netlist_evidence_matches(native_summary, native_evidence):
             raise ValueError("Native netlist evidence changed during design-lint inspection")
+        exclusion_report_hashes = {
+            report_hash
+            for candidate in pcb_native_drc_candidates
+            if candidate.rule_id == "pcb.drc_exclusion_present"
+            for report_hash in candidate.evidence.get("native_drc_report_sha256", ())
+        }
+        if len(exclusion_report_hashes) > 1 or (
+            exclusion_report_hashes
+            and not native_pcb_drc_report_matches(
+                native_summary,
+                next(iter(exclusion_report_hashes)),
+            )
+        ):
+            raise ValueError("Native PCB DRC report changed during design-lint inspection")
         current_config = load_config(root, project.config)
         if (current_config.kicad_version, current_config.image) != (
             config.kicad_version,
@@ -431,7 +451,7 @@ def inspect_design_lint_request(
                 "connectivity_snapshot": connectivity_snapshot,
             }
         )
-    except (OSError, ValueError, StopIteration) as exc:
+    except (OSError, ValueError, TypeError, StopIteration) as exc:
         return DesignLintReport(
             status="BLOCKED",
             project_id=project_id,

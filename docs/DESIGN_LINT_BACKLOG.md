@@ -790,6 +790,15 @@ standalone parity work when it closes a demonstrated feature regression.
 
 ### Current execution focus
 
+- **Current feature work (LINT-408):** Extend the existing persisted PCB DRC
+  exclusion review with the match status from its digest-bound native DRC
+  report. Initial pinned KiCad 10.0.8 evidence shows that changing a saved
+  marker's board-item UUID leaves the underlying DRC violation visible but
+  removes the marker's comment. Local synthetic, CLI/MCP parity, Linux and
+  Windows type checks, and the exact 10.0.0/10.0.5/10.0.8 Docker lane pass.
+  Tagged hosted acceptance is pending. This refines the existing
+  `pcb.drc_exclusion_present` review evidence; it does not add a new rule ID or
+  treat an unmatched marker as proof of an electrical defect.
 - **Latest published lint-gate checkpoint (v0.5.3rc683):** LINT-405 adds a
   source-bound REVIEW for risky custom DRC layer names. The first hosted run of
   `v0.5.3rc682` exposed two rule-gate omissions: this rule was absent from
@@ -23974,6 +23983,42 @@ acceptance threads while new lint features proceed:
   enables it; ordinary focused unit/parity selections can omit Docker. The
   hosted focused gate also passed its installed-wheel check against a separate
   project checkout.
+
+#### LINT-408 — Compare saved PCB DRC exclusions with current native results
+
+- **Status:** Locally implemented and focused acceptance passed as an evidence
+  refinement to `pcb.drc_exclusion_present`; tagged hosted acceptance is
+  pending. No additional rule ID is planned.
+- **Gap:** LINT-141 prompts for every saved marker, but could not distinguish a
+  marker that matched the current native result from one whose board-item UUID
+  no longer identified the excluded violation.
+- **Behavior:** Read the retained `drc.json` only when its exact digest is
+  recorded in the same native validation summary. For each saved marker,
+  compare the DRC rule key, exact saved comment, and participating item UUIDs.
+  Record `MATCHED`, `UNMATCHED`, `AMBIGUOUS`, or `UNAVAILABLE`; an unmatched
+  marker receives a review prompt that asks whether it is stale.
+- **Boundary:** This comparison does not launch another native run or compare
+  marker coordinates. Duplicate marker identities are reported as ambiguous.
+  Missing, stale, unsupported, or differently versioned native evidence never
+  counts as a match. Neither match status nor an empty DRC result approves the
+  exclusion or establishes electrical or manufacturing correctness.
+- **Fixtures and quality gate:** Synthetic report cases cover matched,
+  unmatched, ambiguous, missing-report, and changed-report-digest outcomes.
+  The digest-pinned KiCad 10.0.0/10.0.5/10.0.8 native lane checks two matched
+  markers, a one-UUID stale-marker fault, and a no-exclusion control twice per
+  version. No project or proprietary source is used.
+- **Selection:** Run
+  `tests/test_pcb_drc_exclusion_review.py`,
+  `tests/test_pcb_drc_exclusion_native_matching.py`, and
+  `tests/test_design_lint_mcp_parity_pcb_drc_exclusions.py` with
+  `design_lint and pcb_lint and design_lint_rule(rule_id="pcb.drc_exclusion_present")`.
+  Enable `KICAD_RUN_NATIVE_PCB_FIXTURES=1` for
+  `tests/test_pcb_drc_exclusion_native_fixture_lane.py`.
+- **Local acceptance (2026-11-11):** Focused review, match, parity, catalog,
+  reachability, architecture, and report-view suites passed (`75 passed,
+  4 skipped`); the pinned Docker lane passed (`1 passed`) across KiCad
+  10.0.0, 10.0.5, and 10.0.8. Linux and Windows Pyright targets reported zero
+  errors, Ruff and formatting passed, and the Markdown repository check passed.
 
 ## Completion and release gate
 

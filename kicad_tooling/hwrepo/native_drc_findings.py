@@ -14,6 +14,7 @@ class NativeDrcItem:
     description: str
     x_mm: float | None
     y_mm: float | None
+    uuid: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,6 +25,7 @@ class NativeDrcFinding:
     description: str
     excluded: bool
     items: tuple[NativeDrcItem, ...]
+    comment: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,6 +34,8 @@ class NativeDrcReport:
     source: str
     units: str
     findings: tuple[NativeDrcFinding, ...]
+    schema: str | None = None
+    included_severities: tuple[str, ...] = ()
 
 
 def _object(value: JsonValue, label: str) -> dict[str, JsonValue]:
@@ -81,13 +85,20 @@ def parse_native_drc(document: JsonValue) -> NativeDrcReport:
                 description = item.get("description", "")
                 if not isinstance(description, str):
                     raise TypeError("DRC item description must be text")
+                item_uuid = item.get("uuid")
+                if item_uuid is not None and not isinstance(item_uuid, str):
+                    raise TypeError("DRC item UUID must be text")
                 items.append(
                     NativeDrcItem(
                         description=description,
                         x_mm=_coordinate(position.get("x"), "DRC x"),
                         y_mm=_coordinate(position.get("y"), "DRC y"),
+                        uuid=item_uuid,
                     )
                 )
+            comment = data.get("comment", "")
+            if not isinstance(comment, str):
+                raise TypeError("DRC exclusion comment must be text")
             findings.append(
                 NativeDrcFinding(
                     category=category,
@@ -96,11 +107,21 @@ def parse_native_drc(document: JsonValue) -> NativeDrcReport:
                     description=_text(data.get("description"), "DRC description"),
                     excluded=raw_excluded,
                     items=tuple(items),
+                    comment=comment,
                 )
             )
+    raw_schema = payload.get("$schema")
+    if raw_schema is not None and not isinstance(raw_schema, str):
+        raise TypeError("DRC report schema must be text")
+    included_severities = tuple(
+        _text(item, "DRC included severity")
+        for item in _list(payload.get("included_severities", []), "DRC included severities")
+    )
     return NativeDrcReport(
         version=_text(payload.get("kicad_version"), "DRC version"),
         source=_text(payload.get("source"), "DRC source"),
         units=_text(payload.get("coordinate_units"), "DRC coordinate units"),
         findings=tuple(findings),
+        schema=raw_schema,
+        included_severities=included_severities,
     )

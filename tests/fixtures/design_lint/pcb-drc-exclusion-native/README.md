@@ -8,12 +8,19 @@ their internal-unit coordinates and board-item UUIDs identify the two edge
 violations on the fault board. The control settings contain no exclusions and
 run against the control board.
 
+The stale-marker settings change only the USB_D_P marker's second item UUID to
+an absent synthetic UUID. Native DRC still reports the underlying edge
+violation, but it no longer attaches that marker's comment. The USB_D_N
+marker remains matched.
+
 The pinned KiCad 10.0.0, 10.0.5, and 10.0.8 Docker lanes run
-`kicad-cli pcb drc --severity-all --severity-exclusions` twice per case. The
-fault report must preserve both exact comments on the two edge violations, and
-the control report must contain no excluded violation. In these report versions
-the JSON severity field retains the underlying DRC severity; the comments on
-the requested exclusion output identify the matched saved markers.
+`kicad-cli pcb drc --severity-all` twice per case. The fault report must
+preserve both exact comments on the two edge violations, the stale-marker
+report must preserve only the USB_D_N comment, and the control report must
+contain no excluded violation. This mirrors the normal native-validation
+command, which does not need the separate exclusions-display option. The JSON
+severity field retains the underlying DRC severity; the report's `excluded`
+flag and saved comment identify matched markers.
 
 KiCad documents the [`--severity-exclusions` CLI option][kicad-cli-drc]. The
 10.0.5 [PCB marker serializer][kicad-marker-source] records the rule key,
