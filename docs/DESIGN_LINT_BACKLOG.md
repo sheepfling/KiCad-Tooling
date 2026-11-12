@@ -793,7 +793,15 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc695):** LINT-413 adds
+- **Latest published lint-gate checkpoint (v0.5.3rc696):** LINT-414 adds
+  source-bound review for non-string saved schematic ERC severity values.
+  Hosted acceptance passed in run `43165386784`: 408 tests passed, 8,655 were
+  deselected, and the digest-pinned KiCad 10.0.8 fault/control fixtures ran.
+  Ruff, both Alphus profiles, Markdown and repository-link checks, Linux and
+  Windows typing, wheel and source builds, installed-wheel checks, and
+  external/adapted project checks passed. Package and preview jobs were
+  skipped under prerelease policy.
+- **Previous lint-gate checkpoint (v0.5.3rc695):** LINT-413 adds
   source-bound review for invalid strings on recognized schematic ERC severity
   keys. Hosted acceptance passed in run `43160037570`: 406 tests passed,
   8,630 were deselected, and the digest-pinned invalid-string fault/control
@@ -801,7 +809,7 @@ standalone parity work when it closes a demonstrated feature regression.
   profiles, Markdown and repository-link checks, Linux and Windows typing,
   wheel and source builds, installed-wheel checks, and external/adapted project
   checks passed. Package and preview jobs were skipped under prerelease policy.
-- **Previous lint-gate checkpoint (v0.5.3rc694):** LINT-412 adds
+- **Earlier lint-gate checkpoint (v0.5.3rc694):** LINT-412 adds
   source-bound review for non-string values on recognized PCB DRC severity
   keys. Hosted acceptance passed in run `43156630980`: 400 tests passed,
   8,618 were deselected, and the digest-pinned KiCad 10.0.8 native
@@ -24318,6 +24326,13 @@ acceptance threads while new lint features proceed:
   both Alphus profiles, Rumdl, mdrepo, Linux and Windows Pyright, wheel and
   source builds, installed-package origin/version checks, and the scoped
   architecture/catalog checks passed. Receipt: `build/ci/run-_2s8yke9`.
+- **Hosted acceptance (2026-11-12):** Annotated tag `v0.5.3rc696` passed
+  GitHub Actions run `43165386784`: 408 tests passed and 8,655 were
+  deselected, including five typed native faults and the valid-warning control
+  on the digest-pinned KiCad 10.0.8 image. Ruff, both Alphus profiles, Markdown
+  and repository-link checks, Linux and Windows typing, wheel and source builds,
+  installed-wheel checks, and external/adapted project checks passed. Package
+  and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
