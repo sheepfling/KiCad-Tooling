@@ -24699,7 +24699,10 @@ acceptance threads while new lint features proceed:
   Rumdl, repository-wide mdrepo, scoped Linux and Windows Pyright, wheel and
   sdist builds, installed-wheel execution, and the external template checkout
   rehearsal passed.
-- **Hosted acceptance:** Pending tag `v0.5.3rc703` and hosted workflow.
+- **Hosted acceptance (2026-11-12):** Annotated tag `v0.5.3rc703` passed
+  GitHub Actions run `43209978913`. The focused prerelease gate and installed-
+  wheel rehearsal passed; package publication and preview orchestration were
+  skipped under prerelease policy.
 
 ## Completion and release gate
 
