@@ -25343,6 +25343,10 @@ acceptance threads while new lint features proceed:
   checks, Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist builds,
   installed-artifact checks, and external/adapted template-project playtests
   passed. Receipts are under `build/ci/run-ttkv24qi/`.
+- **Hosted acceptance (2026-11-12):** Tag `v0.5.3rc720` passed in GitHub
+  Actions run `43310078583` with the same 422-test scoped selection, including
+  the installed-wheel rehearsal against a separate project checkout. Package
+  publishing and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
