@@ -127,6 +127,7 @@ def source_bound_pcb_drc_unknown_severity_key_candidates(
         configured_settings = configured_pcb_drc_rule_severity_settings(
             source.document,
             allow_duplicate_erc_severity_keys=True,
+            allow_duplicate_drc_severity_keys=True,
         )
     except (ValueError, TypeError) as exc:
         raise ValueError(

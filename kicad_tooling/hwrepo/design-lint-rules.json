@@ -13781,6 +13781,56 @@
       ]
     },
     {
+      "rule_id": "pcb.drc_duplicate_severity_key",
+      "title": "Duplicate PCB DRC severity keys need review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_drc_duplicate_severity_key_review.py#source_bound_pcb_drc_duplicate_severity_key_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0.8 .kicad_pro board.design_settings.rule_severities map retaining duplicate JSON member values in source order",
+      "predicate": "For PCB or PCB-only projects configured for exact KiCad 10.0.8, emit one source-bound review candidate for every key repeated in board.design_settings.rule_severities and preserve all canonical JSON values in source order.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.8 only; the rule reports duplicate saved keys independent of their values. Native order-sensitive application was measured for track_dangling only on the digest-pinned KiCad 10.0.8 image. Other patches and key-specific native behavior remain outside the claim."
+      ],
+      "limitations": [
+        "A repeated key can hide conflicting saved values from ordinary JSON object parsing. The finding reports ambiguity and source order but does not choose an intended value or prove that the duplicate changed native behavior for this key.",
+        "The rule inspects source-hashed project settings only. It does not run DRC on project boards, establish check applicability, inspect copper, infer electrical intent, or establish manufacturing readiness. Projects may select review, block, off, or an exact-fingerprint ignore."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_drc_duplicate_severity_key.test_duplicate_known_key_preserves_source_order_and_hash",
+        "tests.test_pcb_drc_duplicate_severity_key.test_unknown_and_equal_duplicate_values_are_reviewable",
+        "tests.test_design_lint_mcp_parity_pcb_drc_duplicate_severity_key.test_duplicate_drc_severity_review_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_duplicate_severity_key_native.test_kicad_1008_uses_last_duplicate_drc_severity_repeatably"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_drc_duplicate_severity_key.test_unique_map_is_quiet_and_direct_reader_remains_strict",
+        "tests.test_pcb_drc_duplicate_severity_key.test_duplicate_json_keys_outside_drc_severity_map_remain_strict",
+        "tests.test_pcb_drc_duplicate_severity_key.test_unmeasured_kicad_versions_are_out_of_scope",
+        "tests.test_pcb_drc_duplicate_severity_key.test_non_pcb_projects_are_out_of_scope",
+        "tests.test_pcb_drc_duplicate_severity_key.test_pcb_only_projects_are_supported",
+        "tests.test_pcb_drc_duplicate_severity_key_native.test_kicad_1008_uses_last_duplicate_drc_severity_repeatably"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_drc_duplicate_severity_key.test_repeated_scan_is_deterministic"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_duplicate_severity_key_review.py#source_bound_pcb_drc_duplicate_severity_key_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_duplicate_severity_key_review.py#project_pcb_drc_duplicate_severity_key_evidence",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings.py#configured_pcb_drc_duplicate_rule_severity_settings",
+        "kicad_tooling/hwrepo/contracts.py#parse_model_text_allow_duplicate_json_keys_at",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#read_source_bound_pcb_project_settings",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#verify_source_bound_pcb_project_settings_unchanged",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request",
+        "kicad_tooling/hwrepo/design_lint_candidate_inputs.py#DesignLintCandidateInputs",
+        "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_evaluation"
+      ]
+    },
+    {
       "rule_id": "pcb.drc_unknown_severity_key",
       "title": "Unknown PCB DRC severity keys need version review",
       "theme": "pcb",

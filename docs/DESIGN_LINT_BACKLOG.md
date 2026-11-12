@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 342 rules are implemented with synthetic regression coverage.
+The following 343 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 342 active rules.
+The catalog currently contains 343 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -735,6 +735,7 @@ skipped under prerelease policy.
 - `pcb.miscellaneous_drc_check_downgraded`
 - `pcb.warning_default_drc_check_ignored`
 - `pcb.drc_exclusion_present`
+- `pcb.drc_duplicate_severity_key`
 - `pcb.drc_unknown_severity_key`
 - `pcb.drc_invalid_severity_value`
 - `pcb.drc_nonstring_severity_value`
@@ -4244,7 +4245,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 342 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 343 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -24394,6 +24395,45 @@ acceptance threads while new lint features proceed:
   repository-link checks, Linux and Windows typing, wheel and source builds,
   installed-wheel checks, and external/adapted project checks passed. Package
   and preview jobs were skipped under prerelease policy.
+
+#### LINT-416 — Review duplicate PCB DRC severity keys
+
+- **Priority:** P1 saved-settings integrity. Repeated JSON object member names
+  can hide conflicting DRC severity values from ordinary project parsing.
+- **Status:** Implemented as the default-review rule
+  `pcb.drc_duplicate_severity_key` for exact KiCad 10.0.8, with source-order
+  values retained by the typed settings parser. Native confirmation and the
+  scoped acceptance gate are in progress.
+- **Behavior:** For source-hashed PCB and PCB-only projects configured for
+  exactly KiCad 10.0.8, report each key repeated in
+  `board.design_settings.rule_severities`, preserving every canonical value in
+  source order. Unknown keys and repeated equal values remain reviewable. The
+  rule does not select an intended severity.
+- **Native evidence:** A digest-pinned KiCad 10.0.8 probe measured the
+  `track_dangling` key on the synthetic PCB fixture. Duplicate `warning` then
+  `ignore` suppressed its findings; reversing the entries emitted Warning
+  results; a unique `warning` control emitted Warning results. This confirms
+  order-sensitive loading for that key and image only.
+- **Regression coverage:** Tooling-owned settings cover conflicting known-key
+  duplicates in both orders, an unknown duplicate, equal duplicate values, a
+  unique-key control, and a duplicate outside the target map. Parser defaults,
+  source hash, exact version and project-kind scope, deterministic scanning,
+  and CLI/MCP parity are covered. A pinned native test repeats each measured
+  order and the unique control.
+- **Evidence boundary:** The rule identifies ambiguous saved settings; it is
+  not an electrical defect claim. The native result does not generalize to
+  other keys, KiCad patches, or project DRC outcomes, and no project board is
+  inspected by this source-settings check.
+- **Selection:** Run
+  `tests/test_pcb_drc_duplicate_severity_key.py` and
+  `tests/test_design_lint_mcp_parity_pcb_drc_duplicate_severity_key.py` with
+  `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.drc_duplicate_severity_key")`. The tag gate
+  enables `KICAD_RUN_NATIVE_PCB_FIXTURES=1` for the pinned native module.
+- **Source:** KiCad 10.0.8's
+  [board settings loader][kicad-10-project-drc-exclusions] applies saved
+  settings; the order-sensitive duplicate behavior is directly measured by
+  this pinned native fixture.
 
 ## Completion and release gate
 

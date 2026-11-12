@@ -204,7 +204,7 @@ def test_missing_source_hash_and_stale_bytes_fail_closed(tmp_path: Path) -> None
         _scan(root, config, source_hashes)
 
 
-def test_duplicate_json_keys_and_invalid_severity_types_fail_closed(tmp_path: Path) -> None:
+def test_duplicate_json_keys_remain_strict_for_direct_reader(tmp_path: Path) -> None:
     root, project, config, source_hashes = _project(tmp_path)
     project.write_text(
         '{"board":{"design_settings":{"rule_severities":'
@@ -212,9 +212,17 @@ def test_duplicate_json_keys_and_invalid_severity_types_fail_closed(tmp_path: Pa
         encoding="utf-8",
     )
     source_hashes[PROJECT_RELATIVE] = digest(project)
-    with pytest.raises(ValueError, match="Duplicate JSON key"):
-        _scan(root, config, source_hashes)
+    from kicad_tooling.hwrepo.pcb_drc_project_settings import (
+        configured_pcb_drc_rule_severity_settings,
+    )
 
+    with pytest.raises(ValueError, match="Duplicate JSON key"):
+        configured_pcb_drc_rule_severity_settings(project.read_text(encoding="utf-8"))
+    assert _scan(root, config, source_hashes) == ()
+
+
+def test_invalid_severity_type_fails_closed(tmp_path: Path) -> None:
+    root, project, config, source_hashes = _project(tmp_path)
     project.write_text(
         '{"board":{"design_settings":{"rule_severities":{"unconnected_items":1}}}}',
         encoding="utf-8",

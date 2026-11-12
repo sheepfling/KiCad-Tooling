@@ -168,7 +168,11 @@ def source_bound_pcb_drc_exclusion_candidates(
 
     try:
         document = settings_file.read_text(encoding="utf-8")
-        exclusions = pcb_drc_exclusions(document, allow_duplicate_erc_severity_keys=True)
+        exclusions = pcb_drc_exclusions(
+            document,
+            allow_duplicate_erc_severity_keys=True,
+            allow_duplicate_drc_severity_keys=True,
+        )
     except (OSError, UnicodeError, ValueError, TypeError) as exc:
         raise ValueError(f"{relative}: could not read supported PCB DRC exclusions: {exc}") from exc
     if digest(settings_file) != expected_hash:

@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 342 active rules.
+The catalog currently contains 343 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -5541,6 +5541,26 @@ claim a board defect, run DRC on project boards, or establish electrical or
 manufacturing approval. Projects can use `review`, `block`, `off`, or an exact
 fingerprint ignore. Synthetic settings are documented in
 [`tests/fixtures/design_lint/pcb-drc-unknown-severity-key/`](../tests/fixtures/design_lint/pcb-drc-unknown-severity-key/README.md).
+
+## Review duplicate PCB DRC severity keys
+
+`pcb.drc_duplicate_severity_key` prompts when a source-hashed KiCad 10.0.8
+`.kicad_pro` repeats a key in `board.design_settings.rule_severities`. It
+preserves each canonical JSON value in source order so conflicting or repeated
+identical entries are visible to review. The rule is enabled only for PCB and
+PCB-only projects configured for exactly KiCad 10.0.8; other patches remain
+out of scope.
+
+A digest-pinned KiCad 10.0.8 regression measures order-sensitive application
+for the known `track_dangling` key: duplicate `warning`, then `ignore`
+suppresses its fixture findings; reversing the entries emits Warning results;
+the unique `warning` control also emits Warning results. This observation is
+specific to that key, fixture, and image. The rule does not infer which value
+was intended, claim that every duplicate changes behavior, run DRC on project
+boards, or establish a board defect or manufacturing readiness. Projects may
+select `review`, `block`, `off`, or an exact-fingerprint ignore. Synthetic
+settings are documented in
+[`tests/fixtures/design_lint/pcb-drc-duplicate-severity-key/`](../tests/fixtures/design_lint/pcb-drc-duplicate-severity-key/README.md).
 
 ## Review invalid PCB DRC severity strings
 

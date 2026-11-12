@@ -38,6 +38,7 @@ class _DrcSeverityParser(Protocol):
         *,
         skip_non_string_values: bool = False,
         allow_duplicate_erc_severity_keys: bool = False,
+        allow_duplicate_drc_severity_keys: bool = False,
     ) -> tuple[PcbDrcCheckSeverity, ...]: ...
 
 
@@ -63,6 +64,7 @@ def _source_bound_drc_settings(
             source.document,
             skip_non_string_values=config.kicad_version == "10.0.8",
             allow_duplicate_erc_severity_keys=True,
+            allow_duplicate_drc_severity_keys=True,
         )
     except (ValueError, TypeError) as exc:
         raise ValueError(

@@ -2,11 +2,18 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 
 from pydantic import BaseModel, ConfigDict, JsonValue
 
 from .contracts import parse_model_text, parse_model_text_allow_duplicate_json_keys_at
+from .json_object_pairs import (
+    JsonObjectPairs,
+    json_object_member,
+    json_value_from_object_pairs,
+    retain_json_object_pairs,
+)
 from .json_value_support import canonical_json_value
 
 CORE_DRC_CHECK_IDS = frozenset(
@@ -18,7 +25,8 @@ CORE_DRC_CHECK_IDS = frozenset(
         "unconnected_items",
     }
 )
-_ALLOWED_DUPLICATE_KICAD_PROJECT_OBJECT_PATHS = frozenset({("erc", "rule_severities")})
+_ERC_SEVERITY_OBJECT_PATH = ("erc", "rule_severities")
+_PCB_DRC_SEVERITY_OBJECT_PATH = ("board", "design_settings", "rule_severities")
 DFM_ERROR_DEFAULT_DRC_CHECK_IDS = frozenset(
     {
         "annular_width",
@@ -106,6 +114,14 @@ class PcbDrcRuleSeveritySetting:
     configured_value_json: str
 
 
+@dataclass(frozen=True, slots=True)
+class PcbDrcDuplicateRuleSeveritySetting:
+    """One repeated DRC severity key with values in saved source order."""
+
+    check_id: str
+    configured_values_json: tuple[str, ...]
+
+
 class _PcbDesignSettingsMeta(BaseModel):
     model_config = ConfigDict(extra="ignore", strict=True)
 
@@ -136,13 +152,19 @@ def _parse_pcb_project_settings(
     document: str,
     *,
     allow_duplicate_erc_severity_keys: bool,
+    allow_duplicate_drc_severity_keys: bool,
 ) -> _PcbProjectSettings:
-    if not allow_duplicate_erc_severity_keys:
+    allowed_paths: set[tuple[str, ...]] = set()
+    if allow_duplicate_erc_severity_keys:
+        allowed_paths.add(_ERC_SEVERITY_OBJECT_PATH)
+    if allow_duplicate_drc_severity_keys:
+        allowed_paths.add(_PCB_DRC_SEVERITY_OBJECT_PATH)
+    if not allowed_paths:
         return parse_model_text(document, _PcbProjectSettings)
     return parse_model_text_allow_duplicate_json_keys_at(
         document,
         _PcbProjectSettings,
-        allowed_duplicate_object_paths=_ALLOWED_DUPLICATE_KICAD_PROJECT_OBJECT_PATHS,
+        allowed_duplicate_object_paths=frozenset(allowed_paths),
     )
 
 
@@ -152,10 +174,12 @@ def _configured_drc_check_severities(
     *,
     skip_non_string_values: bool = False,
     allow_duplicate_erc_severity_keys: bool = False,
+    allow_duplicate_drc_severity_keys: bool = False,
 ) -> tuple[PcbDrcCheckSeverity, ...]:
     project = _parse_pcb_project_settings(
         document,
         allow_duplicate_erc_severity_keys=allow_duplicate_erc_severity_keys,
+        allow_duplicate_drc_severity_keys=allow_duplicate_drc_severity_keys,
     )
     if project.board is None or project.board.design_settings is None:
         return ()
@@ -180,11 +204,13 @@ def configured_pcb_drc_rule_severity_settings(
     document: str,
     *,
     allow_duplicate_erc_severity_keys: bool = False,
+    allow_duplicate_drc_severity_keys: bool = False,
 ) -> tuple[PcbDrcRuleSeveritySetting, ...]:
     """Return saved DRC severity keys and values in deterministic key order."""
     project = _parse_pcb_project_settings(
         document,
         allow_duplicate_erc_severity_keys=allow_duplicate_erc_severity_keys,
+        allow_duplicate_drc_severity_keys=allow_duplicate_drc_severity_keys,
     )
     if project.board is None or project.board.design_settings is None:
         return ()
@@ -198,11 +224,44 @@ def configured_pcb_drc_rule_severity_settings(
     )
 
 
+def configured_pcb_drc_duplicate_rule_severity_settings(
+    document: str,
+) -> tuple[PcbDrcDuplicateRuleSeveritySetting, ...]:
+    """Read duplicate DRC severity keys without losing their source-order values."""
+    configured_pcb_drc_rule_severity_settings(
+        document,
+        allow_duplicate_erc_severity_keys=True,
+        allow_duplicate_drc_severity_keys=True,
+    )
+    project = json.loads(document, object_pairs_hook=retain_json_object_pairs)
+    board = json_object_member(project, "board")
+    design_settings = json_object_member(board, "design_settings")
+    severities = json_object_member(design_settings, "rule_severities")
+    if not isinstance(severities, JsonObjectPairs):
+        return ()
+
+    values_by_key: dict[str, list[object]] = {}
+    for check_id, value in severities.pairs:
+        values_by_key.setdefault(check_id, []).append(value)
+
+    return tuple(
+        PcbDrcDuplicateRuleSeveritySetting(
+            check_id=check_id,
+            configured_values_json=tuple(
+                canonical_json_value(json_value_from_object_pairs(value)) for value in values
+            ),
+        )
+        for check_id, values in sorted(values_by_key.items())
+        if len(values) > 1
+    )
+
+
 def configured_core_drc_check_severities(
     document: str,
     *,
     skip_non_string_values: bool = False,
     allow_duplicate_erc_severity_keys: bool = False,
+    allow_duplicate_drc_severity_keys: bool = False,
 ) -> tuple[PcbDrcCheckSeverity, ...]:
     """Return explicit severities for the bounded core electrical DRC checks."""
     return _configured_drc_check_severities(
@@ -210,6 +269,7 @@ def configured_core_drc_check_severities(
         CORE_DRC_CHECK_IDS,
         skip_non_string_values=skip_non_string_values,
         allow_duplicate_erc_severity_keys=allow_duplicate_erc_severity_keys,
+        allow_duplicate_drc_severity_keys=allow_duplicate_drc_severity_keys,
     )
 
 
@@ -218,6 +278,7 @@ def configured_dfm_drc_check_severities(
     *,
     skip_non_string_values: bool = False,
     allow_duplicate_erc_severity_keys: bool = False,
+    allow_duplicate_drc_severity_keys: bool = False,
 ) -> tuple[PcbDrcCheckSeverity, ...]:
     """Return explicit severities for documented Error-default DFM checks."""
     return _configured_drc_check_severities(
@@ -225,6 +286,7 @@ def configured_dfm_drc_check_severities(
         DFM_ERROR_DEFAULT_DRC_CHECK_IDS,
         skip_non_string_values=skip_non_string_values,
         allow_duplicate_erc_severity_keys=allow_duplicate_erc_severity_keys,
+        allow_duplicate_drc_severity_keys=allow_duplicate_drc_severity_keys,
     )
 
 
@@ -233,6 +295,7 @@ def configured_signal_integrity_drc_check_severities(
     *,
     skip_non_string_values: bool = False,
     allow_duplicate_erc_severity_keys: bool = False,
+    allow_duplicate_drc_severity_keys: bool = False,
 ) -> tuple[PcbDrcCheckSeverity, ...]:
     """Return explicit severities for documented Error-default signal-integrity checks."""
     return _configured_drc_check_severities(
@@ -240,6 +303,7 @@ def configured_signal_integrity_drc_check_severities(
         SIGNAL_INTEGRITY_ERROR_DEFAULT_DRC_CHECK_IDS,
         skip_non_string_values=skip_non_string_values,
         allow_duplicate_erc_severity_keys=allow_duplicate_erc_severity_keys,
+        allow_duplicate_drc_severity_keys=allow_duplicate_drc_severity_keys,
     )
 
 
@@ -248,6 +312,7 @@ def configured_electrical_drc_check_severities(
     *,
     skip_non_string_values: bool = False,
     allow_duplicate_erc_severity_keys: bool = False,
+    allow_duplicate_drc_severity_keys: bool = False,
 ) -> tuple[PcbDrcCheckSeverity, ...]:
     """Return explicit severities for bounded Error-default electrical DRC checks."""
     return _configured_drc_check_severities(
@@ -255,6 +320,7 @@ def configured_electrical_drc_check_severities(
         ELECTRICAL_ERROR_DEFAULT_DRC_CHECK_IDS,
         skip_non_string_values=skip_non_string_values,
         allow_duplicate_erc_severity_keys=allow_duplicate_erc_severity_keys,
+        allow_duplicate_drc_severity_keys=allow_duplicate_drc_severity_keys,
     )
 
 
@@ -263,6 +329,7 @@ def configured_miscellaneous_drc_check_severities(
     *,
     skip_non_string_values: bool = False,
     allow_duplicate_erc_severity_keys: bool = False,
+    allow_duplicate_drc_severity_keys: bool = False,
 ) -> tuple[PcbDrcCheckSeverity, ...]:
     """Return severities for bounded Error-default miscellaneous DRC checks."""
     return _configured_drc_check_severities(
@@ -270,6 +337,7 @@ def configured_miscellaneous_drc_check_severities(
         MISCELLANEOUS_ERROR_DEFAULT_DRC_CHECK_IDS,
         skip_non_string_values=skip_non_string_values,
         allow_duplicate_erc_severity_keys=allow_duplicate_erc_severity_keys,
+        allow_duplicate_drc_severity_keys=allow_duplicate_drc_severity_keys,
     )
 
 
@@ -278,6 +346,7 @@ def configured_warning_default_drc_check_severities(
     *,
     skip_non_string_values: bool = False,
     allow_duplicate_erc_severity_keys: bool = False,
+    allow_duplicate_drc_severity_keys: bool = False,
 ) -> tuple[PcbDrcCheckSeverity, ...]:
     """Return explicit severities for reviewed KiCad 10.0 Warning-default checks."""
     return _configured_drc_check_severities(
@@ -285,6 +354,7 @@ def configured_warning_default_drc_check_severities(
         WARNING_DEFAULT_DRC_CHECK_IDS,
         skip_non_string_values=skip_non_string_values,
         allow_duplicate_erc_severity_keys=allow_duplicate_erc_severity_keys,
+        allow_duplicate_drc_severity_keys=allow_duplicate_drc_severity_keys,
     )
 
 
@@ -309,11 +379,13 @@ def pcb_drc_exclusions(
     document: str,
     *,
     allow_duplicate_erc_severity_keys: bool = False,
+    allow_duplicate_drc_severity_keys: bool = False,
 ) -> tuple[PcbDrcExclusion, ...]:
     """Read KiCad 10.0 project exclusions from strings or marker/comment pairs."""
     project = _parse_pcb_project_settings(
         document,
         allow_duplicate_erc_severity_keys=allow_duplicate_erc_severity_keys,
+        allow_duplicate_drc_severity_keys=allow_duplicate_drc_severity_keys,
     )
     if project.board is None or project.board.design_settings is None:
         return ()

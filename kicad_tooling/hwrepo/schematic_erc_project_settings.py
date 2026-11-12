@@ -82,7 +82,12 @@ ERC_DEFAULT_WARNING_RULE_KEYS = frozenset(
 _ERC_RULE_KEYS_KICAD_10_0: frozenset[str] = (
     ERC_DEFAULT_ERROR_RULE_KEYS | ERC_DEFAULT_WARNING_RULE_KEYS | ERC_DEFAULT_IGNORED_RULE_KEYS
 )
-_ALLOWED_DUPLICATE_KICAD_PROJECT_OBJECT_PATHS = frozenset({("erc", "rule_severities")})
+_ALLOWED_DUPLICATE_KICAD_PROJECT_OBJECT_PATHS = frozenset(
+    {
+        ("erc", "rule_severities"),
+        ("board", "design_settings", "rule_severities"),
+    }
+)
 # Keep exact patch entries; later KiCad 10.0 releases can add ERC item keys.
 _ERC_RULE_KEYS_KICAD_10_0_7 = _ERC_RULE_KEYS_KICAD_10_0 | {"same_local_global_power"}
 _ERC_DEFAULT_WARNING_RULE_KEYS_KICAD_10_0_7 = ERC_DEFAULT_WARNING_RULE_KEYS | {
