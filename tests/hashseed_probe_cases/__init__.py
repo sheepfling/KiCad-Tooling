@@ -65,4 +65,5 @@ HASHSEED_REPORT_FAMILIES = (
     "analog",
     "schematic_geometry",
     "schematic_uuid_integrity",
+    "pcb_uuid_integrity",
 )

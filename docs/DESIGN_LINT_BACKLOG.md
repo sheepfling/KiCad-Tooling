@@ -4456,8 +4456,8 @@ Current catalog audit: 350 covered, 0 not applicable, 0 unreviewed.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v93. The cross-process probe supports themed report
-  selectors and retains the complete 337-report inventory gate. Fault/control
+- **Status:** Implemented v94. The cross-process probe supports themed report
+  selectors and retains the complete 338-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -4639,6 +4639,10 @@ Current catalog audit: 350 covered, 0 not applicable, 0 unreviewed.
   referenced twice is read once. The complete report inventory now contains
   337 entries. The focused cross-process regression and full inventory check
   are included in this rule's selector.
+  The v94 extension adds source-bound duplicate PCB object UUID fault and
+  unique-ID control reports. The three-process comparison includes the full
+  REVIEW report and confirms the control stays quiet; the complete inventory
+  now contains 338 reports.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
@@ -24914,6 +24918,47 @@ acceptance threads while new lint features proceed:
   `v0.5.3rc711` passed GitHub Actions run `43241643244`. The focused lint gate
   and installed-wheel rehearsal passed; package publication and preview
   orchestration were skipped under prerelease policy.
+
+#### LINT-424 — Review repeated PCB object UUIDs
+
+- **Priority:** P1 PCB source integrity. Duplicate board object identities can
+  make native diagnostic references ambiguous even when KiCad accepts the
+  source file.
+- **Status:** Implemented as default-review rule `pcb.duplicate_object_uuid`
+  for PCB and PCB-only projects configured for KiCad 10.0.0 or 10.0.5.
+- **Behavior:** Scan the exact source-hashed `.kicad_pcb` file and group
+  canonical direct `(uuid ...)` fields by value. Report each repeated UUID with
+  its source path, SHA-256, occurrence lines, and object types. Missing or
+  mismatched source hashes cannot produce an unbound candidate.
+- **Evidence:** The tooling-owned fault/control boards differ only in the UUID
+  assigned to the second of two disconnected tracks. Digest-pinned KiCad
+  10.0.0 and 10.0.5 accepted both boards. Fault DRC dangling and unconnected
+  records reference both tracks through the same UUID; control records retain
+  distinct UUIDs. This is a source identity observation, not evidence of an
+  electrical or layout defect. No cohort or proprietary board source is used.
+- **Limitations:** The native measurement covers tracks only. The rule does not
+  decide which object should retain an ID or imply electrical consequences.
+  Malformed roots, noncanonical UUID text, and unmeasured KiCad patch versions
+  are outside the predicate. Project policy can select review, block, off, or
+  an exact-fingerprint ignore.
+- **Regression coverage:** Synthetic tests cover duplicate and unique IDs,
+  source hash binding and freshness, case normalization, malformed UUIDs,
+  supported project kinds, unsupported versions, CLI/MCP parity, exact native
+  diagnostic identity behavior, and three-process hash-seed determinism.
+- **Selection:** Run
+  `tests/test_pcb_duplicate_object_uuid.py`,
+  `tests/test_design_lint_mcp_parity_pcb_duplicate_object_uuid.py`, and
+  `tests/test_design_lint_determinism_pcb_duplicate_object_uuid.py` with
+  `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.duplicate_object_uuid")`. Run
+  `tests/test_pcb_duplicate_object_uuid_native.py` with
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1` and the same selector plus `native_kicad`.
+- **Local acceptance (2026-11-12):** Scoped package acceptance passed 419 tests
+  with 8,825 unrelated tests deselected, including the two-version digest-pinned
+  Docker lane and the hash-seed reports. Ruff, both Alphus profiles, Rumdl,
+  repository-wide mdrepo, Linux and Windows Pyright, wheel and sdist builds,
+  installed-wheel execution, and the separate KiCad template checkout playtest
+  passed.
 
 ## Completion and release gate
 

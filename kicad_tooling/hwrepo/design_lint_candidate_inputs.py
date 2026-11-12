@@ -74,6 +74,7 @@ class DesignLintCandidateInputs:
     usb_data_path: UsbDataPathCandidateInputs
     netlist_sha256: Digest | None = None
     schematic_source_candidates: tuple[Candidate, ...] = ()
+    pcb_source_candidates: tuple[Candidate, ...] = ()
 
     def __post_init__(self) -> None:
         if self.bus.observed is not self.observed and self.bus.observed != self.observed:

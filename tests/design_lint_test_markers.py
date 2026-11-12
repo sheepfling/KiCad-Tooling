@@ -39,6 +39,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_architecture_component_supply_voltage_range.py",
                 "tests/test_design_lint_power_native_gate_architecture.py",
                 "tests/test_design_lint_architecture_pcb_dru_rule_selectors.py",
+                "tests/test_design_lint_architecture_pcb_source_integrity.py",
                 "tests/test_design_lint_architecture_serial_endpoint_role_collision.py",
                 "tests/test_design_lint_architecture_named_rail_protocols.py",
                 "tests/test_design_lint_architecture_signal_divider.py",
@@ -254,6 +255,9 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_test_access_probe_holes.py",
                 "tests/test_electrical_test_access_parity.py",
                 "tests/test_design_lint_architecture_pcb_measurement_candidate_evidence.py",
+                "tests/test_pcb_duplicate_object_uuid.py",
+                "tests/test_pcb_duplicate_object_uuid_native.py",
+                "tests/test_design_lint_determinism_pcb_duplicate_object_uuid.py",
                 "tests/test_pcb_measurement_candidate_evidence.py",
                 "tests/test_design_lint_architecture_mapped_candidate_evidence.py",
                 "tests/test_design_lint_architecture_connector_all_open_candidate_evidence.py",
@@ -408,6 +412,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_mcp_parity_pcb_warning_default_drc_ignored.py",
                 "tests/test_design_lint_mcp_parity_oscillator_output_paths.py",
                 "tests/test_design_lint_mcp_parity_pcb_drc_exclusions.py",
+                "tests/test_design_lint_mcp_parity_pcb_duplicate_object_uuid.py",
             }
         ),
     }

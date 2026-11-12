@@ -116,6 +116,7 @@ class DesignLintEvaluationRequest:
     pcb_dru_rule_candidates: tuple[Candidate, ...] = ()
     pcb_native_drc_candidates: tuple[Candidate, ...] = ()
     schematic_source_candidates: tuple[Candidate, ...] = ()
+    pcb_source_candidates: tuple[Candidate, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

@@ -93,6 +93,7 @@ from .pcb_dru_rule_review import (
     text_variable_custom_drc_rule_candidates,
 )
 from .pcb_mechanical_edge_clearance import mechanical_edge_rule_coverage_candidates
+from .pcb_object_uuid_integrity import duplicate_pcb_object_uuid_candidates
 from .project_models import ProjectManifest
 from .project_source_hashes import hash_project_sources as hashes
 from .schematic_erc_source_candidates import source_bound_schematic_erc_candidates
@@ -250,6 +251,11 @@ def inspect_design_lint_request(
                 coach.source_hashes,
             ),
         )
+        pcb_source_candidates = duplicate_pcb_object_uuid_candidates(
+            root,
+            config,
+            coach.source_hashes,
+        )
         spi_roster = spi_roster_context(root, config)
         serial_peer_roster = serial_peer_roster_context(root, config)
         rs485_peer_context = rs485_peer_reference_context(root, config)
@@ -376,6 +382,7 @@ def inspect_design_lint_request(
                 pcb_dru_rule_candidates=pcb_dru_rule_candidates,
                 pcb_native_drc_candidates=pcb_native_drc_candidates,
                 schematic_source_candidates=schematic_source_candidates,
+                pcb_source_candidates=pcb_source_candidates,
             )
         )
         connectivity_snapshot = capture_connectivity_snapshot(

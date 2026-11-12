@@ -72,6 +72,7 @@ _NATIVE_KICAD_MODULES = frozenset(
         "tests/test_pcb_drc_clearance_clamp_native.py",
         "tests/test_pcb_drc_text_variables_native.py",
         "tests/test_pcb_drc_severity_text_variable_native.py",
+        "tests/test_pcb_duplicate_object_uuid_native.py",
         "tests/test_pcb_signal_path_native.py",
         "tests/test_schematic_geometry_native_pin_connectivity.py",
         "tests/test_schematic_geometry_native_symbol_body.py",
@@ -84,6 +85,7 @@ _NATIVE_KICAD_MODULES = frozenset(
 _SLOW_MODULES = frozenset(
     {
         "tests/test_design_lint_determinism.py",
+        "tests/test_design_lint_determinism_pcb_duplicate_object_uuid.py",
         "tests/test_design_lint_determinism_generic_peer_pins.py",
         "tests/test_design_lint_determinism_jtag_connector_return.py",
         "tests/test_design_lint_determinism_connector_returns.py",

@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 350 active rules.
+The catalog currently contains 351 active rules.
 
 ### Placed schematic symbol has no embedded definition
 
@@ -1021,6 +1021,42 @@ KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
   ../tests/fixtures/design_lint/schematic-duplicate-object-uuid/README.md
 [duplicate-object-uuid-cross-file-fixture]:
   ../tests/fixtures/design_lint/schematic-duplicate-object-uuid-across-files/README.md
+
+### PCB object UUID repeats within one board source
+
+`pcb.duplicate_object_uuid` reviews a canonical UUID assigned to multiple
+direct object UUID fields in the exact source-hashed board. It applies to PCB
+and PCB-only projects configured for KiCad 10.0.0 or 10.0.5. The evidence names
+the UUID, each occurrence line and object type, and the board's repository path
+and SHA-256. Unsupported patch versions, malformed board roots, and
+noncanonical UUID text are outside the predicate.
+
+This is a source identity review prompt. In the tooling-owned synthetic fixture, KiCad 10.0.0 and
+10.0.5 accepted two disconnected tracks with the same UUID and reported both tracks under that same
+UUID in dangling and unconnected DRC diagnostics. The distinct-UUID control identifies each track
+separately. This measurement supports reviewing repeated board identities; it does not imply an
+electrical or layout fault, and it covers track segments only. The rule defaults to REVIEW and
+supports project review, block, off, and exact-fingerprint ignore decisions. See the
+[PCB UUID fixture README](../tests/fixtures/design_lint/pcb-duplicate-object-uuid/README.md) for
+source hashes and pinned native details.
+
+Run the source and CLI/MCP regressions with:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_pcb_duplicate_object_uuid.py \
+  tests/test_design_lint_mcp_parity_pcb_duplicate_object_uuid.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.duplicate_object_uuid")'
+```
+
+Run the exact native fault/control regression with:
+
+```sh
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 \
+  .venv/bin/python -I -m pytest \
+  tests/test_pcb_duplicate_object_uuid_native.py \
+  -m 'design_lint and pcb_lint and evidence_lint and native_kicad and design_lint_rule(rule_id="pcb.duplicate_object_uuid")'
+```
 
 ### Placed and embedded symbol pin numbers differ
 
