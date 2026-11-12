@@ -1023,20 +1023,25 @@ KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
 instance records with the pin numbers in its unique embedded definition. It
 reports a default-review finding when the definition has exactly one
 pin-bearing unit/convert group matching the placed symbol and the sorted
-pin-number multisets differ. Other units do not contribute pins to the
-comparison. Evidence includes both lists and their unmatched values. The
+pin-number multisets differ. For nonzero units, the comparison also includes
+the matching unit-0 shared pins for the same convert. Other units and converts
+do not contribute pins. Evidence includes both lists and their unmatched values.
 heuristic cannot decide which representation matches design intent; a reviewer
 should check the approved symbol source, datasheet, and connector requirement.
 
-Groups with unsupported unit/convert suffixes, shared unit-0 pins, malformed
-pin records, ambiguous library IDs, and duplicate matching groups are skipped.
+Groups with unsupported unit/convert suffixes, malformed pin records,
+ambiguous library IDs, duplicate selected groups, or multiple matching unit-0
+groups are skipped. A unit-0 placed symbol is compared only with its own
+matching group.
 Matching lists do not establish electrical connectivity or PCB copper return
 continuity. The digest-pinned KiCad 10.0.5 single-unit fixture exports
 `USB_GND` on J1.4 in the control and J1.9 after the embedded number changes.
 The multi-unit fixture selects unit 2 while unit 1 contains separate pins;
 KiCad exports `USB_GND` on J1.5 in the control and J1.9 after only unit 2's
-embedded pin number changes. These results are limited to the tooling-owned
-fixtures and pinned KiCad image. See the
+embedded pin number changes. With a unit-0 pin added, both exports keep
+`USB_SHARED` on J1.8 while the same selected pin change moves `USB_GND` from
+J1.5 to J1.9. These results are limited to the tooling-owned fixtures and
+pinned KiCad image. See the
 [fixture record](../tests/fixtures/design_lint/embedded-symbol-pin-number-mismatch/README.md).
 
 Run the source and CLI/MCP regressions with:

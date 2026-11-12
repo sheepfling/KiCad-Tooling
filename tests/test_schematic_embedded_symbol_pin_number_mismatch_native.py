@@ -117,3 +117,23 @@ def test_native_matching_multi_unit_group_controls_exported_net_pin(tmp_path: Pa
     assert fault_netlist.nets["USB_GND"] == ("J1.9",)
     assert control_rules == ()
     assert fault_rules == (RULE_ID,)
+
+
+def test_native_shared_unit_zero_and_selected_group_are_compared(tmp_path: Path) -> None:
+    control_runs = tuple(
+        _run_export(tmp_path, "shared-unit-zero-control", run) for run in ("first", "repeat")
+    )
+    fault_runs = tuple(
+        _run_export(tmp_path, "shared-unit-zero-fault", run) for run in ("first", "repeat")
+    )
+
+    assert control_runs[0] == control_runs[1]
+    assert fault_runs[0] == fault_runs[1]
+    control_netlist, control_rules = control_runs[0]
+    fault_netlist, fault_rules = fault_runs[0]
+    assert control_netlist.nets["USB_GND"] == ("J1.5",)
+    assert control_netlist.nets["USB_SHARED"] == ("J1.8",)
+    assert fault_netlist.nets["USB_GND"] == ("J1.9",)
+    assert fault_netlist.nets["USB_SHARED"] == ("J1.8",)
+    assert control_rules == ()
+    assert fault_rules == (RULE_ID,)

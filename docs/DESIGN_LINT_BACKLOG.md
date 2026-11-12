@@ -24723,11 +24723,11 @@ acceptance threads while new lint features proceed:
 - **Status:** Implemented as default-review rule
   `schematic.embedded_symbol_pin_number_mismatch`, with source hashing and
   native evidence bounded to KiCad 10.0.5.
-- **Behavior:** Compare the definition and instance pin-number multisets when
-  exactly one supported pin-bearing group matches the placed symbol's unit and
-  convert. Sibling units are excluded from the comparison. Report the
-  reference, exact library ID, both sorted number lists, and each list's
-  unmatched values.
+- **Behavior:** Compare the placed pin-number multiset with the one supported
+  pin-bearing group matching its unit and convert. For nonzero units, include
+  at most one matching unit-0 group for shared pins. Sibling units and other
+  converts are excluded. Report the reference, exact library ID, both sorted
+  number lists, and each list's unmatched values.
 - **Evidence:** In the tooling-owned synthetic control, KiCad 10.0.5 exports
   `USB_GND` on J1.4. Changing only the unique definition's corresponding pin
   number from 4 to 9 makes the same pinned exporter assign `USB_GND` to J1.9
@@ -24735,19 +24735,23 @@ acceptance threads while new lint features proceed:
   unit-1 pin inventory; the pinned exporter assigns `USB_GND` to J1.5 in its
   control and J1.9 when only unit 2's embedded number changes. Repeated
   single- and multi-unit control/fault exports and lint reports are
-  deterministic. No cohort project or proprietary board source was imported.
+  deterministic. The shared-unit fixture adds unit-0 pin 8 to unit 2's pin
+  list and connects it to `USB_SHARED`; KiCad keeps that pin on J1.8 while the
+  unit-2 pin fault moves `USB_GND` from J1.5 to J1.9. The earlier lint was
+  quiet on this fault because it skipped shared unit-0 groups. No cohort
+  project or proprietary board source was imported.
 - **Limitations:** This check exposes source disagreement but cannot tell
-  which pin list expresses intent. Shared unit-0 pins, unsupported unit/convert
-  suffixes, malformed records, ambiguous definitions, duplicate matching
-  groups, and unsupported structures are skipped. A matching list does not
-  prove the symbol's datasheet mapping, electrical connections, footprint, or
-  PCB copper path. The rule defaults to REVIEW; project policy may select
-  block, off, or an exact-fingerprint ignore after review.
+  which pin list expresses intent. Unsupported unit/convert suffixes, malformed
+  records, ambiguous definitions, duplicate selected or shared groups, and
+  unsupported structures are skipped. A matching list does not prove the
+  symbol's datasheet mapping, electrical connections, footprint, or PCB copper
+  path. The rule defaults to REVIEW; project policy may select block, off, or
+  an exact-fingerprint ignore after review.
 - **Regression coverage:** Tooling-owned source tests cover single- and
-  multi-unit fault/control, unrelated sibling groups, unit-0 skip behavior,
-  exact-version and project-kind scope, source freshness, and deterministic
-  findings. CLI/MCP parity and digest-pinned native exports cover both the
-  single-unit and selected multi-unit cases.
+  multi-unit fault/control, matching unit-0 merge, unrelated sibling units and
+  converts, exact-version and project-kind scope, source freshness, and
+  deterministic findings. CLI/MCP parity and digest-pinned native exports
+  cover single-unit, selected multi-unit, and shared-unit cases.
 - **Selection:** Run
   `tests/test_schematic_embedded_symbol_pin_number_mismatch.py` and
   `tests/test_design_lint_mcp_parity_schematic_embedded_symbol_pin_number_mismatch.py`
@@ -24776,6 +24780,15 @@ acceptance threads while new lint features proceed:
   `43223042588`. The focused gate and installed-wheel rehearsal passed;
   package publication and preview orchestration were skipped under prerelease
   policy.
+- **Shared-unit coverage update (2026-11-12):** Extended the source predicate
+  to compare the selected nonzero unit with its unique unit-0 shared pin group
+  for the same convert. A tooling-owned KiCad 10.0.5 control/fault pair proves
+  the shared `USB_SHARED` pin remains J1.8 while a changed selected pin moves
+  `USB_GND` from J1.5 to J1.9. The previous predicate was quiet on this fault.
+  The scoped CI passed 410 tests with 8,803 deselected; Docker native exports,
+  CLI/MCP parity, catalog reachability, typing, package builds, installed-wheel
+  checks, and external-template rehearsals passed. Duplicate shared groups
+  remain intentionally skipped. No project board source was imported.
 
 #### LINT-423 — Review repeated schematic object UUIDs
 

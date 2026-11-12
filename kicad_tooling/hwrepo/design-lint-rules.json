@@ -16537,32 +16537,36 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
-      "evidence_adapter": "SHA-256 verified hierarchical schematic sources, exact direct library IDs, the uniquely selected pin-bearing unit/convert group, placed pin-instance records, and digest-pinned KiCad 10.0.5 netlist behavior",
-      "predicate": "For a source-hashed KiCad 10.0.5 schematic with one direct lib_symbols section, review a direct placed symbol when its unique embedded definition has exactly one supported pin-bearing group matching the placed unit and convert and the sorted pin-number multisets differ. Other units do not contribute pins to the comparison. The finding reports both source lists and their multiset differences.",
+      "evidence_adapter": "SHA-256 verified hierarchical schematic sources, exact direct library IDs, the uniquely selected pin-bearing unit/convert group and its matching shared unit-0 group, placed pin-instance records, and digest-pinned KiCad 10.0.5 netlist behavior",
+      "predicate": "For a source-hashed KiCad 10.0.5 schematic with one direct lib_symbols section, review a direct placed symbol when its unique embedded definition has exactly one supported pin-bearing group matching the placed unit and convert and the sorted pin-number multiset differs from the placed instance. For nonzero units, include zero or one shared unit-0 group with the same convert; other units and converts do not contribute pins. The finding reports the selected definition list, placed list, and their multiset differences.",
       "supported_kicad_versions": [
         "10.0.5"
       ],
       "limitations": [
         "This is a consistency heuristic: it cannot determine whether the embedded definition or placed instance expresses the intended pin map. The default is REVIEW and projects can select review, block, off, or exact-fingerprint ignore.",
-        "A group must use a recognized unit/convert suffix, and exactly one pin-bearing group must match the placed unit and convert. Shared pins in unit 0, malformed pin records, ambiguous IDs, multiple lib_symbols sections, duplicate matching groups, or unsupported source structure are skipped.",
-        "The native fault/control measurements use tooling-owned single-unit and multi-unit USB connector fixtures on the digest-pinned KiCad 10.0.5 image. The multi-unit fixture selects unit 2 while unit 1 has different contacts; KiCad exported USB_GND at J1.5 for the control and J1.9 after only the selected embedded definition's pin number changed.",
+        "Every pin-bearing group must use a recognized unit/convert suffix. Exactly one group must match the placed unit/convert, and nonzero units may have at most one shared unit-0 group for the same convert. Malformed pin records, ambiguous IDs, multiple lib_symbols sections, duplicate matching groups, and unsupported source structure are skipped.",
+        "The native fault/control measurements use tooling-owned single-unit, multi-unit, and shared-unit USB connector fixtures on the digest-pinned KiCad 10.0.5 image. The shared-unit case selects unit 2 and convert 1; its common unit-0 pin stays J1.8 in both exports while a changed unit-2 pin moves USB_GND from J1.5 to J1.9.",
         "Matching pin-number lists do not prove electrical connectivity, correct datasheet mapping, footprint agreement, or a valid PCB return path."
       ],
       "fault_fixtures": [
         "tests.test_schematic_embedded_symbol_pin_number_mismatch.test_unique_definition_pin_number_mismatch_is_localized_and_control_is_quiet",
         "tests.test_schematic_embedded_symbol_pin_number_mismatch.test_selected_multi_unit_group_is_compared_and_control_is_quiet",
+        "tests.test_schematic_embedded_symbol_pin_number_mismatch.test_shared_unit_zero_group_joins_selected_unit_and_control_is_quiet",
         "tests.test_design_lint_mcp_parity_schematic_embedded_symbol_pin_number_mismatch.test_embedded_symbol_pin_number_review_matches_between_cli_and_mcp",
         "tests.test_schematic_embedded_symbol_pin_number_mismatch_native.test_native_unique_definition_pin_number_mismatch_changes_exported_net_pin",
-        "tests.test_schematic_embedded_symbol_pin_number_mismatch_native.test_native_matching_multi_unit_group_controls_exported_net_pin"
+        "tests.test_schematic_embedded_symbol_pin_number_mismatch_native.test_native_matching_multi_unit_group_controls_exported_net_pin",
+        "tests.test_schematic_embedded_symbol_pin_number_mismatch_native.test_native_shared_unit_zero_and_selected_group_are_compared"
       ],
       "valid_control_fixtures": [
         "tests.test_schematic_embedded_symbol_pin_number_mismatch.test_unique_definition_pin_number_mismatch_is_localized_and_control_is_quiet",
         "tests.test_schematic_embedded_symbol_pin_number_mismatch.test_nonselected_multi_unit_definition_does_not_hide_matching_group",
-        "tests.test_schematic_embedded_symbol_pin_number_mismatch.test_shared_unit_zero_pin_group_remains_unsupported",
+        "tests.test_schematic_embedded_symbol_pin_number_mismatch.test_shared_unit_zero_group_joins_selected_unit_and_control_is_quiet",
+        "tests.test_schematic_embedded_symbol_pin_number_mismatch.test_duplicate_shared_unit_zero_groups_are_skipped",
         "tests.test_schematic_embedded_symbol_pin_number_mismatch.test_selected_multi_unit_group_is_compared_and_control_is_quiet",
         "tests.test_schematic_embedded_symbol_pin_number_mismatch.test_pcb_only_projects_are_out_of_scope",
         "tests.test_schematic_embedded_symbol_pin_number_mismatch_native.test_native_unique_definition_pin_number_mismatch_changes_exported_net_pin",
-        "tests.test_schematic_embedded_symbol_pin_number_mismatch_native.test_native_matching_multi_unit_group_controls_exported_net_pin"
+        "tests.test_schematic_embedded_symbol_pin_number_mismatch_native.test_native_matching_multi_unit_group_controls_exported_net_pin",
+        "tests.test_schematic_embedded_symbol_pin_number_mismatch_native.test_native_shared_unit_zero_and_selected_group_are_compared"
       ],
       "metamorphic_fixtures": [
         "tests.test_schematic_embedded_symbol_pin_number_mismatch.test_irrelevant_source_edit_preserves_finding_and_refreshes_hash"

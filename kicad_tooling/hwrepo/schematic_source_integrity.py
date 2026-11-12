@@ -26,7 +26,7 @@ _DUPLICATE_RULE_ID: DesignLintRuleId = "schematic.duplicate_embedded_symbol_defi
 _PIN_NUMBER_MISMATCH_RULE_ID: DesignLintRuleId = "schematic.embedded_symbol_pin_number_mismatch"
 _DUPLICATE_OBJECT_UUID_RULE_ID: DesignLintRuleId = "schematic.duplicate_object_uuid"
 _SUPPORTED_KICAD_VERSION = "10.0.5"
-_SYMBOL_UNIT_CONVERT_SUFFIX = re.compile(r"_(?P<unit>[1-9][0-9]*)_(?P<convert>[1-9][0-9]*)$")
+_SYMBOL_UNIT_CONVERT_SUFFIX = re.compile(r"_(?P<unit>0|[1-9][0-9]*)_(?P<convert>[1-9][0-9]*)$")
 _UNPARSEABLE_SOURCE_ERRORS = frozenset(
     {"Malformed KiCad schematic source", "Expected one kicad_sch root"}
 )
@@ -219,7 +219,6 @@ def embedded_symbol_pin_number_mismatch_candidates(
 
             pin_groups: list[tuple[str, str, tuple[str, ...]]] = []
             unsupported_group = False
-            shared_pin_group = False
             for sub_symbol in schematic_nodes(text, definition, "symbol"):
                 sub_atoms = sexpr_atoms(text, sub_symbol)
                 if len(sub_atoms) != 2:
@@ -236,9 +235,8 @@ def embedded_symbol_pin_number_mismatch_candidates(
                     unsupported_group = True
                     break
                 unit_group = suffix["unit"]
-                shared_pin_group = shared_pin_group or unit_group == "0"
                 pin_groups.append((unit_group, suffix["convert"], pin_numbers))
-            if unsupported_group or shared_pin_group:
+            if unsupported_group:
                 continue
 
             matching_groups = tuple(
@@ -246,9 +244,23 @@ def embedded_symbol_pin_number_mismatch_candidates(
                 for group_unit, group_convert, pin_numbers in pin_groups
                 if (group_unit, group_convert) == (unit, convert)
             )
-            if len(matching_groups) != 1:
+            shared_groups = (
+                ()
+                if unit == "0"
+                else tuple(
+                    pin_numbers
+                    for group_unit, group_convert, pin_numbers in pin_groups
+                    if (group_unit, group_convert) == ("0", convert)
+                )
+            )
+            if len(matching_groups) != 1 or len(shared_groups) > 1:
                 continue
-            (definition_pin_numbers,) = matching_groups
+            definition_pin_numbers = tuple(
+                sorted(
+                    (*matching_groups[0], *(shared_groups[0] if shared_groups else ())),
+                    key=_pin_number_sort_key,
+                )
+            )
             placed_pin_nodes = schematic_nodes(text, symbol, "pin")
             placed_pin_numbers = _placed_pin_numbers(text, placed_pin_nodes)
             if not placed_pin_numbers:

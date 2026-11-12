@@ -113,18 +113,40 @@ def test_selected_multi_unit_group_is_compared_and_control_is_quiet(tmp_path: Pa
     assert _scan(control_root, control_config, control_hashes) == ()
 
 
-def test_shared_unit_zero_pin_group_remains_unsupported(tmp_path: Path) -> None:
-    root, config, source_hashes = _project(tmp_path, "multi-unit-fault.kicad_sch")
+def test_shared_unit_zero_group_joins_selected_unit_and_control_is_quiet(
+    tmp_path: Path,
+) -> None:
+    fault_root, config, fault_hashes = _project(
+        tmp_path / "fault", "shared-unit-zero-fault.kicad_sch"
+    )
+    control_root, control_config, control_hashes = _project(
+        tmp_path / "control", "shared-unit-zero-control.kicad_sch"
+    )
+
+    (candidate,) = _scan(fault_root, config, fault_hashes)
+
+    assert candidate.evidence["unit"] == ("2",)
+    assert candidate.evidence["convert"] == ("1",)
+    assert candidate.evidence["definition_pin_numbers"] == ("8", "9")
+    assert candidate.evidence["placed_pin_numbers"] == ("5", "8")
+    assert candidate.evidence["definition_only_pin_numbers"] == ("9",)
+    assert candidate.evidence["placed_only_pin_numbers"] == ("5",)
+    assert _scan(control_root, control_config, control_hashes) == ()
+
+
+def test_duplicate_shared_unit_zero_groups_are_skipped(tmp_path: Path) -> None:
+    root, config, source_hashes = _project(tmp_path, "shared-unit-zero-fault.kicad_sch")
     source = root / SCHEMATIC
     content = source.read_text(encoding="utf-8")
-    needle = '(symbol "USB_A_0_1"\n        (rectangle'
-    replacement = """(symbol "USB_A_0_1"
+    needle = '      (symbol "USB_A_1_1"'
+    duplicate_group = """      (symbol "USB_A_0_1"
         (pin passive line (at 0 0 0) (length 2.54)
-          (name "SHARED" (effects (font (size 1.27 1.27))))
-          (number "8" (effects (font (size 1.27 1.27)))))
-        (rectangle"""
+          (name "DUPLICATE_SHARED" (effects (font (size 1.27 1.27))))
+          (number "6" (effects (font (size 1.27 1.27)))))
+      )
+"""
     assert content.count(needle) == 1
-    source.write_text(content.replace(needle, replacement, 1), encoding="utf-8")
+    source.write_text(content.replace(needle, duplicate_group + needle, 1), encoding="utf-8")
     source_hashes[SCHEMATIC] = digest(source)
 
     assert _scan(root, config, source_hashes) == ()
