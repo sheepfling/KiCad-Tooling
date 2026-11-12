@@ -24743,6 +24743,16 @@ acceptance threads while new lint features proceed:
   Run `tests/test_schematic_embedded_symbol_pin_number_mismatch_native.py`
   with `KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1` and the same
   selector plus `native_kicad`.
+- **Local acceptance (2026-11-12):** The tag-equivalent scoped gate passed 403
+  tests with 8,793 unrelated tests deselected, including the digest-pinned
+  KiCad 10.0.5 Docker fixture. Ruff, both Alphus profiles, Rumdl, repository-
+  wide mdrepo, scoped Linux and Windows Pyright, wheel and sdist builds,
+  installed-wheel execution, and the separate template checkout rehearsal
+  passed.
+- **Hosted acceptance (2026-11-12):** Annotated tag `v0.5.3rc704` passed
+  GitHub Actions run `43213623129`. The focused prerelease gate and installed-
+  wheel rehearsal passed; package publication and preview orchestration were
+  skipped under prerelease policy.
 
 ## Completion and release gate
 
