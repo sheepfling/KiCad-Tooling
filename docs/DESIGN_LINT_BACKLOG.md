@@ -806,13 +806,20 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc721):** LINT-432 now also
-  reviews current array-valued PCB netclass assignments alongside legacy
-  scalars. Local and hosted scoped gates each passed 433 tests with 8,890
-  deselected; the local run included repeatable digest-pinned KiCad 10.0.8
-  Docker exports. Hosted acceptance and the installed-wheel rehearsal against
-  a separate project passed in GitHub Actions run `43315379001`; package and
+- **Latest published lint-gate checkpoint (v0.5.3rc722):** LINT-433 adds a
+  default-REVIEW source-shape check for malformed PCB netclass assignments.
+  Local and hosted scoped gates each passed 436 tests with 8,922 deselected;
+  both ran the repeatable, digest-pinned KiCad 10.0.8 Docker fault/control
+  fixture. Hosted acceptance and the installed-wheel rehearsal against a
+  separate project passed in GitHub Actions run `43322304085`; package and
   preview jobs were skipped under prerelease policy.
+- **Previous lint-gate checkpoint (v0.5.3rc721):** LINT-432 reviews current
+  array-valued PCB netclass assignments alongside legacy scalars. Local and
+  hosted scoped gates each passed 433 tests with 8,890 deselected; the local
+  run included repeatable digest-pinned KiCad 10.0.8 Docker exports. Hosted
+  acceptance and the installed-wheel rehearsal against a separate project
+  passed in GitHub Actions run `43315379001`; package and preview jobs were
+  skipped under prerelease policy.
 - **Previous lint-gate checkpoint (v0.5.3rc718):** LINT-430 extends
   `net.numbered_returns` to review a recognized base return label beside a
   matching indexed sibling. Local scoped acceptance passed 456 tests with
@@ -25411,7 +25418,9 @@ acceptance threads while new lint features proceed:
   gate passed 572 tests. Full scoped prerelease acceptance passed 436 tests
   with 8,922 deselected, including Linux and Windows Pyright, wheel and sdist
   builds, installed-wheel checks, and external/adapted template rehearsals.
-  Hosted acceptance for the tag is pending.
+  Hosted acceptance passed in GitHub Actions run `43322304085` with 436 tests
+  and 8,922 deselected, including the pinned Docker regression and external
+  installed-wheel rehearsal.
 
 ## Completion and release gate
 
