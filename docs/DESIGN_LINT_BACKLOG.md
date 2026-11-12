@@ -24590,7 +24590,12 @@ acceptance threads while new lint features proceed:
   403 tests with 8,756 deselected, including the pinned Docker fixture. Scoped
   Linux Pyright passed with 0 errors; Ruff, formatting, Rumdl, and mdrepo also
   passed.
-- **Hosted acceptance:** Pending the scoped tag push.
+- **Hosted acceptance (2026-11-12):** Annotated tag `v0.5.3rc701` passed
+  GitHub Actions run `43195997075`: 403 tests passed and 8,756 were deselected,
+  including the pinned native fixture. Ruff and formatting, Rumdl, mdrepo,
+  scoped Linux Pyright, wheel and source builds, and external inventory,
+  surface, verification, and playtest checks passed. Package and preview jobs
+  were skipped under prerelease policy.
 
 ## Completion and release gate
 
