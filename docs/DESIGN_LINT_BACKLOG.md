@@ -23944,6 +23944,33 @@ acceptance threads while new lint features proceed:
   They can run without the native KiCad Docker lane. The tagged hosted gate also
   passed its installed-wheel check against a separate project checkout.
 
+#### LINT-407 — Verify persisted PCB DRC exclusions with native KiCad
+
+- **Status:** Added a digest-pinned Docker regression to the existing
+  `pcb.drc_exclusion_present` review gate; this adds native evidence without a
+  new rule ID or a claim that the exclusions are defects.
+- **Gap:** LINT-141 already checks that source-hashed KiCad project settings
+  contain saved exclusion records. Its synthetic parser fixtures did not show
+  that saved records match active native DRC markers on a board.
+- **Evidence:** Tooling-owned settings match the two `copper_edge_clearance`
+  fault markers on the synthetic differential-pair board. The test runs both
+  fault and no-exclusion control boards twice on pinned KiCad 10.0.0 and
+  10.0.5 images, using `--severity-exclusions`. Exact comments identify both
+  fault markers in each report; the control has no excluded violations. See
+  the tooling-owned
+  [fixture record](../tests/fixtures/design_lint/pcb-drc-exclusion-native/README.md).
+- **Source basis:** KiCad 10 [documents the CLI exclusion-report option][kicad-10-cli-drc];
+  the [10.0.5 marker serializer][kicad-10-5-marker-serializer] records the
+  rule key, location, and item UUIDs represented by the synthetic settings.
+- **Boundary:** The report retains the underlying `error` severity for these
+  exclusions, so the test identifies a matched marker by its exact saved
+  comment and DRC rule key. This fixture does not resolve arbitrary markers,
+  assess exception acceptability, or validate board electrical intent. No
+  project or cohort data was imported.
+- **Selection:** The native test is registered to
+  `KICAD_RUN_NATIVE_PCB_FIXTURES` and the exact rule selector. Full acceptance
+  enables it; ordinary focused unit/parity selections can omit Docker.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -24006,6 +24033,8 @@ quality, or first-article continuity.
 [kicad-10.0.0-drc-items]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/drc/drc_item.cpp
 [kicad-10.0.5-drc-items]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/drc/drc_item.cpp
 [kicad-10-drc-exclusions]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#design-rule-checking
+[kicad-10-cli-drc]: https://docs.kicad.org/10.0/en/cli/cli.html
+[kicad-10-5-marker-serializer]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/pcb_marker.cpp
 [kicad-10-project-drc-exclusions]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.7/pcbnew/board_design_settings.cpp
 [lint086-cp2102]: https://github.com/MAATHES-THILAK-K/USB_TO_UART-CP2102
 [lint086-fusb302]: https://github.com/bentwire/USB-C-FUSB302-PI/tree/7d95292262b42767bbeefebadb6bafe055923d50

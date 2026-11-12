@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "filename": "board.kicad_pro",
+    "version": 1
+  },
+  "board": {
+    "design_settings": {
+      "meta": {
+        "version": 2
+      },
+      "drc_exclusions": [
+        [
+          "copper_edge_clearance|10000000|500000|00000000-0000-0000-0000-000000000010|00000000-0000-0000-0000-000000000001",
+          "Synthetic reviewed USB_D_P edge-clearance exception."
+        ],
+        [
+          "copper_edge_clearance|10000000|1000000|00000000-0000-0000-0000-000000000010|00000000-0000-0000-0000-000000000002",
+          "Synthetic reviewed USB_D_N edge-clearance exception."
+        ]
+      ]
+    }
+  }
+}

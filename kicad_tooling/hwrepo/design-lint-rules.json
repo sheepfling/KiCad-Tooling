@@ -13548,20 +13548,25 @@
       ],
       "limitations": [
         "A saved exclusion is a review prompt, not proof that the violation is still present or that its exception is wrong; a saved comment is evidence but not approval.",
-        "The rule reads project settings only. It does not run DRC, resolve marker UUIDs against board objects, inspect current board geometry, or determine whether the excluded condition is acceptable.",
+        "The lint service reads project settings only and does not run DRC or resolve arbitrary project markers. A separate synthetic regression confirms two saved markers match two known board violations on the pinned KiCad patches; it does not enumerate live exclusions in arbitrary projects.",
         "The rule does not establish electrical correctness, manufacturing readiness, or project-authored intent. A project may disable or exactly ignore a reviewed candidate."
       ],
       "fault_fixtures": [
         "tests.test_pcb_drc_exclusion_review.test_saved_exclusions_report_rule_key_comment_and_source_binding",
-        "tests.test_design_lint_mcp_parity_pcb_drc_exclusions.test_saved_drc_exclusions_match_between_cli_and_mcp"
+        "tests.test_design_lint_mcp_parity_pcb_drc_exclusions.test_saved_drc_exclusions_match_between_cli_and_mcp",
+        "tests.test_pcb_drc_exclusion_native_fixture_lane.test_native_pcb_drc_reports_saved_exclusion_markers"
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_drc_exclusion_review.test_empty_or_absent_exclusion_lists_are_valid_controls",
         "tests.test_pcb_drc_exclusion_review.test_non_pcb_and_other_minor_versions_are_out_of_scope",
-        "tests.test_pcb_drc_exclusion_review.test_unknown_settings_schema_fails_closed"
+        "tests.test_pcb_drc_exclusion_review.test_unknown_settings_schema_fails_closed",
+        "tests.test_pcb_drc_exclusion_native_fixture_lane.test_native_pcb_drc_reports_saved_exclusion_markers"
       ],
       "metamorphic_fixtures": [
         "tests.test_pcb_drc_exclusion_review.test_exclusion_order_does_not_change_candidate_identity"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_drc_exclusion_review.py#source_bound_pcb_drc_exclusion_candidates",

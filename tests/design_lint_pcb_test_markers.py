@@ -115,6 +115,7 @@ PCB_LINT_TEST_MODULES = frozenset(
         "tests/test_pcb_miscellaneous_drc_severity.py",
         "tests/test_pcb_warning_default_drc_ignored.py",
         "tests/test_pcb_drc_exclusion_review.py",
+        "tests/test_pcb_drc_exclusion_native_fixture_lane.py",
         "tests/test_design_lint_mcp_parity_pcb_dru_rule_review.py",
         "tests/test_design_lint_mcp_parity_pcb_dru_rule_without_constraint.py",
         "tests/test_design_lint_mcp_parity_pcb_dru_duplicate_rule_names.py",
