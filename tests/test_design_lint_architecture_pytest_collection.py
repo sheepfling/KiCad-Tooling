@@ -150,6 +150,15 @@ def test_shared_reference_roots_are_not_resolved_during_collection() -> None:
                 self.source_name = source_name
 
             def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+                self._visit_function_defaults(node)
+
+            def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+                self._visit_function_defaults(node)
+
+            def _visit_function_defaults(
+                self,
+                node: ast.FunctionDef | ast.AsyncFunctionDef,
+            ) -> None:
                 for expression in (
                     *node.decorator_list,
                     *node.args.defaults,
@@ -157,8 +166,6 @@ def test_shared_reference_roots_are_not_resolved_during_collection() -> None:
                 ):
                     if expression is not None:
                         self.visit(expression)
-
-            visit_AsyncFunctionDef = visit_FunctionDef
 
             def visit_Lambda(self, node: ast.Lambda) -> None:
                 for expression in (*node.args.defaults, *node.args.kw_defaults):
@@ -207,3 +214,54 @@ def test_marker_selection_collects_without_the_external_template_checkout() -> N
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert "tests/test_power_pin_net_roles.py:" in result.stdout
+
+
+@pytest.mark.rule_gate_integrity
+@pytest.mark.parametrize(
+    ("rule_id", "selected_test", "other_test"),
+    (
+        pytest.param(
+            "bus.usb_c_unreviewed_port",
+            "test_native_usb_c_role_map_fault_and_controls_are_repeatable",
+            "test_native_usb_c_vbus_capacitance_fault_and_control_are_repeatable",
+            id="usb-c-role-map",
+        ),
+        pytest.param(
+            "bus.usb_c_vbus_capacitance_review",
+            "test_native_usb_c_vbus_capacitance_fault_and_control_are_repeatable",
+            "test_native_usb_c_role_map_fault_and_controls_are_repeatable",
+            id="usb-c-vbus-capacitance",
+        ),
+    ),
+)
+def test_hosted_usb_c_native_cases_are_selectable_by_rule(
+    rule_id: str,
+    selected_test: str,
+    other_test: str,
+) -> None:
+    environment = os.environ.copy()
+    environment.pop("KICAD_TEMPLATE_ROOT", None)
+    result = subprocess.run(
+        (
+            sys.executable,
+            "-I",
+            "-m",
+            "pytest",
+            "-q",
+            "--collect-only",
+            "tests/test_ci_hosted_usb_c_ports.py",
+            "-m",
+            f'design_lint and interface_lint and design_lint_rule(rule_id="{rule_id}")',
+        ),
+        cwd=Path(__file__).resolve().parents[1],
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert selected_test in result.stdout
+    assert other_test not in result.stdout
+    assert "2/4 tests collected" in result.stdout
