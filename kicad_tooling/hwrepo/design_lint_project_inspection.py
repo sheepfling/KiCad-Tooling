@@ -86,22 +86,7 @@ from .pcb_dru_rule_review import (
 from .pcb_mechanical_edge_clearance import mechanical_edge_rule_coverage_candidates
 from .project_models import ProjectManifest
 from .project_source_hashes import hash_project_sources as hashes
-from .schematic_erc_catalog_coverage import (
-    source_bound_schematic_erc_catalog_coverage_candidates,
-)
-from .schematic_erc_exclusion_review import source_bound_schematic_erc_exclusion_candidates
-from .schematic_erc_global_severity_review import (
-    source_bound_schematic_erc_ignored_rule_candidates,
-)
-from .schematic_erc_invalid_severity_value_review import (
-    source_bound_schematic_erc_invalid_severity_value_candidates,
-)
-from .schematic_erc_unknown_rule_key_review import (
-    source_bound_schematic_erc_unknown_rule_key_candidates,
-)
-from .schematic_erc_warning_downgrade import (
-    source_bound_schematic_erc_warning_downgrade_candidates,
-)
+from .schematic_erc_source_candidates import source_bound_schematic_erc_candidates
 from .selection import resolve_project
 
 
@@ -224,37 +209,8 @@ def inspect_design_lint_request(
                 native_summary=native_summary,
             ),
         )
-        schematic_source_candidates = (
-            *source_bound_schematic_erc_catalog_coverage_candidates(
-                root,
-                config,
-                coach.source_hashes,
-            ),
-            *source_bound_schematic_erc_exclusion_candidates(
-                root,
-                config,
-                coach.source_hashes,
-            ),
-            *source_bound_schematic_erc_ignored_rule_candidates(
-                root,
-                config,
-                coach.source_hashes,
-            ),
-            *source_bound_schematic_erc_unknown_rule_key_candidates(
-                root,
-                config,
-                coach.source_hashes,
-            ),
-            *source_bound_schematic_erc_invalid_severity_value_candidates(
-                root,
-                config,
-                coach.source_hashes,
-            ),
-            *source_bound_schematic_erc_warning_downgrade_candidates(
-                root,
-                config,
-                coach.source_hashes,
-            ),
+        schematic_source_candidates = source_bound_schematic_erc_candidates(
+            root, config, coach.source_hashes
         )
         spi_roster = spi_roster_context(root, config)
         serial_peer_roster = serial_peer_roster_context(root, config)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
@@ -10,6 +11,7 @@ from types import MappingProxyType
 from pydantic import BaseModel, ConfigDict, JsonValue
 
 from .contracts import parse_model_text
+from .json_value_support import canonical_json_value
 from .project_models import ProjectKind
 
 SUPPORTED_ERC_EXCLUSION_SCHEMA_VERSION = 0
@@ -136,7 +138,7 @@ class _ErcSettings(BaseModel):
 
     meta: _ErcMeta | None = None
     erc_exclusions: list[JsonValue] | None = None
-    rule_severities: dict[str, str] | None = None
+    rule_severities: dict[str, JsonValue] | None = None
 
 
 class _ProjectSettings(BaseModel):
@@ -162,17 +164,18 @@ class SchematicErcRuleSeverity:
     severity: str
 
 
-def configured_schematic_erc_rule_severities(
-    document: str,
-    *,
-    allow_unrecognized_severity_strings: bool = False,
-) -> tuple[SchematicErcRuleSeverity, ...]:
-    """Read the supported KiCad 10.0 ERC severity map in stable key order.
+@dataclass(frozen=True, slots=True)
+class SchematicErcRuleSeveritySetting:
+    """One saved ERC severity-map key and its canonical JSON value."""
 
-    Source-bound reviews may retain unrecognized strings so a focused rule can
-    report them while neighboring settings checks continue. Direct callers
-    remain strict unless they explicitly opt into that behavior.
-    """
+    rule_key: str
+    configured_value_json: str
+
+
+def configured_schematic_erc_rule_severity_settings(
+    document: str,
+) -> tuple[SchematicErcRuleSeveritySetting, ...]:
+    """Read saved ERC severity keys and JSON values in stable key order."""
     project = parse_model_text(document, _ProjectSettings)
     if project.erc is None:
         return ()
@@ -185,14 +188,41 @@ def configured_schematic_erc_rule_severities(
     if schema_version != SUPPORTED_ERC_EXCLUSION_SCHEMA_VERSION:
         raise ValueError(f"ERC severity settings schema version is not supported: {schema_version}")
     severities = settings.rule_severities or {}
-    supported_severities = {"error", "warning", "ignore"}
-    records: list[SchematicErcRuleSeverity] = []
-    for rule_key, severity in sorted(severities.items()):
+    records: list[SchematicErcRuleSeveritySetting] = []
+    for rule_key, value in sorted(severities.items()):
         if not rule_key.strip():
             raise ValueError("ERC rule severity key must not be empty")
+        records.append(SchematicErcRuleSeveritySetting(rule_key, canonical_json_value(value)))
+    return tuple(records)
+
+
+def configured_schematic_erc_rule_severities(
+    document: str,
+    *,
+    allow_unrecognized_severity_strings: bool = False,
+    skip_nonstring_values: bool = False,
+) -> tuple[SchematicErcRuleSeverity, ...]:
+    """Read the supported KiCad 10.0 ERC severity map in stable key order.
+
+    Source-bound reviews may retain invalid strings and skip non-string JSON
+    values so focused rules can report them while neighboring checks continue.
+    Direct callers remain strict unless they explicitly opt into those modes.
+    """
+    supported_severities = {"error", "warning", "ignore"}
+    records: list[SchematicErcRuleSeverity] = []
+    for setting in configured_schematic_erc_rule_severity_settings(document):
+        severity = json.loads(setting.configured_value_json)
+        if not isinstance(severity, str):
+            if skip_nonstring_values:
+                continue
+            raise TypeError(
+                f"ERC severity in erc.rule_severities for {setting.rule_key!r} must be a string"
+            )
         if severity not in supported_severities and not allow_unrecognized_severity_strings:
-            raise ValueError(f"ERC rule severity for {rule_key!r} is not supported: {severity!r}")
-        records.append(SchematicErcRuleSeverity(rule_key, severity))
+            raise ValueError(
+                f"ERC rule severity for {setting.rule_key!r} is not supported: {severity!r}"
+            )
+        records.append(SchematicErcRuleSeverity(setting.rule_key, severity))
     return tuple(records)
 
 

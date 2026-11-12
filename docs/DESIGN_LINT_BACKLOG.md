@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 340 rules are implemented with synthetic regression coverage.
+The following 341 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 340 active rules.
+The catalog currently contains 341 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -772,6 +772,7 @@ skipped under prerelease policy.
 - `schematic.erc_catalog_unverified`
 - `schematic.erc_unknown_rule_key`
 - `schematic.erc_invalid_severity_value`
+- `schematic.erc_nonstring_severity_value`
 
 This baseline catches suspicious connector symmetry and missing named pins,
 plus narrow netlist patterns for I2C, I3C, SPI, USB-C, and CAN. It does not
@@ -4234,7 +4235,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 340 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 341 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -24273,6 +24274,50 @@ acceptance threads while new lint features proceed:
   Markdown and repository-link checks, Linux and Windows typing, wheel and
   source builds, installed-wheel checks, and external/adapted project checks
   passed. Package and preview jobs were skipped under prerelease policy.
+
+#### LINT-414 — Review non-string schematic ERC severity values
+
+- **Status:** Implemented as `schematic.erc_nonstring_severity_value`, default
+  `review`, for exact KiCad 10.0.8.
+- **Gap:** Schematic ERC settings accepted JSON values with types other than
+  strings. Existing severity reviews consumed only string settings, so a
+  malformed boolean, number, null, array, or object could be invisible.
+- **Behavior:** For source-hashed schematic-capable projects using ERC schema
+  0 and exact KiCad 10.0.8, report every non-string JSON value in
+  `erc.rule_severities`, including entries with unknown rule keys. Preserve
+  source identity, key, JSON type, and canonical value. The rule does not
+  infer the intended severity; valid and invalid strings remain with their
+  separate string-valued rules.
+- **Regression coverage:** Tooling-owned fault fixtures cover boolean, number,
+  null, array, and object values on `pin_not_connected`, plus an object on an
+  unknown key. String controls, parser compatibility, exact version and
+  project-kind bounds, source binding, deterministic ordering, and CLI/MCP
+  parity are covered. A digest-pinned native regression repeats each typed
+  fault and the string `warning` control on KiCad 10.0.8.
+- **Evidence boundary:** Native behavior was measured for the recognized
+  `pin_not_connected` Error-default key only: each non-string case leaves its
+  two fixture findings at Error, while the valid string control changes both
+  to Warning. The rule does not generalize that observation to every ERC key,
+  establish that a saved value was intentional, run ERC on the inspected
+  project, or assert an electrical or manufacturing defect.
+- **Selection:** Run `tests/test_schematic_erc_nonstring_severity_value.py`
+  and `tests/test_design_lint_mcp_parity_schematic_erc_nonstring_severity_value.py`
+  with `design_lint and schematic_lint and
+  design_lint_rule(rule_id="schematic.erc_nonstring_severity_value")`.
+  The tag gate enables
+  `KICAD_RUN_NATIVE_SCHEMATIC_ERC_NONSTRING_SEVERITY_FIXTURES=1` for the
+  digest-pinned native module.
+- **Source:** KiCad 10.0.8's
+  [ERC settings loader](https://raw.githubusercontent.com/KiCad/kicad-source-mirror/10.0.8/eeschema/erc/erc_settings.cpp)
+  applies saved severity settings. The exact native test observes the result
+  for `pin_not_connected`; other ERC keys and KiCad patches remain outside the
+  claim.
+- **Local acceptance (`v0.5.3rc696` candidate):** The tag-scoped package gate
+  passed 408 tests with 8,655 deselected, including five typed native faults
+  and one valid-warning control on the digest-pinned KiCad 10.0.8 image. Ruff,
+  both Alphus profiles, Rumdl, mdrepo, Linux and Windows Pyright, wheel and
+  source builds, installed-package origin/version checks, and the scoped
+  architecture/catalog checks passed. Receipt: `build/ci/run-_2s8yke9`.
 
 ## Completion and release gate
 

@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 340 active rules.
+The catalog currently contains 341 active rules.
 
 ### Numeric-only generic contacts open across connector peers
 
@@ -5755,6 +5755,36 @@ KiCad 10.0.8
 [ERC settings loader](https://raw.githubusercontent.com/KiCad/kicad-source-mirror/10.0.8/eeschema/erc/erc_settings.cpp)
 and
 [severity conversion](https://github.com/KiCad/kicad-source-mirror/blob/10.0.8/common/widgets/ui_common.cpp).
+
+## Review non-string schematic ERC severity values
+
+`schematic.erc_nonstring_severity_value` prompts when a source-hashed,
+schematic-capable KiCad 10.0.8 project stores a boolean, number, null, array,
+or object in `erc.rule_severities`. It also reports non-string values on
+unknown keys, so malformed setting types remain visible even when another
+rule cannot interpret the key. String values, including invalid strings owned
+by `schematic.erc_invalid_severity_value`, stay outside this predicate.
+
+The digest-pinned KiCad 10.0.8 fixture repeats the five non-string values for
+`pin_not_connected`, where the fixture's native ERC result remains Error; a
+string `warning` control changes it to Warning. This establishes behavior for
+that key only. The finding preserves the source hash, setting key, JSON type,
+and canonical value, but does not infer the intended severity or establish an
+electrical defect. Other KiCad patches remain outside the measured boundary.
+
+Select the synthetic and CLI/MCP parity regressions with
+`tests/test_schematic_erc_nonstring_severity_value.py` and
+`tests/test_design_lint_mcp_parity_schematic_erc_nonstring_severity_value.py`
+using
+`design_lint and schematic_lint and
+design_lint_rule(rule_id="schematic.erc_nonstring_severity_value")`.
+The exact native regression is in
+`tests/test_schematic_erc_nonstring_severity_value_native.py` and runs with
+`KICAD_RUN_NATIVE_SCHEMATIC_ERC_NONSTRING_SEVERITY_FIXTURES=1`. See the
+tooling-owned
+[synthetic settings](../tests/fixtures/design_lint/schematic-erc-nonstring-severity/README.md)
+and KiCad 10.0.8
+[ERC settings loader](https://raw.githubusercontent.com/KiCad/kicad-source-mirror/10.0.8/eeschema/erc/erc_settings.cpp).
 [kicad-docker-versions]: https://github.com/KiCad/kicad-docker/pkgs/container/kicad/versions?filters%5Bversion_type%5D=tagged
 
 ## Review ERC overrides on an unaudited KiCad patch

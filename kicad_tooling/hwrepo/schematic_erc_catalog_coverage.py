@@ -124,7 +124,9 @@ def source_bound_schematic_erc_catalog_coverage_candidates(
         return ()
     try:
         configured_rules = configured_schematic_erc_rule_severities(
-            source.document, allow_unrecognized_severity_strings=True
+            source.document,
+            allow_unrecognized_severity_strings=True,
+            skip_nonstring_values=True,
         )
     except (OSError, UnicodeError, ValueError, TypeError) as exc:
         raise ValueError(

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 
 from pydantic import BaseModel, ConfigDict, JsonValue
 
 from .contracts import parse_model_text
+from .json_value_support import canonical_json_value
 
 CORE_DRC_CHECK_IDS = frozenset(
     {
@@ -168,9 +168,7 @@ def configured_pcb_drc_rule_severity_settings(
     return tuple(
         PcbDrcRuleSeveritySetting(
             check_id=check_id,
-            configured_value_json=json.dumps(
-                severities[check_id], sort_keys=True, separators=(",", ":"), allow_nan=False
-            ),
+            configured_value_json=canonical_json_value(severities[check_id]),
         )
         for check_id in sorted(severities)
     )

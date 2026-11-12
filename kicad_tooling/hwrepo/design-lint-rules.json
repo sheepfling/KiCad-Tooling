@@ -10175,6 +10175,53 @@
       ]
     },
     {
+      "rule_id": "schematic.erc_nonstring_severity_value",
+      "title": "Non-string schematic ERC severity values need review",
+      "theme": "schematic",
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_erc_nonstring_severity_value_review.py#source_bound_schematic_erc_nonstring_severity_value_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0.8 .kicad_pro erc.rule_severities key, JSON value type, canonical value, project kind, and configured KiCad version",
+      "predicate": "For schematic-capable projects configured for exact KiCad 10.0.8 with ERC schema 0, emit one source-bound review candidate for each erc.rule_severities JSON value that is not a string, including values on unknown keys.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.8 only; the native fixture measures pin_not_connected, an Error-default rule, with boolean, number, null, array, and object values. Other KiCad patches and ERC keys remain outside the measured native claim."
+      ],
+      "limitations": [
+        "A non-string JSON value does not express a severity token. The digest-pinned native fixture measures unchanged Error severity for pin_not_connected only; this observation is not asserted for every ERC key and the rule does not infer the intended severity.",
+        "The rule reviews saved project settings only. It does not run ERC against the inspected project, decide whether a check applies, assert an electrical defect, or establish electrical or manufacturing approval. Projects may select review, block, off, or an exact-fingerprint ignore."
+      ],
+      "fault_fixtures": [
+        "tests.test_schematic_erc_nonstring_severity_value.test_nonstring_values_create_source_bound_candidates",
+        "tests.test_schematic_erc_nonstring_severity_value.test_unknown_key_with_nonstring_value_is_also_reviewed",
+        "tests.test_design_lint_mcp_parity_schematic_erc_nonstring_severity_value.test_nonstring_erc_severity_review_matches_between_cli_and_mcp",
+        "tests.test_schematic_erc_nonstring_severity_value_native.test_kicad_1008_keeps_nonstring_severity_at_error"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_ERC_NONSTRING_SEVERITY_FIXTURES"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_schematic_erc_nonstring_severity_value.test_string_values_are_outside_this_rule",
+        "tests.test_schematic_erc_nonstring_severity_value_native.test_kicad_1008_honors_valid_warning_control_repeatably"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_schematic_erc_nonstring_severity_value.test_candidate_order_is_stable_when_setting_order_changes"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/schematic_erc_nonstring_severity_value_review.py#source_bound_schematic_erc_nonstring_severity_value_candidates",
+        "kicad_tooling/hwrepo/schematic_erc_nonstring_severity_value_review.py#project_schematic_erc_nonstring_severity_value_evidence",
+        "kicad_tooling/hwrepo/schematic_erc_project_settings.py#configured_schematic_erc_rule_severity_settings",
+        "kicad_tooling/hwrepo/json_value_support.py#canonical_json_value",
+        "kicad_tooling/hwrepo/schematic_erc_project_settings_evidence.py#read_source_bound_schematic_erc_settings",
+        "kicad_tooling/hwrepo/schematic_erc_project_settings_evidence.py#verify_source_bound_schematic_erc_settings_unchanged",
+        "kicad_tooling/hwrepo/schematic_erc_source_candidates.py#source_bound_schematic_erc_candidates",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request",
+        "kicad_tooling/hwrepo/design_lint_candidate_inputs.py#DesignLintCandidateInputs",
+        "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_evaluation"
+      ]
+    },
+    {
       "rule_id": "schematic.wire_end_on_pin_line",
       "title": "Native-unconnected pin has wire endpoint on its segment",
       "status": "active",

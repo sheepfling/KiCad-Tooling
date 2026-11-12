@@ -5,10 +5,10 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TypeAlias
 
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
+from .json_value_support import json_value_type_name
 from .pcb_drc_project_settings import (
     PcbDrcRuleSeveritySetting,
     configured_pcb_drc_rule_severity_settings,
@@ -23,21 +23,6 @@ from .source_state_models import SourceHashInventory
 
 _RULE_ID: DesignLintRuleId = "pcb.drc_nonstring_severity_value"
 _SUPPORTED_PROJECT_KINDS = frozenset({ProjectKind.PCB, ProjectKind.PCB_ONLY})
-JsonSeverityValue: TypeAlias = str | int | float | bool | None | list[object] | dict[str, object]
-
-
-def _json_value_type(value: JsonSeverityValue) -> str:
-    if value is None:
-        return "null"
-    if isinstance(value, bool):
-        return "boolean"
-    if isinstance(value, (int, float)):
-        return "number"
-    if isinstance(value, str):
-        return "string"
-    if isinstance(value, list):
-        return "array"
-    return "object"
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,7 +63,7 @@ def project_pcb_drc_nonstring_severity_value_evidence(
             "kicad_version": (source.kicad_version,),
             "project_kind": (source.project_kind.value,),
             "drc_severity_key": (source.configured_setting.check_id,),
-            "configured_value_type": (_json_value_type(value),),
+            "configured_value_type": (json_value_type_name(value),),
             "configured_value_json": (source.configured_setting.configured_value_json,),
         },
     )
@@ -95,7 +80,7 @@ def _candidate_message(source: PcbDrcNonStringSeverityValueEvidence) -> str:
     value = json.loads(source.configured_setting.configured_value_json)
     return (
         f"KiCad {source.kicad_version} DRC severity key "
-        f"{source.configured_setting.check_id!r} has a JSON {_json_value_type(value)} value, "
+        f"{source.configured_setting.check_id!r} has a JSON {json_value_type_name(value)} value, "
         "not a severity string; review the saved setting."
     )
 
