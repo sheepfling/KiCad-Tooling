@@ -803,7 +803,15 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc712):** LINT-424 now
+- **Latest published lint-gate checkpoint (v0.5.3rc713):** LINT-425 extends
+  `pcb.duplicate_object_uuid` to group legacy zone `(tstamp ...)` fields with
+  object `(uuid ...)` fields. In both supported KiCad Docker images, a
+  synthetic zone/track collision caused dangling-track and unconnected DRC
+  records to resolve the shared identifier to the zone; the distinct-identity
+  control resolved both tracks correctly. Local scoped acceptance passed 422
+  tests with 8,825 deselected. Hosted acceptance passed in run `43267344583`;
+  package and preview jobs were skipped under prerelease policy.
+- **Previous lint-gate checkpoint (v0.5.3rc712):** LINT-424 now
   reviews repeated PCB object UUIDs using source-bound evidence. The tooling-owned
   fault/control boards were accepted by digest-pinned KiCad 10.0.0 and 10.0.5;
   native DRC records point both fault tracks to the same UUID. Local scoped
@@ -25015,7 +25023,10 @@ acceptance threads while new lint features proceed:
   builds, installed-wheel checks, and the separate KiCad template checkout
   playtest passed. The focused catalog and backlog selection also passed 34
   tests, including the active-rule inventory and fixture references. Hosted
-  acceptance for this extension is pending.
+  acceptance for this extension passed in GitHub Actions run `43267344583` on
+  commit `9406b64a056ed034c5c504b1ed7b41ded4b63f6a`. The focused lint gate and
+  installed-wheel rehearsal passed; package and preview orchestration were
+  skipped under prerelease policy.
 
 ## Completion and release gate
 
