@@ -6727,6 +6727,9 @@ fault and assigned control on both supported KiCad versions. Each report had
 the same missing synthetic footprint-library warning and no unconnected-item
 findings; changing this pad assignment did not change native DRC evidence.
 
+The tooling-owned synthetic board pair and native DRC details are in the
+[fixture note](../tests/fixtures/design_lint/pcb-unassigned-copper-pad/README.md).
+
 Run the source, CLI/MCP, catalog, and architecture regressions with:
 
 ```sh
