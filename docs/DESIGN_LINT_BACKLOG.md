@@ -26068,7 +26068,7 @@ acceptance threads while new lint features proceed:
 
 - **Status:** Implemented as the default-REVIEW rule
   `pcb.duplicate_pad_net_conflict`; local scoped package acceptance passed.
-  Corrected tagged hosted acceptance is pending.
+  Corrected tagged hosted acceptance passed for `v0.5.3rc737`.
 - **Priority:** P1 source-bound PCB connectivity review. Multiple physical
   copper pads carrying one schematic pin number can silently disagree about
   their assigned nets.
@@ -26124,8 +26124,8 @@ acceptance threads while new lint features proceed:
   passed the same focused rule/integrity scope locally: 432 tests passed and
   9,125 were deselected. The Docker comparison, Linux and Windows Pyright,
   wheel/sdist checks, and installed-wheel rehearsals against the external and
-  adapted template checkouts all passed. Corrected tagged hosted acceptance is
-  pending.
+  adapted template checkouts all passed. Corrected tagged hosted acceptance
+  passed in GitHub Actions run `43422145172` for tag `v0.5.3rc737`.
 
 ## Completion and release gate
 
