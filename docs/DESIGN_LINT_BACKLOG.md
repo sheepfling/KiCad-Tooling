@@ -26260,8 +26260,9 @@ acceptance threads while new lint features proceed:
   source hashes, and the opt-in/missing-map controls. Native PCB snapshot
   capture is tested on digest-pinned KiCad 10.0.0 and 10.0.5 with separate
   synthetic checkout roots.
-- **Selection:** Run the unit and architecture slices with
-  `tests/test_pcb_track_angle_geometry.py` and
+- **Selection:** Run the unit, CLI/MCP parity, and architecture slices with
+  `tests/test_pcb_track_angle_geometry.py`,
+  `tests/test_pcb_track_angle_geometry_mcp_parity.py`, and
   `tests/test_design_lint_architecture_pcb_track_angle_geometry.py`, selecting
   `design_lint and pcb_lint and
   design_lint_rule(rule_id="pcb.track_angle_geometry_review")`. Run
@@ -26274,8 +26275,12 @@ acceptance threads while new lint features proceed:
   version, external and adapted template checks, and playtest passed. The
   focused rule selector passed 16 tests with 2 native-only skips. The final
   digest-pinned KiCad 10.0.0/10.0.5 fault/control lane passed separately (2
-  tests).
-- **Hosted acceptance:** Pending the annotated rule-gate tag.
+  tests). On 2026-11-13, the focused unit, parity, architecture, and native
+  selection passed 18 tests, including both exact-version native cases and the
+  CLI/MCP fixture with source-bound synthetic DRC receipts.
+- **Hosted acceptance:** Tag `v0.5.3rc749` exposed a missing source-bound
+  synthetic DRC receipt in the CLI/MCP parity fixture. The fixture now supplies
+  that receipt; retest is pending on annotated tag `v0.5.3rc750`.
 
 #### LINT-450 — Review native track-angle rules omitted from geometry scope
 

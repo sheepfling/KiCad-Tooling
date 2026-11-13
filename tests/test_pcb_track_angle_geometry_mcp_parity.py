@@ -40,6 +40,7 @@ from kicad_tooling.hwrepo.pcb_track_angle_models import (
 )
 from kicad_tooling.hwrepo.pcb_track_width_models import PcbTrackWidthCoverageReport
 from tests.mcp_parity_support import semantic_design_lint_report
+from tests.pcb_drc_parity_support import install_source_bound_drc_receipt
 from tests.synthetic_design_lint_project import synthetic_design_lint_project
 
 RULE_ID = "pcb.track_angle_geometry_review"
@@ -106,6 +107,7 @@ def test_mapped_track_angle_finding_matches_cli_and_mcp(
         ),
     )
     root, native = synthetic_design_lint_project(tmp_path, policy)
+    install_source_bound_drc_receipt(root, native)
 
     def synthetic_geometry_scan(*_args, **_kwargs):
         return (
@@ -128,7 +130,8 @@ def test_mapped_track_angle_finding_matches_cli_and_mcp(
         "scan_pcb_geometry",
         synthetic_geometry_scan,
     )
-    # This fixture has no native DRC report; suppress unrelated source-bound DRC lanes.
+    # Keep DRC-specific candidates out of this fixture; its synthetic DRC receipt
+    # exists to satisfy source-bound native-summary validation.
     monkeypatch.setattr(
         design_lint_project_inspection,
         "collect_pcb_dru_candidates",
