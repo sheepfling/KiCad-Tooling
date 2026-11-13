@@ -811,7 +811,13 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc727):** LINT-438 adds a
+- **Latest published lint-gate checkpoint (v0.5.3rc728):** LINT-439 adds a
+  source-bound review for malformed custom DRC condition argument shapes. The
+  local scoped gate passed 417 tests with 9,052 deselected, including the
+  digest-pinned KiCad 10.0.8 Docker fixture. Hosted acceptance passed in
+  GitHub Actions run `43380989172`; package and preview jobs were skipped under
+  prerelease policy.
+- **Previous lint-gate checkpoint (v0.5.3rc727):** LINT-438 adds a
   source-bound review for malformed custom DRC constraint bounds. The local
   scoped gate passed 416 tests with 9,041 deselected, including the
   digest-pinned KiCad 10.0.8 probe. Hosted acceptance and the installed-wheel
@@ -25755,7 +25761,8 @@ acceptance threads while new lint features proceed:
   Alphus module-boundary and shared-utility checks, Rumdl, mdrepo, Linux and
   Windows-target Pyright, wheel and sdist builds, installed-wheel validation,
   external and adapted project verification, and playtest passed. Receipt:
-  `build/ci/run-d84a804h`. Hosted acceptance remains pending.
+  `build/ci/run-d84a804h`. Hosted acceptance passed in GitHub Actions run
+  `43380989172`; package and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
