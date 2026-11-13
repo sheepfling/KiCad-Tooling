@@ -10,10 +10,12 @@ from tests.design_lint_connector_return_parity_fixtures import (
 from tests.design_lint_ethernet_connector_parity_fixtures import (
     ETHERNET_CONNECTOR_PARITY_FIXTURES,
 )
+from tests.design_lint_fixture_ref_support import _refs
 from tests.design_lint_footprint_peer_fixture_refs import (
     FOOTPRINT_PEER_PARITY_FIXTURES,
 )
 from tests.design_lint_pcb_duplicate_pad_fixture_refs import PCB_DUPLICATE_PAD_PARITY_FIXTURES
+from tests.design_lint_pcb_layout_fixture_refs import PCB_LAYOUT_PARITY_FIXTURES
 from tests.design_lint_pcb_netclass_fixture_refs import PCB_NETCLASS_PARITY_FIXTURES
 from tests.design_lint_power_fixture_refs import (
     OPEN_DRAIN_CONTROL_PARITY_FIXTURES,
@@ -26,11 +28,6 @@ from tests.design_lint_swd_signal_same_net_parity_fixtures import (
     SWD_SIGNAL_SAME_NET_PARITY_FIXTURES,
 )
 
-
-def _refs(owner: str, *tests: str) -> tuple[str, ...]:
-    return tuple(f"{owner}.{name}" for name in tests)
-
-
 _PARITY_FIXTURES_BY_RULE = MappingProxyType(
     {
         **FOOTPRINT_PEER_PARITY_FIXTURES,
@@ -42,6 +39,7 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
         **SWD_SIGNAL_SAME_NET_PARITY_FIXTURES,
         **PCB_NETCLASS_PARITY_FIXTURES,
         **PCB_DUPLICATE_PAD_PARITY_FIXTURES,
+        **PCB_LAYOUT_PARITY_FIXTURES,
         "bus.i2c_missing_pullup": MappingProxyType(
             {
                 "fault_fixtures": _refs(
@@ -433,54 +431,6 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
                 "valid_control_fixtures": _refs(
                     "tests.test_design_lint_mcp_parity_ic_decoupling",
                     "test_ic_decoupling_review_matches_between_cli_and_mcp",
-                ),
-            }
-        ),
-        "pcb.keepout_intent_coverage": MappingProxyType(
-            {
-                "valid_control_fixtures": _refs(
-                    "tests.test_pcb_keepouts_mcp_parity",
-                    "test_disabled_keepout_coverage_matches_cli_and_mcp",
-                ),
-            }
-        ),
-        "pcb.rf_module_antenna_keepout_coverage": MappingProxyType(
-            {
-                "fault_fixtures": _refs(
-                    "tests.test_pcb_rf_antenna_mcp_parity",
-                    "test_enabled_rf_antenna_fault_and_control_match_cli_and_mcp",
-                ),
-                "valid_control_fixtures": (
-                    *_refs(
-                        "tests.test_pcb_rf_antenna_mcp_parity",
-                        "test_disabled_rf_antenna_coverage_matches_cli_and_mcp",
-                    ),
-                    *_refs(
-                        "tests.test_pcb_rf_antenna_mcp_parity",
-                        "test_enabled_rf_antenna_fault_and_control_match_cli_and_mcp",
-                    ),
-                ),
-            }
-        ),
-        "pcb.signal_path_rule_coverage": MappingProxyType(
-            {
-                "valid_control_fixtures": _refs(
-                    "tests.test_pcb_signal_path_mcp_parity",
-                    "test_disabled_signal_path_coverage_matches_cli_and_mcp",
-                ),
-            }
-        ),
-        "pcb.differential_pair_route_skew": MappingProxyType(
-            {
-                "fault_fixtures": _refs(
-                    "tests.test_pcb_differential_pair_route_skew",
-                    "test_excessive_routed_skew_is_reviewed_against_authored_bound",
-                    "test_missing_member_route_is_incomplete_not_clean",
-                ),
-                "valid_control_fixtures": _refs(
-                    "tests.test_pcb_differential_pair_route_skew",
-                    "test_route_skew_at_authored_boundary_is_within_limit",
-                    "test_equal_routes_are_within_zero_skew_bound",
                 ),
             }
         ),

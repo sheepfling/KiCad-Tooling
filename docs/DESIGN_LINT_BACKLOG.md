@@ -26067,8 +26067,8 @@ acceptance threads while new lint features proceed:
 #### LINT-446 — Review conflicting nets on duplicate-numbered PCB pads
 
 - **Status:** Implemented as the default-REVIEW rule
-  `pcb.duplicate_pad_net_conflict`; local scoped package acceptance passed,
-  with tagged hosted acceptance pending.
+  `pcb.duplicate_pad_net_conflict`; local scoped package acceptance passed.
+  Corrected tagged hosted acceptance is pending.
 - **Priority:** P1 source-bound PCB connectivity review. Multiple physical
   copper pads carrying one schematic pin number can silently disagree about
   their assigned nets.
@@ -26115,6 +26115,17 @@ acceptance threads while new lint features proceed:
   installed-wheel inventory, surface, verification, adapted-checkout, and
   playtest checks against an external template checkout all passed. Hosted
   acceptance remains pending.
+- **Hosted attempt:** Annotated tag `v0.5.3rc736` resolved the focused rule
+  scope and ran the native comparison, but failed on an architecture check:
+  adding this fixture reference brought
+  `tests/design_lint_catalog_fixture_refs.py` to its 500-line ceiling. The PCB
+  layout parity references now have a focused owner module and a shared test
+  naming helper. This split does not change rule behavior. The corrected source
+  passed the same focused rule/integrity scope locally: 432 tests passed and
+  9,125 were deselected. The Docker comparison, Linux and Windows Pyright,
+  wheel/sdist checks, and installed-wheel rehearsals against the external and
+  adapted template checkouts all passed. Corrected tagged hosted acceptance is
+  pending.
 
 ## Completion and release gate
 
