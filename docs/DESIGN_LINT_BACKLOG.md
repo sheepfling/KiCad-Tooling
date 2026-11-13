@@ -25812,7 +25812,8 @@ acceptance threads while new lint features proceed:
   and shared-utility checks, Rumdl, mdrepo, Linux and Windows-target Pyright,
   wheel/sdist builds, installed-wheel checks, external and adapted
   acceptance-template verification, and playtest passed. Receipt:
-  `build/ci/run-kyrcla_e`. Hosted acceptance is pending.
+  `build/ci/run-kyrcla_e`. Hosted acceptance passed in GitHub Actions run
+  `43380989172`.
 
 #### LINT-441 — Review unknown custom DRC disallow object types
 
@@ -25859,7 +25860,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-442 — Review empty custom DRC disallow clauses
 
-- **Status:** Local acceptance passed; hosted acceptance pending.
+- **Status:** Local and hosted acceptance passed.
 - **Priority:** P1 PCB rule integrity. A syntactically accepted empty clause can fail to restrict
   any object while still allowing DRC to finish.
 - **Rule:** Adds `pcb.custom_drc_empty_disallow_clause` as a default-REVIEW design-lint candidate.
