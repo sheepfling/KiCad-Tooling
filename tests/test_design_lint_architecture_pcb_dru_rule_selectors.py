@@ -63,6 +63,30 @@ RULE_NODE_CASES = (
         "tests/test_pcb_dru_unknown_constraint_native.py::test_misspelled_constraint_is_silently_skipped_and_control_is_repeatable",
     ),
     (
+        "pcb.custom_drc_unknown_disallowed_object_type",
+        "tests/test_pcb_dru_unknown_disallow_object.py::test_unknown_disallow_operand_requests_source_bound_review",
+    ),
+    (
+        "pcb.custom_drc_unknown_disallowed_object_type",
+        "tests/test_pcb_dru_unknown_disallow_object.py::test_documented_disallow_object_vocabulary_stays_quiet",
+    ),
+    (
+        "pcb.custom_drc_unknown_disallowed_object_type",
+        "tests/test_pcb_dru_unknown_disallow_object.py::test_variables_and_out_of_scope_versions_are_quiet",
+    ),
+    (
+        "pcb.custom_drc_unknown_disallowed_object_type",
+        "tests/test_pcb_dru_unknown_disallow_object.py::test_policy_fingerprint_and_source_freshness_are_exact",
+    ),
+    (
+        "pcb.custom_drc_unknown_disallowed_object_type",
+        "tests/test_design_lint_mcp_parity_pcb_dru_unknown_disallow_object.py::test_unknown_disallow_object_matches_between_cli_and_mcp",
+    ),
+    (
+        "pcb.custom_drc_unknown_disallowed_object_type",
+        "tests/test_pcb_dru_unknown_disallow_object_native.py::test_misspelled_disallow_object_is_silently_skipped_and_control_is_repeatable",
+    ),
+    (
         "pcb.custom_drc_malformed_constraint_bounds",
         "tests/test_pcb_dru_malformed_bounds.py::test_unparseable_bounds_request_source_bound_review",
     ),

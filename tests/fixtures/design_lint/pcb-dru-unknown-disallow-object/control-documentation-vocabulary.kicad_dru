@@ -1,0 +1,4 @@
+(version 1)
+(rule "DocumentedDisallowTypes"
+  (constraint disallow track via through_via micro_via blind_via buried_via pad zone text graphic hole footprint)
+)

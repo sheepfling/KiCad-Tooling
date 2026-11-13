@@ -47,6 +47,23 @@ KICAD_10_0_CUSTOM_DRC_CONSTRAINT_TYPES = frozenset(
     }
 )
 
+KICAD_10_0_CUSTOM_DRC_DISALLOW_OBJECT_TYPES = frozenset(
+    {
+        "track",
+        "via",
+        "through_via",
+        "micro_via",
+        "blind_via",
+        "buried_via",
+        "pad",
+        "zone",
+        "text",
+        "graphic",
+        "hole",
+        "footprint",
+    }
+)
+
 _SUPPORTED_KICAD_VERSION = re.compile(r"10\.0\.\d+\Z")
 
 

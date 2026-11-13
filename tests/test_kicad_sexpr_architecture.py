@@ -23,6 +23,7 @@ _CONSUMERS = (
     "model_population.py",
     "part_cad.py",
     "pcb_drc_rule_parser.py",
+    "pcb_drc_rule_structure.py",
     "schematic_geometry_scan.py",
     "schematic_geometry_source.py",
     "schematic_obstruction_geometry.py",

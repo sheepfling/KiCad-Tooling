@@ -35,6 +35,7 @@ PCB_SWITCHING_LOOP_MODULES = (
 PCB_DRC_COVERAGE_MODULES = (
     "pcb_drc_models.py",
     "pcb_drc_rule_parser.py",
+    "pcb_drc_rule_structure.py",
     "pcb_drc_rule_coverage.py",
     "pcb_drc_source_evidence.py",
     "pcb_drc_source_scan.py",

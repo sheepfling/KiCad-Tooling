@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 360 active rules.
+The catalog currently contains 361 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -5656,6 +5656,37 @@ policy can promote, disable, or exactly ignore the finding. See the
 KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_pcb_dru_unknown_constraint_native.py \
   -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.custom_drc_unknown_constraint_type")'
+```
+
+## Review unknown custom DRC disallow object types
+
+`pcb.custom_drc_unknown_disallowed_object_type` asks for review when a
+source-bound KiCad 10.0.x version-1 custom-rule file contains a literal object
+type outside the documented `disallow` vocabulary. The registry includes
+`track`, the via variants, `pad`, `zone`, `text`, `graphic`, `hole`, and
+`footprint`; the finding records the source hash, configured version, rule and
+constraint ordinals, operand ordinal, and exact token. The scope is release
+specific; newer minor versions remain unclassified until their vocabulary is
+audited.
+
+The lint reports a possible ineffective rule and defaults to `review`. It does
+not evaluate the rule condition, prove that a matching object exists, inspect
+other constraint arguments, or establish a board defect. Files containing
+text-variable substitutions remain with the existing substitution review.
+In the repeated digest-pinned KiCad 10.0.8 Docker test, `trak` completed DRC
+with only two unrelated `track_dangling` warnings; the `track` control added
+two `items_not_allowed` errors for the authored rule. This evidence is limited
+to the synthetic board, the two rule files, and that exact image.
+See the [fixture note](../tests/fixtures/design_lint/pcb-dru-unknown-disallow-object/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_pcb_dru_unknown_disallow_object.py \
+  tests/test_design_lint_mcp_parity_pcb_dru_unknown_disallow_object.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.custom_drc_unknown_disallowed_object_type")'
+
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_dru_unknown_disallow_object_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.custom_drc_unknown_disallowed_object_type")'
 ```
 
 ## Review deprecated custom DRC condition functions

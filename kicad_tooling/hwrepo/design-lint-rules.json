@@ -16823,6 +16823,50 @@
       ]
     },
     {
+      "rule_id": "pcb.custom_drc_unknown_disallowed_object_type",
+      "title": "Unknown custom DRC disallow object type needs review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_dru_unknown_disallowed_object_review.py#unknown_custom_drc_disallowed_object_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Source-verified KiCad 10.0.x .kicad_dru path and SHA-256, configured version, named rule and ordinal, direct constraint ordinal, object ordinal, and exact disallow operand",
+      "predicate": "For a source-bound KiCad 10.0.x version-1 PCB custom-rule file without text-variable substitution, emit one REVIEW candidate for each literal operand in a direct disallow constraint that is outside the KiCad 10.0 documented object-type vocabulary. Empty operand lists, malformed S-expressions, and indirect substitutions are outside this predicate.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.x version-1 custom DRC rules; disallow vocabulary follows the KiCad 10.0 PCB Editor reference; native behavior measured on digest-pinned KiCad 10.0.8"
+      ],
+      "limitations": [
+        "The vocabulary is release-scoped. KiCad 10.1 and later versions are not classified until their object types are audited; files containing text-variable substitutions remain with the existing substitution review.",
+        "This check reviews literal disallow operands only. It does not validate the rule condition, prove that the rule applies to a board item, inspect other constraint arguments, or establish a board defect. The default is REVIEW and project policy can promote, disable, or exactly ignore the finding.",
+        "On the digest-pinned KiCad 10.0.8 image, a synthetic rule using `trak` completed DRC with only the board's two unrelated `track_dangling` warnings; the `track` control produced two `items_not_allowed` errors. This result is limited to the exact source, board, and image."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_dru_unknown_disallow_object.test_unknown_disallow_operand_requests_source_bound_review",
+        "tests.test_design_lint_mcp_parity_pcb_dru_unknown_disallow_object.test_unknown_disallow_object_matches_between_cli_and_mcp",
+        "tests.test_pcb_dru_unknown_disallow_object_native.test_misspelled_disallow_object_is_silently_skipped_and_control_is_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_dru_unknown_disallow_object.test_documented_disallow_object_vocabulary_stays_quiet",
+        "tests.test_pcb_dru_unknown_disallow_object_native.test_misspelled_disallow_object_is_silently_skipped_and_control_is_repeatable"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_dru_unknown_disallow_object.test_variables_and_out_of_scope_versions_are_quiet",
+        "tests.test_pcb_dru_unknown_disallow_object.test_policy_fingerprint_and_source_freshness_are_exact"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_dru_unknown_disallowed_object_review.py#unknown_custom_drc_disallowed_object_candidates",
+        "kicad_tooling/hwrepo/design_lint_pcb_dru_candidates.py#collect_pcb_dru_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_rule_structure.py#native_rule_declarations",
+        "kicad_tooling/hwrepo/design_lint_pcb_dru_unknown_disallowed_object_evidence.py#PcbDruUnknownDisallowedObjectFindingEvidence",
+        "kicad_tooling/hwrepo/pcb_dru_constraint_type_registry.py#KICAD_10_0_CUSTOM_DRC_DISALLOW_OBJECT_TYPES",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
+      ]
+    },
+    {
       "rule_id": "pcb.custom_drc_layer_reference",
       "title": "Custom DRC layer references need review",
       "theme": "pcb",

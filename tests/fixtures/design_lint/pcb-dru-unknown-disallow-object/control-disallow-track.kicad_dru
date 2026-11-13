@@ -1,0 +1,4 @@
+(version 1)
+(rule "DisallowTrackControl"
+  (constraint disallow track)
+)

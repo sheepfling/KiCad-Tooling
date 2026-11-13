@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 360 rules are implemented with synthetic regression coverage.
+The following 361 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 360 active rules.
+The catalog currently contains 361 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -729,6 +729,7 @@ skipped under prerelease policy.
 - `pcb.custom_drc_malformed_constraint_bounds`
 - `pcb.custom_drc_malformed_condition_clause`
 - `pcb.custom_drc_unknown_constraint_type`
+- `pcb.custom_drc_unknown_disallowed_object_type`
 - `pcb.custom_drc_deprecated_condition_function`
 - `pcb.core_drc_check_ignored`
 - `pcb.core_drc_check_warning`
@@ -4387,7 +4388,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 360 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 361 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -25811,6 +25812,50 @@ acceptance threads while new lint features proceed:
   wheel/sdist builds, installed-wheel checks, external and adapted
   acceptance-template verification, and playtest passed. Receipt:
   `build/ci/run-kyrcla_e`. Hosted acceptance is pending.
+
+#### LINT-441 — Review unknown custom DRC disallow object types
+
+- **Status:** Local acceptance passed; hosted acceptance pending.
+- **Priority:** P1 PCB rule integrity. A misspelled disallow operand can leave
+  the intended keepout rule ineffective without producing its expected native
+  DRC violation.
+- **Rule:** Adds
+  [`pcb.custom_drc_unknown_disallowed_object_type`](DESIGN_LINT.md#review-unknown-custom-drc-disallow-object-types).
+- **Predicate:** For a source-bound KiCad 10.0.x version-1 `.kicad_dru` file
+  without `${...}` substitutions, emit one default-REVIEW candidate per direct
+  literal operand in a `disallow` constraint that is outside the documented
+  KiCad 10.0 object vocabulary. Empty lists and malformed S-expressions are
+  outside this predicate.
+- **Native evidence:** On the digest-pinned KiCad 10.0.8 image, the
+  `(constraint disallow trak)` fault completed DRC with only the synthetic
+  board's two `track_dangling` warnings. The `(constraint disallow track)`
+  control produced two `items_not_allowed` errors for the authored rule. The
+  focused test repeats each export and compares normalized diagnostics. The
+  documented full object vocabulary is covered by the source control fixture.
+- **Boundary:** The vocabulary is limited to KiCad 10.0.x. Newer minor versions
+  require separately audited lists. The check does not evaluate conditions,
+  prove that any board item matches, validate other constraint arguments, or
+  establish a board defect. Text-variable sources remain with the existing
+  substitution review.
+- **Fixtures:** Tooling-owned fault and valid-control rule files share the
+  existing synthetic board and project. Tests cover source binding, version
+  scope, documented vocabulary, default REVIEW, block, off, exact-ignore,
+  CLI/MCP parity, catalog reachability, selectors, and pinned native behavior.
+  No project or cohort source is used.
+- **Selection:** Run `tests/test_pcb_dru_unknown_disallow_object.py` and
+  `tests/test_design_lint_mcp_parity_pcb_dru_unknown_disallow_object.py` with
+  `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.custom_drc_unknown_disallowed_object_type")`.
+  Run `tests/test_pcb_dru_unknown_disallow_object_native.py` with
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, Docker, `native_kicad`, and the same rule
+  selector.
+- **Focused local evidence:** The tag-scoped package acceptance passed 415
+  selected tests with 9,070 deselected, including the digest-pinned Docker
+  fault/control. Ruff format, Ruff, Alphus module-role and shared-utility
+  checks, Rumdl, mdrepo, Linux and Windows-target Pyright, wheel and sdist
+  builds, installed-wheel checks against the public and adapted workflow
+  template, and playtest passed. Receipt: `build/ci/run-2p_1qhta`. Hosted
+  acceptance is pending.
 
 ## Completion and release gate
 

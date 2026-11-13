@@ -47,6 +47,9 @@ from tests.design_lint_fixtures.catalog_reachability_pcb_dru_malformed_condition
 from tests.design_lint_fixtures.catalog_reachability_pcb_dru_unknown_constraint import (
     pcb_dru_unknown_constraint_rule_ids,
 )
+from tests.design_lint_fixtures.catalog_reachability_pcb_dru_unknown_disallow_object import (
+    pcb_dru_unknown_disallow_object_rule_ids,
+)
 from tests.design_lint_fixtures.pcb_source_integrity import pcb_source_integrity_rule_ids
 from tests.design_lint_fixtures.schematic_erc_duplicate_section import (
     schematic_erc_duplicate_section_rule_ids,
@@ -85,6 +88,7 @@ def source_bound_rule_ids() -> frozenset[str]:
         | pcb_dru_malformed_bounds_rule_ids()
         | pcb_dru_malformed_condition_rule_ids()
         | pcb_dru_unknown_constraint_rule_ids()
+        | pcb_dru_unknown_disallow_object_rule_ids()
         | pcb_drc_unresolved_netclass_assignment_rule_ids()
         | pcb_drc_unknown_severity_key_rule_ids()
         | pcb_drc_invalid_severity_value_rule_ids()
