@@ -26583,7 +26583,9 @@ acceptance threads while new lint features proceed:
   acceptance passed with 463 tests, including digest-pinned Docker checks on
   KiCad 10.0.0 and 10.0.5, Linux and Windows Pyright, wheel/sdist builds, and
   installed-wheel rehearsals against separate and adapted public-template
-  checkouts. Hosted acceptance is pending.
+  checkouts. The tagged hosted lint gate passed in GitHub Actions run
+  `43526434586`; release-package and preview jobs were skipped under
+  prerelease policy.
 - **Priority:** P2 saved-constraint coverage. An exact netclass selector can
   remain syntactically valid after a class is removed or renamed, while the
   custom rule no longer applies.
