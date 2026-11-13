@@ -816,6 +816,14 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
+- **Latest published lint-gate checkpoint (v0.5.3rc735):** LINT-445 extends
+  `pcb.unassigned_copper_pad_review` to unnumbered copper pads in eligible
+  mixed-net footprints. Hosted acceptance passed in GitHub Actions run
+  `43414163726`: 436 tests passed, 9,105 were deselected, and the pinned KiCad
+  10.0.0/10.0.5 native fixture passed. Linux and Windows Pyright, wheel and
+  sdist builds, installed-wheel checks against separate and adapted project
+  checkouts, and playtest also passed. Package and preview jobs were skipped
+  under prerelease policy.
 - **Latest published lint-gate checkpoint (v0.5.3rc734):** LINT-444 reviews an
   extra unassigned copper pad in a mixed-net footprint. Hosted acceptance passed
   in GitHub Actions run `43409299897`: 433 tests passed, 9,105 were deselected,
@@ -26007,8 +26015,8 @@ acceptance threads while new lint features proceed:
 
 #### LINT-445 — Review unnumbered copper pads in mixed-net footprints
 
-- **Status:** Implemented; local scoped package acceptance passed. Hosted
-  acceptance is pending.
+- **Status:** Local and hosted scoped package acceptance passed for tag
+  `v0.5.3rc735`, GitHub Actions run `43414163726`.
 - **Priority:** P2 PCB review. This extends LINT-444 to a pad shape it explicitly
   excluded; an unnumbered copper pad cannot be matched to the schematic pin
   inventory by number.
@@ -26051,7 +26059,9 @@ acceptance threads while new lint features proceed:
   comparison. Ruff format and lint, Alphus module-role/shared-utility checks,
   Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist builds, installed-
   wheel checks against separate and adapted project checkouts, and playtest
-  passed. Receipt: `build/ci/run-ysn_48m3`. Hosted acceptance is pending.
+  passed. Receipt: `build/ci/run-ysn_48m3`. Hosted acceptance passed the same
+  436-test scope in GitHub Actions run `43414163726`; package and preview jobs
+  were skipped under prerelease policy.
 
 ## Completion and release gate
 
