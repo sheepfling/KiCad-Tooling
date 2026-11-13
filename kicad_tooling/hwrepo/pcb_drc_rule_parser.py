@@ -106,6 +106,7 @@ class NativeDrcRuleDeclaration:
     condition: str | None
     layers: tuple[str, ...] = ()
     condition_issue: str | None = None
+    constraint_types: tuple[str | None, ...] = ()
 
 
 NativeDrcRuleSeverity: TypeAlias = Literal["error", "warning", "ignore", "exclusion"]
@@ -418,6 +419,11 @@ def native_rule_declarations(source: str) -> tuple[NativeDrcRuleDeclaration, ...
         constraint_count = sum(
             _atoms(source, child)[:1] == ("constraint",) for child in rule.children
         )
+        constraint_types = tuple(
+            atoms[1] if len(atoms) > 1 else None
+            for child in rule.children
+            if (atoms := _atoms(source, child))[:1] == ("constraint",)
+        )
         layers = tuple(
             atoms[1]
             for child in rule.children
@@ -431,6 +437,7 @@ def native_rule_declarations(source: str) -> tuple[NativeDrcRuleDeclaration, ...
                 condition=condition,
                 layers=layers,
                 condition_issue=condition_issue,
+                constraint_types=constraint_types,
             )
         )
     return tuple(result)

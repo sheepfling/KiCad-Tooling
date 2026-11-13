@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 359 rules are implemented with synthetic regression coverage.
+The following 360 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 359 active rules.
+The catalog currently contains 360 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -728,6 +728,7 @@ skipped under prerelease policy.
 - `pcb.custom_drc_contradictory_constraint_bounds`
 - `pcb.custom_drc_malformed_constraint_bounds`
 - `pcb.custom_drc_malformed_condition_clause`
+- `pcb.custom_drc_unknown_constraint_type`
 - `pcb.custom_drc_deprecated_condition_function`
 - `pcb.core_drc_check_ignored`
 - `pcb.core_drc_check_warning`
@@ -4386,7 +4387,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 359 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 360 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -25718,6 +25719,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-439 — Review malformed custom DRC condition argument shapes
 
+- **Status:** Implemented; hosted acceptance recorded.
 - **Priority:** P1 PCB rule integrity. KiCad can stop evaluating custom rules
   when a condition clause has an invalid source shape; the prior source review
   did not identify this form.
@@ -25763,6 +25765,52 @@ acceptance threads while new lint features proceed:
   external and adapted project verification, and playtest passed. Receipt:
   `build/ci/run-d84a804h`. Hosted acceptance passed in GitHub Actions run
   `43380989172`; package and preview jobs were skipped under prerelease policy.
+
+#### LINT-440 — Review unknown custom DRC constraint types
+
+- **Status:** Local acceptance passed; hosted acceptance pending.
+- **Priority:** P1 PCB rule integrity. A misspelled constraint token can leave
+  the intended custom rule ineffective without producing the expected native
+  DRC violation.
+- **Rule:** Adds
+  [`pcb.custom_drc_unknown_constraint_type`](DESIGN_LINT.md#review-unknown-custom-drc-constraint-types).
+- **Predicate:** For a source-bound KiCad 10.0.x version-1 `.kicad_dru` file
+  without `${...}` substitutions, emit one default-REVIEW candidate per direct
+  constraint whose type token is outside the KiCad 10.0 vocabulary. Missing
+  type tokens and malformed S-expressions remain outside this predicate.
+- **Native evidence:** On the digest-pinned KiCad 10.0.8 image, the misspelled
+  `track_wdith` constraint completed DRC but produced only two unrelated
+  `track_dangling` warnings on the synthetic two-track board. The valid
+  `track_width` control produced those warnings plus two authored width errors.
+  The focused native test repeats both cases and compares normalized reports.
+  It also confirms that the accepted `mechanical_clearance` alias and canonical
+  `physical_clearance` control both produce a clearance error on these tracks.
+- **Boundary:** The registry is limited to KiCad 10.0.x; newer minor versions
+  require a separately audited vocabulary. The lint checks the type token only;
+  it does not validate arguments, evaluate conditions, prove applicability, or
+  establish a board defect. Text-variable files remain with the existing
+  substitution review.
+- **Fixtures:** Tooling-owned fault and control rule files use the existing
+  synthetic two-track board and project. The fixture README records hashes.
+  Tests cover source binding, supported-version scope, default REVIEW, block,
+  off, exact-ignore, CLI/MCP parity, catalog reachability, selectors, and the
+  repeated digest-pinned native comparison. No project or cohort source was
+  imported.
+- **Selection:** Run `tests/test_pcb_dru_unknown_constraint.py` and
+  `tests/test_design_lint_mcp_parity_pcb_dru_unknown_constraint.py` with
+  `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.custom_drc_unknown_constraint_type")`. Run
+  `tests/test_pcb_dru_unknown_constraint_native.py` with
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, Docker, `native_kicad`, and the same rule
+  selector.
+- **Focused local evidence:** The source/policy, CLI/MCP, architecture, marker,
+  selector, catalog, and documentation slice passed. The scoped repository CI
+  run passed 53 selected tests, including the digest-pinned KiCad 10.0.8 Docker
+  fault/control and legacy-alias cases. Ruff format, Ruff, Alphus module-role
+  and shared-utility checks, Rumdl, mdrepo, Linux and Windows-target Pyright,
+  wheel/sdist builds, installed-wheel checks, external and adapted
+  acceptance-template verification, and playtest passed. Receipt:
+  `build/ci/run-kyrcla_e`. Hosted acceptance is pending.
 
 ## Completion and release gate
 

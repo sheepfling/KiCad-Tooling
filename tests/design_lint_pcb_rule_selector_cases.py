@@ -120,6 +120,30 @@ PCB_RULE_NODE_CASES = (
         "tests/test_design_lint_mcp_parity_pcb_dru_casefold_rule_name.py::test_casefold_rule_name_review_matches_cli_and_mcp",
     ),
     (
+        "pcb.custom_drc_unknown_constraint_type",
+        "tests/test_pcb_dru_unknown_constraint.py::test_misspelled_constraint_requests_source_bound_review",
+    ),
+    (
+        "pcb.custom_drc_unknown_constraint_type",
+        "tests/test_pcb_dru_unknown_constraint.py::test_documented_and_legacy_constraint_names_stay_quiet",
+    ),
+    (
+        "pcb.custom_drc_unknown_constraint_type",
+        "tests/test_pcb_dru_unknown_constraint.py::test_unresolved_text_variables_and_out_of_scope_versions_are_quiet",
+    ),
+    (
+        "pcb.custom_drc_unknown_constraint_type",
+        "tests/test_pcb_dru_unknown_constraint.py::test_policy_fingerprint_and_source_freshness_are_exact",
+    ),
+    (
+        "pcb.custom_drc_unknown_constraint_type",
+        "tests/test_design_lint_mcp_parity_pcb_dru_unknown_constraint.py::test_unknown_custom_drc_constraint_matches_between_cli_and_mcp",
+    ),
+    (
+        "pcb.custom_drc_unknown_constraint_type",
+        "tests/test_pcb_dru_unknown_constraint_native.py::test_misspelled_constraint_is_silently_skipped_and_control_is_repeatable",
+    ),
+    (
         "pcb.custom_drc_layer_reference",
         "tests/test_pcb_dru_layer_reference.py::test_display_aliases_in_layer_clauses_and_conditions_request_review",
     ),

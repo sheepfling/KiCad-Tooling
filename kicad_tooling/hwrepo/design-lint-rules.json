@@ -16779,6 +16779,50 @@
       ]
     },
     {
+      "rule_id": "pcb.custom_drc_unknown_constraint_type",
+      "title": "Unknown custom DRC constraint type needs review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_dru_unknown_constraint_review.py#unknown_custom_drc_constraint_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Source-verified KiCad 10.0.x .kicad_dru path and SHA-256, configured version, named rule and ordinal, direct constraint ordinal, and exact constraint token",
+      "predicate": "For a source-bound KiCad 10.0.x version-1 PCB custom-rule file without text-variable substitution, emit one REVIEW candidate for each direct constraint clause whose type token is outside the KiCad 10.0 custom-rule vocabulary. Missing type tokens and malformed S-expressions remain outside this predicate.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.x version-1 custom DRC rules; vocabulary follows the KiCad 10.0 PCB Editor reference and accepted legacy aliases; native behavior measured on digest-pinned KiCad 10.0.8"
+      ],
+      "limitations": [
+        "The vocabulary is intentionally release-scoped. KiCad 10.1 and later versions are not classified until their constraint types are audited; text-variable sources remain with the existing substitution review.",
+        "This check recognizes only the constraint type token. It does not validate arguments, evaluate rule conditions, prove rule applicability, or establish a board defect. The default is REVIEW and project policy can promote, disable, or exactly ignore the finding.",
+        "On the digest-pinned KiCad 10.0.8 image, a track_wdith constraint produced only two unrelated track_dangling warnings while the track_width control produced two authored track_width errors. This is measured only for the source typo, synthetic board, and exact image."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_dru_unknown_constraint.test_misspelled_constraint_requests_source_bound_review",
+        "tests.test_design_lint_mcp_parity_pcb_dru_unknown_constraint.test_unknown_custom_drc_constraint_matches_between_cli_and_mcp",
+        "tests.test_pcb_dru_unknown_constraint_native.test_misspelled_constraint_is_silently_skipped_and_control_is_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_dru_unknown_constraint.test_documented_and_legacy_constraint_names_stay_quiet",
+        "tests.test_pcb_dru_unknown_constraint_native.test_misspelled_constraint_is_silently_skipped_and_control_is_repeatable"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_dru_unknown_constraint.test_unresolved_text_variables_and_out_of_scope_versions_are_quiet",
+        "tests.test_pcb_dru_unknown_constraint.test_policy_fingerprint_and_source_freshness_are_exact"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_dru_unknown_constraint_review.py#unknown_custom_drc_constraint_candidates",
+        "kicad_tooling/hwrepo/design_lint_pcb_dru_candidates.py#collect_pcb_dru_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_rule_declarations",
+        "kicad_tooling/hwrepo/design_lint_pcb_dru_unknown_constraint_evidence.py#PcbDruUnknownConstraintFindingEvidence",
+        "kicad_tooling/hwrepo/pcb_dru_constraint_type_registry.py#KICAD_10_0_CUSTOM_DRC_CONSTRAINT_TYPES",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
+      ]
+    },
+    {
       "rule_id": "pcb.custom_drc_layer_reference",
       "title": "Custom DRC layer references need review",
       "theme": "pcb",

@@ -39,6 +39,30 @@ RULE_NODE_CASES = (
         "tests/test_pcb_dru_malformed_conditions_native.py::test_condition_shape_faults_suppress_native_rules_but_controls_match_repeatably",
     ),
     (
+        "pcb.custom_drc_unknown_constraint_type",
+        "tests/test_pcb_dru_unknown_constraint.py::test_misspelled_constraint_requests_source_bound_review",
+    ),
+    (
+        "pcb.custom_drc_unknown_constraint_type",
+        "tests/test_pcb_dru_unknown_constraint.py::test_documented_and_legacy_constraint_names_stay_quiet",
+    ),
+    (
+        "pcb.custom_drc_unknown_constraint_type",
+        "tests/test_pcb_dru_unknown_constraint.py::test_unresolved_text_variables_and_out_of_scope_versions_are_quiet",
+    ),
+    (
+        "pcb.custom_drc_unknown_constraint_type",
+        "tests/test_pcb_dru_unknown_constraint.py::test_policy_fingerprint_and_source_freshness_are_exact",
+    ),
+    (
+        "pcb.custom_drc_unknown_constraint_type",
+        "tests/test_design_lint_mcp_parity_pcb_dru_unknown_constraint.py::test_unknown_custom_drc_constraint_matches_between_cli_and_mcp",
+    ),
+    (
+        "pcb.custom_drc_unknown_constraint_type",
+        "tests/test_pcb_dru_unknown_constraint_native.py::test_misspelled_constraint_is_silently_skipped_and_control_is_repeatable",
+    ),
+    (
         "pcb.custom_drc_malformed_constraint_bounds",
         "tests/test_pcb_dru_malformed_bounds.py::test_unparseable_bounds_request_source_bound_review",
     ),

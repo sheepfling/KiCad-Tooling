@@ -313,6 +313,7 @@ DesignLintRuleId = Literal[
     "pcb.custom_drc_layer_reference",
     "pcb.custom_drc_contradictory_constraint_bounds",
     "pcb.custom_drc_malformed_condition_clause",
+    "pcb.custom_drc_unknown_constraint_type",
     "pcb.custom_drc_malformed_constraint_bounds",
     "pcb.custom_drc_deprecated_condition_function",
     "pcb.core_drc_check_ignored",

@@ -54,6 +54,7 @@ from .pcb_dru_rule_review import (
     ignored_custom_drc_rule_candidates,
     text_variable_custom_drc_rule_candidates,
 )
+from .pcb_dru_unknown_constraint_review import unknown_custom_drc_constraint_candidates
 from .pcb_mechanical_edge_clearance import mechanical_edge_rule_coverage_candidates
 from .project_models import ProjectConfig
 from .source_state_models import SourceHashInventory
@@ -85,6 +86,7 @@ def collect_pcb_dru_candidates(
         *contradictory_custom_drc_constraint_candidates(root, config, source_hashes),
         *custom_drc_layer_reference_candidates(root, config, source_hashes),
         *custom_drc_malformed_condition_candidates(root, config, source_hashes),
+        *unknown_custom_drc_constraint_candidates(root, config, source_hashes),
         *custom_drc_malformed_bound_candidates(root, config, source_hashes),
         *custom_drc_deprecated_condition_function_candidates(root, config, source_hashes),
     )

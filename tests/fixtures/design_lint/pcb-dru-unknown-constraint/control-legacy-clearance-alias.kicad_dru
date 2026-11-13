@@ -1,0 +1,5 @@
+(version 1)
+(rule "LegacyPhysicalClearanceAlias"
+  (condition "A.Type == 'Track' && B.Type == 'Track'")
+  (severity error)
+  (constraint mechanical_clearance (min 0.25mm)))

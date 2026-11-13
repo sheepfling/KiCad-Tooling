@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 359 active rules.
+The catalog currently contains 360 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -5626,6 +5626,36 @@ forms, fixture, and image. See the
 KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_pcb_dru_malformed_conditions_native.py \
   -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.custom_drc_malformed_condition_clause")'
+```
+
+## Review unknown custom DRC constraint types
+
+`pcb.custom_drc_unknown_constraint_type` asks for review when a named, source-bound KiCad 10.0.x
+version-1 `.kicad_dru` rule uses a direct constraint type outside the KiCad 10.0 vocabulary. The
+recognized names follow the
+[KiCad 10 PCB Editor constraint reference](https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#custom-rule-syntax),
+including accepted legacy aliases. The finding records the exact source hash, configured version,
+rule identity, direct constraint ordinal, and token. The registry is limited to KiCad 10.0.x; newer
+minor versions require a separately audited vocabulary.
+
+On the digest-pinned KiCad 10.0.8 image, `(constraint track_wdith ...)` completed DRC but produced
+only two unrelated `track_dangling` warnings on the synthetic two-track board. The correctly spelled
+`track_width` control produced those warnings and two authored `track_width` errors. This result is
+limited to that typo, source, board, and native image. The same probe confirms that the legacy
+`mechanical_clearance` alias produces the same clearance violation type as canonical
+`physical_clearance` for the synthetic tracks. The lint does not validate constraint arguments,
+evaluate conditions, prove applicability, or claim a board defect. It defaults to `review`; project
+policy can promote, disable, or exactly ignore the finding. See the
+[fixture note](../tests/fixtures/design_lint/pcb-dru-unknown-constraint/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_pcb_dru_unknown_constraint.py \
+  tests/test_design_lint_mcp_parity_pcb_dru_unknown_constraint.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.custom_drc_unknown_constraint_type")'
+
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_dru_unknown_constraint_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.custom_drc_unknown_constraint_type")'
 ```
 
 ## Review deprecated custom DRC condition functions
