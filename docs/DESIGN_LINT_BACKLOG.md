@@ -809,21 +809,28 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc725):** LINT-436 adds a
+- **Latest published lint-gate checkpoint (v0.5.3rc726):** LINT-437 adds a
+  source-bound review for contradictory custom DRC minimum/maximum bounds.
+  Local and hosted scoped gates each passed 414 tests with 9,031 deselected,
+  including repeated digest-pinned KiCad 10.0.8 Docker fault/control runs.
+  Hosted acceptance and the installed-wheel rehearsal against a separate
+  project passed in GitHub Actions run `43342437256`; package and preview jobs
+  were skipped under prerelease policy.
+- **Previous lint-gate checkpoint (v0.5.3rc725):** LINT-436 adds a
   source-bound review for malformed PCB netclass numeric constraint types.
   Local and hosted scoped gates each passed 430 tests with 9,004 deselected,
   including repeatable digest-pinned KiCad 10.0.8 Docker fault/control runs.
   Hosted acceptance and the installed-wheel rehearsal against a separate
   project passed in GitHub Actions run `43336208310`; package and preview jobs
   were skipped under prerelease policy.
-- **Previous lint-gate checkpoint (v0.5.3rc724):** LINT-435 extends malformed
+- **Earlier lint-gate checkpoint (v0.5.3rc724):** LINT-435 extends malformed
   PCB netclass inventory review to non-string and empty class names. Local and
   hosted scoped gates each passed 451 tests with 8,956 deselected, including
   repeatable digest-pinned KiCad 10.0.8 Docker fault/control runs. Hosted
   acceptance and the installed-wheel rehearsal against a separate project
   passed in GitHub Actions run `43331556651`; package and preview jobs were
   skipped under prerelease policy.
-- **Previous lint-gate checkpoint (v0.5.3rc723):** LINT-434 reviews malformed
+- **Earlier lint-gate checkpoint (v0.5.3rc723):** LINT-434 reviews malformed
   PCB netclass inventories. Local and hosted scoped gates each passed 432
   tests with 8,956 deselected and ran the repeatable, digest-pinned KiCad
   10.0.8 Docker fault/control fixture. Hosted acceptance and the installed-wheel
@@ -25640,8 +25647,10 @@ acceptance threads while new lint features proceed:
   with 9,031 deselected; Ruff, both Alphus profiles, Rumdl, mdrepo, Linux and
   Windows Pyright, wheel/sdist construction and equality, installed-wheel
   checks, external project verification, adapted-project verification, and
-  playtest passed. Receipt: `build/ci/run-kcxeebfx`. Hosted acceptance is not
-  yet recorded.
+  playtest passed. Receipt: `build/ci/run-kcxeebfx`. Hosted acceptance passed
+  in GitHub Actions run `43342437256`, including the installed-wheel rehearsal
+  against a separate project. Package and preview jobs were skipped under
+  prerelease policy.
 
 ## Completion and release gate
 
