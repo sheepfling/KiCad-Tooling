@@ -810,13 +810,19 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc726):** LINT-437 adds a
-  source-bound review for contradictory custom DRC minimum/maximum bounds.
-  Local and hosted scoped gates each passed 414 tests with 9,031 deselected,
-  including repeated digest-pinned KiCad 10.0.8 Docker fault/control runs.
-  Hosted acceptance and the installed-wheel rehearsal against a separate
-  project passed in GitHub Actions run `43342437256`; package and preview jobs
-  were skipped under prerelease policy.
+- **Latest published lint-gate checkpoint (v0.5.3rc727):** LINT-438 adds a
+  source-bound review for malformed custom DRC constraint bounds. The local
+  scoped gate passed 416 tests with 9,041 deselected, including the
+  digest-pinned KiCad 10.0.8 probe. Hosted acceptance and the installed-wheel
+  rehearsal against a separate project passed in GitHub Actions run
+  `43376660082`; package and preview jobs were skipped under prerelease policy.
+- **Previous lint-gate checkpoint (v0.5.3rc726):** LINT-437 adds a source-bound
+  review for contradictory custom DRC minimum/maximum bounds. Local and hosted
+  scoped gates each passed 414 tests with 9,031 deselected, including repeated
+  digest-pinned KiCad 10.0.8 Docker fault/control runs. Hosted acceptance and
+  the installed-wheel rehearsal against a separate project passed in GitHub
+  Actions run `43342437256`; package and preview jobs were skipped under
+  prerelease policy.
 - **Previous lint-gate checkpoint (v0.5.3rc725):** LINT-436 adds a
   source-bound review for malformed PCB netclass numeric constraint types.
   Local and hosted scoped gates each passed 430 tests with 9,004 deselected,
@@ -25699,7 +25705,9 @@ acceptance threads while new lint features proceed:
   Ruff, both Alphus profiles, Rumdl, mdrepo, Pyright and Windows type checks,
   wheel and sdist builds, installed-wheel checks, external project verification,
   adapted-project verification, and playtest passed. Receipt:
-  `build/ci/run-x3lp2kxu`. Hosted acceptance is pending.
+  `build/ci/run-x3lp2kxu`. Hosted acceptance and the installed-wheel rehearsal
+  against a separate project passed in GitHub Actions run `43376660082`;
+  package and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
