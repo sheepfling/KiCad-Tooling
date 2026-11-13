@@ -26492,7 +26492,7 @@ acceptance threads while new lint features proceed:
 #### LINT-455 — Review exact differential-pair DRC selectors omitted from the map
 
 - **Status:** Implemented as a default-REVIEW rule; focused local acceptance
-  passed. Hosted acceptance is pending the prerelease tag push.
+  and hosted acceptance passed.
 - **Rule:** `pcb.differential_pair_unmapped_native_rule` runs for PCB projects
   with `pcb_differential_pair_rule_map` while
   `pcb.differential_pair_rule_coverage` is enabled. It reads source-bound KiCad
@@ -26515,6 +26515,12 @@ acceptance threads while new lint features proceed:
   fault/control also passed in digest-pinned KiCad 10.0.0 and 10.0.5 Docker
   images; this corroborates the native pair-rule syntax used by the parser but
   does not exercise LINT-455 as a native geometry check.
+- **Hosted acceptance:** Passed run
+  [43512754166](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43512754166)
+  for annotated gate tag `v0.5.3rc757`: 441 tests passed, 9,248 were
+  deselected, and the scoped quality, packaging, installed-wheel, separate and
+  adapted project rehearsal, and playtest stages passed. Package and preview
+  jobs were skipped under prerelease policy.
 - **Selection:** Run `tests/test_pcb_differential_pair_unmapped.py`,
   `tests/test_design_lint_mcp_parity_pcb_pairs.py`, and
   `tests/test_design_lint_architecture_pcb_differential_pair_unmapped.py` with
