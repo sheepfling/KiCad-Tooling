@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 369 rules are implemented with synthetic regression coverage.
+The following 370 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 369 active rules.
+The catalog currently contains 370 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -711,6 +711,7 @@ skipped under prerelease policy.
 - `pcb.decoupling_proximity`
 - `pcb.protection_entry_path`
 - `pcb.minimum_track_width`
+- `pcb.track_width_unmapped_native_rule`
 - `pcb.reference_plane_coverage`
 - `pcb.reference_plane_unanchored_island`
 - `pcb.alternate_reference_plane_run`
@@ -4429,7 +4430,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 369 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 370 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -26312,6 +26313,39 @@ acceptance threads while new lint features proceed:
   `v0.5.3rc744`: 433 scoped tests passed; Pyright, Windows type checks,
   wheel/sdist builds, installed-origin/version checks, and external and adapted
   template inventory, surface, verification, and playtest stages passed.
+
+#### LINT-451 — Review native track-width rules omitted from geometry scope
+
+- **Status:** Implemented as default-REVIEW rule
+  `pcb.track_width_unmapped_native_rule`. It runs only when the project has an
+  exact-net `pcb_track_width_map` and `pcb.minimum_track_width` is enabled; the
+  new rule itself can be independently disabled. A board-wide `net="*"` map
+  covers every exact native net scope.
+- **Priority:** P2 coverage completeness. A native per-net `track_width` rule
+  can apply to a net omitted from the mapped geometry screen, leaving no
+  source-bound track-width measurement for that net.
+- **Predicate:** For each parsed native `track_width` constraint with one exact
+  literal `A.NetName == '<net>'` condition, prompt when `<net>` is absent from
+  the enabled geometry map. Compare map net names case-insensitively and group
+  repeated constraints for the same named rule and net.
+- **Boundary:** This is a map-coverage prompt, not a claim that the native rule
+  is defective or that an omitted net must be added. Wildcard, combined,
+  variable-backed, and other nonliteral scopes stay quiet. The geometry map
+  remains independently authored and is not an ampacity calculation; native
+  DRC remains responsible for configured constraints.
+- **Fixtures:** Synthetic fault/control cases cover an omitted exact net, a
+  mapped case-insensitive control, an explicit board-wide map, unsupported
+  broad scopes, disabled and unconfigured scopes, and rule-order stability. A
+  CLI/MCP parity case uses source-bound synthetic KiCad evidence and a
+  deterministic PCB snapshot shim; it does not claim native DRC execution
+  semantics for custom rules.
+- **Selection:** Run
+  `tests/test_pcb_track_width_unmapped_rules.py`,
+  `tests/test_design_lint_mcp_parity_pcb_track_width_unmapped.py`, and
+  `tests/test_design_lint_architecture_pcb_track_width_unmapped.py` with
+  `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.track_width_unmapped_native_rule")`.
+- **Hosted acceptance:** Pending the annotated rule-gate tag.
 
 ## Completion and release gate
 

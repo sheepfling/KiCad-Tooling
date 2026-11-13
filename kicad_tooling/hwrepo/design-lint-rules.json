@@ -12677,6 +12677,47 @@
       ]
     },
     {
+      "rule_id": "pcb.track_width_unmapped_native_rule",
+      "title": "Exact per-net track-width rules are absent from enabled geometry review scope",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_track_width_unmapped.py#unmapped_track_width_rule_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact literal per-net track_width rules from source-bound KiCad custom DRC rules compared with the project-authored pcb_track_width_map used by enabled geometry review",
+      "predicate": "When pcb.minimum_track_width is enabled and a PCB project supplies pcb_track_width_map, emit a REVIEW candidate for each exact native track_width rule using A.NetName == '<literal>' when that net is absent from the map. A board-wide '*' map covers every exact net. Do not infer omitted scope from wildcard, compound, or otherwise nonliteral conditions.",
+      "supported_kicad_versions": [
+        "Version-1 KiCad 10 custom-rule source accepted by the shared parser; the configured exact KiCad version is bound through the native DRC receipt. This source review does not independently establish native rule execution semantics."
+      ],
+      "limitations": [
+        "This review runs only when mapped track-width geometry review is enabled and an exact-net map is supplied. An explicit board-wide '*' map covers all nets; no per-net omission claim is made when no map exists or the geometry rule is off.",
+        "Only exact literal A.NetName equality is recognized. Wildcard, compound, variable-backed, and other conditional scopes are skipped rather than guessed.",
+        "An omitted map entry is a coverage prompt, not a claim that the native rule is wrong or that a net must be added. The geometry screen is not an ampacity calculation, and native DRC remains responsible for its configured constraints."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_track_width_unmapped_rules.test_unmapped_exact_native_track_width_scope_is_reviewed",
+        "tests.test_design_lint_mcp_parity_pcb_track_width_unmapped.test_unmapped_track_width_scope_matches_between_cli_and_mcp"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_track_width_unmapped_rules.test_mapped_exact_net_and_board_wide_scopes_are_quiet",
+        "tests.test_pcb_track_width_unmapped_rules.test_nonliteral_scope_is_skipped",
+        "tests.test_pcb_track_width_unmapped_rules.test_geometry_and_new_rule_overrides_disable_source_reads"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_track_width_unmapped_rules.test_rule_order_does_not_change_unmapped_findings"
+      ],
+      "required_native_fixtures": [],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_track_width_unmapped.py#unmapped_track_width_rule_candidates",
+        "kicad_tooling/hwrepo/pcb_track_width_rule_coverage.py#track_width_rule_scope_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_conditions.py#native_exact_net_condition",
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_constraints",
+        "kicad_tooling/hwrepo/pcb_drc_source_evidence.py#source_bound_drc_evidence",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
+      ]
+    },
+    {
       "rule_id": "pcb.reference_plane_coverage",
       "title": "Mapped PCB signal track has limited adjacent reference-copper coverage",
       "status": "active",

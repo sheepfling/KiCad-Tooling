@@ -45,8 +45,8 @@ from tests.design_lint_fixtures.catalog_reachability_pcb_routes import pcb_route
 from tests.design_lint_fixtures.catalog_reachability_pcb_track_angle_geometry import (
     track_angle_geometry_rule_ids,
 )
-from tests.design_lint_fixtures.catalog_reachability_pcb_track_angle_unmapped import (
-    unmapped_track_angle_rule_ids,
+from tests.design_lint_fixtures.catalog_reachability_pcb_track_unmapped import (
+    unmapped_track_rule_ids,
 )
 from tests.design_lint_fixtures.jtag_generic_connector_pair import generic_jtag_connector_netlist
 from tests.design_lint_fixtures.pcb_signal_path import incomplete_signal_report, path_map
@@ -493,5 +493,5 @@ def pcb_rule_ids() -> set[str]:
     result.update(custom_drc_layer_rule_ids())
     result.update(custom_drc_deprecated_function_rule_ids())
     result.update(track_angle_geometry_rule_ids())
-    result.update(unmapped_track_angle_rule_ids())
+    result.update(unmapped_track_rule_ids())
     return result

@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 369 active rules.
+The catalog currently contains 370 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -5117,6 +5117,26 @@ or ambiguous chains remain incomplete. Candidate
 tracks come from KiCad's
 [`CONNECTIVITY_DATA.GetConnectedTracks`](https://docs.kicad.org/doxygen-python-10.0/classpcbnew_1_1CONNECTIVITY__DATA.html)
 API, then native effective track shapes are checked at the exact endpoint.
+
+### Native track-width rules omitted from geometry review
+
+`pcb.track_width_unmapped_native_rule` prompts when an exact per-net native
+`track_width` rule targets a net absent from `pcb_track_width_map` while
+`pcb.minimum_track_width` is enabled. An explicit board-wide `"*"` map covers
+all exact native net scopes. The prompt asks whether the net should be included
+in geometry review; it does not judge the native rule or derive a width from
+current. Wildcard, combined, and variable-backed conditions are skipped. The
+rule defaults to REVIEW when applicable and can be disabled independently.
+
+Run its focused synthetic, CLI/MCP, selector, and architecture regressions:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_pcb_track_width_unmapped_rules.py \
+  tests/test_design_lint_mcp_parity_pcb_track_width_unmapped.py \
+  tests/test_design_lint_architecture_pcb_track_width_unmapped.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.track_width_unmapped_native_rule")'
+```
 
 ## Review mapped capacitive touch-pad clearance
 

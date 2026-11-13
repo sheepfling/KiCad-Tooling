@@ -281,6 +281,7 @@ DesignLintRuleId = Literal[
     "pcb.decoupling_proximity",
     "pcb.protection_entry_path",
     "pcb.minimum_track_width",
+    "pcb.track_width_unmapped_native_rule",
     "pcb.reference_plane_coverage",
     "pcb.reference_plane_unanchored_island",
     "pcb.alternate_reference_plane_run",
