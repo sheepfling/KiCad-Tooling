@@ -1,0 +1,5 @@
+(version 1)
+(rule "VariableRange"
+  (condition "A.Type == 'Track'")
+  (severity error)
+  (constraint track_width (min ${MINIMUM}) (max 0.3mm)))

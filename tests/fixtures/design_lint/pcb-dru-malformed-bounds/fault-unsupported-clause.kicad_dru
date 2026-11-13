@@ -1,0 +1,5 @@
+(version 1)
+(rule "UnsupportedClause"
+  (condition "A.Type == 'Track'")
+  (severity error)
+  (constraint track_width (min 0.1mm) (max 0.3mm) (limit 0.2mm)))

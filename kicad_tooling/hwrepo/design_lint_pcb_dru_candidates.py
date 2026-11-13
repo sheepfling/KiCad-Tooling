@@ -43,6 +43,7 @@ from .pcb_dru_deprecated_function_review import (
     custom_drc_deprecated_condition_function_candidates,
 )
 from .pcb_dru_layer_review import custom_drc_layer_reference_candidates
+from .pcb_dru_malformed_bounds_review import custom_drc_malformed_bound_candidates
 from .pcb_dru_rule_review import (
     custom_drc_casefold_rule_name_collision_candidates,
     custom_drc_conflicting_severity_candidates,
@@ -82,6 +83,7 @@ def collect_pcb_dru_candidates(
         *custom_drc_conflicting_severity_candidates(root, config, source_hashes),
         *contradictory_custom_drc_constraint_candidates(root, config, source_hashes),
         *custom_drc_layer_reference_candidates(root, config, source_hashes),
+        *custom_drc_malformed_bound_candidates(root, config, source_hashes),
         *custom_drc_deprecated_condition_function_candidates(root, config, source_hashes),
     )
 

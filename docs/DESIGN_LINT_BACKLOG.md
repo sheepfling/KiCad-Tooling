@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 357 rules are implemented with synthetic regression coverage.
+The following 358 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 357 active rules.
+The catalog currently contains 358 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -726,6 +726,7 @@ skipped under prerelease policy.
 - `pcb.custom_drc_text_variable_review`
 - `pcb.custom_drc_layer_reference`
 - `pcb.custom_drc_contradictory_constraint_bounds`
+- `pcb.custom_drc_malformed_constraint_bounds`
 - `pcb.custom_drc_deprecated_condition_function`
 - `pcb.core_drc_check_ignored`
 - `pcb.core_drc_check_warning`
@@ -4372,7 +4373,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 357 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 358 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -25651,6 +25652,54 @@ acceptance threads while new lint features proceed:
   in GitHub Actions run `43342437256`, including the installed-wheel rehearsal
   against a separate project. Package and preview jobs were skipped under
   prerelease policy.
+
+#### LINT-438 — Review malformed custom DRC constraint bounds
+
+- **Priority:** P1 PCB rule integrity. A repeated, unsupported, or unparseable
+  bound can leave the authored constraint's effective behavior unclear, while
+  the shared parser previously did not expose a typed bound-specific issue to
+  design lint.
+- **Rule:** Adds
+  [`pcb.custom_drc_malformed_constraint_bounds`](DESIGN_LINT.md#review-malformed-custom-drc-constraint-bounds).
+- **Status:** Implemented as a source-bound default-REVIEW prompt for recognized
+  KiCad 10.x version-1 custom DRC constraint bounds. Layer diagnostics are
+  preserved independently; the existing aggregate parser diagnostic remains
+  available to prior consumers.
+- **Predicate:** Emit one candidate for each recognized constraint whose
+  explicit min/max bounds produce a shared-parser diagnostic, including
+  repeated bounds, unsupported clauses, invalid length literals, and empty
+  constraints. Skip unresolved text-variable files and do not infer that the
+  authored behavior was unintended or defective.
+- **Native evidence:** Repeated-minimum and valid-range sources both completed
+  DRC on the digest-pinned KiCad 10.0.8 image and produced identical reports
+  on the synthetic two-track board: two `track_dangling` warnings. The probe
+  does not establish duplicate-bound precedence or prove that either rule
+  matched the board. Other malformed forms and configurations remain
+  unmeasured.
+- **Boundary:** This prompt identifies a parser coverage gap, not a KiCad error
+  or board defect. Layer-only issues remain with the layer review; `${...}`
+  substitutions remain with text-variable review; unknown constraint forms
+  are outside the shared parser's recognition. A reviewer must inspect the
+  saved source and exact native behavior.
+- **Fixtures:** Synthetic sources cover repeated minimum, invalid length,
+  unsupported clause, empty constraint, valid range, one-sided minimum, and a
+  text-variable control. Tests cover source freshness, supported-version and
+  project scope, policy and exact-ignore behavior, parser diagnostic
+  separation, catalog reachability, CLI/MCP parity, and repeated native
+  exports. No product or cohort source was used.
+- **Selection:** Run `tests/test_pcb_dru_malformed_bounds.py` and
+  `tests/test_design_lint_mcp_parity_pcb_dru_malformed_bounds.py` with
+  `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.custom_drc_malformed_constraint_bounds")`.
+  Run `tests/test_pcb_dru_malformed_bounds_native.py` with
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, Docker, `native_kicad`, and the same rule
+  selector.
+- **Focused local acceptance (2026-11-13):** The scoped package gate passed
+  416 tests with 9,041 deselected, including the digest-pinned Docker probe.
+  Ruff, both Alphus profiles, Rumdl, mdrepo, Pyright and Windows type checks,
+  wheel and sdist builds, installed-wheel checks, external project verification,
+  adapted-project verification, and playtest passed. Receipt:
+  `build/ci/run-x3lp2kxu`. Hosted acceptance is pending.
 
 ## Completion and release gate
 

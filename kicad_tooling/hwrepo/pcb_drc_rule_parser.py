@@ -62,6 +62,7 @@ class NativeRuleConstraint:
         severity: str | None,
         severity_issue: str | None,
         layer: str | None,
+        bounds_issue: str | None = None,
     ) -> None:
         self.rule_name = rule_name
         self.ordinal = ordinal
@@ -74,6 +75,7 @@ class NativeRuleConstraint:
         self.severity = severity
         self.severity_issue = severity_issue
         self.layer = layer
+        self.bounds_issue = bounds_issue
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,22 +196,28 @@ def _parse_constraint(
     name = atoms[1]
     fields: dict[str, int] = {}
     issue: str | None = layer_issue
+    bounds_issue: str | None = None
     for child in _children(source, span.start + 1, span.end - 1):
         values = _atoms(source, child)
         if not values or values[0] == "opt":
             continue
         if values[0] not in {"min", "max"} or len(values) != 2:
-            issue = f"Unsupported bound expression in rule {rule_name!r}"
+            bounds_issue = f"Unsupported bound expression in rule {rule_name!r}"
+            issue = bounds_issue
             continue
         if values[0] in fields:
-            issue = f"Repeated {values[0]} bound in rule {rule_name!r}"
+            bounds_issue = f"Repeated {values[0]} bound in rule {rule_name!r}"
+            issue = bounds_issue
             continue
         try:
             fields[values[0]] = _length_nm(values[1])
         except ValueError as exc:
-            issue = str(exc)
-    if not fields and issue is None:
-        issue = f"Rule {rule_name!r} has no explicit min/max bound"
+            bounds_issue = str(exc)
+            issue = bounds_issue
+    if not fields and bounds_issue is None:
+        bounds_issue = f"Rule {rule_name!r} has no explicit min/max bound"
+        if issue is None:
+            issue = bounds_issue
     return NativeRuleConstraint(
         rule_name,
         ordinal,
@@ -222,6 +230,7 @@ def _parse_constraint(
         severity,
         severity_issue,
         layer,
+        bounds_issue,
     )
 
 

@@ -15,6 +15,30 @@ pytestmark = [
 
 RULE_NODE_CASES = (
     (
+        "pcb.custom_drc_malformed_constraint_bounds",
+        "tests/test_pcb_dru_malformed_bounds.py::test_unparseable_bounds_request_source_bound_review",
+    ),
+    (
+        "pcb.custom_drc_malformed_constraint_bounds",
+        "tests/test_pcb_dru_malformed_bounds.py::test_supported_bound_forms_are_quiet",
+    ),
+    (
+        "pcb.custom_drc_malformed_constraint_bounds",
+        "tests/test_pcb_dru_malformed_bounds.py::test_text_variables_and_layer_only_issues_stay_out_of_bound_review",
+    ),
+    (
+        "pcb.custom_drc_malformed_constraint_bounds",
+        "tests/test_pcb_dru_malformed_bounds.py::test_source_scope_policy_and_freshness_are_exact",
+    ),
+    (
+        "pcb.custom_drc_malformed_constraint_bounds",
+        "tests/test_design_lint_mcp_parity_pcb_dru_malformed_bounds.py::test_custom_drc_malformed_bounds_match_between_cli_and_mcp",
+    ),
+    (
+        "pcb.custom_drc_malformed_constraint_bounds",
+        "tests/test_pcb_dru_malformed_bounds_native.py::test_repeated_bound_native_probe_is_repeatable_and_matches_control",
+    ),
+    (
         "pcb.custom_drc_contradictory_constraint_bounds",
         "tests/test_pcb_dru_contradictory_bounds.py::test_minimum_above_maximum_requests_one_source_bound_review_per_constraint",
     ),

@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 357 active rules.
+The catalog currently contains 358 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -5559,6 +5559,38 @@ CLI/MCP parity, and repeated pinned native DRC results. See the
 KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_pcb_dru_contradictory_bounds_native.py \
   -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.custom_drc_contradictory_constraint_bounds")'
+```
+
+## Review malformed custom DRC constraint bounds
+
+`pcb.custom_drc_malformed_constraint_bounds` asks for review when a recognized
+constraint in a source-bound KiCad 10 version-1 `.kicad_dru` has a bound that
+the shared parser cannot verify. Cases include repeated `min` or `max`
+clauses, invalid length literals, unsupported bound expressions, and a
+constraint with no explicit bound. The finding preserves the exact source
+hash, configured KiCad version, rule name and ordinal, constraint name, and
+parser diagnostic. It defaults to `review`; policy can choose `block`, `off`,
+or an exact-fingerprint ignore.
+
+This is a parser-coverage prompt, not a claim that KiCad rejects or ignores the
+rule, that the declaration was unintended, or that the board is defective.
+Layer-only parser issues and unresolved `${...}` substitutions are excluded;
+the latter remain with the text-variable review. The pinned KiCad 10.0.8 probe
+completed DRC with both a repeated-minimum source and a valid-range control,
+and their synthetic-board reports were identical (two unrelated
+`track_dangling` warnings). It does not establish how KiCad interprets
+duplicate bounds or whether those constraints matched the board. Other
+malformed forms and configurations remain unmeasured. See the
+[fixture note](../tests/fixtures/design_lint/pcb-dru-malformed-bounds/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_pcb_dru_malformed_bounds.py \
+  tests/test_design_lint_mcp_parity_pcb_dru_malformed_bounds.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.custom_drc_malformed_constraint_bounds")'
+
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_dru_malformed_bounds_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.custom_drc_malformed_constraint_bounds")'
 ```
 
 ## Review deprecated custom DRC condition functions

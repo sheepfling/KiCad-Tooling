@@ -16692,6 +16692,50 @@
       ]
     },
     {
+      "rule_id": "pcb.custom_drc_malformed_constraint_bounds",
+      "title": "Malformed custom DRC constraint bounds need review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_dru_malformed_bounds_review.py#custom_drc_malformed_bound_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Source-verified .kicad_dru path and SHA-256 hash, configured KiCad version, rule name and ordinal, recognized constraint name, and the shared parser's exact bound diagnostic",
+      "predicate": "For a source-bound KiCad 10 version-1 PCB custom-rule file without text-variable substitution, emit one REVIEW candidate for each recognized constraint whose shared parser reports an issue parsing its explicit min/max bounds. Include repeated bounds, unsupported clauses, invalid length literals, and constraints with no parseable bound. Layer-only parser issues and unresolved text variables are excluded.",
+      "supported_kicad_versions": [
+        "KiCad 10.x version-1 .kicad_dru syntax recognized by the shared parser; native behavior was tested only on the digest-pinned KiCad 10.0.8 image"
+      ],
+      "limitations": [
+        "A bound-parser issue does not establish that KiCad rejects or ignores the entire rule, that the authored behavior was unintended, or that the board is defective. The default REVIEW asks for inspection of the exact source and native behavior.",
+        "Coverage is limited to constraint names and bound forms recognized by the shared parser. Text-variable substitutions are handled by the existing substitution review, layer-only issues by the layer review, and unknown constraint forms are not classified by this rule.",
+        "The native probe shows that a repeated track_width minimum and a valid range control both complete DRC on the digest-pinned KiCad 10.0.8 image and produce identical reports on the synthetic board. It does not establish how KiCad interprets duplicate bounds or whether other malformed forms, constraints, versions, boards, or project configurations behave the same."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_dru_malformed_bounds.test_unparseable_bounds_request_source_bound_review",
+        "tests.test_design_lint_mcp_parity_pcb_dru_malformed_bounds.test_custom_drc_malformed_bounds_match_between_cli_and_mcp",
+        "tests.test_pcb_dru_malformed_bounds_native.test_repeated_bound_native_probe_is_repeatable_and_matches_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_dru_malformed_bounds.test_supported_bound_forms_are_quiet",
+        "tests.test_pcb_dru_malformed_bounds.test_text_variables_and_layer_only_issues_stay_out_of_bound_review",
+        "tests.test_design_lint_mcp_parity_pcb_dru_malformed_bounds.test_custom_drc_malformed_bounds_match_between_cli_and_mcp",
+        "tests.test_pcb_dru_malformed_bounds_native.test_repeated_bound_native_probe_is_repeatable_and_matches_control"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_dru_malformed_bounds.test_source_scope_policy_and_freshness_are_exact"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_dru_malformed_bounds_review.py#custom_drc_malformed_bound_candidates",
+        "kicad_tooling/hwrepo/design_lint_pcb_dru_candidates.py#collect_pcb_dru_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_constraints",
+        "kicad_tooling/hwrepo/design_lint_pcb_dru_malformed_bounds_evidence.py#PcbDruMalformedBoundsFindingEvidence",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
+      ]
+    },
+    {
       "rule_id": "pcb.custom_drc_layer_reference",
       "title": "Custom DRC layer references need review",
       "theme": "pcb",
