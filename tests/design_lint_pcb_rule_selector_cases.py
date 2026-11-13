@@ -351,4 +351,40 @@ PCB_RULE_NODE_CASES = (
         "pcb.drc_malformed_netclass_inventory",
         "tests/test_pcb_drc_malformed_netclass_inventory_native.py::test_malformed_shapes_fall_back_like_default_and_repeat_with_narrow_control",
     ),
+    (
+        "pcb.drc_malformed_netclass_numeric_constraints",
+        "tests/test_pcb_drc_malformed_netclass_numeric_constraints.py::test_nonnumeric_constraint_fixtures_are_source_hashed_and_reviewed",
+    ),
+    (
+        "pcb.drc_malformed_netclass_numeric_constraints",
+        "tests/test_pcb_drc_malformed_netclass_numeric_constraints.py::test_all_recognized_constraint_names_retain_nonnumeric_types",
+    ),
+    (
+        "pcb.drc_malformed_netclass_numeric_constraints",
+        "tests/test_pcb_drc_malformed_netclass_numeric_constraints.py::test_numeric_values_and_omitted_constraint_properties_are_controls",
+    ),
+    (
+        "pcb.drc_malformed_netclass_numeric_constraints",
+        "tests/test_pcb_drc_malformed_netclass_numeric_constraints.py::test_valid_clearance_configuration_controls_stay_quiet",
+    ),
+    (
+        "pcb.drc_malformed_netclass_numeric_constraints",
+        "tests/test_pcb_drc_malformed_netclass_numeric_constraints.py::test_unmeasured_versions_and_non_pcb_projects_are_out_of_scope",
+    ),
+    (
+        "pcb.drc_malformed_netclass_numeric_constraints",
+        "tests/test_pcb_drc_malformed_netclass_numeric_constraints.py::test_pcb_only_projects_are_supported",
+    ),
+    (
+        "pcb.drc_malformed_netclass_numeric_constraints",
+        "tests/test_pcb_drc_malformed_netclass_numeric_constraints.py::test_stale_source_hash_does_not_produce_candidate",
+    ),
+    (
+        "pcb.drc_malformed_netclass_numeric_constraints",
+        "tests/test_design_lint_mcp_parity_pcb_drc_malformed_netclass_numeric_constraints.py::test_malformed_netclass_numeric_constraint_matches_between_cli_and_mcp",
+    ),
+    (
+        "pcb.drc_malformed_netclass_numeric_constraints",
+        "tests/test_pcb_drc_malformed_netclass_numeric_constraints_native.py::test_malformed_clearance_values_fall_back_like_default_and_repeat_with_narrow_control",
+    ),
 )

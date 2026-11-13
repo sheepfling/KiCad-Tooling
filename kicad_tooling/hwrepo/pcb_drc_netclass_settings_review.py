@@ -11,6 +11,9 @@ from .pcb_drc_malformed_netclass_assignment_review import (
 from .pcb_drc_malformed_netclass_inventory_review import (
     source_bound_pcb_malformed_netclass_inventory_candidates,
 )
+from .pcb_drc_malformed_netclass_numeric_constraints_review import (
+    source_bound_pcb_malformed_netclass_numeric_constraint_candidates,
+)
 from .pcb_drc_netclass_conflict_review import source_bound_pcb_netclass_conflict_candidates
 from .pcb_drc_unresolved_netclass_assignment_review import (
     source_bound_pcb_unresolved_netclass_assignment_candidates,
@@ -33,6 +36,11 @@ def source_bound_pcb_netclass_settings_candidates(
             source_hashes,
         ),
         *source_bound_pcb_malformed_netclass_inventory_candidates(
+            root,
+            config,
+            source_hashes,
+        ),
+        *source_bound_pcb_malformed_netclass_numeric_constraint_candidates(
             root,
             config,
             source_hashes,

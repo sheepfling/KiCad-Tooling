@@ -62,5 +62,21 @@ PCB_NETCLASS_PARITY_FIXTURES = MappingProxyType(
                 ),
             }
         ),
+        "pcb.drc_malformed_netclass_numeric_constraints": MappingProxyType(
+            {
+                "fault_fixtures": (
+                    (
+                        "tests.test_design_lint_mcp_parity_pcb_drc_malformed_netclass_numeric_constraints"
+                        ".test_malformed_netclass_numeric_constraint_matches_between_cli_and_mcp"
+                    ),
+                ),
+                "valid_control_fixtures": (
+                    (
+                        "tests.test_design_lint_mcp_parity_pcb_drc_malformed_netclass_numeric_constraints"
+                        ".test_malformed_netclass_numeric_constraint_matches_between_cli_and_mcp"
+                    ),
+                ),
+            }
+        ),
     }
 )

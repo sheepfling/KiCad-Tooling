@@ -156,6 +156,8 @@ an intended value or establish an electrical board defect.
 [net-settings-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L230-263
 [netclass-inventory-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L170-201
 [netclass-inventory-name-source]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L115-120
+[netclass-numeric-conversion]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L39-45
+[netclass-numeric-fields]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L127-149
 [net-settings-migration]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L418-434
 
 ## Malformed netclass names
@@ -261,4 +263,48 @@ python -I -m pytest -q \
 KICAD_RUN_NATIVE_PCB_FIXTURES=1 python -I -m pytest -q \
   tests/test_pcb_drc_malformed_netclass_inventory_native.py \
   -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.drc_malformed_netclass_inventory")'
+```
+
+## Malformed netclass numeric constraint values
+
+These fixtures replace `Narrow.clearance` with each nonnumeric JSON type while
+keeping the two `Narrow` assignments. KiCad 10.0.8's numeric conversion helper
+uses only JSON numbers for the listed constraint fields. In the pinned native
+fixture, every malformed clearance value behaves like explicit `Default`; a
+valid numeric Narrow clearance of 0.20 mm produces a clearance violation. The
+source rule covers all nine fields, while the native effect comparison is
+limited to clearance and this synthetic board.
+
+| Fixture                                                   | `clearance` JSON value | SHA-256                                                            |
+| --------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------ |
+| `fault-netclass-clearance-type-array.kicad_pro`           | `[]`                   | `3b4868d576f5741659e42a23c10c787626d07ef5e182b08a50d25eb335f5516d` |
+| `fault-netclass-clearance-type-boolean.kicad_pro`         | `false`                | `12e4e4050cea56f38ac3adf44990361400d0ef86f83a07e46ba4cd4596a3fb22` |
+| `fault-netclass-clearance-type-null.kicad_pro`            | `null`                 | `09bfc7424fab3826f6893b506f08128e1b588db78430618294349a5ea8912bf5` |
+| `fault-netclass-clearance-type-object.kicad_pro`          | `{}`                   | `2760e7b5025070b06796c7957c0cf3bd7386d17f5b3712c84f530d1e0cdeb996` |
+| `fault-netclass-clearance-type-string.kicad_pro`          | `"0.2"`                | `a5ae5596c3254a6e54ecb1b8641b45fd5612e52f77cc6884f720104dced93269` |
+| `control-netclass-clearance-narrower-default.kicad_pro`   | `0.2`                  | `555c72d0dff201be83610eccc608f823cb671fcc49e5e30178e080be598a3bb2` |
+| `control-netclass-clearance-default-assignment.kicad_pro` | `0.2`                  | `2f2ca16e74fa331f446195d8345fc37cd01786118ced157b6b05d7e4e63677de` |
+| `control-netclass-clearance-property-omitted.kicad_pro`   | omitted                | `c578f1a087127e7765a517b64e19bf6e5da2ee3e233a3b4f5687f749a1188b46` |
+
+The DRC regression runs every fault and control twice and requires matching
+violation types. The numeric Narrow control reports a clearance violation;
+malformed values, explicit Default assignment, and the omitted-property case
+do not. This is only an observation for the exact values, geometry, version,
+and digest-pinned image below. KiCad source references: [numeric
+conversion][netclass-numeric-conversion] and its [netclass field call
+sites][netclass-numeric-fields].
+
+Native image:
+`ghcr.io/kicad/kicad:10.0.8-amd64@sha256:05f6ac957e351bbbd9e1f9c996be997f61948ed9f94e0c3cab336bfcaf60161c`.
+
+Run the source and CLI/MCP cases with:
+
+```sh
+python -I -m pytest -q \
+  tests/test_pcb_drc_malformed_netclass_numeric_constraints.py \
+  tests/test_design_lint_mcp_parity_pcb_drc_malformed_netclass_numeric_constraints.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.drc_malformed_netclass_numeric_constraints")'
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 python -I -m pytest -q \
+  tests/test_pcb_drc_malformed_netclass_numeric_constraints_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.drc_malformed_netclass_numeric_constraints")'
 ```

@@ -14263,6 +14263,59 @@
       ]
     },
     {
+      "rule_id": "pcb.drc_malformed_netclass_numeric_constraints",
+      "title": "Malformed PCB netclass numeric constraint values need review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_drc_malformed_netclass_numeric_constraints_review.py#source_bound_pcb_malformed_netclass_numeric_constraint_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact source-hashed KiCad 10.0.8 .kicad_pro constraint property, observed JSON type, class index/name, member occurrence, project kind, and source digest retained",
+      "predicate": "For PCB and PCB-only projects configured for exact KiCad 10.0.8, inspect the unique source-hashed net_settings.classes array. Review each present clearance, track_width, via_diameter, via_drill, microvia_diameter, microvia_drill, diff_pair_width, diff_pair_gap, or diff_pair_via_gap value that is not a JSON number. Preserve class index/name, property, observed JSON type, and occurrence. Skip ambiguous settings and class collections. Omitted properties and JSON numbers remain quiet; this rule does not judge numeric ranges or intended electrical values.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.8 only; the shared parser reads all nine listed constraints through its JSON-number conversion path. Digest-pinned native DRC demonstrates malformed clearance values match explicit Default behavior for the synthetic two-track fixture; other properties have source-type coverage only."
+      ],
+      "limitations": [
+        "This is a source-shape review. It does not prove that the malformed value changes a particular board result, determine the intended value, validate numeric engineering ranges, infer class assignments, or establish an electrical defect.",
+        "The native comparison covers only malformed clearance values (array, boolean, null, object, string), explicit Default and numeric Narrow controls, one synthetic two-track geometry, and the pinned KiCad 10.0.8 image. The other eight properties are covered by the common parser implementation and deterministic source tests, not native behavior fixtures.",
+        "Omitted properties, nonnumeric fields outside this nine-field allowlist, unsupported versions, ambiguous root/class collections, and numeric values including zero or negative numbers are outside the predicate. Repeated supported members retain occurrence indexes where accepted by the source validator. The default is REVIEW; project policy may promote, disable, or exactly ignore the finding."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_drc_malformed_netclass_numeric_constraints.test_nonnumeric_constraint_fixtures_are_source_hashed_and_reviewed",
+        "tests.test_pcb_drc_malformed_netclass_numeric_constraints.test_all_recognized_constraint_names_retain_nonnumeric_types",
+        "tests.test_design_lint_mcp_parity_pcb_drc_malformed_netclass_numeric_constraints.test_malformed_netclass_numeric_constraint_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_malformed_netclass_numeric_constraints_native.test_malformed_clearance_values_fall_back_like_default_and_repeat_with_narrow_control"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_drc_malformed_netclass_numeric_constraints.test_numeric_values_and_omitted_constraint_properties_are_controls",
+        "tests.test_pcb_drc_malformed_netclass_numeric_constraints.test_valid_clearance_configuration_controls_stay_quiet",
+        "tests.test_design_lint_mcp_parity_pcb_drc_malformed_netclass_numeric_constraints.test_malformed_netclass_numeric_constraint_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_malformed_netclass_numeric_constraints_native.test_malformed_clearance_values_fall_back_like_default_and_repeat_with_narrow_control"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_drc_malformed_netclass_numeric_constraints.test_all_recognized_constraint_names_retain_nonnumeric_types",
+        "tests.test_pcb_drc_malformed_netclass_numeric_constraints.test_numeric_values_and_omitted_constraint_properties_are_controls",
+        "tests.test_pcb_drc_malformed_netclass_numeric_constraints.test_unmeasured_versions_and_non_pcb_projects_are_out_of_scope",
+        "tests.test_pcb_drc_malformed_netclass_numeric_constraints.test_stale_source_hash_does_not_produce_candidate"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_malformed_netclass_numeric_constraints_review.py#source_bound_pcb_malformed_netclass_numeric_constraint_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_malformed_netclass_numeric_constraints_review.py#project_pcb_malformed_netclass_numeric_constraint_evidence",
+        "kicad_tooling/hwrepo/pcb_drc_malformed_netclass_numeric_constraints.py#configured_pcb_malformed_netclass_numeric_constraints",
+        "kicad_tooling/hwrepo/pcb_drc_malformed_netclass_numeric_constraints.py#_is_json_number",
+        "kicad_tooling/hwrepo/pcb_drc_netclass_settings_review.py#source_bound_pcb_netclass_settings_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#read_source_bound_pcb_project_settings",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#verify_source_bound_pcb_project_settings_unchanged",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request",
+        "kicad_tooling/hwrepo/design_lint_candidate_inputs.py#DesignLintCandidateInputs",
+        "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_evaluation"
+      ]
+    },
+    {
       "rule_id": "pcb.duplicate_object_uuid",
       "title": "PCB object UUID repeats within one board source",
       "theme": "pcb",

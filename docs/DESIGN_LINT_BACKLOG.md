@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 355 rules are implemented with synthetic regression coverage.
+The following 356 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 355 active rules.
+The catalog currently contains 356 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -741,6 +741,7 @@ skipped under prerelease policy.
 - `pcb.drc_unresolved_netclass_assignment`
 - `pcb.drc_malformed_netclass_assignment`
 - `pcb.drc_malformed_netclass_inventory`
+- `pcb.drc_malformed_netclass_numeric_constraints`
 - `pcb.duplicate_object_uuid`
 - `pcb.drc_duplicate_severity_key`
 - `pcb.drc_unknown_severity_key`
@@ -4356,7 +4357,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 355 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 356 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -25534,6 +25535,51 @@ acceptance threads while new lint features proceed:
   Receipt: `build/ci/run-0v2mb16c`. Hosted acceptance passed in GitHub Actions
   run `43331556651`, including the separate installed-wheel rehearsal. Package
   and preview jobs were skipped under prerelease policy.
+
+#### LINT-436 — Review malformed PCB netclass numeric constraint types
+
+- **Priority:** P1 PCB-settings integrity. KiCad 10.0.8 reads netclass
+  constraint values through a JSON-number conversion helper; a saved string,
+  null, boolean, array, or object may silently leave a constraint unset.
+- **Rule:** Adds
+  [`pcb.drc_malformed_netclass_numeric_constraints`](DESIGN_LINT.md#review-malformed-pcb-netclass-numeric-constraints).
+- **Status:** Implemented as a default-REVIEW source check for exact KiCad
+  10.0.8 PCB and PCB-only projects; focused local acceptance passed and hosted
+  acceptance is pending.
+- **Predicate:** For the unique source-hashed `net_settings.classes` array,
+  review present values of the nine recognized numeric fields when their JSON
+  type is not number. Preserve class index/name, property name, JSON type, and
+  repeated member occurrence. Missing properties and numeric values remain
+  quiet; no numeric range or engineering-intent claim is made.
+- **Native evidence:** Digest-pinned Docker DRC compares array, boolean, null,
+  object, and string `Narrow.clearance` values against explicit `Default` and
+  numeric `Narrow` controls on the synthetic two-track board. Native evidence
+  is limited to clearance; the other eight fields have parser-path and
+  source-type tests only.
+- **Boundary:** The source review prompts on malformed saved types. It does not
+  prove the effect on another project, infer intended values or assignments,
+  judge numeric ranges, or establish an electrical defect. KiCad versions
+  other than 10.0.8 and properties outside the fixed allowlist are out of
+  scope. Default mode is REVIEW and project policy controls disposition.
+- **Synthetic evidence:** Five source-hashed fault files cover all nonnumeric
+  JSON types. Tests cover every recognized property, valid numeric and omitted
+  controls, source freshness, version/project-kind bounds, CLI/MCP parity, and
+  repeatable native fault/control exports.
+- **Selection:** Run
+  `tests/test_pcb_drc_malformed_netclass_numeric_constraints.py` and
+  `tests/test_design_lint_mcp_parity_pcb_drc_malformed_netclass_numeric_constraints.py`
+  with `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.drc_malformed_netclass_numeric_constraints")`.
+  Run `tests/test_pcb_drc_malformed_netclass_numeric_constraints_native.py`
+  with `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, Docker, `native_kicad`, and the same
+  rule selector.
+- **Focused local acceptance (2026-11-12):** Source and CLI/MCP selection
+  passed 25 tests. The digest-pinned Docker regression passed with five
+  malformed clearance values, three controls, and repeated exports. The
+  scoped package gate passed 430 tests with 9,004 deselected; catalog,
+  selector, architecture, lint, type checks, wheel/sdist, installed-wheel,
+  external project, and adapted project stages passed. Receipt:
+  `build/ci/run-6zbqyzl5`. Hosted acceptance is pending.
 
 ## Completion and release gate
 

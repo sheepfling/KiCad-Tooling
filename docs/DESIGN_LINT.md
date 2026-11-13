@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 355 active rules.
+The catalog currently contains 356 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -5843,6 +5843,35 @@ choose `review`, `block`, or `off`, or add an exact-fingerprint ignore. Fixture
 hashes, native image, and focused pytest selectors are recorded in
 [`tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/`](../tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/README.md).
 
+## Review malformed PCB netclass numeric constraints
+
+`pcb.drc_malformed_netclass_numeric_constraints` prompts for exact KiCad
+10.0.8 PCB/PCB-only projects when a present `clearance`, `track_width`,
+`via_diameter`, `via_drill`, `microvia_diameter`, `microvia_drill`,
+`diff_pair_width`, `diff_pair_gap`, or `diff_pair_via_gap` value in a unique
+`net_settings.classes` array is not a JSON number. Evidence retains the source
+hash, class index and name, property, observed JSON type, and repeated-member
+occurrence. Omitted properties and JSON numbers remain quiet. The predicate
+does not validate numeric ranges or decide whether a value is appropriate.
+
+KiCad 10.0.8's shared conversion helper reads these values only when they are
+JSON numbers; other types leave the optional constraint unset. In the pinned
+two-track fixture, malformed `Narrow.clearance` values (array, boolean, null,
+object, string) produce the same clearance result as explicit `Default`, while
+numeric `Narrow.clearance = 0.2` reports a clearance violation. This native
+observation is limited to clearance, these fixtures, the board geometry, and
+the pinned KiCad image. The other eight properties have deterministic
+source-shape coverage; their native effects are not claimed. See the
+[KiCad numeric conversion helper][kicad-netclass-numeric-conversion] and its
+[netclass field call sites][kicad-netclass-numeric-fields].
+
+The review reports malformed source types; it does not infer intended values,
+establish an electrical defect, or prove a particular board's effective
+constraints. Projects may choose `review`, `block`, or `off`, or add an exact-
+fingerprint ignore. Synthetic files, hashes, native image, and focused pytest
+selectors are recorded in
+[`tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/`](../tests/fixtures/design_lint/pcb-drc-duplicate-net-settings/README.md).
+
 ## Review conflicting PCB netclass definitions
 
 `pcb.drc_conflicting_netclass_definitions` prompts when an exact KiCad 10.0.8
@@ -9860,3 +9889,5 @@ Review the actual board and assembly requirements before approving a build.
 [kicad-pcb-parser-105]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/pcb_io/kicad_sexpr/pcb_io_kicad_sexpr_parser.cpp
 [kicad-netclass-name-parser]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L115-120
 [kicad-netclass-name-loader]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L187-199
+[kicad-netclass-numeric-conversion]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L39-45
+[kicad-netclass-numeric-fields]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L127-149

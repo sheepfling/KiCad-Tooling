@@ -260,6 +260,8 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_determinism_pcb_duplicate_object_uuid.py",
                 "tests/test_pcb_drc_malformed_netclass_inventory.py",
                 "tests/test_pcb_drc_malformed_netclass_inventory_native.py",
+                "tests/test_pcb_drc_malformed_netclass_numeric_constraints.py",
+                "tests/test_pcb_drc_malformed_netclass_numeric_constraints_native.py",
                 "tests/test_pcb_measurement_candidate_evidence.py",
                 "tests/test_design_lint_architecture_mapped_candidate_evidence.py",
                 "tests/test_design_lint_architecture_connector_all_open_candidate_evidence.py",
@@ -417,6 +419,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_mcp_parity_pcb_duplicate_object_uuid.py",
                 "tests/test_design_lint_mcp_parity_pcb_drc_malformed_netclass_assignment.py",
                 "tests/test_design_lint_mcp_parity_pcb_drc_malformed_netclass_inventory.py",
+                "tests/test_design_lint_mcp_parity_pcb_drc_malformed_netclass_numeric_constraints.py",
             }
         ),
     }
