@@ -26173,8 +26173,9 @@ acceptance threads while new lint features proceed:
   integrity, Linux/Windows Pyright, wheel/sdist, installed-wheel checks, and the
   public external/adapted-template verification and playtest. Receipt:
   `build/ci/run-2bdw98vn`.
-- **Hosted acceptance:** Pending the annotated rule-gate tag
-  `v0.5.3rc738`.
+- **Hosted acceptance:** Passed in GitHub Actions run `43428632764` for the
+  annotated rule-gate tag `v0.5.3rc738`; package and preview jobs were skipped
+  under prerelease policy.
 
 ## Completion and release gate
 
