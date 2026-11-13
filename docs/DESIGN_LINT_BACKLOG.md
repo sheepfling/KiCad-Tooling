@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 366 rules are implemented with synthetic regression coverage.
+The following 367 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 366 active rules.
+The catalog currently contains 367 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -756,6 +756,7 @@ skipped under prerelease policy.
 - `pcb.drc_invalid_severity_value`
 - `pcb.drc_nonstring_severity_value`
 - `pcb.mechanical_edge_clearance_rule_coverage`
+- `pcb.track_angle_rule_coverage`
 - `pcb.rf_module_antenna_keepout_coverage`
 - `pcb.keepout_intent_coverage`
 - `pcb.schematic_component_inventory`
@@ -4426,7 +4427,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 366 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 367 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -26175,6 +26176,53 @@ acceptance threads while new lint features proceed:
   `build/ci/run-2bdw98vn`.
 - **Hosted acceptance:** Pending the annotated rule-gate tag
   `v0.5.3rc738`.
+
+#### LINT-448 — Review project-authored per-net track-angle DRC coverage
+
+- **Status:** Implemented as the default-REVIEW rule
+  `pcb.track_angle_rule_coverage`, enabled only when a PCB project supplies an
+  explicit `pcb_track_angle_map`.
+- **Priority:** P2 saved-constraint coverage. A route-angle requirement can be
+  present in engineering policy yet absent, downgraded, excluded, or shadowed
+  in the saved native DRC rules.
+- **Cohort basis:** The MIT `kicad-corner-lint` project documents configurable
+  angle analysis and exclusions alongside broad geometry heuristics. The
+  direct geometry detector is deferred because its stated pad, arc, and
+  junction limitations need more evidence. The local check adopts the
+  configurable concern, not upstream code or a universal angle threshold; the
+  read-only screen is recorded in
+  [DESIGN_LINT_COHORT_TRIALS.md](DESIGN_LINT_COHORT_TRIALS.md#source-screen-kicad-corner-lint-track-angle-heuristic).
+- **Predicate:** For every explicitly authored net, rule name, and minimum or
+  maximum degree bound, require one uniquely named native `track_angle`
+  constraint with the exact `A.NetName` scope and matching unitless integer
+  bounds. Check blocking rule/global severity, source-bound ignored-check and
+  exclusion evidence, and later potentially overlapping rules. Unsupported
+  syntax, unresolved text variables, ambiguous precedence, or unmeasured
+  KiCad versions leave coverage unconfirmed.
+- **Boundary:** The project owner supplies the nets and limits after
+  independent review. The lint verifies that saved native rules enforce those
+  decisions; it neither discovers which nets need limits nor selects
+  universal thresholds. KiCad native DRC evaluates geometry. A configuration
+  match is not manufacturing approval.
+- **Fixtures:** Tooling-owned parser, exact-scope, bounds, severity,
+  suppression, precedence, policy, and CLI/MCP parity cases. Native DRC
+  fault/control boards exercise a routed-angle violation and collinear control
+  on digest-pinned KiCad 10.0.0 and 10.0.5. No cohort board or project source
+  is stored.
+- **Selection:** Run the source, CLI/MCP parity, and architecture slices with
+  `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.track_angle_rule_coverage")`. Run
+  `tests/test_pcb_track_angle_native_fixture_lane.py` with Docker,
+  `KICAD_RUN_NATIVE_TRACK_ANGLE_FIXTURES=1`, and the same rule selector.
+- **Local scoped acceptance:** `scripts/ci.py` passed 447 selected tests with
+  9,160 deselected, including the native fault/control lane on digest-pinned
+  KiCad 10.0.0 and 10.0.5. Ruff, Alphus module-role and shared-utility
+  profiles, Rumdl, mdrepo, Linux and Windows Pyright, wheel, sdist,
+  rebuilt-sdist wheel, installed-origin/version checks, and the external and
+  adapted checkout inventory, surface, verification, and playtest stages all
+  passed. Receipt: `build/ci/run-mu_xzsdu`.
+- **Hosted acceptance:** Pending the annotated rule-gate tag
+  `v0.5.3rc739`.
 
 ## Completion and release gate
 

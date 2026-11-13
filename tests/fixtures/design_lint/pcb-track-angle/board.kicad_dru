@@ -1,0 +1,5 @@
+(version 1)
+(rule "synthetic-clock-track-angle"
+  (severity error)
+  (condition "A.NetName == 'CLOCK_OUT'")
+  (constraint track_angle (min 150)))

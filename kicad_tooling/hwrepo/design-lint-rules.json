@@ -14680,6 +14680,59 @@
       "implementation_owner": "kicad_tooling/hwrepo/pcb_mechanical_edge_clearance.py#mechanical_edge_rule_coverage_issue"
     },
     {
+      "rule_id": "pcb.track_angle_rule_coverage",
+      "title": "Project-authored per-net track-angle DRC coverage is missing or ambiguous",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_track_angle.py#track_angle_rule_coverage_issue",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Project-authored exact net, named DRC rule and degree bounds compared with source-bound KiCad custom rules, project severity settings, and native DRC report",
+      "predicate": "For each explicitly mapped PCB net and approved minimum/maximum angle, require one uniquely named native track_angle constraint with the exact A.NetName condition and exact unitless integer degree bounds. Require blocking rule severity (error or the KiCad default), no source-bound ignored check or DRC exclusion, no non-error global track_angle severity, and no later potentially overlapping track_angle rule. Emit a review candidate for missing, mismatched, unsupported, suppressed, or ambiguous coverage.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native fault/control fixtures only; coverage claims remain unconfirmed on other versions."
+      ],
+      "limitations": [
+        "This is an opt-in coverage review. The project owner must author each net and degree bound from an independently reviewed routing requirement; the heuristic does not infer which nets require an angle limit or choose universal limits.",
+        "The rule verifies authored configuration and source-bound native DRC evidence. KiCad DRC evaluates the board geometry; a matching schematic policy or rule does not establish fabricated geometry, electrical performance, or manufacturing approval.",
+        "Only exact literal A.NetName equality is used to prove disjoint later rules. Other conditions are treated as potentially overlapping. Unresolved text variables, malformed bounds, and unsupported KiCad versions do not establish coverage.",
+        "The synthetic native fixtures cover one deliberately angled route and one collinear control on KiCad 10.0.0 and 10.0.5. They do not establish angle-rule behavior for every router geometry or every native version."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_track_angle_rule_coverage.test_native_parser_marks_unsupported_angle_bounds",
+        "tests.test_pcb_track_angle_rule_coverage.test_missing_mismatched_or_suppressed_coverage_is_reported",
+        "tests.test_pcb_track_angle_rule_coverage.test_duplicate_or_overriding_rules_are_not_credited",
+        "tests.test_pcb_track_angle_rule_coverage.test_candidate_is_review_mode_and_policy_off_skips_source_reads",
+        "tests.test_design_lint_mcp_parity_pcb_track_angle.test_track_angle_coverage_finding_matches_cli_and_mcp",
+        "tests.test_pcb_track_angle_native_fixture_lane.test_native_track_angle_fault_is_reported_and_collinear_control_is_clean"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_track_angle_rule_coverage.test_native_parser_reads_unitless_integer_angle_bounds",
+        "tests.test_pcb_track_angle_rule_coverage.test_exact_project_requirement_is_covered_by_the_saved_rule",
+        "tests.test_pcb_track_angle_rule_coverage.test_exact_net_condition_disjointness_proves_only_literal_inequality",
+        "tests.test_pcb_track_angle_rule_coverage.test_map_requires_reviewable_unique_exact_net_scopes",
+        "tests.test_design_lint_mcp_parity_pcb_track_angle.test_track_angle_coverage_finding_matches_cli_and_mcp",
+        "tests.test_pcb_track_angle_native_fixture_lane.test_native_track_angle_fault_is_reported_and_collinear_control_is_clean"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_track_angle_rule_coverage.test_exact_net_condition_disjointness_proves_only_literal_inequality",
+        "tests.test_pcb_track_angle_native_fixture_lane.test_native_track_angle_fault_is_reported_and_collinear_control_is_clean"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_TRACK_ANGLE_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_track_angle.py#track_angle_rule_coverage_issue",
+        "kicad_tooling/hwrepo/pcb_track_angle.py#track_angle_rule_coverage_candidates",
+        "kicad_tooling/hwrepo/pcb_track_angle_models.py#PcbTrackAngleMap",
+        "kicad_tooling/hwrepo/pcb_track_angle_models.py#PcbTrackAngleRequirement",
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_constraints",
+        "kicad_tooling/hwrepo/pcb_drc_conditions.py#native_net_conditions_are_disjoint",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
+      ]
+    },
+    {
       "rule_id": "pcb.touch_pad_reference_clearance",
       "title": "Configured pad-to-reference-copper clearance is below its project minimum",
       "status": "active",

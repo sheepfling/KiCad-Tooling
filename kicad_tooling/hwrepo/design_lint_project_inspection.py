@@ -60,6 +60,7 @@ from .pcb_footprint_path_integrity import (
     pcb_footprint_path_trailing_separator_candidates,
 )
 from .pcb_object_uuid_integrity import duplicate_pcb_object_uuid_candidates
+from .pcb_track_angle import track_angle_rule_coverage_candidates
 from .pcb_unassigned_copper_pad import unassigned_copper_pad_candidates
 from .project_models import ProjectManifest
 from .project_source_hashes import hash_project_sources as hashes
@@ -148,6 +149,16 @@ def inspect_design_lint_request(
             policy,
             coach.source_hashes,
             native_summary,
+        )
+        pcb_dru_rule_candidates = (
+            *pcb_dru_rule_candidates,
+            *track_angle_rule_coverage_candidates(
+                root,
+                config,
+                policy,
+                coach.source_hashes,
+                native_summary,
+            ),
         )
         pcb_native_drc_candidates = collect_pcb_native_drc_candidates(
             root,

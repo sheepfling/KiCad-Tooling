@@ -142,6 +142,17 @@ def missing_evidence_report(data: DesignLintMissingEvidenceInput) -> DesignLintR
                 "source-bound native netlist evidence."
             ),
         )
+    track_angle_mode = next(
+        (item.mode for item in policy.rules if item.rule_id == "pcb.track_angle_rule_coverage"),
+        "review",
+    )
+    if policy.pcb_track_angle_map is not None and track_angle_mode != "off":
+        missing_evidence_issues += (
+            (
+                "Source-bound native PCB DRC evidence is unavailable for configured track-angle "
+                "rule-coverage review."
+            ),
+        )
     return DesignLintReport(
         status="BLOCKED",
         project_id=data.project_id,

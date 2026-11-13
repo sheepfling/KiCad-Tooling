@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from fnmatch import fnmatchcase
 
 from kicad_tooling.hwrepo.pcb_drc_models import (
@@ -21,6 +20,7 @@ from kicad_tooling.hwrepo.pcb_signal_path_rule_models import (
 
 from .netlist_contract_models import NetlistContract
 from .pcb_connectivity_snapshot import PcbConnectivitySnapshot
+from .pcb_drc_conditions import native_net_conditions_are_disjoint
 from .pcb_drc_rule_parser import (
     RULE_SEVERITY,
     NativeRuleConstraint,
@@ -29,18 +29,10 @@ from .pcb_drc_rule_parser import (
     native_constraints,
 )
 
-_EXACT_NET_CONDITION = re.compile(r"A\.NetName == '([^'\\*?\r\n]+)'")
-
 
 def _definitely_disjoint(name: PcbDrcConstraintName, first: str, second: str) -> bool:
     """Prove only distinct literal net selectors for copper-edge rules disjoint."""
-    if name != "edge_clearance":
-        return False
-    first_net = _EXACT_NET_CONDITION.fullmatch(first)
-    second_net = _EXACT_NET_CONDITION.fullmatch(second)
-    return bool(
-        first_net and second_net and first_net.group(1).casefold() != second_net.group(1).casefold()
-    )
+    return name == "edge_clearance" and native_net_conditions_are_disjoint(first, second)
 
 
 def _expected(

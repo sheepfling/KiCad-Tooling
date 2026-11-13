@@ -258,6 +258,12 @@ def pcb_rule_ids() -> set[str]:
         message="Synthetic source-bound courtyard-to-edge rule coverage is incomplete.",
         evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
     )
+    track_angle_rule = Candidate(
+        rule_id="pcb.track_angle_rule_coverage",
+        subject="projects/synthetic/controller.kicad_dru#clock-track-angle",
+        message="Synthetic source-bound track-angle rule coverage is incomplete.",
+        evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
+    )
     report = evaluate(
         coach.project_id,
         coach,
@@ -272,6 +278,7 @@ def pcb_rule_ids() -> set[str]:
             casefold_custom_rule_names,
             conflicting_custom_rule_severity,
             mechanical_edge_rule,
+            track_angle_rule,
         ),
         pcb_native_drc_candidates=(
             ignored_core_check,

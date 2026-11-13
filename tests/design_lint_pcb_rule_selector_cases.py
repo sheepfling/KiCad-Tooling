@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from tests.design_lint_pcb_track_angle_rule_selector_cases import (
+    PCB_TRACK_ANGLE_RULE_NODE_CASES,
+)
+
 PCB_RULE_NODE_CASES = (
     (
         "pcb.fiducial_count",
@@ -476,3 +480,5 @@ PCB_RULE_NODE_CASES = (
         "tests/test_pcb_duplicate_pad_net_conflicts_native.py::test_native_drc_does_not_distinguish_duplicate_pad_net_conflict",
     ),
 )
+
+PCB_RULE_NODE_CASES = (*PCB_RULE_NODE_CASES, *PCB_TRACK_ANGLE_RULE_NODE_CASES)

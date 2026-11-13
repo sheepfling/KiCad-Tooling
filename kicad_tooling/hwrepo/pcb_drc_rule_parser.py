@@ -21,7 +21,7 @@ from .pcb_drc_models import PcbDrcConstraintName
 
 NativeDrcRuleDeclaration = _rule_structure.NativeDrcRuleDeclaration
 native_rule_declarations = _rule_structure.native_rule_declarations
-_native_named_rules = _rule_structure._native_named_rules
+native_named_rules = _rule_structure.native_named_rules
 
 RULE_SEVERITY = MappingProxyType(
     {
@@ -31,11 +31,14 @@ RULE_SEVERITY = MappingProxyType(
         "diff_pair_uncoupled": "diff_pair_uncoupled_length_too_long",
         "length": "length_out_of_range",
         "edge_clearance": "copper_edge_clearance",
+        "track_angle": "track_angle",
     }
 )
 _LENGTH = re.compile(r"^([+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+))(mm|mil)$")
+_ANGLE_DEGREES = re.compile(r"^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)$")
 NativePcbConstraintName = (
-    PcbDrcConstraintName | Literal["physical_hole_clearance", "unresolved_text_variable"]
+    PcbDrcConstraintName
+    | Literal["track_angle", "physical_hole_clearance", "unresolved_text_variable"]
 )
 
 # KiCad 10.0.0 and 10.0.5 clamp clearance minima to 500 mm. Other
@@ -68,6 +71,8 @@ class NativeRuleConstraint:
         severity_issue: str | None,
         layer: str | None,
         bounds_issue: str | None = None,
+        minimum_angle_degrees: int | None = None,
+        maximum_angle_degrees: int | None = None,
     ) -> None:
         self.rule_name = rule_name
         self.ordinal = ordinal
@@ -81,6 +86,8 @@ class NativeRuleConstraint:
         self.severity_issue = severity_issue
         self.layer = layer
         self.bounds_issue = bounds_issue
+        self.minimum_angle_degrees = minimum_angle_degrees
+        self.maximum_angle_degrees = maximum_angle_degrees
 
 
 @dataclass(frozen=True, slots=True)
@@ -160,6 +167,8 @@ def _parse_constraint(
         return None
     name = atoms[1]
     fields: dict[str, int] = {}
+    angle_fields: dict[str, int] = {}
+    seen_bounds: set[str] = set()
     issue: str | None = layer_issue
     bounds_issue: str | None = None
     for child in _children(source, span.start + 1, span.end - 1):
@@ -170,19 +179,52 @@ def _parse_constraint(
             bounds_issue = f"Unsupported bound expression in rule {rule_name!r}"
             issue = bounds_issue
             continue
-        if values[0] in fields:
+        if values[0] in seen_bounds:
             bounds_issue = f"Repeated {values[0]} bound in rule {rule_name!r}"
             issue = bounds_issue
             continue
-        try:
-            fields[values[0]] = _length_nm(values[1])
-        except ValueError as exc:
-            bounds_issue = str(exc)
+        seen_bounds.add(values[0])
+        if name == "track_angle":
+            angle = values[1]
+            if _ANGLE_DEGREES.fullmatch(angle) is None:
+                bounds_issue = f"Unsupported native DRC angle literal {angle!r}; use degrees"
+            else:
+                try:
+                    degrees = Decimal(angle)
+                except InvalidOperation:
+                    bounds_issue = f"Invalid native DRC angle literal {angle!r}"
+                else:
+                    if degrees != degrees.to_integral_value():
+                        bounds_issue = f"Native DRC angle {angle!r} is not an integer degree value"
+                    elif not 0 <= degrees <= 180:
+                        bounds_issue = (
+                            f"Native DRC angle {angle!r} is outside the range 0 through 180"
+                        )
+                    else:
+                        angle_fields[values[0]] = int(degrees)
+        else:
+            try:
+                fields[values[0]] = _length_nm(values[1])
+            except ValueError as exc:
+                bounds_issue = str(exc)
+        if bounds_issue is not None:
             issue = bounds_issue
-    if not fields and bounds_issue is None:
-        bounds_issue = f"Rule {rule_name!r} has no explicit min/max bound"
-        if issue is None:
+    if name == "track_angle":
+        if not angle_fields and bounds_issue is None:
+            bounds_issue = f"Rule {rule_name!r} has no explicit min/max angle bound"
+        if (
+            angle_fields.get("min") is not None
+            and angle_fields.get("max") is not None
+            and angle_fields["min"] > angle_fields["max"]
+        ):
+            bounds_issue = f"Rule {rule_name!r} has a minimum angle above its maximum"
+        if bounds_issue is not None and issue is None:
             issue = bounds_issue
+    else:
+        if not fields and bounds_issue is None:
+            bounds_issue = f"Rule {rule_name!r} has no explicit min/max bound"
+            if issue is None:
+                issue = bounds_issue
     return NativeRuleConstraint(
         rule_name,
         ordinal,
@@ -196,6 +238,8 @@ def _parse_constraint(
         severity_issue,
         layer,
         bounds_issue,
+        angle_fields.get("min"),
+        angle_fields.get("max"),
     )
 
 
@@ -222,7 +266,7 @@ def native_constraints(source: str) -> tuple[NativeRuleConstraint, ...]:
             ),
         )
     result: list[NativeRuleConstraint] = []
-    for rule in _native_named_rules(source):
+    for rule in native_named_rules(source):
         children = rule.children
         conditions = [node for node in children if _atoms(source, node)[:1] == ("condition",)]
         condition_atoms = _atoms(source, conditions[0]) if len(conditions) == 1 else ()
@@ -289,7 +333,7 @@ def native_rules_with_severity(
     if not source.strip():
         return ()
     result: list[NativeDrcRuleWithSeverity] = []
-    for rule in _native_named_rules(source):
+    for rule in native_named_rules(source):
         if any(_atoms(source, child) == ("severity", severity) for child in rule.children):
             result.append(
                 NativeDrcRuleWithSeverity(
@@ -320,7 +364,7 @@ def native_rules_with_conflicting_severities(
     if not source.strip():
         return ()
     result: list[NativeDrcRuleWithConflictingSeverities] = []
-    for rule in _native_named_rules(source):
+    for rule in native_named_rules(source):
         clauses = [
             _atoms(source, child)
             for child in rule.children

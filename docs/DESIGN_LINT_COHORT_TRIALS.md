@@ -6,9 +6,39 @@ applicability screens summarized under LINT-031 in the
 Use the [review measurement worksheet](DESIGN_LINT_REVIEW_MEASUREMENT.md)
 for dispositions and timing; leave unmeasured values unstated.
 
+## Source screen: `kicad-corner-lint` track-angle heuristic
+
+- **Source and license:** Read-only review of the public
+  [`94xhn/kicad-corner-lint` repository](https://github.com/94xhn/kicad-corner-lint)
+  and its declared MIT license. No release was installed, no external source
+  was executed, and no project board was used.
+- **Documented behavior:** The project classifies straight 180-degree paths
+  and standard 135-degree routing as clean, 90-degree and acute corners as
+  errors, and intermediate angles as warnings. It supports net exclusions
+  and machine-readable reports. Its stated limitations include no pad-aware
+  filtering, no arc checks, and skipped mid-span T-junctions.
+- **Local comparison:** KiCad 10 supports project-authored `track_angle`
+  custom DRC constraints, but a project must select the net scopes and angle
+  limits. `pcb.track_angle_rule_coverage` checks an authored per-net
+  requirement against the saved rules, blocking severity, ignored-check and
+  exclusion evidence, and later potentially overlapping rules. Native fault
+  and collinear-control boards are exercised on digest-pinned KiCad 10.0.0 and
+  10.0.5 images. This adopts the configurable concern without importing
+  implementation code or assuming a universal right-angle policy.
+- **Disposition and gap:** The direct geometry heuristic is deferred because
+  the documented pad, arc, and junction limits leave meaningful false-positive
+  and miss boundaries. The local coverage rule does not infer which nets need
+  angle requirements; missing-map discovery remains open. No real-board
+  precision or reviewer-time result is claimed.
+- **References:** [cohort repository][corner-lint] and
+  [KiCad 10 PCB Editor manual][kicad-10-pcb-manual]. See
+  [LINT-448][lint448-track-angle] and the
+  [synthetic native fixture note][track-angle-fixture].
+
 ## LINT-031 — Candidate analyzer trial and incremental-value register
 
-- **Status:** Partial v29; read-only synthetic comparisons across seven cohort
+- **Status:** Partial v30; includes the LINT-448 track-angle source screen and
+  read-only synthetic comparisons across seven cohort
   repositories, a first-party public-template applicability replay,
   kicad_skills schematic-rule trials, a ThomsonLint board-export trial, and
   public project review samples are recorded below, plus source-only audits of
@@ -2553,10 +2583,10 @@ Source: [kicad-happy release notes][happy-fiducial-release-notes].
   proprietary project, cohort board, or upstream source was stored.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 366 active rules. Each entry has a deterministic predicate, evidence
+contains 367 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
-Of the 366 active rules, 308 default to `review`, 57 to `off`, and
+Of the 367 active rules, 309 default to `review`, 57 to `off`, and
 `pcb.required_fitted_reference` to `block`. Off-by-default checks include
 schematic geometry, generic peer assignment, selected component topology
 reviews such as the BJT base-bias and base/collector same-net prompts, and
@@ -2594,3 +2624,7 @@ it does not claim field validation or effectiveness against private boards.
 [druid-layer-review]: <https://github.com/Cimos/kicad-druid/commit/6687d733be816e27317456a29355d3c69eea0fa3>
 [kicad-layer-name-to-layer]: <https://gitlab.com/kicad/code/kicad/-/blob/6fd26c3126ab342aa49dac7de8de36f187c6c08f/common/lset.cpp>
 [kicad-layer-display-name-example]: <https://gitlab.com/kicad/code/kicad/-/blob/10.0.4/qa/data/eeschema/issue24044/issue24044.kicad_pcb>
+[corner-lint]: https://github.com/94xhn/kicad-corner-lint
+[kicad-10-pcb-manual]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html
+[lint448-track-angle]: DESIGN_LINT_BACKLOG.md#lint-448--review-project-authored-per-net-track-angle-drc-coverage
+[track-angle-fixture]: ../tests/fixtures/design_lint/pcb-track-angle/README.md

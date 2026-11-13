@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 366 active rules.
+The catalog currently contains 367 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -1209,6 +1209,76 @@ KiCad DRC measures board geometry. Neither check establishes enclosure fit,
 manufacturing tolerance, or mechanical approval. For details, see
 [LINT-209](DESIGN_LINT_BACKLOG.md#lint-209--courtyard-to-edge-drc-rule-coverage)
 and the [fixture note](../tests/fixtures/design_lint/pcb-mechanical-edge-clearance/README.md).
+
+### Project-authored per-net track-angle DRC coverage
+
+`pcb.track_angle_rule_coverage` reviews each explicitly mapped PCB net against
+the source-bound native `.kicad_dru`. It requires a uniquely named
+`track_angle` constraint with the exact `A.NetName` condition and matching
+unitless integer degree bounds. It also checks that the rule is blocking, the
+global track-angle check is not downgraded, no check or exclusion suppresses
+it, and no later possibly overlapping track-angle rule can take precedence.
+This rule defaults to REVIEW and only runs when a project authors a
+`pcb_track_angle_map`:
+
+```json
+{
+  "design_lint": {
+    "pcb_track_angle_map": {
+      "schema_version": "1",
+      "basis": "Reviewed interface routing requirement, revision 2",
+      "requirements": [
+        {
+          "id": "clock-output-angle",
+          "basis": "Keep the routed clock output within the approved angle range",
+          "net": "CLOCK_OUT",
+          "rule_name": "clock-output-angle",
+          "minimum_degrees": 150,
+          "maximum_degrees": 180
+        }
+      ]
+    }
+  }
+}
+```
+
+The named rule in the project `.kicad_dru` must match that declaration:
+
+```scheme
+(version 1)
+(rule "clock-output-angle"
+  (condition "A.NetName == 'CLOCK_OUT'")
+  (severity error)
+  (constraint track_angle (min 150) (max 180)))
+```
+
+The map records the decision; it does not discover which nets require an angle
+limit or choose universal limits. Native KiCad DRC evaluates the actual track
+geometry. The coverage audit has native fault/control evidence only for the
+digest-pinned KiCad 10.0.0 and 10.0.5 images; another version remains
+unconfirmed. No rule-coverage match proves manufacturing quality or
+design-specific routing suitability.
+
+Run the focused synthetic, CLI/MCP, selector, and architecture regressions:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_pcb_track_angle_rule_coverage.py \
+  tests/test_design_lint_mcp_parity_pcb_track_angle.py \
+  tests/test_design_lint_architecture_pcb_track_angle.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.track_angle_rule_coverage")'
+```
+
+The native lane uses tooling-owned fixture boards and the pinned images:
+
+```sh
+KICAD_RUN_NATIVE_TRACK_ANGLE_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_track_angle_native_fixture_lane.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.track_angle_rule_coverage")'
+```
+
+See [LINT-448][lint448-track-angle] and the
+[synthetic fixture note][track-angle-fixture].
 
 ### Distinct mapped connector supply domains sharing a net
 
@@ -10209,3 +10279,5 @@ Review the actual board and assembly requirements before approving a build.
 [kicad-netclass-numeric-fields]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L127-149
 [kicad-board-lint-duplicate-pad]: https://github.com/94xhn/kicad-board-lint/tree/3296d711b9d9b0d6c724cb3b4e404202ca0a13c4
 [duplicate-pad-conflict-fixture]: ../tests/fixtures/design_lint/pcb-duplicate-pad-net-conflict/README.md
+[lint448-track-angle]: DESIGN_LINT_BACKLOG.md#lint-448--review-project-authored-per-net-track-angle-drc-coverage
+[track-angle-fixture]: ../tests/fixtures/design_lint/pcb-track-angle/README.md

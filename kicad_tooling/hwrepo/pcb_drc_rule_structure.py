@@ -24,13 +24,13 @@ class NativeDrcRuleDeclaration:
 
 
 @dataclass(frozen=True, slots=True)
-class _NativeNamedRule:
+class NativeNamedDrcRule:
     name: str
     ordinal: int
     children: tuple[_Span, ...]
 
 
-def _native_named_rules(source: str) -> tuple[_NativeNamedRule, ...]:
+def native_named_rules(source: str) -> tuple[NativeNamedDrcRule, ...]:
     """Parse the canonical named-rule inventory for version-1 custom rules."""
     if not source.strip():
         return ()
@@ -38,7 +38,7 @@ def _native_named_rules(source: str) -> tuple[_NativeNamedRule, ...]:
     versions = [_atoms(source, node) for node in nodes if _atoms(source, node)[:1] == ("version",)]
     if len(versions) != 1 or versions[0] != ("version", "1"):
         raise ValueError("Expected one version 1 root atom in the native DRC rules file")
-    rules: list[_NativeNamedRule] = []
+    rules: list[NativeNamedDrcRule] = []
     ordinal = 0
     for node in nodes:
         header = _atoms(source, node)
@@ -48,14 +48,14 @@ def _native_named_rules(source: str) -> tuple[_NativeNamedRule, ...]:
         if len(header) != 2:
             raise ValueError("Malformed named rule in the native DRC rules file")
         children = _children(source, node.start + 1, node.end - 1)
-        rules.append(_NativeNamedRule(header[1], ordinal, children))
+        rules.append(NativeNamedDrcRule(header[1], ordinal, children))
     return tuple(rules)
 
 
 def native_rule_declarations(source: str) -> tuple[NativeDrcRuleDeclaration, ...]:
     """Return direct rule clauses without expanding variables or conditions."""
     result: list[NativeDrcRuleDeclaration] = []
-    for rule in _native_named_rules(source):
+    for rule in native_named_rules(source):
         conditions = [
             child for child in rule.children if _atoms(source, child)[:1] == ("condition",)
         ]

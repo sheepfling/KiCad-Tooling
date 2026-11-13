@@ -31,6 +31,7 @@ _MODULES = (
     "pcb_drc_source_scan.py",
     "pcb_dru_rule_review.py",
     "pcb_mechanical_edge_clearance.py",
+    "pcb_track_angle.py",
 )
 
 

@@ -32,6 +32,7 @@ from .pcb_signal_path_rule_models import PcbSignalPathRuleMap
 from .pcb_switching_loop_models import PcbSwitchingLoopMap
 from .pcb_thermal_via_models import PcbThermalViaMap
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceMap
+from .pcb_track_angle_models import PcbTrackAngleMap
 from .pcb_track_width_models import PcbTrackWidthMap
 from .power_path_models import PowerPathMap
 from .power_sequence_models import PowerSequenceMap
@@ -82,6 +83,7 @@ class DesignLintPolicy(StrictModel):
     pcb_signal_path_rule_map: PcbSignalPathRuleMap | None = None
     pcb_keepout_map: PcbKeepoutMap | None = None
     pcb_mechanical_edge_clearance_map: PcbMechanicalEdgeClearanceMap | None = None
+    pcb_track_angle_map: PcbTrackAngleMap | None = None
     pcb_rf_module_antenna_map: PcbRfModuleAntennaMap | None = None
     pcb_touch_pad_clearance_map: PcbTouchPadClearanceMap | None = None
     pcb_thermal_via_map: PcbThermalViaMap | None = None
