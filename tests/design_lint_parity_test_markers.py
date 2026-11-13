@@ -52,6 +52,7 @@ PARITY_LINT_TEST_MODULES = frozenset(
         "tests/test_design_lint_mcp_parity_pcb_dru_rule_review.py",
         "tests/test_design_lint_mcp_parity_pcb_dru_unknown_constraint.py",
         "tests/test_design_lint_mcp_parity_pcb_dru_unknown_disallow_object.py",
+        "tests/test_design_lint_mcp_parity_pcb_dru_empty_disallow.py",
         "tests/test_design_lint_mcp_parity_pcb_dru_severity_exclusion.py",
         "tests/test_design_lint_mcp_parity_pcb_dru_text_variable.py",
         "tests/test_design_lint_mcp_parity_pcb_drc_global_severity_review.py",

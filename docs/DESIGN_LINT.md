@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 361 active rules.
+The catalog currently contains 362 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -5687,6 +5687,31 @@ See the [fixture note](../tests/fixtures/design_lint/pcb-dru-unknown-disallow-ob
 KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_pcb_dru_unknown_disallow_object_native.py \
   -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.custom_drc_unknown_disallowed_object_type")'
+```
+
+## Review empty custom DRC disallow clauses
+
+`pcb.custom_drc_empty_disallow_clause` asks for review when a source-bound
+KiCad 10.0.x version-1 rule contains a direct `(constraint disallow)` with no
+object types. The KiCad reference specifies one or more object types, and a
+digest-pinned KiCad 10.0.8 Docker probe showed that the empty form completed
+DRC without `items_not_allowed` findings, while one-object and multi-object
+controls reported the synthetic tracks. The evidence records the source hash,
+configured version, rule ordinal, and constraint ordinal.
+
+The finding defaults to `review`. It does not interpret rule conditions,
+establish applicability, or prove a board defect. KiCad versions outside
+10.0.x and files with `${...}` text-variable substitutions remain out of
+scope. See the [fixture note](../tests/fixtures/design_lint/pcb-dru-empty-disallow/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_pcb_dru_empty_disallow.py \
+  tests/test_design_lint_mcp_parity_pcb_dru_empty_disallow.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.custom_drc_empty_disallow_clause")'
+
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_dru_empty_disallow_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.custom_drc_empty_disallow_clause")'
 ```
 
 ## Review deprecated custom DRC condition functions

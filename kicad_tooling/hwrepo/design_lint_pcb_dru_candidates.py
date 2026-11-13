@@ -42,6 +42,7 @@ from .pcb_dru_contradictory_bounds_review import (
 from .pcb_dru_deprecated_function_review import (
     custom_drc_deprecated_condition_function_candidates,
 )
+from .pcb_dru_empty_disallow_review import empty_custom_drc_disallow_candidates
 from .pcb_dru_layer_review import custom_drc_layer_reference_candidates
 from .pcb_dru_malformed_bounds_review import custom_drc_malformed_bound_candidates
 from .pcb_dru_malformed_condition_review import custom_drc_malformed_condition_candidates
@@ -91,6 +92,7 @@ def collect_pcb_dru_candidates(
         *custom_drc_malformed_condition_candidates(root, config, source_hashes),
         *unknown_custom_drc_constraint_candidates(root, config, source_hashes),
         *unknown_custom_drc_disallowed_object_candidates(root, config, source_hashes),
+        *empty_custom_drc_disallow_candidates(root, config, source_hashes),
         *custom_drc_malformed_bound_candidates(root, config, source_hashes),
         *custom_drc_deprecated_condition_function_candidates(root, config, source_hashes),
     )

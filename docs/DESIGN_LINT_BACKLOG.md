@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 361 rules are implemented with synthetic regression coverage.
+The following 362 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 361 active rules.
+The catalog currently contains 362 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -730,6 +730,7 @@ skipped under prerelease policy.
 - `pcb.custom_drc_malformed_condition_clause`
 - `pcb.custom_drc_unknown_constraint_type`
 - `pcb.custom_drc_unknown_disallowed_object_type`
+- `pcb.custom_drc_empty_disallow_clause`
 - `pcb.custom_drc_deprecated_condition_function`
 - `pcb.core_drc_check_ignored`
 - `pcb.core_drc_check_warning`
@@ -4388,7 +4389,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 361 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 362 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -25815,7 +25816,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-441 — Review unknown custom DRC disallow object types
 
-- **Status:** Local acceptance passed; hosted acceptance pending.
+- **Status:** Local and hosted acceptance passed.
 - **Priority:** P1 PCB rule integrity. A misspelled disallow operand can leave
   the intended keepout rule ineffective without producing its expected native
   DRC violation.
@@ -25849,13 +25850,49 @@ acceptance threads while new lint features proceed:
   Run `tests/test_pcb_dru_unknown_disallow_object_native.py` with
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, Docker, `native_kicad`, and the same rule
   selector.
-- **Focused local evidence:** The tag-scoped package acceptance passed 415
-  selected tests with 9,070 deselected, including the digest-pinned Docker
-  fault/control. Ruff format, Ruff, Alphus module-role and shared-utility
-  checks, Rumdl, mdrepo, Linux and Windows-target Pyright, wheel and sdist
-  builds, installed-wheel checks against the public and adapted workflow
-  template, and playtest passed. Receipt: `build/ci/run-2p_1qhta`. Hosted
-  acceptance is pending.
+- **Focused local evidence:** The tag-scoped package acceptance passed 415 selected tests with 9,070
+  deselected, including the digest-pinned Docker fault/control. Ruff format, Ruff, Alphus
+  module-role and shared-utility checks, Rumdl, mdrepo, Linux and Windows-target Pyright, wheel and
+  sdist builds, installed-wheel checks against the public and adapted workflow template, and
+  playtest passed. Receipt: `build/ci/run-2p_1qhta`. The hosted prerelease gate
+  passed in Actions run `43391173404`.
+
+#### LINT-442 — Review empty custom DRC disallow clauses
+
+- **Status:** Local acceptance passed; hosted acceptance pending.
+- **Priority:** P1 PCB rule integrity. A syntactically accepted empty clause can fail to restrict
+  any object while still allowing DRC to finish.
+- **Rule:** Adds `pcb.custom_drc_empty_disallow_clause` as a default-REVIEW design-lint candidate.
+- **Predicate:** For a source-bound KiCad 10.0.x version-1 `.kicad_dru` file without `${...}`
+  substitutions, emit one candidate for each direct `disallow` constraint with no literal
+  object-type operands.
+- **Source basis:** The
+  [KiCad 10.0 PCB Editor reference](https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#custom-rule-syntax)
+  specifies one or more object types for `disallow`.
+- **Native probe:** On the digest-pinned KiCad 10.0.8 image, `(constraint disallow)` completed DRC
+  with only two unrelated synthetic `track_dangling` warnings. The one-object `track` and
+  multi-object `track via pad` controls each produced two `items_not_allowed` track errors. This is
+  bounded to the exact tooling-owned board, rules, and image.
+- **Boundary:** The check does not evaluate rule conditions, establish board applicability, infer an
+  electrical requirement, or prove a board defect. Versions beyond KiCad 10.0.x and files containing
+  text-variable substitutions remain out of scope. Multiple object operands are documented and
+  valid.
+- **Fixtures:** Tooling-owned rules cover two empty constraints, one object, and multiple objects.
+  Tests cover source binding, exact ordinals, version and substitution limits, default REVIEW,
+  block/off/exact-ignore policy, repeatability, CLI/MCP parity, catalog reachability, selectors, and
+  repeated native behavior. No project or cohort board source is used.
+- **Selection:** Run `tests/test_pcb_dru_empty_disallow.py` and
+  `tests/test_design_lint_mcp_parity_pcb_dru_empty_disallow.py` with
+  `design_lint and pcb_lint and design_lint_rule(rule_id="pcb.custom_drc_empty_disallow_clause")`.
+  Run `tests/test_pcb_dru_empty_disallow_native.py` with `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, Docker,
+  `native_kicad`, and the same selector.
+- **Focused local evidence:** The tag-scoped package acceptance passed 416
+  selected tests with 9,077 deselected, including repeated digest-pinned
+  KiCad 10.0.8 Docker fault/one-object/multi-object exports. Ruff format, Ruff,
+  Alphus module-role and shared-utility checks, Rumdl, mdrepo, Linux and
+  Windows-target Pyright, wheel and sdist builds, installed-wheel checks against
+  separate and adapted project checkouts, and playtest passed. Receipt:
+  `build/ci/run-eny5gdgm`. Hosted acceptance is pending.
 
 ## Completion and release gate
 

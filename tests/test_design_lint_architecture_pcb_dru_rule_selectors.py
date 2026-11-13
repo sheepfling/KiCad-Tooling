@@ -87,6 +87,30 @@ RULE_NODE_CASES = (
         "tests/test_pcb_dru_unknown_disallow_object_native.py::test_misspelled_disallow_object_is_silently_skipped_and_control_is_repeatable",
     ),
     (
+        "pcb.custom_drc_empty_disallow_clause",
+        "tests/test_pcb_dru_empty_disallow.py::test_empty_disallow_clauses_request_exact_source_bound_reviews",
+    ),
+    (
+        "pcb.custom_drc_empty_disallow_clause",
+        "tests/test_pcb_dru_empty_disallow.py::test_one_or_more_documented_disallow_objects_stay_quiet",
+    ),
+    (
+        "pcb.custom_drc_empty_disallow_clause",
+        "tests/test_pcb_dru_empty_disallow.py::test_text_variables_and_out_of_scope_versions_stay_deferred",
+    ),
+    (
+        "pcb.custom_drc_empty_disallow_clause",
+        "tests/test_pcb_dru_empty_disallow.py::test_policy_fingerprint_repeatability_and_source_freshness_are_exact",
+    ),
+    (
+        "pcb.custom_drc_empty_disallow_clause",
+        "tests/test_design_lint_mcp_parity_pcb_dru_empty_disallow.py::test_empty_disallow_review_matches_between_cli_and_mcp",
+    ),
+    (
+        "pcb.custom_drc_empty_disallow_clause",
+        "tests/test_pcb_dru_empty_disallow_native.py::test_empty_clause_is_ineffective_and_one_or_more_objects_are_repeatable",
+    ),
+    (
         "pcb.custom_drc_malformed_constraint_bounds",
         "tests/test_pcb_dru_malformed_bounds.py::test_unparseable_bounds_request_source_bound_review",
     ),

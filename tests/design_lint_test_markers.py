@@ -44,6 +44,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_power_native_gate_architecture.py",
                 "tests/test_design_lint_architecture_pcb_dru_rule_selectors.py",
                 "tests/test_design_lint_architecture_pcb_dru_unknown_disallow_object.py",
+                "tests/test_design_lint_architecture_pcb_dru_empty_disallow.py",
                 "tests/test_design_lint_architecture_pcb_source_integrity.py",
                 "tests/test_design_lint_architecture_serial_endpoint_role_collision.py",
                 "tests/test_design_lint_architecture_named_rail_protocols.py",

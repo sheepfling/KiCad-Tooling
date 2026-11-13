@@ -5,6 +5,9 @@ PCB_EVIDENCE_LINT_TEST_MODULES = frozenset(
         "tests/test_pcb_dru_unknown_disallow_object.py",
         "tests/test_pcb_dru_unknown_disallow_object_native.py",
         "tests/test_design_lint_mcp_parity_pcb_dru_unknown_disallow_object.py",
+        "tests/test_pcb_dru_empty_disallow.py",
+        "tests/test_pcb_dru_empty_disallow_native.py",
+        "tests/test_design_lint_mcp_parity_pcb_dru_empty_disallow.py",
     }
 )
 
@@ -116,6 +119,10 @@ PCB_LINT_TEST_MODULES = frozenset(
         "tests/test_design_lint_mcp_parity_pcb_dru_unknown_disallow_object.py",
         "tests/test_design_lint_architecture_pcb_dru_rule_selectors.py",
         "tests/test_design_lint_architecture_pcb_dru_unknown_disallow_object.py",
+        "tests/test_pcb_dru_empty_disallow.py",
+        "tests/test_pcb_dru_empty_disallow_native.py",
+        "tests/test_design_lint_mcp_parity_pcb_dru_empty_disallow.py",
+        "tests/test_design_lint_architecture_pcb_dru_empty_disallow.py",
         "tests/test_pcb_dru_item_type_case_native.py",
         "tests/test_pcb_dru_severity_exclusion_review.py",
         "tests/test_pcb_dru_text_variable_review.py",

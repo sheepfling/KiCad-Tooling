@@ -1,0 +1,6 @@
+(version 1)
+(rule "EmptyDisallow"
+  (constraint disallow)
+  (constraint disallow track)
+  (constraint disallow)
+)
