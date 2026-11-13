@@ -25770,7 +25770,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-440 — Review unknown custom DRC constraint types
 
-- **Status:** Local acceptance passed; hosted acceptance pending.
+- **Status:** Local and hosted acceptance passed.
 - **Priority:** P1 PCB rule integrity. A misspelled constraint token can leave
   the intended custom rule ineffective without producing the expected native
   DRC violation.
@@ -25892,7 +25892,8 @@ acceptance threads while new lint features proceed:
   Alphus module-role and shared-utility checks, Rumdl, mdrepo, Linux and
   Windows-target Pyright, wheel and sdist builds, installed-wheel checks against
   separate and adapted project checkouts, and playtest passed. Receipt:
-  `build/ci/run-eny5gdgm`. Hosted acceptance is pending.
+  `build/ci/run-eny5gdgm`. The hosted prerelease gate passed in Actions run
+  `43394607293`.
 
 ## Completion and release gate
 
