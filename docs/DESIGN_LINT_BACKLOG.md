@@ -413,7 +413,7 @@ intended requirement.
 
 ## Existing baseline
 
-The following 371 rules are implemented with synthetic regression coverage.
+The following 373 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
 The catalog currently contains 373 active rules.
@@ -719,6 +719,8 @@ skipped under prerelease policy.
 - `pcb.differential_pair_rule_coverage`
 - `pcb.signal_path_rule_coverage`
 - `pcb.signal_path_unmapped_native_rule`
+- `pcb.signal_path_unmapped_edge_clearance_rule`
+- `pcb.signal_path_unmapped_from_to_length_rule`
 - `pcb.custom_drc_rule_ignored`
 - `pcb.custom_drc_rule_excluded`
 - `pcb.custom_drc_rule_without_constraint`
@@ -823,15 +825,17 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc754):** LINT-453 reviews
-  exact native edge-clearance rule nets omitted from signal-path coverage.
-  Hosted acceptance passed in GitHub Actions run `43500046265`: 435 tests
-  passed and 9,231 were deselected, including the digest-pinned KiCad
-  10.0.0/10.0.5 native fault/control fixture. Ruff formatting and lint,
-  Alphus boundaries, Rumdl, mdrepo, Pyright, Windows type checks, wheel and
-  sdist builds, installed-origin and version checks, external and adapted
-  project rehearsals, and playtest passed. Package and preview jobs were
-  skipped under prerelease policy.
+- **Latest published lint-gate checkpoint (v0.5.3rc756):** LINT-454 reviews
+  exact native `fromTo` length-rule pairs omitted from signal-path coverage.
+  Hosted acceptance passed in GitHub Actions run
+  [43504915100](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43504915100):
+  436 tests passed and 9,239 were deselected, including digest-pinned KiCad
+  10.0.0/10.0.5 native fault/control fixtures. Ruff formatting and lint,
+  Alphus boundaries, Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist
+  builds, installed-origin and version checks, external and adapted project
+  rehearsals, and playtest passed. Package and preview jobs were skipped under
+  prerelease policy. The earlier `v0.5.3rc755` run stopped at Rumdl MD013 for
+  one long backlog owner line; `v0.5.3rc756` wraps that line.
 - **Latest published lint-gate checkpoint (v0.5.3rc734):** LINT-444 reviews an
   extra unassigned copper pad in a mixed-net footprint. Hosted acceptance passed
   in GitHub Actions run `43409299897`: 433 tests passed, 9,105 were deselected,
@@ -26447,7 +26451,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-454 — Review exact native fromTo length pairs omitted from path coverage
 
-- **Status:** Implemented as a default-REVIEW rule; hosted acceptance pending.
+- **Status:** Implemented as a default-REVIEW rule; hosted acceptance passed.
 - **Rule:** `pcb.signal_path_unmapped_from_to_length_rule` shares the existing
   source-bound native DRC scan. When signal-path coverage is enabled, it
   reports named native `length` constraints with one exact literal `fromTo`
@@ -26474,7 +26478,15 @@ acceptance threads while new lint features proceed:
   `tests/test_design_lint_architecture_pcb_signal_path_unmapped_fromto.py`
   with `design_lint and pcb_lint and
   design_lint_rule(rule_id="pcb.signal_path_unmapped_from_to_length_rule")`.
-- **Hosted acceptance:** Pending for the annotated rule-gate tag.
+- **Hosted acceptance:** Passed run
+  [43504915100](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43504915100)
+  for annotated rule-gate tag `v0.5.3rc756`: 436 tests passed, 9,239 were
+  deselected, and native fixtures passed in both pinned KiCad versions. Ruff,
+  Alphus, Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist builds,
+  installed-origin/version checks, separate and adapted project rehearsals,
+  and playtest passed. Package and preview jobs were skipped by prerelease
+  policy. The earlier tag `v0.5.3rc755` stopped at a Rumdl MD013 line-length
+  finding; `v0.5.3rc756` includes the formatting correction.
 
 ## Completion and release gate
 
