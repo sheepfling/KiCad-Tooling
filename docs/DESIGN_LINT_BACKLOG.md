@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 363 rules are implemented with synthetic regression coverage.
+The following 364 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 363 active rules.
+The catalog currently contains 364 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -761,6 +761,7 @@ skipped under prerelease policy.
 - `pcb.schematic_pcb_dnp_mismatch`
 - `pcb.schematic_pcb_value_mismatch`
 - `pcb.schematic_pcb_pad_net_mismatch`
+- `pcb.unassigned_copper_pad_review`
 - `pcb.board_only_footprint`
 - `pcb.required_fitted_reference`
 - `pcb.touch_pad_reference_clearance`
@@ -4407,7 +4408,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 363 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 364 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -25949,6 +25950,50 @@ acceptance threads while new lint features proceed:
   installed-wheel rehearsal passed in GitHub Actions run `43401434167`; package and preview jobs
   were skipped under prerelease policy.
 
+#### LINT-444 — Review extra unassigned copper pads in mixed-net footprints
+
+- **Status:** Implemented; focused local acceptance passed. Hosted acceptance is pending.
+- **Priority:** P2 PCB review. This closes a narrow footprint-coverage gap without claiming that
+  an unknown pad must be connected.
+- **Rule:** Adds `pcb.unassigned_copper_pad_review` as a default-REVIEW candidate for an unassigned
+  numbered copper pad whose pad number is absent from the source-bound schematic pin inventory,
+  when another copper pad in the same non-DNP, non-board-only footprint has a net assignment.
+- **Cohort basis:** The public MIT [kicad-board-lint repository][cohort-lint-444] describes its
+  `ghost-pad` detector for mixed-net footprints. The examined revision is
+  `3296d711b9d9b0d6c724cb3b4e404202ca0a13c4`. This tooling rule uses the candidate as a measured
+  design lead, reuses the existing KiCad S-expression and source-binding services, and does not
+  install the cohort package or store its board data.
+- **Incremental coverage:** `pcb.schematic_pcb_pad_net_mismatch` already covers known schematic
+  pins with unassigned same-numbered PCB pads when enabled. This rule filters those known pin
+  numbers and reviews only extra footprint pad numbers, reducing duplicate warnings while
+  preserving intentional NC cases for project review.
+- **Native evidence:** A tooling-owned two-pad connector fault and fully assigned control produce
+  identical DRC reports under the digest-pinned KiCad 10.0.0 and 10.0.5 Docker images. Each report
+  contains the same missing synthetic footprint-library warning and no unconnected-item
+  findings. Changing the pad assignment does not change native DRC evidence; the warning is part
+  of the synthetic fixture setup, not a claim about electrical need.
+- **Boundary:** Only exact KiCad 10.0.0 and 10.0.5 schematic-backed PCB sources are in scope.
+  PCB-only projects lack an authoritative schematic pin inventory. All-netless,
+  board-only, DNP, non-copper, unnumbered, duplicate-numbered, or unmatched schematic-inventory
+  cases are skipped. Intentional NC, mechanical, shield, thermal, BGA, connector mounting, and
+  alternate-footprint pads can still prompt review. Project policy may set `review`, `block`, or
+  `off`, or ignore an exact finding fingerprint.
+- **Fixtures:** Tooling-owned source tests cover mixed-net fault, assigned control, extra versus
+  known schematic pin scope, board-only/DNP/non-copper/all-netless exclusions, policy, source
+  freshness, and metamorphic net assignment. CLI/MCP parity and native DRC comparisons are also
+  registered. No private project fixtures were used.
+- **Selection:** Run `tests/test_pcb_unassigned_copper_pad.py` and
+  `tests/test_design_lint_mcp_parity_pcb_unassigned_copper_pad.py` with
+  `design_lint and pcb_lint and design_lint_rule(rule_id="pcb.unassigned_copper_pad_review")`.
+  Run `tests/test_pcb_unassigned_copper_pad_native.py` with Docker,
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, `native_kicad`, and the same rule selector.
+- **Focused local evidence:** The source and CLI/MCP regressions passed; the exact native Docker
+  comparison passed for both supported versions. The scoped catalog run also checks rule-owner
+  boundaries, fixture reachability, selectors, and backlog counts. Two pre-existing failures in
+  `tests/test_design_lint_architecture.py` remain outside this change: the connector candidate
+  facade is 129 lines against a 100-line ceiling, and `native_pcb_probe.py.in` is 527 lines against
+  its 500-line ceiling. Hosted acceptance is pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -26019,6 +26064,7 @@ quality, or first-article continuity.
 [kicad-10-project-drc-exclusions]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.7/pcbnew/board_design_settings.cpp
 [kicad-file-doctor-missing-symbol]: https://github.com/94xhn/kicad-file-doctor/blob/45133533e05aeabb7ef150d3a95084c318f16c9d/kicad_file_doctor/checks.py
 [kicad-file-doctor-license]: https://github.com/94xhn/kicad-file-doctor/blob/45133533e05aeabb7ef150d3a95084c318f16c9d/LICENSE
+[cohort-lint-444]: https://github.com/94xhn/kicad-board-lint/tree/3296d71
 [lint086-cp2102]: https://github.com/MAATHES-THILAK-K/USB_TO_UART-CP2102
 [lint086-fusb302]: https://github.com/bentwire/USB-C-FUSB302-PI/tree/7d95292262b42767bbeefebadb6bafe055923d50
 [lint086-16nx]: https://github.com/16n-faderbank/16nx/tree/ca7de2233011407fdd791839d711547bf41d33d3

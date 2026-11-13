@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 363 active rules.
+The catalog currently contains 364 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -6697,6 +6697,51 @@ Source-bound fault/control, metamorphic, CLI/MCP parity, and native evidence are
   tests/test_pcb_footprint_path_integrity.py \
   tests/test_design_lint_mcp_parity_pcb_footprint_path_trailing_separator.py \
   -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.footprint_path_trailing_separator")'
+```
+
+## Review extra unassigned copper pads in mixed-net footprints
+
+`pcb.unassigned_copper_pad_review` reviews a numbered copper-layer pad when its
+footprint has another net-assigned copper pad, the pad number is absent from the
+source-bound schematic pin inventory, and the footprint is neither DNP nor
+board-only. This adds a narrow prompt for extra footprint pads that the
+schematic-to-PCB pad assignment comparison cannot classify. Known schematic
+pins remain with `pcb.schematic_pcb_pad_net_mismatch`, avoiding a duplicate
+warning for that case.
+
+This is a heuristic clue, not an electrical defect declaration. Extra NC,
+mechanical, shield, thermal, BGA, connector mounting, or alternate-footprint
+pads can be intentional. PCB-only projects lack an authoritative schematic pin
+inventory and are outside scope. All-netless footprints, unknown schematic pin
+inventories, unnumbered and non-copper pads, and duplicate pad numbers are also
+outside the predicate. The rule defaults to `review`; project policy can set
+`block`, `off`, or ignore an exact fingerprint. Only KiCad 10.0.0 and 10.0.5
+are supported by the measured native fixture.
+
+The idea comes from the `ghost-pad` check in the public MIT
+[`kicad-board-lint` candidate](https://github.com/94xhn/kicad-board-lint/tree/3296d711b9d9b0d6c724cb3b4e404202ca0a13c4).
+This implementation reuses the tooling's source-bound board reader and
+S-expression parser; it does not install the candidate or copy its board data.
+Pinned native DRC produced identical reports for the synthetic unassigned-pad
+fault and assigned control on both supported KiCad versions. Each report had
+the same missing synthetic footprint-library warning and no unconnected-item
+findings; changing this pad assignment did not change native DRC evidence.
+
+Run the source, CLI/MCP, catalog, and architecture regressions with:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_pcb_unassigned_copper_pad.py \
+  tests/test_design_lint_mcp_parity_pcb_unassigned_copper_pad.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.unassigned_copper_pad_review")'
+```
+
+Run the native comparison with Docker and:
+
+```sh
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_unassigned_copper_pad_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.unassigned_copper_pad_review")'
 ```
 
 ## Require selected references to be fitted in the base assembly or a variant

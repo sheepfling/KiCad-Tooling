@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Literal
 
 from .contract_coach import inspect_summary as inspect_contract_summary
+from .contract_coach_models import ContractCoachReport
 from .contracts import read_model, repo_path
 from .design_lint_component_coverage import ComponentMapCoverageInputs
 from .design_lint_connectivity_snapshot import capture_connectivity_snapshot
@@ -58,6 +59,7 @@ from .pcb_footprint_path_integrity import (
     pcb_footprint_path_trailing_separator_candidates,
 )
 from .pcb_object_uuid_integrity import duplicate_pcb_object_uuid_candidates
+from .pcb_unassigned_copper_pad import unassigned_copper_pad_candidates
 from .project_models import ProjectManifest
 from .project_source_hashes import hash_project_sources as hashes
 from .schematic_erc_source_candidates import source_bound_schematic_erc_candidates
@@ -95,7 +97,7 @@ def inspect_design_lint_request(
         native_evidence = capture_native_netlist_evidence(native_summary)
     except OSError:
         native_evidence = None
-    coach = inspect_contract_summary(root, project_id, native_summary)
+    coach: ContractCoachReport = inspect_contract_summary(root, project_id, native_summary)
     try:
         project = resolve_project(root, project_id)
         manifest_path = repo_path(root, project.config)
@@ -169,6 +171,12 @@ def inspect_design_lint_request(
                 root,
                 config,
                 coach.source_hashes,
+            ),
+            *unassigned_copper_pad_candidates(
+                root,
+                config,
+                coach.source_hashes,
+                coach.observed,
             ),
         )
         spi_roster = spi_roster_context(root, config)

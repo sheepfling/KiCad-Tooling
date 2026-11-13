@@ -14,6 +14,10 @@ from kicad_tooling.hwrepo.pcb_footprint_path_integrity import (
 from kicad_tooling.hwrepo.pcb_object_uuid_integrity import (
     duplicate_pcb_object_uuid_candidates,
 )
+from kicad_tooling.hwrepo.pcb_unassigned_copper_pad import (
+    unassigned_copper_pad_candidates,
+)
+from tests.design_lint_fixtures.pcb_component_inventory import netlist
 
 
 def pcb_source_integrity_rule_ids() -> frozenset[str]:
@@ -47,6 +51,25 @@ def pcb_source_integrity_rule_ids() -> frozenset[str]:
             repository,
             path_config,
             {path_relative: digest(path_source)},
+        )
+    )
+    pad_relative = "tests/fixtures/design_lint/pcb-unassigned-copper-pad/fault.kicad_pcb"
+    pad_source = repository / pad_relative
+    pad_project = pad_relative.removesuffix(".kicad_pcb") + ".kicad_pro"
+    pad_config = cast(
+        ProjectConfig,
+        SimpleNamespace(kind=ProjectKind.PCB, project=pad_project, kicad_version="10.0.5"),
+    )
+    candidates.extend(
+        unassigned_copper_pad_candidates(
+            repository,
+            pad_config,
+            {pad_relative: digest(pad_source)},
+            netlist(
+                components={"J1": "Synthetic:TwoPadConnector"},
+                nets={"SIGNAL": ("J1.1",)},
+                component_pin_numbers={"J1": ("1",)},
+            ),
         )
     )
     return frozenset(candidate.rule_id for candidate in candidates)

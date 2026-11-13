@@ -303,6 +303,7 @@ DesignLintRuleId = Literal[
     "pcb.schematic_pcb_dnp_mismatch",
     "pcb.schematic_pcb_value_mismatch",
     "pcb.schematic_pcb_pad_net_mismatch",
+    "pcb.unassigned_copper_pad_review",
     "pcb.custom_drc_rule_ignored",
     "pcb.custom_drc_rule_excluded",
     "pcb.custom_drc_rule_without_constraint",
