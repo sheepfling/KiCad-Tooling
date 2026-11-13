@@ -8,7 +8,7 @@ for dispositions and timing; leave unmeasured values unstated.
 
 ## LINT-031 — Candidate analyzer trial and incremental-value register
 
-- **Status:** Partial v29; read-only synthetic comparisons across seven cohort
+- **Status:** Partial v30; read-only synthetic comparisons across seven cohort
   repositories, a first-party public-template applicability replay,
   kicad_skills schematic-rule trials, a ThomsonLint board-export trial, and
   public project review samples are recorded below, plus source-only audits of
@@ -53,7 +53,15 @@ for dispositions and timing; leave unmeasured values unstated.
   tooling-owned fault/control fixtures and existing native I2C lanes. A
   follow-up built the pinned `kicad_skills` Docker image and ran its two analog
   checks through the image's KiCad CLI on synthetic inputs; this closed the
-  documented Docker-workflow gap without finding unique detection.
+  documented Docker-workflow gap without finding unique detection. A pinned
+  `kicad-file-doctor` source review and synthetic KiCad 10.0.8 probes of PCB
+  instance fields, duplicate references, and over-precision coordinates found
+  no new local rule candidate; the detailed dispositions follow the existing
+  incomplete-path trial. A source-only comparison of all four
+  `kicad-board-lint` checks maps them to active local rules, with generic
+  ampacity calculation still deferred. A `kicad-corner-lint` source screen
+  found KiCad's native `track_angle` rule for projects that explicitly choose
+  a corner policy; no universal angle rule was adopted.
 
 ### Source review: kicad-druid custom DRC rule lint
 
@@ -2551,6 +2559,83 @@ Source: [kicad-happy release notes][happy-fiducial-release-notes].
 - **Disposition:** Keep the narrow rule as an opt-in-strength REVIEW clue.
   Reassess after a real independent review can label the path's intent. No
   proprietary project, cohort board, or upstream source was stored.
+
+### Follow-up screen: kicad-file-doctor PCB file checks (2026-11-13)
+
+- **Pinned source:** `94xhn/kicad-file-doctor` at commit
+  [`45133533e05aeabb7ef150d3a95084c318f16c9d`](https://github.com/94xhn/kicad-file-doctor/tree/45133533e05aeabb7ef150d3a95084c318f16c9d),
+  which declares MIT. The checks reviewed were duplicate footprint references,
+  library-file header fields embedded in PCB footprint instances, and numbers
+  with more than six decimal places. The same revision's missing-symbol and
+  trailing-sheet-path checks are already represented by LINT-420 and LINT-443.
+- **Native probes:** Tooling-owned synthetic faults and controls were run with
+  the digest-pinned KiCad 10.0.8 image
+  `ghcr.io/kicad/kicad:10.0.8-amd64@sha256:05f6ac957e351bbbd9e1f9c996be997f61948ed9f94e0c3cab336bfcaf60161c`.
+  DRC returned success with identical violation-type sets for a unique-reference
+  control and a duplicate-reference fault, and for a PCB footprint-instance
+  control and individual `version`, `generator`, and `generator_version` fields.
+  The candidate's DSN-export claim could not be tested: this KiCad CLI does not
+  provide a `pcb export dsn` command. A coordinate-precision probe changed only
+  the first track start from `2` to `2.1234567890123456` in the tooling-owned
+  `pcb-drc-duplicate-net-settings/board.kicad_pcb` fixture. Both control and
+  fault loaded as KiCad 10.0.8 DRC inputs and returned exit code zero with the
+  same `clearance` and two `track_dangling` violation types. The exact fixture
+  hash, mutation, and reports are retained under the ignored local
+  `build/cohort-trials/kicad-file-doctor-precision-2026-11-13/` receipt.
+- **Local overlap and boundary:** Missing embedded symbol definitions are
+  already reviewed by LINT-420; incomplete footprint paths by LINT-443;
+  malformed S-expressions are rejected by the canonical parser; and native
+  PCB component-inventory and connectivity-snapshot validators reject duplicate
+  footprint references. These probes establish only that KiCad 10.0.8 CLI DRC
+  accepts the tested field and precision inputs. They do not test GUI load
+  behavior or every KiCad patch.
+- **Disposition:** Do not adopt a blanket precision rule from the unreplicated
+  load-failure claim, a footprint-field lint from CLI DRC evidence that did not
+  distinguish the fault, or a duplicate-reference lint that duplicates an
+  existing input validator while its proposed DSN failure mode is unavailable
+  in this CLI. No candidate code, board, or project data was copied.
+
+### Source screen: kicad-board-lint feature coverage
+
+- **Pinned source:** The public MIT
+  [`94xhn/kicad-board-lint` repository](https://github.com/94xhn/kicad-board-lint/tree/3296d711b9d9b0d6c724cb3b4e404202ca0a13c4)
+  at commit `3296d711b9d9b0d6c724cb3b4e404202ca0a13c4` documents four checks:
+  unassigned copper pads (`ghost-pad`), inconsistent same-numbered copper-pad
+  assignments (`dup-pad-net`), per-segment power width, and netclass entries
+  without current net matches.
+- **Local mapping:** `ghost-pad` overlaps LINT-113 for known schematic pads
+  and LINT-444/LINT-445 for extra or unnumbered copper pads. `dup-pad-net`
+  maps to LINT-446. The unmatched netclass pattern prompt maps to LINT-447.
+  The current-width input maps to LINT-021's source-bound segment measurements
+  and project-authored minimums, but its automatic ampacity estimate is not
+  equivalent.
+- **Disposition:** No package adoption or duplicate detector is warranted by
+  this source screen. Keep current derivation of copper ampacity deferred:
+  the candidate's generic IPC-2221 formula does not model the project-specific
+  stackup, temperature, vias, zones, branching, or current allocation needed
+  for a defensible board-level capacity claim. This was documentation and
+  catalog comparison only; candidate code and example boards were not installed,
+  run, or copied.
+
+### Source screen: kicad-corner-lint
+
+- **Pinned source:** The public MIT
+  [`94xhn/kicad-corner-lint` repository](https://github.com/94xhn/kicad-corner-lint/tree/53442b8acdf918ade85461e641db4c17b9c924ac)
+  at commit `53442b8acdf918ade85461e641db4c17b9c924ac` documents right-angle,
+  acute-angle, and shallow-corner classifications with configurable net
+  exclusions. Its README also records in-pad false positives and that arc
+  junctions are outside its check.
+- **Incremental gap:** KiCad 10 already provides a [`track_angle` custom DRC
+  constraint](https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#custom-rule-syntax)
+  for project-selected minimum and maximum connected-segment angles. The
+  first-party tooling currently audits disabled or warning DRC severities, but
+  has no project contract that says a specific net scope must have a selected
+  angle policy.
+- **Disposition:** Do not adopt the candidate's global angle thresholds as a
+  default electrical lint. A future coverage gate could verify an explicitly
+  authored per-project angle policy and its native DRC scope when a project
+  requires 45-degree routing. This source screen does not establish an
+  electrical benefit or a need for that gate.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
 contains 366 active rules. Each entry has a deterministic predicate, evidence
