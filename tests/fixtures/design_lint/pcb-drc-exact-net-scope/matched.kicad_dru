@@ -1,0 +1,4 @@
+(version 1)
+(rule "matched-net-width" (severity warning)
+  (condition "A.NetName == 'N1'")
+  (constraint track_width (min 0.4mm)))

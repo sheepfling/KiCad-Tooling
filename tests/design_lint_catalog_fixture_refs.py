@@ -64,6 +64,18 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
                 ),
             }
         ),
+        "pcb.drc_exact_net_scope_unmatched": MappingProxyType(
+            {
+                "fault_fixtures": _refs(
+                    "tests.test_design_lint_mcp_parity_pcb_drc_exact_net_scope",
+                    "test_unmatched_exact_net_scope_matches_between_cli_and_mcp",
+                ),
+                "valid_control_fixtures": _refs(
+                    "tests.test_design_lint_mcp_parity_pcb_drc_exact_net_scope",
+                    "test_unmatched_exact_net_scope_matches_between_cli_and_mcp",
+                ),
+            }
+        ),
         "bus.i2c_missing_pullup": MappingProxyType(
             {
                 "fault_fixtures": _refs(

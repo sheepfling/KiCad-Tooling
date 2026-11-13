@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import cast
 
 from .json_object_pairs import JsonObjectPairs, retain_json_object_pairs
-from .kicad_sexpr import sexpr_atoms, sexpr_children, sexpr_root
+from .pcb_board_net_inventory import pcb_board_net_names
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,7 +30,7 @@ def unmatched_pcb_netclass_patterns(
     KiCad patterns accept filename-style wildcards and regular expressions.
     Malformed or ambiguous project/board inventories are outside this review.
     """
-    board_nets = _pcb_board_net_names(board_document)
+    board_nets = pcb_board_net_names(board_document)
     if board_nets is None:
         return ()
     configured = _configured_netclass_patterns(project_settings_document)
@@ -44,44 +44,6 @@ def unmatched_pcb_netclass_patterns(
         and netclass in class_names
         and not any(_kicad_netclass_pattern_matches(pattern, net) for net in board_nets)
     )
-
-
-def _pcb_board_net_names(document: str) -> tuple[str, ...] | None:
-    """Read unique top-level named nets from one complete board expression."""
-    try:
-        root = sexpr_root(document, "kicad_pcb")
-        children = sexpr_children(document, root.start + 1, root.end - 1)
-    except ValueError:
-        return None
-
-    names: list[str] = []
-    seen_codes: set[int] = set()
-    seen_names: set[str] = set()
-    found_net_record = False
-    for child in children:
-        atoms = sexpr_atoms(document, child)
-        if not atoms or atoms[0] != "net":
-            continue
-        found_net_record = True
-        if len(atoms) != 3:
-            return None
-        try:
-            code = int(atoms[1])
-        except ValueError:
-            return None
-        name = atoms[2]
-        if code < 0 or code in seen_codes:
-            return None
-        seen_codes.add(code)
-        if code == 0 and name == "":
-            continue
-        if code == 0 or not name or name in seen_names:
-            return None
-        seen_names.add(name)
-        names.append(name)
-    if not found_net_record:
-        return None
-    return tuple(sorted(names))
 
 
 def _configured_netclass_patterns(

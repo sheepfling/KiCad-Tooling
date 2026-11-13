@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 374 rules are implemented with synthetic regression coverage.
+The following 375 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 374 active rules.
+The catalog currently contains 375 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -754,6 +754,7 @@ skipped under prerelease policy.
 - `pcb.drc_malformed_netclass_inventory`
 - `pcb.drc_malformed_netclass_numeric_constraints`
 - `pcb.drc_netclass_pattern_unmatched`
+- `pcb.drc_exact_net_scope_unmatched`
 - `pcb.duplicate_object_uuid`
 - `pcb.footprint_path_trailing_separator`
 - `pcb.drc_duplicate_severity_key`
@@ -4437,7 +4438,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 371 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 375 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -26526,6 +26527,46 @@ acceptance threads while new lint features proceed:
   `tests/test_design_lint_architecture_pcb_differential_pair_unmapped.py` with
   `design_lint and pcb_lint and
   design_lint_rule(rule_id="pcb.differential_pair_unmapped_native_rule")`.
+
+#### LINT-456 — Review exact custom DRC net selectors absent from the PCB
+
+- **Status:** Implemented as a default-REVIEW rule; focused and digest-pinned
+  native acceptance passed locally; hosted acceptance pending.
+- **Rule:** `pcb.drc_exact_net_scope_unmatched` scans source-bound KiCad 10.0.0
+  and 10.0.5 custom DRC constraints for supported exact literal
+  `A.NetName == '…'` selectors absent from the current source-bound PCB's
+  complete top-level net table. It groups repeated constraints by selector
+  and retains constraint details plus project, board, rules, native DRC, and
+  summary identities.
+- **Boundary:** Native fixtures confirm that selector equality is
+  case-insensitive for ASCII net names and that an absent selector does not
+  apply the custom track-width constraint. Net names colliding under Python
+  case-folding make the board inventory ambiguous and suppress this heuristic.
+  A stale scope may be an intentional variant reservation; the finding does
+  not declare the net required, infer schematic intent, inspect copper, or
+  evaluate the constraint itself. Other KiCad versions are unsupported.
+- **Owner:** `kicad_tooling/hwrepo/pcb_drc_exact_net_scope.py`
+  (`unmatched_exact_net_scope_candidates`) with the shared PCB net inventory
+  in `pcb_board_net_inventory.py` and source-bound scan in
+  `pcb_drc_exact_net_scope_scan.py`.
+- **Fixtures:** Synthetic absent, case-variant-present, present, unsupported,
+  ambiguous, disabled-policy, and malformed-board controls; CLI/MCP parity;
+  catalog reachability; and native DRC fault/control behavior on pinned
+  KiCad 10.0.0 and 10.0.5 Docker images. Inputs are tooling-authored only.
+- **Local acceptance:** Scoped package CI passed 440 tests with 9,263
+  deselected, including the native Docker fixtures. Ruff, Alphus, Rumdl,
+  mdrepo, Linux and Windows Pyright, wheel and sdist rebuilds, installed-origin
+  and version checks, separate and adapted public-template rehearsals, and
+  playtest passed. The shared netclass-pattern source/parity regressions passed
+  (18 tests); catalog synchronization passed (24 tests), and selector/module
+  architecture checks passed (9 tests).
+- **Selection:** Run `tests/test_pcb_drc_exact_net_scope.py`,
+  `tests/test_design_lint_mcp_parity_pcb_drc_exact_net_scope.py`, and
+  `tests/test_design_lint_architecture_pcb_drc_exact_net_scope.py` with
+  `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.drc_exact_net_scope_unmatched")`. Run
+  `tests/test_pcb_drc_exact_net_scope_native.py` with `native_kicad` and the
+  same rule selector for the Docker lane.
 
 ## Completion and release gate
 

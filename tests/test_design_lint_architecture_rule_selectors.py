@@ -6,6 +6,9 @@ import pytest
 
 from tests.design_lint_connector_rule_selector_cases import CONNECTOR_RULE_NODE_CASES
 from tests.design_lint_numbered_return_selector_cases import NUMBERED_RETURN_RULE_NODE_CASES
+from tests.design_lint_pcb_exact_net_scope_rule_selector_cases import (
+    PCB_EXACT_NET_SCOPE_RULE_NODE_CASES,
+)
 from tests.design_lint_pcb_rule_selector_cases import PCB_RULE_NODE_CASES
 from tests.design_lint_pcb_signal_path_unmapped_edge_clearance_rule_selector_cases import (
     PCB_SIGNAL_PATH_UNMAPPED_EDGE_CLEARANCE_RULE_NODE_CASES,
@@ -25,6 +28,7 @@ RULE_NODE_CASES = (
     *NON_PCB_RULE_NODE_CASES,
     *NUMBERED_RETURN_RULE_NODE_CASES,
     *PCB_RULE_NODE_CASES,
+    *PCB_EXACT_NET_SCOPE_RULE_NODE_CASES,
     *PCB_SIGNAL_PATH_UNMAPPED_RULE_NODE_CASES,
     *PCB_SIGNAL_PATH_UNMAPPED_EDGE_CLEARANCE_RULE_NODE_CASES,
     *PCB_SIGNAL_PATH_UNMAPPED_FROM_TO_RULE_NODE_CASES,

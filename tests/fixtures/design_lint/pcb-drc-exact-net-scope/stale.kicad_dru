@@ -1,0 +1,4 @@
+(version 1)
+(rule "stale-net-width" (severity warning)
+  (condition "A.NetName == 'GHOST'")
+  (constraint track_width (min 0.4mm)))

@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 374 active rules.
+The catalog currently contains 375 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -923,6 +923,38 @@ reserved for a future board variant is an expected review case and can be
 ignored through project policy. This check requires both the current
 `.kicad_pro` and `.kicad_pcb`
 source hashes; it skips ambiguous inputs and does not inspect copper.
+
+For PCB and PCB-only projects on KiCad 10.0.0 or 10.0.5,
+`pcb.drc_exact_net_scope_unmatched` reviews exact literal `A.NetName == '…'`
+selectors in supported named custom DRC constraints when the selector has no
+case-insensitive match in the current source-bound PCB net table. A renamed or
+removed net can leave a custom constraint scoped to nothing. Digest-pinned
+native fixtures confirm that `N1` and `n1` select the same net and that an
+absent `GHOST` selector does not apply the custom track-width constraint. The
+finding preserves the selector, affected rule and constraint details, and
+source and native receipt identities. Its default is `review`; project policy
+can select `block`, `off`, or an exact-fingerprint ignore.
+
+This is a stale-scope prompt, not a requirement that a named net exist. A
+selector may be reserved for another assembly variant. The check recognizes
+only one exact literal selector on a supported constraint, skips ambiguous
+case-fold-colliding board net names, and does not infer schematic intent,
+inspect copper, or evaluate the electrical suitability of the constraint.
+Malformed or unsupported source evidence remains governed by the existing
+source-bound DRC checks.
+The tooling-owned inputs are documented in the
+[exact-net scope fixture record](../tests/fixtures/design_lint/pcb-drc-exact-net-scope/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_pcb_drc_exact_net_scope.py \
+  tests/test_design_lint_mcp_parity_pcb_drc_exact_net_scope.py \
+  tests/test_design_lint_architecture_pcb_drc_exact_net_scope.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.drc_exact_net_scope_unmatched")'
+
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_drc_exact_net_scope_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.drc_exact_net_scope_unmatched")'
+```
 
 ### Placed schematic symbol has no embedded definition
 

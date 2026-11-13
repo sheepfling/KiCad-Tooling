@@ -1,0 +1,4 @@
+(version 1)
+(rule "case-variant-net-width" (severity warning)
+  (condition "A.NetName == 'n1'")
+  (constraint track_width (min 0.4mm)))

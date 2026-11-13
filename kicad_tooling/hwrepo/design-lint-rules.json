@@ -14589,7 +14589,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_drc_netclass_patterns.py#unmatched_pcb_netclass_patterns",
         "kicad_tooling/hwrepo/pcb_drc_netclass_patterns.py#_configured_netclass_patterns",
-        "kicad_tooling/hwrepo/pcb_drc_netclass_patterns.py#_pcb_board_net_names",
+        "kicad_tooling/hwrepo/pcb_board_net_inventory.py#pcb_board_net_names",
         "kicad_tooling/hwrepo/pcb_drc_netclass_pattern_review.py#source_bound_pcb_netclass_pattern_candidates",
         "kicad_tooling/hwrepo/pcb_drc_netclass_pattern_review.py#project_pcb_unmatched_netclass_pattern_evidence",
         "kicad_tooling/hwrepo/pcb_drc_netclass_settings_review.py#source_bound_pcb_netclass_settings_candidates",
@@ -14600,6 +14600,53 @@
         "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request",
         "kicad_tooling/hwrepo/design_lint_candidate_inputs.py#DesignLintCandidateInputs",
         "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_evaluation"
+      ]
+    },
+    {
+      "rule_id": "pcb.drc_exact_net_scope_unmatched",
+      "title": "Exact custom DRC net selector is absent from the current PCB",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_drc_exact_net_scope.py#unmatched_exact_net_scope_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact literal A.NetName scopes in source-bound KiCad custom DRC rules compared with the unique named-net table in the source-bound PCB",
+      "predicate": "For PCB and PCB-only projects configured for exact KiCad 10.0.0 or 10.0.5, emit one default-REVIEW candidate per exact literal A.NetName selector used by a named, supported custom DRC constraint when no case-insensitive name match occurs in the complete current PCB net table. Group repeated constraints by selector and preserve rule names, conditions, constraint bounds, layers, severities, and project, board, rules, DRC, and summary identities. If PCB net names collide under case-folding, skip the analysis as ambiguous. Do not infer that the net should exist or that its native rule is a design requirement.",
+      "supported_kicad_versions": [
+        "Exact KiCad 10.0.0 and 10.0.5 only. Digest-pinned native DRC fault/control fixtures confirm that A.NetName exact equality targets the current board net case-insensitively, while a truly absent name does not apply the custom track-width rule."
+      ],
+      "limitations": [
+        "A rule may intentionally reserve a net for another assembly variant or future board revision. The finding requests review and does not establish that the PCB is defective or that a net should be added.",
+        "Only one exact literal A.NetName equality condition on a named supported constraint is recognized. Net-name comparison is case-insensitive; case-fold-colliding board net names cause the check to skip. Wildcard, compound, variable-backed, malformed, ignored, excluded, and unsupported conditions or constraints are skipped.",
+        "The check requires a complete unique top-level PCB net table. It does not infer net intent from the schematic, inspect copper connectivity, assess the constraint bounds, or establish that an object on a present net is affected by a rule."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_drc_exact_net_scope.test_exact_net_selector_missing_from_board_is_reviewed_with_native_evidence",
+        "tests.test_design_lint_mcp_parity_pcb_drc_exact_net_scope.test_unmatched_exact_net_scope_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_exact_net_scope_native.test_exact_net_selector_case_semantics_are_deterministic"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_drc_exact_net_scope.test_current_net_names_and_unsupported_condition_shapes_are_quiet",
+        "tests.test_pcb_drc_exact_net_scope.test_scanner_runs_for_pcb_only_and_skips_unsupported_or_disabled_inputs",
+        "tests.test_design_lint_mcp_parity_pcb_drc_exact_net_scope.test_unmatched_exact_net_scope_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_exact_net_scope_native.test_exact_net_selector_case_semantics_are_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_drc_exact_net_scope.test_rule_order_does_not_change_grouping_or_subject_order",
+        "tests.test_pcb_drc_exact_net_scope.test_malformed_board_net_inventory_does_not_create_a_stale_scope_finding"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_exact_net_scope.py#unmatched_exact_net_scope_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_exact_net_scope_scan.py#scan_unmatched_exact_net_drc_scopes",
+        "kicad_tooling/hwrepo/pcb_board_net_inventory.py#pcb_board_net_names",
+        "kicad_tooling/hwrepo/pcb_drc_conditions.py#native_exact_net_condition",
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_constraints",
+        "kicad_tooling/hwrepo/pcb_drc_source_evidence.py#source_bound_drc_evidence",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
       ]
     },
     {
