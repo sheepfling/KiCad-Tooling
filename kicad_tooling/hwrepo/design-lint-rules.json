@@ -14650,6 +14650,53 @@
       ]
     },
     {
+      "rule_id": "pcb.drc_exact_netclass_scope_unmatched",
+      "title": "Exact custom DRC netclass selector is absent from project settings",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_drc_exact_netclass_scope.py#unmatched_exact_netclass_scope_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact literal A.NetClass scopes in source-bound KiCad custom DRC rules compared with declared, assigned, and pattern-referenced netclass names in the source-bound project settings",
+      "predicate": "For PCB and PCB-only projects configured for exact KiCad 10.0.0 or 10.0.5, emit one default-REVIEW candidate per case-insensitive group of exact literal A.NetClass selectors used by a named, supported custom DRC constraint when no selector matches a class declared in net_settings.classes, referenced by net_settings.netclass_assignments, or referenced by net_settings.netclass_patterns. Preserve selector spellings, rule names, constraints, complete class-name inventory, and project, board, rules, native DRC, and summary identities. Skip malformed or ambiguous inventories and case-fold-colliding class names. Do not infer that the class should exist or that the board has an electrical defect.",
+      "supported_kicad_versions": [
+        "Exact KiCad 10.0.0 and 10.0.5 only. Digest-pinned native DRC confirms case-insensitive A.NetClass equality and confirms that absent selectors do not apply the track-width rule, while classes referenced only by assignments or patterns still match."
+      ],
+      "limitations": [
+        "A selector may intentionally reserve a class for another assembly variant or future board revision. The finding requests review and does not establish a board defect or require a class to be added.",
+        "Only one exact ASCII A.NetClass equality literal on a named supported constraint is recognized. Composite class lists, wildcard, variable-backed, function, compound, malformed, ignored, excluded, and unsupported conditions or constraints are skipped. Case-insensitive class-name collisions make the project inventory ambiguous and suppress analysis.",
+        "The complete inventory uses class definitions, netclass assignment values, and pattern targets from the current project settings. This check does not inspect copper, determine whether a class has assigned nets, assess constraint bounds, or evaluate electrical suitability."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_drc_exact_netclass_scope.test_absent_exact_class_selector_is_reviewed_with_bound_sources",
+        "tests.test_design_lint_mcp_parity_pcb_drc_exact_netclass_scope.test_unmatched_exact_netclass_scope_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_exact_netclass_scope_native.test_exact_netclass_selector_behavior_and_project_references_are_deterministic"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_drc_exact_netclass_scope.test_project_class_sources_and_casefold_controls_are_quiet",
+        "tests.test_design_lint_mcp_parity_pcb_drc_exact_netclass_scope.test_unmatched_exact_netclass_scope_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_exact_netclass_scope_native.test_exact_netclass_selector_behavior_and_project_references_are_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_drc_exact_netclass_scope.test_casefold_equivalent_absent_selectors_group_deterministically",
+        "tests.test_pcb_drc_exact_netclass_scope.test_unsupported_shapes_and_ambiguous_project_inventories_stay_quiet",
+        "tests.test_pcb_drc_exact_netclass_scope.test_disabled_or_unmeasured_scans_do_not_read_native_sources"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_exact_netclass_scope.py#unmatched_exact_netclass_scope_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_exact_netclass_scope_scan.py#scan_unmatched_exact_netclass_drc_scopes",
+        "kicad_tooling/hwrepo/pcb_drc_netclass_scope_inventory.py#pcb_project_netclass_scope_names",
+        "kicad_tooling/hwrepo/pcb_drc_conditions.py#native_exact_netclass_condition",
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_constraints",
+        "kicad_tooling/hwrepo/pcb_drc_source_evidence.py#source_bound_drc_evidence",
+        "kicad_tooling/hwrepo/design_lint_pcb_dru_candidates.py#collect_pcb_dru_candidates"
+      ]
+    },
+    {
       "rule_id": "pcb.duplicate_object_uuid",
       "title": "PCB object UUID repeats within one board source",
       "theme": "pcb",

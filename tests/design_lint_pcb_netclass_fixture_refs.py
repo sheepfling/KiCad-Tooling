@@ -20,6 +20,22 @@ PCB_NETCLASS_PARITY_FIXTURES = MappingProxyType(
                 ),
             }
         ),
+        "pcb.drc_exact_netclass_scope_unmatched": MappingProxyType(
+            {
+                "fault_fixtures": (
+                    (
+                        "tests.test_design_lint_mcp_parity_pcb_drc_exact_netclass_scope"
+                        ".test_unmatched_exact_netclass_scope_matches_between_cli_and_mcp"
+                    ),
+                ),
+                "valid_control_fixtures": (
+                    (
+                        "tests.test_design_lint_mcp_parity_pcb_drc_exact_netclass_scope"
+                        ".test_unmatched_exact_netclass_scope_matches_between_cli_and_mcp"
+                    ),
+                ),
+            }
+        ),
         "pcb.drc_conflicting_netclass_definitions": MappingProxyType(
             {
                 "fault_fixtures": (

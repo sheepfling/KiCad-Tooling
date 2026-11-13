@@ -52,6 +52,7 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_pcb_drc_netclass_pattern_unmatched_native.py": frozenset(
             {"pcb_lint", "evidence_lint"}
         ),
+        "test_pcb_drc_exact_netclass_scope_native.py": frozenset({"pcb_lint", "evidence_lint"}),
         "test_pcb_drc_malformed_netclass_numeric_constraints_native.py": frozenset(
             {"pcb_lint", "evidence_lint"}
         ),

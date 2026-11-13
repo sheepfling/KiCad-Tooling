@@ -1,0 +1,4 @@
+(version 1)
+(rule "pattern-implicit-netclass-width" (severity warning)
+  (condition "A.NetClass == 'PatternOnly'")
+  (constraint track_width (min 0.4mm)))

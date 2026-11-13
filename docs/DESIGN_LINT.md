@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 375 active rules.
+The catalog currently contains 376 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -944,6 +944,38 @@ Malformed or unsupported source evidence remains governed by the existing
 source-bound DRC checks.
 The tooling-owned inputs are documented in the
 [exact-net scope fixture record](../tests/fixtures/design_lint/pcb-drc-exact-net-scope/README.md).
+
+For PCB and PCB-only projects on KiCad 10.0.0 or 10.0.5,
+`pcb.drc_exact_netclass_scope_unmatched` reviews supported exact literal
+`A.NetClass == '…'` selectors when no case-insensitive match occurs among the
+class definitions, netclass assignments, or netclass pattern targets in the
+current source-bound project settings. Native fixtures confirm that absent
+selectors do not apply the custom track-width constraint. They also confirm
+that assignment and pattern references still match even when no class
+definition exists, so those references remain valid controls rather than
+false positives. The finding preserves selector spellings, affected rule and
+constraint details, and project, board, rule, DRC, and summary identities.
+Its default is `review`; project policy can select `block`, `off`, or an
+exact-fingerprint ignore.
+
+This is a stale-scope prompt, not a requirement that a named class be declared.
+A selector may be reserved for another assembly variant. The check recognizes
+only a single exact ASCII class literal, skips composite, wildcard,
+function-based, variable-backed, malformed, or ambiguous inputs, and does not
+inspect copper, determine whether a class has assigned nets, or judge the
+constraint's electrical suitability. The tooling-owned inputs are documented
+in the
+[exact-netclass scope fixture record](../tests/fixtures/design_lint/pcb-drc-exact-netclass-scope/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_pcb_drc_exact_netclass_scope.py \
+  tests/test_design_lint_mcp_parity_pcb_drc_exact_netclass_scope.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.drc_exact_netclass_scope_unmatched")'
+
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_drc_exact_netclass_scope_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.drc_exact_netclass_scope_unmatched")'
+```
 
 ```sh
 .venv/bin/python -I -m pytest tests/test_pcb_drc_exact_net_scope.py \

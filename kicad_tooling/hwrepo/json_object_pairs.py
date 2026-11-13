@@ -27,6 +27,26 @@ def json_object_member(value: object, key: str) -> object | None:
     return next((item for name, item in reversed(value.pairs) if name == key), None)
 
 
+def unique_json_object_member(value: object, key: str) -> object | None:
+    """Return a member only when one retained JSON object key is present."""
+    if not isinstance(value, JsonObjectPairs):
+        return None
+    values = tuple(item for name, item in value.pairs if name == key)
+    return values[0] if len(values) == 1 else None
+
+
+def unique_json_array_member(value: object, key: str) -> list[object] | None:
+    """Return a unique array-valued member without collapsing duplicate keys."""
+    member = unique_json_object_member(value, key)
+    return cast(list[object], member) if isinstance(member, list) else None
+
+
+def unique_json_string_member(value: object, key: str) -> str | None:
+    """Return a unique string-valued member without collapsing duplicate keys."""
+    member = unique_json_object_member(value, key)
+    return member if isinstance(member, str) else None
+
+
 def json_value_from_object_pairs(
     value: object,
     *,

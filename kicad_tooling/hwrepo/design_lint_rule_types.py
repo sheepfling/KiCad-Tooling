@@ -346,6 +346,7 @@ DesignLintRuleId = Literal[
     "pcb.drc_malformed_netclass_numeric_constraints",
     "pcb.drc_netclass_pattern_unmatched",
     "pcb.drc_exact_net_scope_unmatched",
+    "pcb.drc_exact_netclass_scope_unmatched",
     "pcb.drc_duplicate_severity_key",
     "pcb.drc_invalid_severity_value",
     "pcb.drc_nonstring_severity_value",

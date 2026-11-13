@@ -1,0 +1,4 @@
+(version 1)
+(rule "assigned-implicit-netclass-width" (severity warning)
+  (condition "A.NetClass == 'MissingClass'")
+  (constraint track_width (min 0.4mm)))

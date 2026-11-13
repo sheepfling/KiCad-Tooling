@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 375 rules are implemented with synthetic regression coverage.
+The following 376 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 375 active rules.
+The catalog currently contains 376 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -755,6 +755,7 @@ skipped under prerelease policy.
 - `pcb.drc_malformed_netclass_numeric_constraints`
 - `pcb.drc_netclass_pattern_unmatched`
 - `pcb.drc_exact_net_scope_unmatched`
+- `pcb.drc_exact_netclass_scope_unmatched`
 - `pcb.duplicate_object_uuid`
 - `pcb.footprint_path_trailing_separator`
 - `pcb.drc_duplicate_severity_key`
@@ -4438,7 +4439,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 375 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 376 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -26575,6 +26576,48 @@ acceptance threads while new lint features proceed:
   design_lint_rule(rule_id="pcb.drc_exact_net_scope_unmatched")`. Run
   `tests/test_pcb_drc_exact_net_scope_native.py` with `native_kicad` and the
   same rule selector for the Docker lane.
+
+#### LINT-457 — Review exact custom DRC netclass selectors absent from project settings
+
+- **Status:** Implemented as a default-REVIEW rule. The local scoped package
+  acceptance passed with 463 tests, including digest-pinned Docker checks on
+  KiCad 10.0.0 and 10.0.5, Linux and Windows Pyright, wheel/sdist builds, and
+  installed-wheel rehearsals against separate and adapted public-template
+  checkouts. Hosted acceptance is pending.
+- **Priority:** P2 saved-constraint coverage. An exact netclass selector can
+  remain syntactically valid after a class is removed or renamed, while the
+  custom rule no longer applies.
+- **Rule:** Adds `pcb.drc_exact_netclass_scope_unmatched` for exact literal
+  `A.NetClass == '…'` selectors on named supported custom DRC constraints.
+  It compares case-insensitively against class names in the source-bound
+  `net_settings.classes`, `netclass_assignments`, and `netclass_patterns`
+  settings. Repeated case-equivalent selectors share one REVIEW candidate;
+  source, rule, constraint, and native DRC identities remain in evidence.
+- **Native evidence:** Digest-pinned KiCad 10.0.0 and 10.0.5 Docker fixtures
+  show that an absent `GhostClass` selector does not apply the custom
+  track-width constraint. The lowercase `narrow` selector matches declared
+  `Narrow`; `MissingClass` referenced only by an assignment and `PatternOnly`
+  referenced only by a netclass pattern also match. These controls prevent
+  the lint from treating assignment or pattern names as missing classes.
+- **Boundary:** Only exact ASCII single-class equality selectors, unique
+  supported project inventories, named supported constraints, PCB/PCB-only
+  projects, and KiCad 10.0.0 or 10.0.5 are in scope. Wildcard, composite,
+  variable, function, malformed, ignored, excluded, ambiguous, and unsupported
+  inputs stay quiet. A selector can be intentionally reserved for a variant;
+  the finding does not require the class to exist, inspect copper, or judge
+  electrical suitability. Project policy may choose `review`, `block`, `off`,
+  or an exact-fingerprint ignore.
+- **Fixtures:** Tooling-authored source fault/control fixtures cover declared,
+  case-variant, assignment-only, pattern-only, unsupported, ambiguous, and
+  disabled cases. CLI/MCP parity and repeated native DRC controls use no
+  external board or cohort source.
+- **Selection:** Run `tests/test_pcb_drc_exact_netclass_scope.py`,
+  `tests/test_design_lint_mcp_parity_pcb_drc_exact_netclass_scope.py`, and
+  `tests/test_design_lint_architecture_pcb_drc_exact_netclass_scope.py` with
+  `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.drc_exact_netclass_scope_unmatched")`. Run
+  `tests/test_pcb_drc_exact_netclass_scope_native.py` with Docker,
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, `native_kicad`, and the same rule selector.
 
 ## Completion and release gate
 

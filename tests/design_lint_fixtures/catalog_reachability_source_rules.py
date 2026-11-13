@@ -14,6 +14,9 @@ from tests.design_lint_fixtures.catalog_reachability_pcb_drc_duplicate_net_setti
 from tests.design_lint_fixtures.catalog_reachability_pcb_drc_duplicate_severity import (
     pcb_drc_duplicate_severity_key_rule_ids,
 )
+from tests.design_lint_fixtures.catalog_reachability_pcb_drc_exact_netclass_scope import (
+    pcb_drc_exact_netclass_scope_rule_ids,
+)
 from tests.design_lint_fixtures.catalog_reachability_pcb_drc_malformed_netclass_assignment import (
     pcb_drc_malformed_netclass_assignment_rule_ids,
 )
@@ -91,6 +94,7 @@ def source_bound_rule_ids() -> frozenset[str]:
         | pcb_drc_malformed_netclass_inventory_rule_ids()
         | pcb_drc_malformed_netclass_numeric_constraints_rule_ids()
         | pcb_drc_netclass_pattern_unmatched_rule_ids()
+        | pcb_drc_exact_netclass_scope_rule_ids()
         | pcb_dru_contradictory_bounds_rule_ids()
         | pcb_dru_malformed_bounds_rule_ids()
         | pcb_dru_malformed_condition_rule_ids()

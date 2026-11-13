@@ -6,9 +6,14 @@ import fnmatch
 import json
 import re
 from dataclasses import dataclass
-from typing import cast
 
-from .json_object_pairs import JsonObjectPairs, retain_json_object_pairs
+from .json_object_pairs import (
+    JsonObjectPairs,
+    retain_json_object_pairs,
+    unique_json_array_member,
+    unique_json_object_member,
+    unique_json_string_member,
+)
 from .pcb_board_net_inventory import pcb_board_net_names
 
 
@@ -56,11 +61,11 @@ def _configured_netclass_patterns(
         return None
     if not isinstance(root, JsonObjectPairs):
         return None
-    net_settings = _unique_object_member(root, "net_settings")
+    net_settings = unique_json_object_member(root, "net_settings")
     if not isinstance(net_settings, JsonObjectPairs):
         return None
-    classes = _unique_array_member(net_settings, "classes")
-    pattern_entries = _unique_array_member(net_settings, "netclass_patterns")
+    classes = unique_json_array_member(net_settings, "classes")
+    pattern_entries = unique_json_array_member(net_settings, "netclass_patterns")
     if classes is None or pattern_entries is None:
         return None
 
@@ -68,7 +73,7 @@ def _configured_netclass_patterns(
     for entry in classes:
         if not isinstance(entry, JsonObjectPairs):
             return None
-        name = _unique_string_member(entry, "name")
+        name = unique_json_string_member(entry, "name")
         if name is None or not name or name in class_names:
             return None
         class_names.append(name)
@@ -79,26 +84,11 @@ def _configured_netclass_patterns(
     for index, entry in enumerate(pattern_entries):
         if not isinstance(entry, JsonObjectPairs):
             continue
-        pattern = _unique_string_member(entry, "pattern")
-        netclass = _unique_string_member(entry, "netclass")
+        pattern = unique_json_string_member(entry, "pattern")
+        netclass = unique_json_string_member(entry, "netclass")
         if pattern and netclass:
             patterns.append((index, pattern, netclass))
     return frozenset(class_names), tuple(patterns)
-
-
-def _unique_object_member(source: JsonObjectPairs, name: str) -> object | None:
-    values = tuple(value for key, value in source.pairs if key == name)
-    return values[0] if len(values) == 1 else None
-
-
-def _unique_array_member(source: JsonObjectPairs, name: str) -> list[object] | None:
-    value = _unique_object_member(source, name)
-    return cast(list[object], value) if isinstance(value, list) else None
-
-
-def _unique_string_member(source: JsonObjectPairs, name: str) -> str | None:
-    value = _unique_object_member(source, name)
-    return value if isinstance(value, str) else None
 
 
 def _kicad_netclass_pattern_matches(pattern: str, net: str) -> bool:

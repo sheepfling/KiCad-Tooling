@@ -37,6 +37,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_architecture_pcb_mechanical_edge.py",
                 "tests/test_design_lint_architecture_pcb_differential_pair_unmapped.py",
                 "tests/test_design_lint_architecture_pcb_drc_exact_net_scope.py",
+                "tests/test_design_lint_architecture_pcb_drc_exact_netclass_scope.py",
                 "tests/test_design_lint_native_gate_architecture.py",
                 "tests/test_design_lint_native_fixture_inventory_architecture.py",
                 "tests/test_design_lint_architecture_pytest_markers.py",
