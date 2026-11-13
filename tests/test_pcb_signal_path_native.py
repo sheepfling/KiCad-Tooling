@@ -13,6 +13,7 @@ from pydantic import JsonValue
 from kicad_tooling.ci_hosted import HostedLog, pcb_signal_path_drc_fixture_lane
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import DesignLintPolicy
+from kicad_tooling.hwrepo.pcb_drc_rule_parser import native_constraints
 from tests.synthetic_design_lint_project import (
     PINNED_NATIVE_KICAD_IMAGES,
     synthetic_design_lint_project,
@@ -126,6 +127,7 @@ def _retain_native_receipt(project_root: Path, log: HostedLog, project: str) -> 
     ("kicad_version", "image"),
     tuple(PINNED_NATIVE_KICAD_IMAGES.items()),
 )
+@pytest.mark.design_lint_rule(rule_id="pcb.signal_path_unmapped_native_rule")
 def test_native_signal_path_drc_faults_are_repeatable(
     tmp_path: Path, kicad_version: str, image: str
 ) -> None:
@@ -151,6 +153,24 @@ def test_native_signal_path_drc_faults_are_repeatable(
         and item.get("status") == "PASS"
     )
     output = root / result["artifact_directory"]
+    native_fault_rules = native_constraints(
+        (output / "fault.kicad_dru").read_text(encoding="utf-8")
+    )
+    (unmapped_length_rule,) = tuple(
+        item
+        for item in native_fault_rules
+        if item.rule_name == "synthetic-unmapped-data-length"
+        and item.condition == "A.NetName == 'SYNTH_DATA'"
+        and item.name == "length"
+    )
+    assert unmapped_length_rule.maximum_nm == 20_000_000
+    fault_drc = (output / "fault.first.json").read_text(encoding="utf-8")
+    control_drc = (output / "control.first.json").read_text(encoding="utf-8")
+    exact_rule_diagnostic = "rule 'synthetic-unmapped-data-length'"
+    assert exact_rule_diagnostic in fault_drc
+    assert exact_rule_diagnostic not in control_drc
+    control_rules = native_constraints((output / "control.kicad_dru").read_text(encoding="utf-8"))
+    assert not any(item.rule_name == "synthetic-unmapped-data-length" for item in control_rules)
     expected_findings = {
         "length_out_of_range",
         "skew_out_of_range",

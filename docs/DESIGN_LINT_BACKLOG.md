@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 370 rules are implemented with synthetic regression coverage.
+The following 371 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 370 active rules.
+The catalog currently contains 371 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -718,6 +718,7 @@ skipped under prerelease policy.
 - `pcb.switching_loop_geometry`
 - `pcb.differential_pair_rule_coverage`
 - `pcb.signal_path_rule_coverage`
+- `pcb.signal_path_unmapped_native_rule`
 - `pcb.custom_drc_rule_ignored`
 - `pcb.custom_drc_rule_excluded`
 - `pcb.custom_drc_rule_without_constraint`
@@ -4430,7 +4431,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 370 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 371 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -26357,6 +26358,42 @@ acceptance threads while new lint features proceed:
   rumdl, mdrepo, Pyright, Windows type checks, wheel/sdist builds,
   installed-origin/version checks, and external/adapted template
   inventory, surface, verification, and playtest stages passed.
+
+#### LINT-452 — Review native length-rule nets omitted from signal-path coverage
+
+- **Status:** Implemented as default-REVIEW rule
+  `pcb.signal_path_unmapped_native_rule`. It runs for PCB projects that have a
+  `pcb_signal_path_rule_map` with native DRC requirements while
+  `pcb.signal_path_rule_coverage` is enabled. The rule can independently be
+  promoted to `block` or disabled with `off`.
+- **Priority:** P2 coverage completeness. An exact native per-net length rule
+  may be enforced by KiCad while its source-netlist net is missing from the
+  project-authored endpoint map used for path review.
+- **Predicate:** Prompt for each named `length` constraint with one exact,
+  literal `A.NetName == '<net>'` scope when the net exists in the current
+  source-bound schematic netlist but is absent from mapped paths. Reuse the
+  shared literal selector parser, compare case-insensitively, and group
+  repeated constraints by rule and net.
+- **Boundary:** This is a prompt to review map coverage. It does not infer
+  timing criticality, decide that the map should be expanded, validate the
+  authored bounds, or establish PCB or cable continuity. Wildcard, compound,
+  variable-backed, unnamed, and otherwise nonliteral scopes stay quiet.
+  Native DRC remains responsible for configured length constraints.
+- **Fixtures:** Synthetic cases cover an omitted exact source-net scope, an
+  already mapped net, a net absent from the source netlist, a broad selector,
+  independent coverage/rule modes, and input-order stability. CLI/MCP parity
+  uses the same typed inspection service and source-bound synthetic DRC receipt.
+  A digest-pinned Docker fault/control lane also confirms that the exact-net
+  native length rule is accepted and reported by KiCad 10.0.0 and 10.0.5. It
+  does not measure a mapped path or claim copper continuity. No proprietary
+  project data is part of this rule.
+- **Selection:** Run
+  `tests/test_pcb_signal_path_unmapped_rules.py`,
+  `tests/test_design_lint_mcp_parity_pcb_signal_path_unmapped.py`, and
+  `tests/test_design_lint_architecture_pcb_signal_path_unmapped.py` with
+  `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.signal_path_unmapped_native_rule")`.
+- **Hosted acceptance:** Pending.
 
 ## Completion and release gate
 

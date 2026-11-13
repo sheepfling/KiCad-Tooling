@@ -70,6 +70,13 @@ def _rules(
     ignore_severity: bool = False,
 ) -> None:
     severity = "(severity ignore)\n  " if ignore_severity else ""
+    unmapped_length = (
+        '(rule "synthetic-unmapped-data-length" (severity error) '
+        "(condition \"A.NetName == 'SYNTH_DATA'\") "
+        "(constraint length (max 20mm)))\n"
+        if name == "fault"
+        else ""
+    )
     source = f"""(version 1)
 (rule \"synthetic-clock-length\"
   {severity}(condition \"A.fromTo('J1-1', 'U1-1')\")
@@ -83,6 +90,7 @@ def _rules(
 (rule \"synthetic-data-skew\"
   {severity}(condition \"A.fromTo('J1-*', 'U1-*')\")
   (constraint skew (max {skew_mm:g}mm)))
+{unmapped_length}
 """
     (directory / f"{name}.kicad_dru").write_text(source, encoding="utf-8")
 

@@ -17,6 +17,9 @@ from tests.design_lint_footprint_peer_fixture_refs import (
 from tests.design_lint_pcb_duplicate_pad_fixture_refs import PCB_DUPLICATE_PAD_PARITY_FIXTURES
 from tests.design_lint_pcb_layout_fixture_refs import PCB_LAYOUT_PARITY_FIXTURES
 from tests.design_lint_pcb_netclass_fixture_refs import PCB_NETCLASS_PARITY_FIXTURES
+from tests.design_lint_pcb_signal_path_unmapped_fixture_refs import (
+    PCB_SIGNAL_PATH_UNMAPPED_PARITY_FIXTURES,
+)
 from tests.design_lint_power_fixture_refs import (
     OPEN_DRAIN_CONTROL_PARITY_FIXTURES,
     SUPPLY_RANGE_MAP_COVERAGE_PARITY_FIXTURES,
@@ -40,6 +43,7 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
         **PCB_NETCLASS_PARITY_FIXTURES,
         **PCB_DUPLICATE_PAD_PARITY_FIXTURES,
         **PCB_LAYOUT_PARITY_FIXTURES,
+        **PCB_SIGNAL_PATH_UNMAPPED_PARITY_FIXTURES,
         "bus.i2c_missing_pullup": MappingProxyType(
             {
                 "fault_fixtures": _refs(
