@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 362 active rules.
+The catalog currently contains 363 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -6671,6 +6671,33 @@ This is a reference-identity heuristic. It cannot determine the item's
 electrical role, assembly state, or manufacturing intent. A project may decide
 that one unmatched reference is an error and another is intentional; the
 checker only supplies the review prompt.
+
+## Review PCB footprint paths with a trailing separator
+
+`pcb.footprint_path_trailing_separator` reports a source-bound PCB footprint
+whose single quoted instance `path` contains one or more canonical UUID
+segments and ends in `/`. A trailing separator leaves an empty final segment;
+the rule asks for identity review because a normal schematic-backed footprint
+path includes its symbol UUID.
+
+This is a heuristic clue, not proof that the schematic association is lost.
+Pinned KiCad 10.0.0 and 10.0.5 DRC accepted the tooling-owned fault and
+complete-path control and emitted identical violations and unconnected-item
+evidence. The native check did not exercise Update-from-Schematic. The lint
+does not establish electrical or layout correctness, and it does not propose
+an edit. It defaults to `review`; policy may set `block`, `off`, or ignore an
+exact fingerprint. Board-only root paths, malformed or noncanonical paths,
+duplicate path fields, and other KiCad patches are outside its predicate.
+
+Source-bound fault/control, metamorphic, CLI/MCP parity, and native evidence are in the
+[fixture note](../tests/fixtures/design_lint/pcb-footprint-path-trailing-separator/README.md).
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_pcb_footprint_path_integrity.py \
+  tests/test_design_lint_mcp_parity_pcb_footprint_path_trailing_separator.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.footprint_path_trailing_separator")'
+```
 
 ## Require selected references to be fitted in the base assembly or a variant
 

@@ -339,6 +339,7 @@ DesignLintRuleId = Literal[
     "pcb.drc_nonstring_severity_value",
     "pcb.drc_exclusion_present",
     "pcb.duplicate_object_uuid",
+    "pcb.footprint_path_trailing_separator",
     "schematic.erc_error_downgraded",
     "schematic.erc_catalog_unverified",
     "schematic.erc_exclusion_present",

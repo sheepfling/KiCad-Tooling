@@ -54,6 +54,9 @@ from .pcb_drc_models import (
     PcbDifferentialPairRuleMap,
 )
 from .pcb_drc_source_scan import scan_source_bound_rule_map
+from .pcb_footprint_path_integrity import (
+    pcb_footprint_path_trailing_separator_candidates,
+)
 from .pcb_object_uuid_integrity import duplicate_pcb_object_uuid_candidates
 from .project_models import ProjectManifest
 from .project_source_hashes import hash_project_sources as hashes
@@ -160,10 +163,13 @@ def inspect_design_lint_request(
                 coach.source_hashes,
             ),
         )
-        pcb_source_candidates = duplicate_pcb_object_uuid_candidates(
-            root,
-            config,
-            coach.source_hashes,
+        pcb_source_candidates = (
+            *duplicate_pcb_object_uuid_candidates(root, config, coach.source_hashes),
+            *pcb_footprint_path_trailing_separator_candidates(
+                root,
+                config,
+                coach.source_hashes,
+            ),
         )
         spi_roster = spi_roster_context(root, config)
         serial_peer_roster = serial_peer_roster_context(root, config)

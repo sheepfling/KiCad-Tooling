@@ -2528,11 +2528,35 @@ evaluation of upstream precision or reviewer effort.
 
 Source: [kicad-happy release notes][happy-fiducial-release-notes].
 
+### Source review and local trial: incomplete PCB footprint instance paths
+
+- **Pinned source:** `94xhn/kicad-file-doctor` at commit
+  [`45133533e05aeabb7ef150d3a95084c318f16c9d`](https://github.com/94xhn/kicad-file-doctor/tree/45133533e05aeabb7ef150d3a95084c318f16c9d)
+  declares MIT and checks for footprint paths ending in `/`, describing a possible incomplete symbol
+  path. See the
+  [source predicate](https://github.com/94xhn/kicad-file-doctor/blob/45133533e05aeabb7ef150d3a95084c318f16c9d/kicad_file_doctor/checks.py#L1416-L1455)
+  and
+  [license](https://github.com/94xhn/kicad-file-doctor/blob/45133533e05aeabb7ef150d3a95084c318f16c9d/LICENSE).
+- **Local gap and response:** No existing source-bound check recognized this
+  PCB footprint path shape. LINT-443 adds a first-party, exact-hash REVIEW
+  prompt for a single quoted direct path ending in `/` after canonical UUID
+  segments. It does not import candidate code or assert that association is
+  actually broken.
+- **Native evidence:** The minimal tooling-owned fault and complete-path
+  control both loaded under pinned KiCad 10.0.0 and 10.0.5. Two repeated runs
+  per case/version produced identical DRC violations and unconnected-item
+  evidence across fault and control. This establishes that native DRC does not
+  differentiate these inputs; it does not test the GUI Update-from-Schematic
+  workflow or measure field precision or reviewer value.
+- **Disposition:** Keep the narrow rule as an opt-in-strength REVIEW clue.
+  Reassess after a real independent review can label the path's intent. No
+  proprietary project, cohort board, or upstream source was stored.
+
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 362 active rules. Each entry has a deterministic predicate, evidence
+contains 363 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
-Of the 362 active rules, 304 default to `review`, 57 to `off`, and
+Of the 363 active rules, 305 default to `review`, 57 to `off`, and
 `pcb.required_fitted_reference` to `block`. Off-by-default checks include
 schematic geometry, generic peer assignment, selected component topology
 reviews such as the BJT base-bias and base/collector same-net prompts, and

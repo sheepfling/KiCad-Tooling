@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 362 rules are implemented with synthetic regression coverage.
+The following 363 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 362 active rules.
+The catalog currently contains 363 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -749,6 +749,7 @@ skipped under prerelease policy.
 - `pcb.drc_malformed_netclass_inventory`
 - `pcb.drc_malformed_netclass_numeric_constraints`
 - `pcb.duplicate_object_uuid`
+- `pcb.footprint_path_trailing_separator`
 - `pcb.drc_duplicate_severity_key`
 - `pcb.drc_unknown_severity_key`
 - `pcb.drc_invalid_severity_value`
@@ -4399,7 +4400,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 362 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 363 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -25905,6 +25906,39 @@ acceptance threads while new lint features proceed:
   separate and adapted project checkouts, and playtest passed. Receipt:
   `build/ci/run-eny5gdgm`. The hosted prerelease gate passed in Actions run
   `43394607293`.
+
+#### LINT-443 — Review trailing separators in PCB footprint instance paths
+
+- **Status:** Local synthetic and pinned-native acceptance passed; hosted gate pending.
+- **Priority:** P2 source-identity review. A footprint path can stop after one or more sheet UUIDs
+  while still parsing as PCB source; native DRC does not identify the distinction.
+- **Rule:** Adds `pcb.footprint_path_trailing_separator` as a default-REVIEW candidate for exact
+  source-hashed PCB footprints whose single quoted path ends in `/` after canonical UUID segments.
+- **Cohort basis:** `94xhn/kicad-file-doctor` at `45133533e05aeabb7ef150d3a95084c318f16c9d`
+  checks footprint paths ending in `/` and describes them as a possible incomplete symbol path.
+  The upstream repository declares MIT. Only the rule idea was evaluated; no candidate source or
+  board was copied.
+- **Native evidence:** The tooling-owned synthetic fault and complete-path control loaded in
+  digest-pinned KiCad 10.0.0 and 10.0.5 Docker images. Repeated DRC reports had identical
+  violations and unconnected-item evidence across the two cases. This does not test GUI
+  Update-from-Schematic behavior, prove a lost link, or establish an electrical or layout defect.
+- **Boundary:** Only PCB and PCB-only projects configured for those two exact patches are in scope.
+  The predicate excludes root-only, malformed, noncanonical, duplicate, or unquoted paths. The
+  finding requests identity review and recommends no edit. Project policy can select review,
+  block, off, or an exact-fingerprint ignore.
+- **Fixtures:** Tooling-owned source fixtures cover the trailing path fault, complete-path control,
+  source binding, version and shape limits, metamorphic edits, CLI/MCP parity, and repeated native
+  DRC. No proprietary or cohort project data is stored.
+- **Selection:** Run `tests/test_pcb_footprint_path_integrity.py` and
+  `tests/test_design_lint_mcp_parity_pcb_footprint_path_trailing_separator.py` with
+  `design_lint and pcb_lint and design_lint_rule(rule_id="pcb.footprint_path_trailing_separator")`.
+  Run `tests/test_pcb_footprint_path_integrity_native.py` with
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, Docker, `native_kicad`, and the same rule selector.
+- **Focused local evidence:** The scoped package acceptance passed 435 selected tests with 9,083
+  deselected, including the repeated pinned KiCad 10.0.0/10.0.5 Docker comparison. Ruff format,
+  Ruff, Alphus module-role and shared-utility checks, Rumdl, mdrepo, Linux and Windows-target
+  Pyright, wheel and sdist builds, installed-wheel checks against separate and adapted project
+  checkouts, and playtest passed. Receipt: `build/ci/run-ip4tqzmd`. Hosted gate pending.
 
 ## Completion and release gate
 

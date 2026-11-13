@@ -70,6 +70,10 @@ PCB_SOURCE_INTEGRITY_SUITES = (
     "test_pcb_duplicate_object_uuid_native.py",
     "test_design_lint_determinism_pcb_duplicate_object_uuid.py",
     "test_design_lint_architecture_pcb_source_integrity.py",
+    "test_pcb_footprint_path_integrity.py",
+    "test_design_lint_mcp_parity_pcb_footprint_path_trailing_separator.py",
+    "test_pcb_footprint_path_integrity_native.py",
+    "test_design_lint_architecture_pcb_footprint_path.py",
 )
 PCB_REFERENCE_PLANE_THEME_SUITES = (
     "test_pcb_alternate_reference_plane_run.py",

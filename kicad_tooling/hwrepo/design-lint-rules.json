@@ -14369,6 +14369,51 @@
       ]
     },
     {
+      "rule_id": "pcb.footprint_path_trailing_separator",
+      "title": "Trailing separator in PCB footprint instance path needs review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_footprint_path_integrity.py#pcb_footprint_path_trailing_separator_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact SHA-256 hashed KiCad PCB source, direct footprint path field, canonical UUID segments, source line, reference, and pinned KiCad 10.0.0/10.0.5 DRC fault/control comparison",
+      "predicate": "For PCB and PCB-only projects configured for KiCad 10.0.0 or 10.0.5, review a footprint with exactly one quoted direct path whose value is one or more canonical UUID segments prefixed and suffixed by /. Bind the finding to the current board source hash and report the source line, footprint reference, full path, and UUID segments.",
+      "supported_kicad_versions": [
+        "10.0.0",
+        "10.0.5"
+      ],
+      "limitations": [
+        "This is a source-shape review prompt. Pinned native KiCad DRC loaded both synthetic cases and produced identical violations and unconnected-item evidence; no schematic update operation or GUI linkage behavior was measured.",
+        "The rule does not prove that a footprint has lost its schematic association, establish an electrical or layout defect, or recommend a source edit. Board-only paths, malformed paths, noncanonical UUID text, duplicate or unquoted path fields, and versions other than the two measured patches are outside the predicate.",
+        "The default is REVIEW. Project policy may select review, block, off, or an exact-fingerprint ignore."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_footprint_path_integrity.test_trailing_sheet_path_is_localized_and_source_bound",
+        "tests.test_design_lint_mcp_parity_pcb_footprint_path_trailing_separator.test_footprint_path_review_matches_between_cli_and_mcp",
+        "tests.test_pcb_footprint_path_integrity_native.test_native_drc_does_not_distinguish_fault_from_complete_path"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_footprint_path_integrity.test_complete_footprint_path_is_a_quiet_control",
+        "tests.test_pcb_footprint_path_integrity.test_other_path_shapes_are_outside_the_predicate",
+        "tests.test_pcb_footprint_path_integrity.test_unmeasured_versions_are_out_of_scope",
+        "tests.test_pcb_footprint_path_integrity_native.test_native_drc_does_not_distinguish_fault_from_complete_path"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_footprint_path_integrity.test_irrelevant_source_edit_preserves_identity_and_refreshes_its_hash",
+        "tests.test_pcb_footprint_path_integrity.test_changing_only_the_path_to_a_complete_instance_clears_the_candidate"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_footprint_path_integrity.py#pcb_footprint_path_trailing_separator_candidates",
+        "kicad_tooling/hwrepo/pcb_board_source_binding.py#read_source_bound_pcb_board",
+        "kicad_tooling/hwrepo/pcb_source_identity.py#canonical_pcb_uuid",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
+      ]
+    },
+    {
       "rule_id": "pcb.drc_exclusion_present",
       "title": "Persisted PCB DRC exclusions need intentional review",
       "theme": "pcb",
