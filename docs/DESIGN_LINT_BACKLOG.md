@@ -816,14 +816,22 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc732):** LINT-443 reviews
+- **Latest published lint-gate checkpoint (v0.5.3rc734):** LINT-444 reviews an
+  extra unassigned copper pad in a mixed-net footprint. Hosted acceptance passed
+  in GitHub Actions run `43409299897`: 433 tests passed, 9,105 were deselected,
+  and the native KiCad 10.0.0/10.0.5 fixtures passed. Pyright on Linux and
+  Windows, wheel and sdist builds, installed-wheel checks against separate and
+  adapted project checkouts, and playtest also passed. Package and preview jobs
+  were skipped under prerelease policy. The earlier `v0.5.3rc733` run exposed an
+  unreachable fixture README; `v0.5.3rc734` adds its documentation link.
+- **Previous hosted lint-gate checkpoint (v0.5.3rc732):** LINT-443 reviews
   trailing separators in source-bound PCB footprint paths. Local scoped package
   acceptance passed 435 tests with 9,083 deselected, including repeated
   digest-pinned KiCad 10.0.0/10.0.5 Docker fault/control runs and installed-wheel
   rehearsals against separate and adapted project checkouts. Hosted acceptance
   passed in GitHub Actions run `43401434167`; package and preview jobs were
   skipped under prerelease policy.
-- **Previous lint-gate checkpoint (v0.5.3rc731):** LINT-442 reviews empty
+- **Earlier lint-gate checkpoint (v0.5.3rc731):** LINT-442 reviews empty
   custom DRC `disallow` clauses. The local scoped gate passed 416 tests with
   9,077 deselected, including repeated digest-pinned KiCad 10.0.8 Docker
   fault/control exports. Hosted acceptance passed in GitHub Actions run
@@ -25952,7 +25960,8 @@ acceptance threads while new lint features proceed:
 
 #### LINT-444 — Review extra unassigned copper pads in mixed-net footprints
 
-- **Status:** Implemented; focused local acceptance passed. Hosted acceptance is pending.
+- **Status:** Implemented; hosted acceptance passed in GitHub Actions run
+  `43409299897` for tag `v0.5.3rc734`.
 - **Priority:** P2 PCB review. This closes a narrow footprint-coverage gap without claiming that
   an unknown pad must be connected.
 - **Rule:** Adds `pcb.unassigned_copper_pad_review` as a default-REVIEW candidate for an unassigned
@@ -25987,12 +25996,14 @@ acceptance threads while new lint features proceed:
   `design_lint and pcb_lint and design_lint_rule(rule_id="pcb.unassigned_copper_pad_review")`.
   Run `tests/test_pcb_unassigned_copper_pad_native.py` with Docker,
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, `native_kicad`, and the same rule selector.
-- **Focused local evidence:** The source and CLI/MCP regressions passed; the exact native Docker
-  comparison passed for both supported versions. The scoped catalog run also checks rule-owner
-  boundaries, fixture reachability, selectors, and backlog counts. Two pre-existing failures in
+- **Focused local evidence:** 46 source, CLI/MCP, architecture, catalog, fixture-reachability, and
+  marker tests passed. The exact native Docker comparison passed for both supported versions.
+  Hosted scoped acceptance passed with 433 tests and 9,105 deselected, including the native
+  fixture, Linux and Windows Pyright, artifact builds, and installed-wheel rehearsals against
+  separate and adapted checkouts. Two pre-existing failures in
   `tests/test_design_lint_architecture.py` remain outside this change: the connector candidate
   facade is 129 lines against a 100-line ceiling, and `native_pcb_probe.py.in` is 527 lines against
-  its 500-line ceiling. Hosted acceptance is pending.
+  its 500-line ceiling.
 
 ## Completion and release gate
 
