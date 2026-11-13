@@ -232,6 +232,42 @@ def test_malformed_bounds_have_focused_parser_evidence_and_predicate_owners() ->
     )
 
 
+def test_malformed_condition_has_focused_evidence_and_predicate_owners() -> None:
+    evidence_owner = HWREPO / "design_lint_pcb_dru_malformed_condition_evidence.py"
+    evidence_tree = ast.parse(evidence_owner.read_text(encoding="utf-8"))
+    assert line_count(evidence_owner) < IMPLEMENTATION_MAX_LINES
+    classes = {node.name for node in evidence_tree.body if isinstance(node, ast.ClassDef)}
+    functions = {node.name for node in evidence_tree.body if isinstance(node, ast.FunctionDef)}
+    assert {
+        "PcbDruMalformedConditionFindingEvidence",
+        "PcbDruMalformedConditionCandidate",
+    } <= classes
+    assert "project_pcb_dru_malformed_condition_evidence" in functions
+
+    predicate_owner = HWREPO / "pcb_dru_malformed_condition_review.py"
+    predicate_tree = ast.parse(predicate_owner.read_text(encoding="utf-8"))
+    assert line_count(predicate_owner) < IMPLEMENTATION_MAX_LINES
+    assert "custom_drc_malformed_condition_candidates" in {
+        node.name for node in predicate_tree.body if isinstance(node, ast.FunctionDef)
+    }
+
+    collector = HWREPO / "design_lint_pcb_dru_candidates.py"
+    collector_tree = ast.parse(collector.read_text(encoding="utf-8"))
+    imports = {
+        alias.name
+        for node in collector_tree.body
+        if isinstance(node, ast.ImportFrom) and node.module == "pcb_dru_malformed_condition_review"
+        for alias in node.names
+    }
+    assert imports == {"custom_drc_malformed_condition_candidates"}
+    assert any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "custom_drc_malformed_condition_candidates"
+        for node in ast.walk(collector_tree)
+    )
+
+
 def test_deprecated_custom_drc_function_evidence_has_a_focused_owner() -> None:
     evidence_owner = HWREPO / "design_lint_pcb_dru_deprecated_function_evidence.py"
     evidence_tree = ast.parse(evidence_owner.read_text(encoding="utf-8"))

@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 358 rules are implemented with synthetic regression coverage.
+The following 359 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 358 active rules.
+The catalog currently contains 359 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -727,6 +727,7 @@ skipped under prerelease policy.
 - `pcb.custom_drc_layer_reference`
 - `pcb.custom_drc_contradictory_constraint_bounds`
 - `pcb.custom_drc_malformed_constraint_bounds`
+- `pcb.custom_drc_malformed_condition_clause`
 - `pcb.custom_drc_deprecated_condition_function`
 - `pcb.core_drc_check_ignored`
 - `pcb.core_drc_check_warning`
@@ -4379,7 +4380,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 358 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 359 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -25708,6 +25709,53 @@ acceptance threads while new lint features proceed:
   `build/ci/run-x3lp2kxu`. Hosted acceptance and the installed-wheel rehearsal
   against a separate project passed in GitHub Actions run `43376660082`;
   package and preview jobs were skipped under prerelease policy.
+
+#### LINT-439 — Review malformed custom DRC condition argument shapes
+
+- **Priority:** P1 PCB rule integrity. KiCad can stop evaluating custom rules
+  when a condition clause has an invalid source shape; the prior source review
+  did not identify this form.
+- **Rule:** Adds
+  [`pcb.custom_drc_malformed_condition_clause`](DESIGN_LINT.md#review-malformed-custom-drc-condition-clauses).
+- **Predicate:** For a source-bound KiCad 10 version-1 `.kicad_dru` file with
+  no `${...}` substitutions, emit one default-REVIEW candidate per named
+  top-level rule with exactly one direct condition clause whose argument count
+  is not one. No condition is valid and unconditional; multiple direct
+  condition clauses remain outside this predicate.
+- **Native evidence:** On the digest-pinned KiCad 10.0.8 image, the
+  no-expression `(condition)` form and an extra condition argument each failed
+  to reach the terminal sentinel and suppressed the authored track-width
+  findings on the synthetic two-track board. Single-expression, repeated-
+  identical, and empty-quoted-expression controls compiled and reported their
+  authored width findings. Each case was repeated with identical normalized
+  violation signatures. This evidence applies only to these source forms,
+  fixture, and image.
+- **Boundary:** The rule checks direct argument count only. It does not parse
+  or evaluate KiCad's condition language, resolve text variables, or prove
+  rule applicability or a board defect. Empty quoted strings remain quiet
+  because the pinned probe accepted that source and reported the authored
+  findings. Text-variable files and multiple direct condition clauses remain
+  outside the predicate.
+- **Fixtures:** Tooling-owned fault and control files record individual source
+  hashes. Tests cover policy modes, exact-ignore, source freshness, supported
+  version, project scope, CLI/MCP parity, catalog reachability, selector
+  registration, and repeatable native compilation. No project or cohort source
+  was imported.
+- **Selection:** Run `tests/test_pcb_dru_malformed_conditions.py` and
+  `tests/test_design_lint_mcp_parity_pcb_dru_malformed_condition.py` with
+  `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.custom_drc_malformed_condition_clause")`.
+  Run `tests/test_pcb_dru_malformed_conditions_native.py` with
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, Docker, `native_kicad`, and the same rule
+  selector.
+- **Focused local evidence:** The source/policy, CLI/MCP, architecture, and
+  selector slice passed 18 tests. The catalog-lint slice passed 577 tests with
+  8,892 deselected. The complete scoped package acceptance passed 417 tests
+  with 9,052 deselected, including the digest-pinned Docker cases. Ruff,
+  Alphus module-boundary and shared-utility checks, Rumdl, mdrepo, Linux and
+  Windows-target Pyright, wheel and sdist builds, installed-wheel validation,
+  external and adapted project verification, and playtest passed. Receipt:
+  `build/ci/run-d84a804h`. Hosted acceptance remains pending.
 
 ## Completion and release gate
 

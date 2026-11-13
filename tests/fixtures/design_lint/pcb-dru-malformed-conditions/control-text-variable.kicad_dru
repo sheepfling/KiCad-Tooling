@@ -1,0 +1,5 @@
+(version 1)
+(rule "VariableCondition"
+  (condition "A.NetName == '${NET_NAME}'")
+  (severity error)
+  (constraint track_width (min 0.5mm)))

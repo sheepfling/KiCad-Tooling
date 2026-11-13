@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 358 active rules.
+The catalog currently contains 359 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -5591,6 +5591,41 @@ malformed forms and configurations remain unmeasured. See the
 KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_pcb_dru_malformed_bounds_native.py \
   -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.custom_drc_malformed_constraint_bounds")'
+```
+
+## Review malformed custom DRC condition clauses
+
+`pcb.custom_drc_malformed_condition_clause` asks for review when a named, source-bound KiCad 10
+version-1 rule has exactly one direct `(condition ...)` clause whose arguments are not exactly one
+expression value. KiCad documents the condition as optional and specifies an expression when it is
+present in the [KiCad 10 PCB Editor reference](https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html).
+The rule preserves the exact `.kicad_dru` hash, configured KiCad version, rule name and ordinal, and
+parser's shape issue. It defaults to `review`; project policy can choose `block`, `off`, or an
+exact-fingerprint ignore.
+
+No condition clause is valid and means unconditional. Multiple direct
+condition clauses are outside this predicate. An empty quoted value is one
+expression value; it compiled and produced the authored findings in the
+measured native fixture. Files containing `${...}` are left to
+the existing text-variable review. This check does not parse or evaluate the
+condition language, establish rule applicability, or claim a board defect.
+
+On the digest-pinned KiCad 10.0.8 image, a missing expression and extra direct
+condition atom each prevented the terminal sentinel and suppressed the authored
+track-width findings on the synthetic two-track board. Single, repeated-
+identical, and empty-quoted condition controls compiled and reported the
+authored width findings. These observations apply only to the tested source
+forms, fixture, and image. See the
+[fixture note](../tests/fixtures/design_lint/pcb-dru-malformed-conditions/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_pcb_dru_malformed_conditions.py \
+  tests/test_design_lint_mcp_parity_pcb_dru_malformed_condition.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.custom_drc_malformed_condition_clause")'
+
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_dru_malformed_conditions_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.custom_drc_malformed_condition_clause")'
 ```
 
 ## Review deprecated custom DRC condition functions

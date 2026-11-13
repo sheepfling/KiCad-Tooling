@@ -1,0 +1,4 @@
+(version 1)
+(rule "Unconditional"
+  (severity error)
+  (constraint track_width (min 0.5mm)))

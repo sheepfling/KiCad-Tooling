@@ -16736,6 +16736,49 @@
       ]
     },
     {
+      "rule_id": "pcb.custom_drc_malformed_condition_clause",
+      "title": "Malformed custom DRC condition clauses need review",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_dru_malformed_condition_review.py#custom_drc_malformed_condition_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Source-verified .kicad_dru path and SHA-256, configured KiCad version, rule name and ordinal, and exact direct-condition shape issue",
+      "predicate": "For a source-bound KiCad 10 version-1 PCB custom-rule file without text-variable substitution, emit one REVIEW candidate for each named top-level rule with exactly one direct (condition ...) clause whose arguments are not exactly one expression value. No condition clause is valid and unconditional; multiple direct condition clauses are outside this predicate.",
+      "supported_kicad_versions": [
+        "KiCad 10.x version-1 .kicad_dru syntax recognized by the shared parser; native shape probes are pinned to KiCad 10.0.8"
+      ],
+      "limitations": [
+        "The check validates only the direct argument count for one condition clause. An empty quoted value is retained as one expression value; the check does not parse or evaluate KiCad's condition language, resolve text variables, establish rule applicability, or claim a board defect.",
+        "Files containing ${ text-variable substitutions and rules with multiple direct condition clauses are left outside this predicate. Absence of a condition is a valid unconditional rule; repeated identical condition clauses remain a quiet control.",
+        "On the digest-pinned KiCad 10.0.8 image, the no-expression and extra-atom source shapes prevented a terminal sentinel and suppressed the authored track-width findings. Single, repeated-identical, and empty-quoted condition controls compiled and reported the authored width findings. This native evidence is limited to the exact synthetic board, rules, and image."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_dru_malformed_conditions.test_malformed_single_condition_clause_requests_source_bound_review",
+        "tests.test_design_lint_mcp_parity_pcb_dru_malformed_condition.test_custom_drc_malformed_condition_matches_between_cli_and_mcp",
+        "tests.test_pcb_dru_malformed_conditions_native.test_condition_shape_faults_suppress_native_rules_but_controls_match_repeatably"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_dru_malformed_conditions.test_well_shaped_and_unconditional_rules_stay_quiet",
+        "tests.test_pcb_dru_malformed_conditions.test_text_variable_rule_is_deferred_to_existing_review",
+        "tests.test_pcb_dru_malformed_conditions_native.test_condition_shape_faults_suppress_native_rules_but_controls_match_repeatably"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_dru_malformed_conditions.test_source_scope_policy_and_freshness_are_exact"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_dru_malformed_condition_review.py#custom_drc_malformed_condition_candidates",
+        "kicad_tooling/hwrepo/design_lint_pcb_dru_candidates.py#collect_pcb_dru_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_rule_declarations",
+        "kicad_tooling/hwrepo/design_lint_pcb_dru_malformed_condition_evidence.py#PcbDruMalformedConditionFindingEvidence",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
+      ]
+    },
+    {
       "rule_id": "pcb.custom_drc_layer_reference",
       "title": "Custom DRC layer references need review",
       "theme": "pcb",

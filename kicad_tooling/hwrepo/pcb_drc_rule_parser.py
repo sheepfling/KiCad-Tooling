@@ -105,6 +105,7 @@ class NativeDrcRuleDeclaration:
     constraint_count: int
     condition: str | None
     layers: tuple[str, ...] = ()
+    condition_issue: str | None = None
 
 
 NativeDrcRuleSeverity: TypeAlias = Literal["error", "warning", "ignore", "exclusion"]
@@ -403,10 +404,17 @@ def native_rule_declarations(source: str) -> tuple[NativeDrcRuleDeclaration, ...
             child for child in rule.children if _atoms(source, child)[:1] == ("condition",)
         ]
         condition: str | None = None
+        condition_issue: str | None = None
         if len(conditions) == 1:
             atoms = _atoms(source, conditions[0])
             if len(atoms) == 2:
                 condition = atoms[1]
+            else:
+                expression_count = max(0, len(atoms) - 1)
+                condition_issue = (
+                    "Direct condition clause has "
+                    f"{expression_count} expression values; expected exactly one."
+                )
         constraint_count = sum(
             _atoms(source, child)[:1] == ("constraint",) for child in rule.children
         )
@@ -422,6 +430,7 @@ def native_rule_declarations(source: str) -> tuple[NativeDrcRuleDeclaration, ...
                 constraint_count=constraint_count,
                 condition=condition,
                 layers=layers,
+                condition_issue=condition_issue,
             )
         )
     return tuple(result)

@@ -15,6 +15,30 @@ pytestmark = [
 
 RULE_NODE_CASES = (
     (
+        "pcb.custom_drc_malformed_condition_clause",
+        "tests/test_pcb_dru_malformed_conditions.py::test_malformed_single_condition_clause_requests_source_bound_review",
+    ),
+    (
+        "pcb.custom_drc_malformed_condition_clause",
+        "tests/test_pcb_dru_malformed_conditions.py::test_well_shaped_and_unconditional_rules_stay_quiet",
+    ),
+    (
+        "pcb.custom_drc_malformed_condition_clause",
+        "tests/test_pcb_dru_malformed_conditions.py::test_text_variable_rule_is_deferred_to_existing_review",
+    ),
+    (
+        "pcb.custom_drc_malformed_condition_clause",
+        "tests/test_pcb_dru_malformed_conditions.py::test_source_scope_policy_and_freshness_are_exact",
+    ),
+    (
+        "pcb.custom_drc_malformed_condition_clause",
+        "tests/test_design_lint_mcp_parity_pcb_dru_malformed_condition.py::test_custom_drc_malformed_condition_matches_between_cli_and_mcp",
+    ),
+    (
+        "pcb.custom_drc_malformed_condition_clause",
+        "tests/test_pcb_dru_malformed_conditions_native.py::test_condition_shape_faults_suppress_native_rules_but_controls_match_repeatably",
+    ),
+    (
         "pcb.custom_drc_malformed_constraint_bounds",
         "tests/test_pcb_dru_malformed_bounds.py::test_unparseable_bounds_request_source_bound_review",
     ),
