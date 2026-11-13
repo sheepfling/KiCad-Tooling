@@ -7,10 +7,14 @@ import re
 _EXACT_NET_CONDITION = re.compile(r"A\.NetName == '([^'\\*?\r\n]+)'")
 
 
+def native_exact_net_condition(condition: str) -> str | None:
+    """Return the literal net from a supported exact KiCad net selector."""
+    match = _EXACT_NET_CONDITION.fullmatch(condition)
+    return None if match is None else match.group(1)
+
+
 def native_net_conditions_are_disjoint(first: str, second: str) -> bool:
     """Prove disjointness only for two exact, literal KiCad A.NetName selectors."""
-    first_net = _EXACT_NET_CONDITION.fullmatch(first)
-    second_net = _EXACT_NET_CONDITION.fullmatch(second)
-    return bool(
-        first_net and second_net and first_net.group(1).casefold() != second_net.group(1).casefold()
-    )
+    first_net = native_exact_net_condition(first)
+    second_net = native_exact_net_condition(second)
+    return bool(first_net and second_net and first_net.casefold() != second_net.casefold())

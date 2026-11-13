@@ -50,6 +50,7 @@ PCB_LINT_TEST_MODULES = frozenset(
         "tests/test_pcb_mechanical_edge_clearance.py",
         "tests/test_pcb_mechanical_edge_clearance_native.py",
         "tests/test_pcb_track_angle_rule_coverage.py",
+        "tests/test_pcb_track_angle_unmapped_rules.py",
         "tests/test_pcb_track_angle_native_fixture_lane.py",
         "tests/test_pcb_track_angle_geometry.py",
         "tests/test_pcb_track_angle_geometry_native_fixture_lane.py",

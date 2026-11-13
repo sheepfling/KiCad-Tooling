@@ -267,6 +267,12 @@ def pcb_rule_ids() -> set[str]:
         message="Synthetic source-bound track-angle rule coverage is incomplete.",
         evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
     )
+    unmapped_track_angle_rule = Candidate(
+        rule_id="pcb.track_angle_unmapped_native_rule",
+        subject="projects/synthetic/controller.kicad_dru#data-track-angle",
+        message="Synthetic per-net track-angle rule is absent from mapped geometry scope.",
+        evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
+    )
     report = evaluate(
         coach.project_id,
         coach,
@@ -282,6 +288,7 @@ def pcb_rule_ids() -> set[str]:
             conflicting_custom_rule_severity,
             mechanical_edge_rule,
             track_angle_rule,
+            unmapped_track_angle_rule,
         ),
         pcb_native_drc_candidates=(
             ignored_core_check,

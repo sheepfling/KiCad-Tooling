@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 368 rules are implemented with synthetic regression coverage.
+The following 369 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 368 active rules.
+The catalog currently contains 369 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -757,6 +757,8 @@ skipped under prerelease policy.
 - `pcb.drc_nonstring_severity_value`
 - `pcb.mechanical_edge_clearance_rule_coverage`
 - `pcb.track_angle_rule_coverage`
+- `pcb.track_angle_geometry_review`
+- `pcb.track_angle_unmapped_native_rule`
 - `pcb.rf_module_antenna_keepout_coverage`
 - `pcb.keepout_intent_coverage`
 - `pcb.schematic_component_inventory`
@@ -4427,7 +4429,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 368 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 369 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -26272,6 +26274,40 @@ acceptance threads while new lint features proceed:
   focused rule selector passed 16 tests with 2 native-only skips. The final
   digest-pinned KiCad 10.0.0/10.0.5 fault/control lane passed separately (2
   tests).
+- **Hosted acceptance:** Pending the annotated rule-gate tag.
+
+#### LINT-450 — Review native track-angle rules omitted from geometry scope
+
+- **Status:** Implemented as default-REVIEW rule
+  `pcb.track_angle_unmapped_native_rule`. It runs only when the project has
+  enabled `pcb.track_angle_geometry_review` and supplied `pcb_track_angle_map`;
+  the new rule itself can be independently disabled.
+- **Priority:** P2 coverage completeness. LINT-448 checks every mapped net's
+  native rule, while LINT-449 checks mapped geometry. An exact per-net native
+  rule omitted from the map can therefore receive native DRC enforcement but
+  no LINT-449 geometry localization.
+- **Predicate:** For each parsed native `track_angle` constraint with one exact
+  literal `A.NetName == '<net>'` condition, prompt when `<net>` is absent from
+  the enabled geometry map. Match mapped net names case-insensitively to avoid
+  duplicate prompts when LINT-448 already reports a case mismatch.
+- **Boundary:** This is a map-coverage prompt, not a claim that the native rule
+  is defective or that an omitted net must be added. Wildcard, combined,
+  variable-backed, and other nonliteral scopes stay quiet. The map's angle
+  limits remain independently authored; native DRC remains responsible for
+  configured constraints.
+- **Fixtures:** Synthetic fault/control cases cover an omitted exact net, a
+  mapped control, unsupported broad scope, explicit opt-in, project override,
+  independent rule modes, and rule-order stability. The predicate consumes
+  source-bound DRC evidence already validated by LINT-448; it adds no native
+  geometry or DRC interpretation. A CLI/MCP parity case confirms that the same
+  candidate is returned from both design-lint surfaces. LINT-448 and LINT-449
+  retain their separate digest-pinned KiCad 10.0.0/10.0.5 Docker lanes.
+- **Selection:** Run
+  `tests/test_pcb_track_angle_unmapped_rules.py` and
+  `tests/test_design_lint_mcp_parity_pcb_track_angle.py` and
+  `tests/test_design_lint_architecture_pcb_track_angle.py` with
+  `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.track_angle_unmapped_native_rule")`.
 - **Hosted acceptance:** Pending the annotated rule-gate tag.
 
 ## Completion and release gate

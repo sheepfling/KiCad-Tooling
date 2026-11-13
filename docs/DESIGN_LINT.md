@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 368 active rules.
+The catalog currently contains 369 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -1279,6 +1279,27 @@ KICAD_RUN_NATIVE_TRACK_ANGLE_FIXTURES=1 .venv/bin/python -I -m pytest \
 
 See [LINT-448][lint448-track-angle] and the
 [synthetic fixture note][track-angle-fixture].
+
+### Native track-angle rules omitted from geometry review
+
+`pcb.track_angle_unmapped_native_rule` prompts when an exact per-net native
+`track_angle` rule targets a net absent from `pcb_track_angle_map` while
+`pcb.track_angle_geometry_review` is enabled. It uses the same source-bound
+native DRC evidence as the coverage check above. The prompt asks whether the
+net should be included in geometry review; it does not say the native rule is
+wrong or choose an angle limit. Wildcard, combined, and variable-backed
+conditions are skipped because their single-net scope is not certain. This
+rule defaults to REVIEW when applicable and can be set to `off` independently.
+
+Run its focused synthetic and architecture regressions:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_pcb_track_angle_unmapped_rules.py \
+  tests/test_design_lint_mcp_parity_pcb_track_angle.py \
+  tests/test_design_lint_architecture_pcb_track_angle.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.track_angle_unmapped_native_rule")'
+```
 
 ### Opt-in track-angle geometry cross-check
 

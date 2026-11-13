@@ -22,6 +22,7 @@ def test_track_angle_modules_keep_theme_ownership_and_reviewable_size() -> None:
     names = (
         "pcb_drc_conditions.py",
         "pcb_track_angle.py",
+        "pcb_track_angle_unmapped.py",
         "pcb_track_angle_models.py",
     )
     sizes = {name: len((HWREPO / name).read_text(encoding="utf-8").splitlines()) for name in names}
@@ -57,6 +58,13 @@ def test_track_angle_service_owns_the_rule_predicate_and_integration() -> None:
     assert "track_angle_rule_coverage_candidates" in functions
     assert "track_angle_rule_coverage_candidates" in imports
     assert "kicad_tooling/hwrepo/pcb_track_angle.py#track_angle_rule_coverage_issue" in catalog
+    unmapped = ast.parse((HWREPO / "pcb_track_angle_unmapped.py").read_text(encoding="utf-8"))
+    unmapped_functions = {node.name for node in unmapped.body if isinstance(node, ast.FunctionDef)}
+    assert "unmapped_track_angle_rule_candidates" in unmapped_functions
+    assert (
+        "kicad_tooling/hwrepo/pcb_track_angle_unmapped.py#unmapped_track_angle_rule_candidates"
+        in catalog
+    )
     assert (
         "kicad_tooling/hwrepo/pcb_drc_conditions.py#native_net_conditions_are_disjoint" in catalog
     )

@@ -11,6 +11,7 @@ from mcp import Client
 
 from kicad_tooling.hwrepo.command_evidence_models import CommandEvidence
 from kicad_tooling.hwrepo.contracts import parse_model_text, read_model, write_model
+from kicad_tooling.hwrepo.design_lint_finding_models import DesignLintRuleOverride
 from kicad_tooling.hwrepo.design_lint_policy_models import DesignLintPolicy
 from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.evidence import digest
@@ -27,6 +28,7 @@ from tests.mcp_parity_support import parity_design_lint_policy, semantic_design_
 from tests.synthetic_design_lint_project import run_design_lint_cli, synthetic_design_lint_project
 
 RULE_ID = "pcb.track_angle_rule_coverage"
+UNMAPPED_RULE_ID = "pcb.track_angle_unmapped_native_rule"
 pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.pcb_lint,
@@ -149,4 +151,65 @@ def test_track_angle_coverage_finding_matches_cli_and_mcp(tmp_path: Path) -> Non
     assert finding.evidence["net"] == ("CLOCK_OUT",)
     assert finding.evidence["project_sha256"] == (
         mcp_report.source_hashes["projects/controller/kicad/controller.kicad_pro"],
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=UNMAPPED_RULE_ID)
+def test_unmapped_track_angle_rule_finding_matches_cli_and_mcp(tmp_path: Path) -> None:
+    policy = parity_design_lint_policy(
+        DesignLintPolicy(
+            pcb_track_angle_map=_policy().pcb_track_angle_map,
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id=RULE_ID,
+                    mode="off",
+                    reason="Keep this parity fixture focused on map completeness",
+                ),
+                DesignLintRuleOverride(
+                    rule_id="pcb.track_angle_geometry_review",
+                    mode="review",
+                    reason="Check exact native rule scopes against enabled geometry review",
+                ),
+            ),
+        )
+    )
+    rules = (
+        "(version 1)\n"
+        '(rule "clock-track-angle" (severity error) '
+        "(condition \"A.NetName == 'CLOCK_OUT'\") (constraint track_angle (min 150)))\n"
+        '(rule "data-track-angle" (severity error) '
+        "(condition \"A.NetName == 'DATA'\") (constraint track_angle (min 150)))\n"
+    )
+    root, native = synthetic_design_lint_project(
+        tmp_path,
+        policy,
+        custom_rules_source=rules,
+    )
+    _install_source_bound_drc_receipt(root, native)
+
+    process = run_design_lint_cli(tmp_path, root, native)
+    assert process.returncode == 1, process.stderr + process.stdout
+    cli_report = parse_model_text(process.stdout, DesignLintReport)
+
+    async def inspect_mcp() -> DesignLintReport:
+        async with Client(create_server(root), mode="legacy") as client:
+            result = await client.call_tool(
+                "inspect_design_lint",
+                {
+                    "project_id": "controller",
+                    "native_summary": native.relative_to(root).as_posix(),
+                },
+            )
+        assert not result.is_error, result.content
+        assert result.structured_content is not None
+        return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
+
+    mcp_report = asyncio.run(inspect_mcp())
+
+    assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(mcp_report)
+    (finding,) = (item for item in mcp_report.findings if item.rule_id == UNMAPPED_RULE_ID)
+    assert finding.mode == "review" and finding.disposition == "OPEN"
+    assert finding.evidence["net"] == ("DATA",)
+    assert finding.evidence["source_sha256"] == (
+        mcp_report.source_hashes["projects/controller/kicad/controller.kicad_dru"],
     )

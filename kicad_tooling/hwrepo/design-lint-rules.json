@@ -14787,6 +14787,48 @@
       ]
     },
     {
+      "rule_id": "pcb.track_angle_unmapped_native_rule",
+      "title": "Per-net track-angle rules are absent from enabled geometry review scope",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_track_angle_unmapped.py#unmapped_track_angle_rule_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact literal per-net track_angle rules from source-bound native KiCad DRC rules compared with the project-authored pcb_track_angle_map used by enabled geometry review",
+      "predicate": "When pcb.track_angle_geometry_review is enabled and a PCB project supplies pcb_track_angle_map, emit a REVIEW candidate for each exact native track_angle rule using A.NetName == '<literal>' when that net is absent from the map. Do not infer omitted scope from wildcard, compound, or otherwise nonliteral conditions.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 source-bound native DRC evidence; the bounded literal condition grammar is shared with the track-angle rule coverage audit."
+      ],
+      "limitations": [
+        "This review runs only when mapped track-angle geometry review is enabled. No per-rule omission claim is made when the project has not opted into that geometry review or supplied a map.",
+        "Only exact literal A.NetName equality is recognized. Wildcard, combined, variable-backed, and other conditional scopes are skipped rather than guessed.",
+        "An omitted map entry is a coverage prompt, not a claim that the native rule is wrong or that the angle bound is electrically appropriate. Native DRC remains responsible for its configured rules, and a map entry requires independent review."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_track_angle_unmapped_rules.test_unmapped_exact_per_net_rule_is_reviewed_when_geometry_lint_is_enabled",
+        "tests.test_pcb_track_angle_unmapped_rules.test_unmapped_review_remains_active_when_mapped_coverage_is_off",
+        "tests.test_design_lint_mcp_parity_pcb_track_angle.test_unmapped_track_angle_rule_finding_matches_cli_and_mcp"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_track_angle_unmapped_rules.test_map_entry_covers_the_exact_native_net_scope",
+        "tests.test_pcb_track_angle_unmapped_rules.test_nonliteral_rule_scope_is_not_treated_as_an_unmapped_exact_net",
+        "tests.test_pcb_track_angle_unmapped_rules.test_geometry_review_scope_is_opt_in_and_new_rule_can_be_disabled"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_track_angle_unmapped_rules.test_rule_order_does_not_change_the_unmapped_scope_finding"
+      ],
+      "required_native_fixtures": [],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_track_angle_unmapped.py#unmapped_track_angle_rule_candidates",
+        "kicad_tooling/hwrepo/pcb_track_angle.py#track_angle_rule_coverage_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_conditions.py#native_exact_net_condition",
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_constraints",
+        "kicad_tooling/hwrepo/pcb_drc_source_evidence.py#source_bound_drc_evidence",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
+      ]
+    },
+    {
       "rule_id": "pcb.touch_pad_reference_clearance",
       "title": "Configured pad-to-reference-copper clearance is below its project minimum",
       "status": "active",

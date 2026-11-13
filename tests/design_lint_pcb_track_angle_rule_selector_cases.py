@@ -47,4 +47,24 @@ PCB_TRACK_ANGLE_RULE_NODE_CASES = (
         "pcb.track_angle_rule_coverage",
         "tests/test_pcb_track_angle_native_fixture_lane.py::test_native_track_angle_fault_is_reported_and_collinear_control_is_clean",
     ),
+    (
+        "pcb.track_angle_unmapped_native_rule",
+        "tests/test_pcb_track_angle_unmapped_rules.py::test_unmapped_exact_per_net_rule_is_reviewed_when_geometry_lint_is_enabled",
+    ),
+    (
+        "pcb.track_angle_unmapped_native_rule",
+        "tests/test_pcb_track_angle_unmapped_rules.py::test_map_entry_covers_the_exact_native_net_scope",
+    ),
+    (
+        "pcb.track_angle_unmapped_native_rule",
+        "tests/test_pcb_track_angle_unmapped_rules.py::test_nonliteral_rule_scope_is_not_treated_as_an_unmapped_exact_net",
+    ),
+    (
+        "pcb.track_angle_unmapped_native_rule",
+        "tests/test_pcb_track_angle_unmapped_rules.py::test_rule_order_does_not_change_the_unmapped_scope_finding",
+    ),
+    (
+        "pcb.track_angle_unmapped_native_rule",
+        "tests/test_design_lint_mcp_parity_pcb_track_angle.py::test_unmapped_track_angle_rule_finding_matches_cli_and_mcp",
+    ),
 )
