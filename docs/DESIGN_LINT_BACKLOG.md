@@ -26531,7 +26531,7 @@ acceptance threads while new lint features proceed:
 #### LINT-456 — Review exact custom DRC net selectors absent from the PCB
 
 - **Status:** Implemented as a default-REVIEW rule; focused and digest-pinned
-  native acceptance passed locally; hosted acceptance pending.
+  native acceptance and hosted acceptance passed.
 - **Rule:** `pcb.drc_exact_net_scope_unmatched` scans source-bound KiCad 10.0.0
   and 10.0.5 custom DRC constraints for supported exact literal
   `A.NetName == '…'` selectors absent from the current source-bound PCB's
@@ -26560,6 +26560,14 @@ acceptance threads while new lint features proceed:
   playtest passed. The shared netclass-pattern source/parity regressions passed
   (18 tests); catalog synchronization passed (24 tests), and selector/module
   architecture checks passed (9 tests).
+- **Hosted acceptance:** Passed run
+  [43520553891](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43520553891)
+  for annotated gate tag `v0.5.3rc758`: 440 tests passed, 9,263 were
+  deselected, and digest-pinned native fixtures passed on KiCad 10.0.0 and
+  10.0.5. Ruff, Alphus, Rumdl, mdrepo, Linux and Windows Pyright, wheel and
+  sdist builds, installed-origin/version checks, separate and adapted
+  public-template rehearsals, and playtest passed. Package and preview jobs
+  were skipped under prerelease policy.
 - **Selection:** Run `tests/test_pcb_drc_exact_net_scope.py`,
   `tests/test_design_lint_mcp_parity_pcb_drc_exact_net_scope.py`, and
   `tests/test_design_lint_architecture_pcb_drc_exact_net_scope.py` with
