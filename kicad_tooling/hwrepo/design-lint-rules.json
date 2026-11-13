@@ -13150,7 +13150,55 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_signal_path_unmapped_native.py#unmapped_signal_path_length_rule_candidates",
-        "kicad_tooling/hwrepo/pcb_signal_path_unmapped_rule_scan.py#scan_unmapped_signal_path_length_rules",
+        "kicad_tooling/hwrepo/pcb_signal_path_unmapped_rule_scan.py#scan_unmapped_signal_path_native_rules",
+        "kicad_tooling/hwrepo/pcb_drc_conditions.py#native_exact_net_condition",
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_constraints",
+        "kicad_tooling/hwrepo/pcb_drc_source_evidence.py#source_bound_drc_evidence",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
+      ]
+    },
+    {
+      "rule_id": "pcb.signal_path_unmapped_edge_clearance_rule",
+      "title": "Exact native edge-clearance nets are absent from signal-path coverage",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_signal_path_unmapped_native.py#unmapped_signal_path_edge_clearance_rule_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Exact literal native KiCad edge_clearance scopes compared with the project-authored signal-path map and source-bound schematic net inventory, with the native netlist digest retained in the candidate",
+      "predicate": "When a PCB project supplies a signal-path map with native DRC requirements and pcb.signal_path_rule_coverage is enabled, emit a REVIEW candidate for each source-bound edge_clearance constraint with a named rule and exact literal A.NetName == '<net>' condition when the net exists in the source-bound schematic netlist but is absent from all mapped paths. Group repeated constraints by case-insensitive rule name and net. Retain the source-bound netlist digest. Skip broad, compound, variable-backed, unnamed, and nonliteral scopes.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native fault/control checks; source-bound scope matching uses the shared bounded literal A.NetName parser"
+      ],
+      "limitations": [
+        "This prompt runs only when the project supplies a signal-path map with a native DRC requirement and enables pcb.signal_path_rule_coverage. The rule itself defaults to review and can be independently overridden to block or off.",
+        "Only exact literal A.NetName equality is recognized. Wildcard, compound, variable-backed, unnamed, and other nonliteral rule scopes are skipped rather than guessed.",
+        "The map omission is a coverage question, not proof that edge clearance is inadequate or that a path requirement must be added. A matching map entry requires independent project review; this rule does not measure geometry, judge the bound, or replace native DRC.",
+        "Only nets present in the source-bound schematic netlist are considered. The prompt does not establish PCB copper connectivity, cable wiring, or physical continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_signal_path_unmapped_edge_clearance_rules.test_unmapped_exact_edge_clearance_rule_for_source_net_is_reviewed",
+        "tests.test_design_lint_mcp_parity_pcb_signal_path_unmapped_edge_clearance.test_unmapped_edge_clearance_scope_matches_cli_and_mcp",
+        "tests.test_pcb_signal_path_native.test_native_signal_path_drc_faults_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_signal_path_unmapped_edge_clearance_rules.test_mapped_or_source_absent_edge_clearance_net_is_quiet",
+        "tests.test_pcb_signal_path_unmapped_edge_clearance_rules.test_nonliteral_edge_clearance_scopes_are_not_guessed",
+        "tests.test_pcb_signal_path_unmapped_edge_clearance_rules.test_length_and_edge_clearance_overrides_are_independent",
+        "tests.test_design_lint_mcp_parity_pcb_signal_path_unmapped_edge_clearance.test_unmapped_edge_clearance_scope_matches_cli_and_mcp",
+        "tests.test_pcb_signal_path_native.test_native_signal_path_drc_faults_are_repeatable"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_pcb_signal_path_unmapped_edge_clearance_rules.test_edge_clearance_candidate_order_is_stable_under_rule_and_map_order",
+        "tests.test_pcb_signal_path_native.test_native_signal_path_drc_faults_are_repeatable"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_signal_path_unmapped_native.py#unmapped_signal_path_edge_clearance_rule_candidates",
+        "kicad_tooling/hwrepo/pcb_signal_path_unmapped_rule_scan.py#scan_unmapped_signal_path_native_rules",
         "kicad_tooling/hwrepo/pcb_drc_conditions.py#native_exact_net_condition",
         "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_constraints",
         "kicad_tooling/hwrepo/pcb_drc_source_evidence.py#source_bound_drc_evidence",

@@ -8,127 +8,33 @@ from typing import cast
 
 import pytest
 
-from kicad_tooling.hwrepo.design_lint_finding_models import DesignLintRuleOverride
-from kicad_tooling.hwrepo.design_lint_policy_models import DesignLintPolicy
-from kicad_tooling.hwrepo.design_lint_types import Candidate
 from kicad_tooling.hwrepo.pcb_drc_rule_parser import native_constraints
 from kicad_tooling.hwrepo.pcb_drc_source_evidence import BoundDrcEvidence
-from kicad_tooling.hwrepo.pcb_signal_path_rule_models import (
-    PcbDrcMinMaxRequirement,
-    PcbSignalPathRequirement,
-    PcbSignalPathRuleMap,
-)
 from kicad_tooling.hwrepo.project_models import ProjectConfig, ProjectKind
+from tests.pcb_signal_path_unmapped_rule_support import (
+    LENGTH_RULE_ID as RULE_ID,
+)
+from tests.pcb_signal_path_unmapped_rule_support import (
+    bound_evidence as _evidence,
+)
+from tests.pcb_signal_path_unmapped_rule_support import (
+    native_rule as _rule,
+)
+from tests.pcb_signal_path_unmapped_rule_support import (
+    path_map as _map,
+)
+from tests.pcb_signal_path_unmapped_rule_support import (
+    policy as _policy,
+)
+from tests.pcb_signal_path_unmapped_rule_support import (
+    scan as _scan,
+)
 
-RULE_ID = "pcb.signal_path_unmapped_native_rule"
-COVERAGE_RULE_ID = "pcb.signal_path_rule_coverage"
 pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.pcb_lint,
     pytest.mark.design_lint_rule(rule_id=RULE_ID),
 ]
-
-
-def _rule(name: str, net: str, *, condition: str | None = None) -> str:
-    selector = f"A.NetName == '{net}'" if condition is None else condition
-    return (
-        f'(rule "{name}" (severity error) (condition "{selector}") (constraint length (max 25mm)))'
-    )
-
-
-def _map(*nets: str) -> PcbSignalPathRuleMap:
-    return PcbSignalPathRuleMap(
-        basis="Synthetic reviewed signal-path coverage",
-        paths=tuple(
-            PcbSignalPathRequirement(
-                id=f"path-{index}",
-                basis="Synthetic route requirement",
-                net=net,
-                from_pad=f"J1.{index}",
-                to_pad=f"U1.{index}",
-                length=PcbDrcMinMaxRequirement(max_nm=25_000_000),
-            )
-            for index, net in enumerate(nets, start=1)
-        ),
-    )
-
-
-def _policy(
-    requirements: PcbSignalPathRuleMap,
-    *,
-    coverage_mode: str = "review",
-    rule_mode: str = "review",
-) -> DesignLintPolicy:
-    return DesignLintPolicy(
-        pcb_signal_path_rule_map=requirements,
-        rules=(
-            DesignLintRuleOverride(
-                rule_id=COVERAGE_RULE_ID,
-                mode=coverage_mode,  # type: ignore[arg-type]
-                reason="Synthetic test policy",
-            ),
-            DesignLintRuleOverride(
-                rule_id=RULE_ID,
-                mode=rule_mode,  # type: ignore[arg-type]
-                reason="Synthetic test policy",
-            ),
-        ),
-    )
-
-
-def _evidence(source: str) -> BoundDrcEvidence:
-    empty = Path("/synthetic/not-read")
-    return BoundDrcEvidence(
-        project_path="projects/synthetic/board.kicad_pro",
-        project_sha256="a" * 64,
-        rules_path="projects/synthetic/board.kicad_dru",
-        rules_sha256="b" * 64,
-        board_path="projects/synthetic/board.kicad_pcb",
-        board_sha256="c" * 64,
-        native_summary_path="build/native/summary.json",
-        native_summary_sha256="d" * 64,
-        native_drc_path="build/native/drc.json",
-        native_drc_sha256="e" * 64,
-        project_file=empty,
-        board_file=empty,
-        summary_file=empty,
-        summary_sha256_before="d" * 64,
-        drc_file=empty,
-        command_file=empty,
-        command_sha256="f" * 64,
-        rules_source=source,
-        ignored_checks=frozenset(),
-    )
-
-
-def _scan(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    source: str,
-    requirements: PcbSignalPathRuleMap,
-    current_net_names: dict[str, object],
-    *,
-    coverage_mode: str = "review",
-    rule_mode: str = "review",
-) -> tuple[Candidate, ...]:
-    import kicad_tooling.hwrepo.pcb_signal_path_unmapped_rule_scan as owner
-
-    evidence = _evidence(source)
-    monkeypatch.setattr(owner, "source_bound_drc_evidence", lambda *_args: evidence)
-    monkeypatch.setattr(owner, "verify_source_bound_drc_unchanged", lambda *_args: None)
-    config = cast(
-        ProjectConfig,
-        SimpleNamespace(kind=ProjectKind.PCB, kicad_version="10.0.5"),
-    )
-    return owner.scan_unmapped_signal_path_length_rules(
-        tmp_path,
-        config,
-        _policy(requirements, coverage_mode=coverage_mode, rule_mode=rule_mode),
-        {},
-        tmp_path / "build/native",
-        current_net_names,
-        "1" * 64,
-    )
 
 
 def test_unmapped_exact_length_rule_for_source_net_is_reviewed(
@@ -192,12 +98,20 @@ def test_map_coverage_and_rule_modes_gate_the_prompt(
         ProjectConfig,
         SimpleNamespace(kind=ProjectKind.PCB, kicad_version="10.0.5"),
     )
-    for coverage_mode, rule_mode in (("off", "review"), ("review", "off")):
+    for coverage_mode, length_mode, edge_clearance_mode in (
+        ("off", "review", "review"),
+        ("review", "off", "off"),
+    ):
         assert (
-            owner.scan_unmapped_signal_path_length_rules(
+            owner.scan_unmapped_signal_path_native_rules(
                 tmp_path,
                 config,
-                _policy(_map("CLOCK"), coverage_mode=coverage_mode, rule_mode=rule_mode),
+                _policy(
+                    _map("CLOCK"),
+                    coverage_mode=coverage_mode,
+                    length_mode=length_mode,
+                    edge_clearance_mode=edge_clearance_mode,
+                ),
                 {},
                 tmp_path / "build/native",
                 {"DATA": ()},

@@ -77,6 +77,13 @@ def _rules(
         if name == "fault"
         else ""
     )
+    unmapped_edge_clearance = (
+        '(rule "synthetic-unmapped-data-edge-clearance" (severity error) '
+        "(condition \"A.NetName == 'SYNTH_DATA'\") "
+        "(constraint edge_clearance (min 9mm)))\n"
+        if name == "fault"
+        else ""
+    )
     source = f"""(version 1)
 (rule \"synthetic-clock-length\"
   {severity}(condition \"A.fromTo('J1-1', 'U1-1')\")
@@ -91,6 +98,7 @@ def _rules(
   {severity}(condition \"A.fromTo('J1-*', 'U1-*')\")
   (constraint skew (max {skew_mm:g}mm)))
 {unmapped_length}
+{unmapped_edge_clearance}
 """
     (directory / f"{name}.kicad_dru").write_text(source, encoding="utf-8")
 

@@ -60,7 +60,7 @@ from .pcb_footprint_path_integrity import (
     pcb_footprint_path_trailing_separator_candidates,
 )
 from .pcb_object_uuid_integrity import duplicate_pcb_object_uuid_candidates
-from .pcb_signal_path_unmapped_rule_scan import scan_unmapped_signal_path_length_rules
+from .pcb_signal_path_unmapped_rule_scan import scan_unmapped_signal_path_native_rules
 from .pcb_track_angle import track_angle_rule_coverage_candidates
 from .pcb_track_width_rule_coverage import track_width_rule_scope_candidates
 from .pcb_unassigned_copper_pad import unassigned_copper_pad_candidates
@@ -168,7 +168,7 @@ def inspect_design_lint_request(
                 coach.source_hashes,
                 native_summary,
             ),
-            *scan_unmapped_signal_path_length_rules(
+            *scan_unmapped_signal_path_native_rules(
                 root,
                 config,
                 policy,

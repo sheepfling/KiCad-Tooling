@@ -416,7 +416,7 @@ intended requirement.
 The following 371 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 371 active rules.
+The catalog currently contains 372 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -823,14 +823,14 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc735):** LINT-445 extends
-  `pcb.unassigned_copper_pad_review` to unnumbered copper pads in eligible
-  mixed-net footprints. Hosted acceptance passed in GitHub Actions run
-  `43414163726`: 436 tests passed, 9,105 were deselected, and the pinned KiCad
-  10.0.0/10.0.5 native fixture passed. Linux and Windows Pyright, wheel and
-  sdist builds, installed-wheel checks against separate and adapted project
-  checkouts, and playtest also passed. Package and preview jobs were skipped
-  under prerelease policy.
+- **Latest published lint-gate checkpoint (v0.5.3rc752):** LINT-452 reviews
+  exact native length-rule nets omitted from signal-path coverage. Hosted
+  acceptance passed in GitHub Actions run `43494579159`: 434 tests passed and
+  9,223 were deselected, including the digest-pinned KiCad 10.0.0/10.0.5 native
+  fixture. Ruff, Alphus boundaries, Rumdl, mdrepo, Pyright, Windows type checks,
+  wheel and sdist builds, installed-origin and version checks, external and
+  adapted project rehearsals, and playtest passed. Package and preview jobs
+  were skipped under prerelease policy.
 - **Latest published lint-gate checkpoint (v0.5.3rc734):** LINT-444 reviews an
   extra unassigned copper pad in a mixed-net footprint. Hosted acceptance passed
   in GitHub Actions run `43409299897`: 433 tests passed, 9,105 were deselected,
@@ -26399,6 +26399,43 @@ acceptance threads while new lint features proceed:
   Pyright, Windows type checks, wheel and sdist builds, installed-origin and
   version checks, external and adapted project rehearsals, and playtest passed.
   Package and preview jobs were skipped under prerelease policy.
+
+#### LINT-453 — Review native edge-clearance nets omitted from signal-path coverage
+
+- **Status:** Implemented as default-REVIEW rule
+  `pcb.signal_path_unmapped_edge_clearance_rule`. It runs for PCB projects with
+  a `pcb_signal_path_rule_map` containing native DRC requirements while
+  `pcb.signal_path_rule_coverage` is enabled. The rule has its own mode and can
+  be promoted to `block` or disabled with `off` independently of the length
+  rule.
+- **Priority:** P2 coverage completeness. A custom native per-net edge-clearance
+  constraint can apply to a source-netlist net that is absent from the
+  project-authored endpoint map used for path review.
+- **Predicate:** Prompt for each named `edge_clearance` constraint with one
+  exact literal `A.NetName == '<net>'` scope when the net exists in the current
+  source-bound schematic netlist but is absent from mapped paths. Reuse the
+  shared exact-net parser, compare case-insensitively, and group repeated
+  constraints by rule and net.
+- **Boundary:** This asks whether path-map coverage is intentional. It does not
+  infer that a net needs an edge margin, decide that the map should be
+  expanded, validate the authored bound, or establish PCB or cable continuity.
+  Wildcard, compound, variable-backed, unnamed, and nonliteral scopes stay
+  quiet. Native DRC remains responsible for configured clearance constraints.
+- **Fixtures:** Synthetic fault, mapped/source-absent controls, unsupported
+  scopes, independent policy overrides, and input-order stability are covered.
+  CLI/MCP parity uses source-bound synthetic DRC evidence. A digest-pinned
+  Docker fault/control lane confirms that KiCad 10.0.0 and 10.0.5 accept and
+  report the exact-net native `edge_clearance` rule. It does not evaluate the
+  adequacy of board-edge geometry or prove copper continuity. No proprietary
+  project data is included.
+- **Selection:** Run
+  `tests/test_pcb_signal_path_unmapped_edge_clearance_rules.py`,
+  `tests/test_design_lint_mcp_parity_pcb_signal_path_unmapped_edge_clearance.py`,
+  and
+  `tests/test_design_lint_architecture_pcb_signal_path_unmapped_edge_clearance.py`
+  with `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.signal_path_unmapped_edge_clearance_rule")`.
+- **Hosted acceptance:** Pending.
 
 ## Completion and release gate
 

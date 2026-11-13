@@ -1,20 +1,22 @@
-"""Find exact native length-rule nets omitted from a PCB signal-path map."""
+"""Find exact native path-rule nets omitted from a PCB signal-path map."""
 
 from __future__ import annotations
 
 import hashlib
 from collections.abc import Mapping
 
+from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .pcb_drc_conditions import native_exact_net_condition
 from .pcb_drc_rule_parser import NativeRuleConstraint
 from .pcb_drc_source_evidence import BoundDrcEvidence
 from .pcb_signal_path_rule_models import PcbSignalPathRuleMap
 
-RULE_ID = "pcb.signal_path_unmapped_native_rule"
+LENGTH_RULE_ID: DesignLintRuleId = "pcb.signal_path_unmapped_native_rule"
+EDGE_CLEARANCE_RULE_ID: DesignLintRuleId = "pcb.signal_path_unmapped_edge_clearance_rule"
 
 
-def unmapped_signal_path_length_rule_candidates(
+def _unmapped_signal_path_rule_candidates(
     requirements: PcbSignalPathRuleMap,
     constraints: tuple[NativeRuleConstraint, ...],
     evidence: BoundDrcEvidence,
@@ -22,8 +24,10 @@ def unmapped_signal_path_length_rule_candidates(
     current_net_names: Mapping[str, object],
     source_netlist_sha256: str,
     kicad_version: str,
+    rule_id: DesignLintRuleId,
+    constraint_name: str,
 ) -> tuple[Candidate, ...]:
-    """Prompt about exact native length-rule nets absent from mapped path coverage."""
+    """Compare one supported native per-net constraint with the path map."""
     mapped_nets = {item.net.casefold() for item in requirements.paths}
     source_nets: dict[str, str] = {}
     for net_value in current_net_names:
@@ -33,7 +37,7 @@ def unmapped_signal_path_length_rule_candidates(
     groups: dict[tuple[str, str], list[NativeRuleConstraint]] = {}
     labels: dict[tuple[str, str], tuple[str, str]] = {}
     for constraint in constraints:
-        if constraint.name != "length" or not constraint.rule_name.strip():
+        if constraint.name != constraint_name or not constraint.rule_name.strip():
             continue
         net = native_exact_net_condition(constraint.condition)
         if net is None or net.casefold() not in source_nets or net.casefold() in mapped_nets:
@@ -44,16 +48,19 @@ def unmapped_signal_path_length_rule_candidates(
         labels[key] = (min(prior[0], constraint.rule_name), min(prior[1], net))
 
     map_sha256 = hashlib.sha256(requirements.model_dump_json().encode("utf-8")).hexdigest()
+    bounds_key = (
+        "native_length_bounds" if constraint_name == "length" else "native_edge_clearance_bounds"
+    )
     candidates: list[Candidate] = []
     for key, matches in sorted(groups.items()):
         rule_name, net = labels[key]
         candidates.append(
             Candidate(
-                rule_id=RULE_ID,
+                rule_id=rule_id,
                 subject=f"{rule_name}: {net} is absent from signal-path coverage",
                 message=(
-                    f"The source-bound native length rule {rule_name!r} targets exact net "
-                    f"{net!r}, which exists in the source netlist but is absent from "
+                    f"The source-bound native {constraint_name} rule {rule_name!r} targets exact "
+                    f"net {net!r}, which exists in the source netlist but is absent from "
                     "pcb_signal_path_rule_map while pcb.signal_path_rule_coverage is enabled. "
                     "Add an independently reviewed path if geometry review should cover it, "
                     "or disposition this prompt if the omission is intentional. This does not "
@@ -66,7 +73,7 @@ def unmapped_signal_path_length_rule_candidates(
                     "map_basis": (requirements.basis,),
                     "map_sha256": (map_sha256,),
                     "native_conditions": tuple(sorted({item.condition for item in matches})),
-                    "native_length_bounds": tuple(
+                    bounds_key: tuple(
                         sorted(
                             f"min_nm={item.minimum_nm};max_nm={item.maximum_nm};"
                             f"issue={item.issue or item.bounds_issue or '<none>'}"
@@ -95,3 +102,47 @@ def unmapped_signal_path_length_rule_candidates(
             )
         )
     return tuple(candidates)
+
+
+def unmapped_signal_path_length_rule_candidates(
+    requirements: PcbSignalPathRuleMap,
+    constraints: tuple[NativeRuleConstraint, ...],
+    evidence: BoundDrcEvidence,
+    *,
+    current_net_names: Mapping[str, object],
+    source_netlist_sha256: str,
+    kicad_version: str,
+) -> tuple[Candidate, ...]:
+    """Prompt about exact native length-rule nets absent from path coverage."""
+    return _unmapped_signal_path_rule_candidates(
+        requirements,
+        constraints,
+        evidence,
+        current_net_names=current_net_names,
+        source_netlist_sha256=source_netlist_sha256,
+        kicad_version=kicad_version,
+        rule_id=LENGTH_RULE_ID,
+        constraint_name="length",
+    )
+
+
+def unmapped_signal_path_edge_clearance_rule_candidates(
+    requirements: PcbSignalPathRuleMap,
+    constraints: tuple[NativeRuleConstraint, ...],
+    evidence: BoundDrcEvidence,
+    *,
+    current_net_names: Mapping[str, object],
+    source_netlist_sha256: str,
+    kicad_version: str,
+) -> tuple[Candidate, ...]:
+    """Prompt about exact native edge-clearance nets absent from path coverage."""
+    return _unmapped_signal_path_rule_candidates(
+        requirements,
+        constraints,
+        evidence,
+        current_net_names=current_net_names,
+        source_netlist_sha256=source_netlist_sha256,
+        kicad_version=kicad_version,
+        rule_id=EDGE_CLEARANCE_RULE_ID,
+        constraint_name="edge_clearance",
+    )

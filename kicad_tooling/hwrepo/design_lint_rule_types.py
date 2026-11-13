@@ -296,6 +296,7 @@ DesignLintRuleId = Literal[
     "pcb.track_angle_unmapped_native_rule",
     "pcb.signal_path_rule_coverage",
     "pcb.signal_path_unmapped_native_rule",
+    "pcb.signal_path_unmapped_edge_clearance_rule",
     "pcb.keepout_intent_coverage",
     "pcb.rf_module_antenna_keepout_coverage",
     "pcb.touch_pad_reference_clearance",

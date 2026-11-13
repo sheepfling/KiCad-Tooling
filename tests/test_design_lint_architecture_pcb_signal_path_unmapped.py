@@ -39,13 +39,13 @@ def test_signal_path_unmapped_rule_has_focused_owner_and_source_scan() -> None:
     assert rule["implementation_owner"] in rule["implementation_refs"]
     assert (
         "kicad_tooling/hwrepo/pcb_signal_path_unmapped_rule_scan.py#"
-        "scan_unmapped_signal_path_length_rules"
+        "scan_unmapped_signal_path_native_rules"
     ) in rule["implementation_refs"]
 
     inspection = ast.parse((HWREPO / "design_lint_project_inspection.py").read_text())
     scanner_imported = any(
         node.module == "pcb_signal_path_unmapped_rule_scan"
-        and any(alias.name == "scan_unmapped_signal_path_length_rules" for alias in node.names)
+        and any(alias.name == "scan_unmapped_signal_path_native_rules" for alias in node.names)
         for node in inspection.body
         if isinstance(node, ast.ImportFrom)
     )

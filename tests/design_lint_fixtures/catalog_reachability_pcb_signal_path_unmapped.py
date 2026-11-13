@@ -1,4 +1,4 @@
-"""Synthetic reachability for omitted native signal-path length scopes."""
+"""Synthetic reachability for omitted native signal-path rule scopes."""
 
 from __future__ import annotations
 
@@ -17,16 +17,26 @@ def unmapped_signal_path_rule_ids() -> set[str]:
         observed=NetlistContract(components={}, nets={"EXTRA": ("J1.1",)}),
         source_hashes={},
     )
-    candidate = Candidate(
-        rule_id="pcb.signal_path_unmapped_native_rule",
-        subject="projects/synthetic/controller.kicad_dru#extra-length",
-        message="Synthetic exact native length rule is absent from mapped path coverage.",
-        evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
+    candidates = (
+        Candidate(
+            rule_id="pcb.signal_path_unmapped_native_rule",
+            subject="projects/synthetic/controller.kicad_dru#extra-length",
+            message="Synthetic exact native length rule is absent from mapped path coverage.",
+            evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
+        ),
+        Candidate(
+            rule_id="pcb.signal_path_unmapped_edge_clearance_rule",
+            subject="projects/synthetic/controller.kicad_dru#extra-edge-clearance",
+            message=(
+                "Synthetic exact native edge-clearance rule is absent from mapped path coverage."
+            ),
+            evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
+        ),
     )
     report = evaluate(
         project_id,
         coach,
         DesignLintPolicy(),
-        pcb_dru_rule_candidates=(candidate,),
+        pcb_dru_rule_candidates=candidates,
     )
     return {finding.rule_id for finding in report.findings}
