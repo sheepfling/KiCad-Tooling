@@ -26393,7 +26393,12 @@ acceptance threads while new lint features proceed:
   `tests/test_design_lint_architecture_pcb_signal_path_unmapped.py` with
   `design_lint and pcb_lint and
   design_lint_rule(rule_id="pcb.signal_path_unmapped_native_rule")`.
-- **Hosted acceptance:** Pending.
+- **Hosted acceptance:** Passed run `43494579159` for annotated rule-gate tag
+  `v0.5.3rc752`: 434 tests passed and 9,223 were deselected, including the
+  digest-pinned native fixture. Ruff, Alphus boundaries, Rumdl, mdrepo,
+  Pyright, Windows type checks, wheel and sdist builds, installed-origin and
+  version checks, external and adapted project rehearsals, and playtest passed.
+  Package and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
