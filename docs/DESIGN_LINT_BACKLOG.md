@@ -815,9 +815,16 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc731):** LINT-442 reviews
-  empty custom DRC `disallow` clauses. The local scoped gate passed 416 tests
-  with 9,077 deselected, including repeated digest-pinned KiCad 10.0.8 Docker
+- **Latest published lint-gate checkpoint (v0.5.3rc732):** LINT-443 reviews
+  trailing separators in source-bound PCB footprint paths. Local scoped package
+  acceptance passed 435 tests with 9,083 deselected, including repeated
+  digest-pinned KiCad 10.0.0/10.0.5 Docker fault/control runs and installed-wheel
+  rehearsals against separate and adapted project checkouts. Hosted acceptance
+  passed in GitHub Actions run `43401434167`; package and preview jobs were
+  skipped under prerelease policy.
+- **Previous lint-gate checkpoint (v0.5.3rc731):** LINT-442 reviews empty
+  custom DRC `disallow` clauses. The local scoped gate passed 416 tests with
+  9,077 deselected, including repeated digest-pinned KiCad 10.0.8 Docker
   fault/control exports. Hosted acceptance passed in GitHub Actions run
   `43394607293`; package and preview jobs were skipped under prerelease policy.
 - **Previous lint-gate checkpoint (v0.5.3rc730):** LINT-441 reviews unknown
@@ -25909,7 +25916,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-443 — Review trailing separators in PCB footprint instance paths
 
-- **Status:** Local synthetic and pinned-native acceptance passed; hosted gate pending.
+- **Status:** Local and hosted acceptance passed.
 - **Priority:** P2 source-identity review. A footprint path can stop after one or more sheet UUIDs
   while still parsing as PCB source; native DRC does not identify the distinction.
 - **Rule:** Adds `pcb.footprint_path_trailing_separator` as a default-REVIEW candidate for exact
@@ -25938,7 +25945,9 @@ acceptance threads while new lint features proceed:
   deselected, including the repeated pinned KiCad 10.0.0/10.0.5 Docker comparison. Ruff format,
   Ruff, Alphus module-role and shared-utility checks, Rumdl, mdrepo, Linux and Windows-target
   Pyright, wheel and sdist builds, installed-wheel checks against separate and adapted project
-  checkouts, and playtest passed. Receipt: `build/ci/run-ip4tqzmd`. Hosted gate pending.
+  checkouts, and playtest passed. Receipt: `build/ci/run-ip4tqzmd`. Hosted scoped acceptance and
+  installed-wheel rehearsal passed in GitHub Actions run `43401434167`; package and preview jobs
+  were skipped under prerelease policy.
 
 ## Completion and release gate
 
