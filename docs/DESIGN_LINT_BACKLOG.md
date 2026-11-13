@@ -814,13 +814,23 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc728):** LINT-439 adds a
+- **Latest published lint-gate checkpoint (v0.5.3rc731):** LINT-442 reviews
+  empty custom DRC `disallow` clauses. The local scoped gate passed 416 tests
+  with 9,077 deselected, including repeated digest-pinned KiCad 10.0.8 Docker
+  fault/control exports. Hosted acceptance passed in GitHub Actions run
+  `43394607293`; package and preview jobs were skipped under prerelease policy.
+- **Previous lint-gate checkpoint (v0.5.3rc730):** LINT-441 reviews unknown
+  custom DRC `disallow` object types. The local scoped gate passed 415 tests
+  with 9,070 deselected, including the digest-pinned Docker fault/control.
+  Hosted acceptance passed in GitHub Actions run `43391173404`; package and
+  preview jobs were skipped under prerelease policy.
+- **Earlier lint-gate checkpoint (v0.5.3rc728):** LINT-439 adds a
   source-bound review for malformed custom DRC condition argument shapes. The
   local scoped gate passed 417 tests with 9,052 deselected, including the
   digest-pinned KiCad 10.0.8 Docker fixture. Hosted acceptance passed in
   GitHub Actions run `43380989172`; package and preview jobs were skipped under
   prerelease policy.
-- **Previous lint-gate checkpoint (v0.5.3rc727):** LINT-438 adds a
+- **Earlier lint-gate checkpoint (v0.5.3rc727):** LINT-438 adds a
   source-bound review for malformed custom DRC constraint bounds. The local
   scoped gate passed 416 tests with 9,041 deselected, including the
   digest-pinned KiCad 10.0.8 probe. Hosted acceptance and the installed-wheel
