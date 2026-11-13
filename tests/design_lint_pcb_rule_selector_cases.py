@@ -459,4 +459,20 @@ PCB_RULE_NODE_CASES = (
         "pcb.drc_malformed_netclass_numeric_constraints",
         "tests/test_pcb_drc_malformed_netclass_numeric_constraints_native.py::test_malformed_clearance_values_fall_back_like_default_and_repeat_with_narrow_control",
     ),
+    (
+        "pcb.duplicate_pad_net_conflict",
+        "tests/test_pcb_duplicate_pad_net_conflicts.py::test_different_net_assignments_on_duplicate_schematic_pads_are_reviewed",
+    ),
+    (
+        "pcb.duplicate_pad_net_conflict",
+        "tests/test_pcb_duplicate_pad_net_conflicts.py::test_same_net_duplicate_schematic_pads_are_a_control",
+    ),
+    (
+        "pcb.duplicate_pad_net_conflict",
+        "tests/test_design_lint_mcp_parity_pcb_duplicate_pad_net_conflict.py::test_duplicate_pad_net_conflict_matches_between_cli_and_mcp",
+    ),
+    (
+        "pcb.duplicate_pad_net_conflict",
+        "tests/test_pcb_duplicate_pad_net_conflicts_native.py::test_native_drc_does_not_distinguish_duplicate_pad_net_conflict",
+    ),
 )

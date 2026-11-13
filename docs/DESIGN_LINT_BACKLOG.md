@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 364 rules are implemented with synthetic regression coverage.
+The following 365 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 364 active rules.
+The catalog currently contains 365 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -762,6 +762,7 @@ skipped under prerelease policy.
 - `pcb.schematic_pcb_value_mismatch`
 - `pcb.schematic_pcb_pad_net_mismatch`
 - `pcb.unassigned_copper_pad_review`
+- `pcb.duplicate_pad_net_conflict`
 - `pcb.board_only_footprint`
 - `pcb.required_fitted_reference`
 - `pcb.touch_pad_reference_clearance`
@@ -4424,7 +4425,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 364 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 365 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -26062,6 +26063,58 @@ acceptance threads while new lint features proceed:
   passed. Receipt: `build/ci/run-ysn_48m3`. Hosted acceptance passed the same
   436-test scope in GitHub Actions run `43414163726`; package and preview jobs
   were skipped under prerelease policy.
+
+#### LINT-446 — Review conflicting nets on duplicate-numbered PCB pads
+
+- **Status:** Implemented as the default-REVIEW rule
+  `pcb.duplicate_pad_net_conflict`; local scoped package acceptance passed,
+  with tagged hosted acceptance pending.
+- **Priority:** P1 source-bound PCB connectivity review. Multiple physical
+  copper pads carrying one schematic pin number can silently disagree about
+  their assigned nets.
+- **Cohort basis:** The public MIT
+  [`kicad-board-lint` candidate](https://github.com/94xhn/kicad-board-lint/tree/3296d711b9d9b0d6c724cb3b4e404202ca0a13c4)
+  describes `dup-pad-net`. The local rule uses that report as a test lead and
+  does not install candidate code or retain cohort boards. The KiCad 10 PCB
+  Editor manual documents duplicate-numbered jumper pads as a shared-net
+  contact.
+- **Predicate:** For exact KiCad 10.0.0 and 10.0.5 PCB projects, inspect
+  source-hash-matched footprints whose unique fitted reference and duplicate
+  nonempty copper pad number both occur in the current native schematic pin
+  inventory. Emit one REVIEW candidate when the same-numbered copper pads have
+  different native net states, including an assigned pad beside an unassigned
+  one. Evidence retains each pad's ordinal, source line, net code, and exact
+  net name. Do not select an intended net or repair the board.
+- **Native result:** Tooling-owned synthetic fault/control boards set
+  `duplicate_pad_numbers_are_jumpers` explicitly and differ only in the second
+  pad's net assignment. Repeated KiCad 10.0.0 and 10.0.5 Docker DRC runs
+  produced identical fault/control reports: the same synthetic footprint
+  library warning and no unconnected-item findings. This observation is
+  limited to these fixtures and pinned versions.
+- **Boundary:** PCB-only projects, unmatched references or pin numbers,
+  duplicate footprint references, DNP/board-only footprints, malformed pad
+  net state, and unsupported versions are outside scope. REVIEW evidence does
+  not establish physical continuity, an electrical defect, or manufacturing
+  readiness; project policy can promote, disable, or exactly ignore a finding.
+- **Fixtures:** Synthetic tests cover conflicting assignments, assigned vs
+  unassigned pads, same-net controls, schematic-inventory mismatch, non-copper
+  pads, DNP/board-only exclusions, stale-source rejection, policy, and a
+  metamorphic same-net mutation. CLI/MCP reports are parity-checked. The
+  fixture note records source hashes; no proprietary board source is used.
+- **Selection:** Run `tests/test_pcb_duplicate_pad_net_conflicts.py`,
+  `tests/test_design_lint_mcp_parity_pcb_duplicate_pad_net_conflict.py`, and
+  the corresponding architecture/catalog tests with
+  `design_lint and pcb_lint and design_lint_rule(rule_id="pcb.duplicate_pad_net_conflict")`.
+  Run `tests/test_pcb_duplicate_pad_net_conflicts_native.py` with Docker,
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, `native_kicad`, and that rule selector.
+- **Focused local evidence:** The scoped package gate passed 71 selected tests,
+  including source, policy, CLI/MCP, catalog, architecture, selector, existing
+  unassigned-pad regressions, and repeated native fault/control comparisons on
+  KiCad 10.0.0 and 10.0.5. Ruff, Alphus boundaries, Rumdl, mdrepo, Linux and
+  Windows Pyright, wheel/sdist builds, installed-origin/version checks, and the
+  installed-wheel inventory, surface, verification, adapted-checkout, and
+  playtest checks against an external template checkout all passed. Hosted
+  acceptance remains pending.
 
 ## Completion and release gate
 

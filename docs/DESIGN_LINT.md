@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 364 active rules.
+The catalog currently contains 365 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -6747,6 +6747,49 @@ KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
   -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.unassigned_copper_pad_review")'
 ```
 
+## Review conflicting nets on duplicate-numbered PCB pads
+
+`pcb.duplicate_pad_net_conflict` compares repeated copper pad numbers within
+one fitted footprint when the same reference and pin number exist in the
+current native schematic pin inventory. It reports a source-bound REVIEW
+candidate when those physical pads have different assigned nets, or when one
+pad is assigned and another is unassigned. Evidence gives each pad's copper
+ordinal, source line, net code, and exact net name.
+
+The [KiCad 10 PCB Editor manual](https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html)
+documents duplicate-numbered jumper pads as one internally connected contact
+that shares one net. This rule applies that deterministic relationship only
+to pad numbers backed by the schematic pin inventory. It does not choose an
+intended net or prove copper continuity, board correctness, or manufacturing
+readiness. The rule defaults to `review`; project policy
+can set `block`, `off`, or ignore one exact fingerprint. Only KiCad 10.0.0 and
+10.0.5 are supported by the native fixture comparison.
+
+The public MIT [`kicad-board-lint` candidate][kicad-board-lint-duplicate-pad]
+describes a duplicate-pad net-conflict detector. This local rule uses the
+candidate as a test lead and stores no cohort implementation or board data.
+The [tooling-owned fault/control fixture][duplicate-pad-conflict-fixture]
+sets `duplicate_pad_numbers_are_jumpers` explicitly. Native DRC produced
+identical violations and unconnected-item evidence for its conflicting-net
+fault and same-net control on both pinned versions.
+
+Run the source, CLI/MCP, catalog, and architecture regressions with:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_pcb_duplicate_pad_net_conflicts.py \
+  tests/test_design_lint_mcp_parity_pcb_duplicate_pad_net_conflict.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.duplicate_pad_net_conflict")'
+```
+
+Run the native comparison with Docker and:
+
+```sh
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_duplicate_pad_net_conflicts_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.duplicate_pad_net_conflict")'
+```
+
 ## Require selected references to be fitted in the base assembly or a variant
 
 `pcb.required_fitted_reference` checks a project-authored list of exact
@@ -10154,3 +10197,5 @@ Review the actual board and assembly requirements before approving a build.
 [kicad-netclass-name-loader]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L187-199
 [kicad-netclass-numeric-conversion]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L39-45
 [kicad-netclass-numeric-fields]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.8/common/project/net_settings.cpp#L127-149
+[kicad-board-lint-duplicate-pad]: https://github.com/94xhn/kicad-board-lint/tree/3296d711b9d9b0d6c724cb3b4e404202ca0a13c4
+[duplicate-pad-conflict-fixture]: ../tests/fixtures/design_lint/pcb-duplicate-pad-net-conflict/README.md

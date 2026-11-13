@@ -15183,6 +15183,53 @@
       "implementation_owner": "kicad_tooling/hwrepo/pcb_unassigned_copper_pad.py#unassigned_copper_pad_candidates"
     },
     {
+      "rule_id": "pcb.duplicate_pad_net_conflict",
+      "title": "Duplicate schematic pad number has conflicting PCB net assignments",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Exact SHA-256 hashed KiCad PCB source, source-bound native schematic pin inventory, copper-pad ordinals and source lines, native pad net identities, and pinned KiCad 10.0.0/10.0.5 DRC fault/control comparison",
+      "predicate": "For KiCad 10.0.0 and 10.0.5 schematic-backed PCB projects, inspect each unique, fitted, non-board-only footprint reference. For each nonempty copper pad number that appears at least twice in the footprint and is present in the current native schematic pin inventory for that reference, emit one REVIEW candidate when the repeated copper pads have different native net-assignment states, including assigned-versus-unassigned. Preserve each pad's copper ordinal, source line, net code, and exact net name. Skip malformed net evidence and do not infer the expected net or physical connection.",
+      "supported_kicad_versions": [
+        "10.0.0",
+        "10.0.5"
+      ],
+      "limitations": [
+        "The finding compares source-assigned nets among duplicate numbered copper pads for one schematic pin. It does not prove the schematic pin's intended net, copper continuity, physical contact, off-board continuity, or manufacturing defect.",
+        "The source-matched native schematic pin inventory must contain the reference and pad number. PCB-only projects, board-only or DNP footprints, duplicate footprint references, unknown pad net syntax, unmatched references, and other KiCad versions are outside this predicate.",
+        "Custom footprint behavior and intentional project-specific exceptions still require review. Project policy may promote, disable, or exactly ignore a candidate; the rule does not repair source or choose an intended net.",
+        "For the tooling-owned synthetic jumper-pad fixture, KiCad 10.0.0 and 10.0.5 emitted identical fault/control DRC violations and no unconnected items. The bounded native comparison does not establish behavior for other layouts, footprint settings, or KiCad versions."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_duplicate_pad_net_conflicts.test_different_net_assignments_on_duplicate_schematic_pads_are_reviewed",
+        "tests.test_pcb_duplicate_pad_net_conflicts.test_assigned_and_unassigned_duplicate_pads_are_reviewed",
+        "tests.test_design_lint_mcp_parity_pcb_duplicate_pad_net_conflict.test_duplicate_pad_net_conflict_matches_between_cli_and_mcp",
+        "tests.test_pcb_duplicate_pad_net_conflicts_native.test_native_drc_does_not_distinguish_duplicate_pad_net_conflict"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_duplicate_pad_net_conflicts.test_same_net_duplicate_schematic_pads_are_a_control",
+        "tests.test_pcb_duplicate_pad_net_conflicts.test_unmatched_pad_number_and_non_copper_duplicate_are_controls",
+        "tests.test_pcb_duplicate_pad_net_conflicts.test_dnp_and_board_only_footprints_are_controls",
+        "tests.test_pcb_duplicate_pad_net_conflicts.test_assigning_the_duplicate_group_to_one_net_clears_the_finding",
+        "tests.test_pcb_duplicate_pad_net_conflicts_native.test_native_drc_does_not_distinguish_duplicate_pad_net_conflict"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_pcb_duplicate_pad_net_conflicts.test_assigning_the_duplicate_group_to_one_net_clears_the_finding"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_duplicate_pad_net_conflicts.py#duplicate_pad_net_conflict_candidates",
+        "kicad_tooling/hwrepo/pcb_pad_source.py#source_bound_pcb_footprint_pads",
+        "kicad_tooling/hwrepo/pcb_board_source_binding.py#read_source_bound_pcb_board",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
+      ],
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_duplicate_pad_net_conflicts.py#duplicate_pad_net_conflict_candidates"
+    },
+    {
       "rule_id": "component.led_directly_across_supply_and_return",
       "title": "Supported two-pin LED directly spans a positive rail and return",
       "status": "active",

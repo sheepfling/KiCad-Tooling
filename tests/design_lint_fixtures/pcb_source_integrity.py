@@ -8,6 +8,9 @@ from typing import cast
 
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import ProjectConfig, ProjectKind
+from kicad_tooling.hwrepo.pcb_duplicate_pad_net_conflicts import (
+    duplicate_pad_net_conflict_candidates,
+)
 from kicad_tooling.hwrepo.pcb_footprint_path_integrity import (
     pcb_footprint_path_trailing_separator_candidates,
 )
@@ -65,6 +68,29 @@ def pcb_source_integrity_rule_ids() -> frozenset[str]:
             repository,
             pad_config,
             {pad_relative: digest(pad_source)},
+            netlist(
+                components={"J1": "Synthetic:TwoPadConnector"},
+                nets={"SIGNAL": ("J1.1",)},
+                component_pin_numbers={"J1": ("1",)},
+            ),
+        )
+    )
+    duplicate_relative = "tests/fixtures/design_lint/pcb-duplicate-pad-net-conflict/fault.kicad_pcb"
+    duplicate_source = repository / duplicate_relative
+    duplicate_project = duplicate_relative.removesuffix(".kicad_pcb") + ".kicad_pro"
+    duplicate_config = cast(
+        ProjectConfig,
+        SimpleNamespace(
+            kind=ProjectKind.PCB,
+            project=duplicate_project,
+            kicad_version="10.0.5",
+        ),
+    )
+    candidates.extend(
+        duplicate_pad_net_conflict_candidates(
+            repository,
+            duplicate_config,
+            {duplicate_relative: digest(duplicate_source)},
             netlist(
                 components={"J1": "Synthetic:TwoPadConnector"},
                 nets={"SIGNAL": ("J1.1",)},
