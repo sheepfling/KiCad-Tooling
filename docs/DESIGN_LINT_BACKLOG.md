@@ -808,13 +808,20 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc724):** LINT-435 extends
-  malformed PCB netclass inventory review to non-string and empty class names.
-  Local and hosted scoped gates each passed 451 tests with 8,956 deselected,
+- **Latest published lint-gate checkpoint (v0.5.3rc725):** LINT-436 adds a
+  source-bound review for malformed PCB netclass numeric constraint types.
+  Local and hosted scoped gates each passed 430 tests with 9,004 deselected,
   including repeatable digest-pinned KiCad 10.0.8 Docker fault/control runs.
   Hosted acceptance and the installed-wheel rehearsal against a separate
-  project passed in GitHub Actions run `43331556651`; package and preview jobs
+  project passed in GitHub Actions run `43336208310`; package and preview jobs
   were skipped under prerelease policy.
+- **Previous lint-gate checkpoint (v0.5.3rc724):** LINT-435 extends malformed
+  PCB netclass inventory review to non-string and empty class names. Local and
+  hosted scoped gates each passed 451 tests with 8,956 deselected, including
+  repeatable digest-pinned KiCad 10.0.8 Docker fault/control runs. Hosted
+  acceptance and the installed-wheel rehearsal against a separate project
+  passed in GitHub Actions run `43331556651`; package and preview jobs were
+  skipped under prerelease policy.
 - **Previous lint-gate checkpoint (v0.5.3rc723):** LINT-434 reviews malformed
   PCB netclass inventories. Local and hosted scoped gates each passed 432
   tests with 8,956 deselected and ran the repeatable, digest-pinned KiCad
@@ -25544,8 +25551,7 @@ acceptance threads while new lint features proceed:
 - **Rule:** Adds
   [`pcb.drc_malformed_netclass_numeric_constraints`](DESIGN_LINT.md#review-malformed-pcb-netclass-numeric-constraints).
 - **Status:** Implemented as a default-REVIEW source check for exact KiCad
-  10.0.8 PCB and PCB-only projects; focused local acceptance passed and hosted
-  acceptance is pending.
+  10.0.8 PCB and PCB-only projects; focused local and hosted acceptance passed.
 - **Predicate:** For the unique source-hashed `net_settings.classes` array,
   review present values of the nine recognized numeric fields when their JSON
   type is not number. Preserve class index/name, property name, JSON type, and
@@ -25579,7 +25585,9 @@ acceptance threads while new lint features proceed:
   scoped package gate passed 430 tests with 9,004 deselected; catalog,
   selector, architecture, lint, type checks, wheel/sdist, installed-wheel,
   external project, and adapted project stages passed. Receipt:
-  `build/ci/run-6zbqyzl5`. Hosted acceptance is pending.
+  `build/ci/run-6zbqyzl5`. Hosted acceptance passed in GitHub Actions run
+  `43336208310`, including the installed-wheel external-project rehearsal.
+  Package and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
