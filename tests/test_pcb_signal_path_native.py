@@ -129,6 +129,7 @@ def _retain_native_receipt(project_root: Path, log: HostedLog, project: str) -> 
 )
 @pytest.mark.design_lint_rule(rule_id="pcb.signal_path_unmapped_native_rule")
 @pytest.mark.design_lint_rule(rule_id="pcb.signal_path_unmapped_edge_clearance_rule")
+@pytest.mark.design_lint_rule(rule_id="pcb.signal_path_unmapped_from_to_length_rule")
 def test_native_signal_path_drc_faults_are_repeatable(
     tmp_path: Path, kicad_version: str, image: str
 ) -> None:
@@ -173,18 +174,32 @@ def test_native_signal_path_drc_faults_are_repeatable(
         and item.name == "edge_clearance"
     )
     assert unmapped_edge_clearance_rule.minimum_nm == 9_000_000
+    (unmapped_from_to_length_rule,) = tuple(
+        item
+        for item in native_fault_rules
+        if item.rule_name == "synthetic-unmapped-aux-fromto-length"
+        and item.condition == "A.fromTo('J1-3', 'U1-3')"
+        and item.name == "length"
+    )
+    assert unmapped_from_to_length_rule.maximum_nm == 18_000_000
     fault_drc = (output / "fault.first.json").read_text(encoding="utf-8")
     control_drc = (output / "control.first.json").read_text(encoding="utf-8")
     exact_rule_diagnostic = "rule 'synthetic-unmapped-data-length'"
     exact_edge_diagnostic = "rule 'synthetic-unmapped-data-edge-clearance'"
+    exact_from_to_diagnostic = "rule 'synthetic-unmapped-aux-fromto-length'"
     assert exact_rule_diagnostic in fault_drc
     assert exact_rule_diagnostic not in control_drc
     assert exact_edge_diagnostic in fault_drc
     assert exact_edge_diagnostic not in control_drc
+    assert exact_from_to_diagnostic in fault_drc
+    assert exact_from_to_diagnostic not in control_drc
     control_rules = native_constraints((output / "control.kicad_dru").read_text(encoding="utf-8"))
     assert not any(item.rule_name == "synthetic-unmapped-data-length" for item in control_rules)
     assert not any(
         item.rule_name == "synthetic-unmapped-data-edge-clearance" for item in control_rules
+    )
+    assert not any(
+        item.rule_name == "synthetic-unmapped-aux-fromto-length" for item in control_rules
     )
     expected_findings = {
         "length_out_of_range",

@@ -32,6 +32,14 @@ def unmapped_signal_path_rule_ids() -> set[str]:
             ),
             evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
         ),
+        Candidate(
+            rule_id="pcb.signal_path_unmapped_from_to_length_rule",
+            subject="projects/synthetic/controller.kicad_dru#extra-fromto-length",
+            message=(
+                "Synthetic exact native fromTo length rule is absent from mapped path coverage."
+            ),
+            evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
+        ),
     )
     report = evaluate(
         project_id,

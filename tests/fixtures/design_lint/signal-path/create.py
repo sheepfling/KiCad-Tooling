@@ -9,7 +9,7 @@ from pathlib import Path
 import pcbnew
 
 _FOOTPRINT_LIBRARY = Path("/usr/share/kicad/footprints/Connector_PinHeader_2.54mm.pretty")
-_FOOTPRINT_NAME = "PinHeader_1x02_P2.54mm_Vertical"
+_FOOTPRINT_NAME = "PinHeader_1x03_P2.54mm_Vertical"
 
 
 def _edge(board: pcbnew.BOARD, start: tuple[float, float], end: tuple[float, float]) -> None:
@@ -39,10 +39,11 @@ def _add_footprint(
     footprint.SetPosition(pcbnew.VECTOR2I(pcbnew.FromMM(x_mm), pcbnew.FromMM(y_mm)))
     board.Add(footprint)
     pads = {pad.GetNumber(): pad for pad in footprint.Pads()}
-    if set(pads) != {"1", "2"}:
+    if set(pads) != {"1", "2", "3"}:
         raise RuntimeError(f"Synthetic footprint pads changed unexpectedly: {sorted(pads)}")
     pads["1"].SetNet(nets["SYNTH_CLK"])
     pads["2"].SetNet(nets["SYNTH_DATA"])
+    pads["3"].SetNet(nets["SYNTH_AUX"])
     return pads
 
 
@@ -51,12 +52,14 @@ def _add_track(
     start: pcbnew.VECTOR2I,
     end: pcbnew.VECTOR2I,
     net: pcbnew.NETINFO_ITEM,
+    *,
+    layer: int = pcbnew.F_Cu,
 ) -> None:
     track = pcbnew.PCB_TRACK(board)
     track.SetStart(start)
     track.SetEnd(end)
     track.SetWidth(pcbnew.FromMM(0.25))
-    track.SetLayer(pcbnew.F_Cu)
+    track.SetLayer(layer)
     track.SetNet(net)
     board.Add(track)
 
@@ -84,6 +87,13 @@ def _rules(
         if name == "fault"
         else ""
     )
+    unmapped_from_to_length = (
+        '(rule "synthetic-unmapped-aux-fromto-length" (severity error) '
+        "(condition \"A.fromTo('J1-3', 'U1-3')\") "
+        "(constraint length (max 18mm)))\n"
+        if name == "fault"
+        else ""
+    )
     source = f"""(version 1)
 (rule \"synthetic-clock-length\"
   {severity}(condition \"A.fromTo('J1-1', 'U1-1')\")
@@ -99,6 +109,7 @@ def _rules(
   (constraint skew (max {skew_mm:g}mm)))
 {unmapped_length}
 {unmapped_edge_clearance}
+{unmapped_from_to_length}
 """
     (directory / f"{name}.kicad_dru").write_text(source, encoding="utf-8")
 
@@ -116,7 +127,10 @@ def create(directory: Path, expected_version: str) -> None:
         ("ignored", 22.0, 1.0, True),
     ):
         board = pcbnew.BOARD()
-        nets = {name: pcbnew.NETINFO_ITEM(board, name) for name in ("SYNTH_CLK", "SYNTH_DATA")}
+        nets = {
+            name: pcbnew.NETINFO_ITEM(board, name)
+            for name in ("SYNTH_CLK", "SYNTH_DATA", "SYNTH_AUX")
+        }
         for net in nets.values():
             board.Add(net)
         source_pads = _add_footprint(board, "J1", 10.0, 10.0, nets)
@@ -127,6 +141,13 @@ def create(directory: Path, expected_version: str) -> None:
             source_pads["1"].GetPosition(),
             receiver_pads["1"].GetPosition(),
             nets["SYNTH_CLK"],
+        )
+        _add_track(
+            board,
+            source_pads["3"].GetPosition(),
+            receiver_pads["3"].GetPosition(),
+            nets["SYNTH_AUX"],
+            layer=pcbnew.B_Cu,
         )
         start = source_pads["2"].GetPosition()
         end = receiver_pads["2"].GetPosition()

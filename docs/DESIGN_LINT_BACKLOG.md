@@ -416,7 +416,7 @@ intended requirement.
 The following 371 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 372 active rules.
+The catalog currently contains 373 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -26444,6 +26444,35 @@ acceptance threads while new lint features proceed:
   external/adapted project rehearsal, and playtest passed. Package and preview
   jobs were skipped under prerelease policy. The earlier `v0.5.3rc753` stopped
   at the formatter gate; `v0.5.3rc754` includes that correction.
+
+#### LINT-454 — Review exact native fromTo length pairs omitted from path coverage
+
+- **Status:** Implemented as a default-REVIEW rule; hosted acceptance pending.
+- **Rule:** `pcb.signal_path_unmapped_from_to_length_rule` shares the existing
+  source-bound native DRC scan. When signal-path coverage is enabled, it
+  reports named native `length` constraints with one exact literal `fromTo`
+  endpoint pair when both pads occur on the same source-netlist net and that
+  unordered pair is absent from all mapped paths. Reversed endpoint order is
+  treated as the same pair. Wildcard, compound, variable-backed, malformed,
+  ambiguous, and source-unconfirmed scopes are skipped. The finding asks for
+  disposition; it does not infer criticality, require a map entry, inspect PCB
+  copper, or establish continuity. It cannot find disconnected pins unless
+  there is both a native rule and shared source-netlist membership.
+- **Owner:**
+  `kicad_tooling/hwrepo/pcb_signal_path_unmapped_native.py#unmapped_signal_path_from_to_length_rule_candidates`
+  using
+  `kicad_tooling/hwrepo/pcb_drc_conditions.py#native_exact_from_to_condition`.
+- **Regression scope:** Focused source-scan faults and controls, CLI/MCP
+  semantic parity, architecture and selector ownership, and native rule
+  diagnostics in digest-pinned KiCad 10.0.0 and 10.0.5 Docker fixtures.
+  Synthetic fixtures contain tooling-authored circuit data only.
+- **Selection:** Run
+  `tests/test_pcb_signal_path_unmapped_fromto_rules.py`,
+  `tests/test_design_lint_mcp_parity_pcb_signal_path_unmapped_fromto.py`, and
+  `tests/test_design_lint_architecture_pcb_signal_path_unmapped_fromto.py`
+  with `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.signal_path_unmapped_from_to_length_rule")`.
+- **Hosted acceptance:** Pending for the annotated rule-gate tag.
 
 ## Completion and release gate
 

@@ -9,6 +9,11 @@ clock pads and uses tighter length and skew limits, so native DRC must report
 third board uses the fault geometry and limits with `(severity ignore)` on
 each matching custom rule; it must not report any target violation.
 
+The fault rules also include an exact `A.fromTo('J1-3', 'U1-3')` length
+constraint and require its named native diagnostic; the control has no such
+rule. This checks native acceptance of the selector used by the unmapped-pair
+review heuristic.
+
 The boards are generated inside the digest-pinned KiCad 10.0.0 and 10.0.5
 images. The native lane runs each case twice, checks the exact tool version,
 and requires identical violation types across runs. Its retained acceptance

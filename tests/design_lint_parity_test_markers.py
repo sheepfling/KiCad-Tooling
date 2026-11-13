@@ -51,6 +51,7 @@ PARITY_LINT_TEST_MODULES = frozenset(
         "tests/test_pcb_signal_path_mcp_parity.py",
         "tests/test_design_lint_mcp_parity_pcb_signal_path_unmapped.py",
         "tests/test_design_lint_mcp_parity_pcb_signal_path_unmapped_edge_clearance.py",
+        "tests/test_design_lint_mcp_parity_pcb_signal_path_unmapped_fromto.py",
         "tests/test_design_lint_mcp_parity_pcb_dru_rule_review.py",
         "tests/test_design_lint_mcp_parity_pcb_dru_unknown_constraint.py",
         "tests/test_design_lint_mcp_parity_pcb_dru_unknown_disallow_object.py",

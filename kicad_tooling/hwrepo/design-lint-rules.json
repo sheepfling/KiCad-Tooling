@@ -13206,6 +13206,55 @@
       ]
     },
     {
+      "rule_id": "pcb.signal_path_unmapped_from_to_length_rule",
+      "title": "Exact native fromTo length-rule pad pairs are absent from signal-path coverage",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_signal_path_unmapped_native.py#unmapped_signal_path_from_to_length_rule_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Exact literal native KiCad fromTo length scopes matched to exact source-netlist pads on one net, with source hashes and native-netlist digest retained in the candidate",
+      "predicate": "When a PCB project supplies a signal-path map with native DRC requirements and pcb.signal_path_rule_coverage is enabled, emit a REVIEW candidate for each named native length constraint with one exact literal A.fromTo('REF-PAD', 'REF-PAD') selector whose endpoint pads both occur on the same source-bound schematic net but whose unordered exact endpoint pair is absent from all mapped paths. Group repeated constraints by case-insensitive rule name and endpoint pair, retain source-bound DRC and netlist evidence, and treat endpoint order as irrelevant. Skip wildcard, compound, variable-backed, unnamed, malformed, ambiguous, or source-netlist-unconfirmed scopes.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native fault/control checks; exact fromTo scope matching uses the shared bounded literal selector parser"
+      ],
+      "limitations": [
+        "This prompt runs only when the project supplies a signal-path map with a native DRC requirement and enables pcb.signal_path_rule_coverage. The rule defaults to review and can be independently overridden to block or off.",
+        "Only exact literal A.fromTo selectors are recognized. Wildcard, compound, variable-backed, malformed, and other nonliteral conditions are skipped rather than guessed.",
+        "Both endpoints must appear on the same named net in the source-bound schematic netlist. Unconnected pads, pads on different nets, ambiguous assignments, or missing netlist membership do not produce a candidate.",
+        "The map omission is a coverage question, not proof that the path is critical or that a path requirement must be added. This rule does not inspect PCB copper connectivity, cable wiring, physical continuity, or route geometry.",
+        "An exact fromTo rule supplies a scope to review, not an independently approved interface requirement. It cannot detect disconnected pins that have no matching native rule and source-netlist membership."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_signal_path_unmapped_fromto_rules.test_unmapped_exact_from_to_length_pair_is_reviewed",
+        "tests.test_design_lint_mcp_parity_pcb_signal_path_unmapped_fromto.test_unmapped_exact_from_to_length_scope_matches_cli_and_mcp",
+        "tests.test_pcb_signal_path_native.test_native_signal_path_drc_faults_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_signal_path_unmapped_fromto_rules.test_mapped_pair_in_either_order_and_split_source_nets_are_quiet",
+        "tests.test_pcb_signal_path_unmapped_fromto_rules.test_wildcard_compound_and_variable_from_to_scopes_are_not_guessed",
+        "tests.test_pcb_signal_path_unmapped_fromto_rules.test_from_to_mode_is_independent_and_coverage_off_skips_evidence",
+        "tests.test_design_lint_mcp_parity_pcb_signal_path_unmapped_fromto.test_unmapped_exact_from_to_length_scope_matches_cli_and_mcp",
+        "tests.test_pcb_signal_path_native.test_native_signal_path_drc_faults_are_repeatable"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_pcb_signal_path_unmapped_fromto_rules.test_candidate_order_is_stable_and_repeated_rule_pairs_are_grouped",
+        "tests.test_pcb_signal_path_native.test_native_signal_path_drc_faults_are_repeatable"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_signal_path_unmapped_native.py#unmapped_signal_path_from_to_length_rule_candidates",
+        "kicad_tooling/hwrepo/pcb_signal_path_unmapped_rule_scan.py#scan_unmapped_signal_path_native_rules",
+        "kicad_tooling/hwrepo/pcb_drc_conditions.py#native_exact_from_to_condition",
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_constraints",
+        "kicad_tooling/hwrepo/pcb_drc_source_evidence.py#source_bound_drc_evidence",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
+      ]
+    },
+    {
       "rule_id": "pcb.differential_pair_route_layer_mismatch",
       "title": "Mapped differential-pair routes use different copper-layer sequences",
       "theme": "pcb",

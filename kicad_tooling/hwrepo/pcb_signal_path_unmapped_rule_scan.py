@@ -14,8 +14,10 @@ from .pcb_drc_source_evidence import (
 )
 from .pcb_signal_path_unmapped_native import (
     EDGE_CLEARANCE_RULE_ID,
+    FROM_TO_LENGTH_RULE_ID,
     LENGTH_RULE_ID,
     unmapped_signal_path_edge_clearance_rule_candidates,
+    unmapped_signal_path_from_to_length_rule_candidates,
     unmapped_signal_path_length_rule_candidates,
 )
 from .project_models import ProjectConfig, ProjectKind
@@ -28,7 +30,7 @@ def scan_unmapped_signal_path_native_rules(
     policy: DesignLintPolicy,
     source_hashes: SourceHashInventory,
     native_summary: Path,
-    current_net_names: Mapping[str, object],
+    current_net_names: Mapping[str, tuple[str, ...]],
     source_netlist_sha256: str,
 ) -> tuple[Candidate, ...]:
     """Review exact native path constraints missing from an enabled path map."""
@@ -43,7 +45,7 @@ def scan_unmapped_signal_path_native_rules(
         return ()
     active_rule_ids = tuple(
         rule_id
-        for rule_id in (LENGTH_RULE_ID, EDGE_CLEARANCE_RULE_ID)
+        for rule_id in (LENGTH_RULE_ID, EDGE_CLEARANCE_RULE_ID, FROM_TO_LENGTH_RULE_ID)
         if modes.get(rule_id, "review") != "off"
     )
     if not active_rule_ids:
@@ -64,9 +66,20 @@ def scan_unmapped_signal_path_native_rules(
                     kicad_version=config.kicad_version,
                 )
             )
-        else:
+        elif rule_id == EDGE_CLEARANCE_RULE_ID:
             candidates.extend(
                 unmapped_signal_path_edge_clearance_rule_candidates(
+                    requirements,
+                    constraints,
+                    evidence,
+                    current_net_names=current_net_names,
+                    source_netlist_sha256=source_netlist_sha256,
+                    kicad_version=config.kicad_version,
+                )
+            )
+        else:
+            candidates.extend(
+                unmapped_signal_path_from_to_length_rule_candidates(
                     requirements,
                     constraints,
                     evidence,

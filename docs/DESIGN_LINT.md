@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 372 active rules.
+The catalog currently contains 373 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -6758,6 +6758,18 @@ does not infer that the net needs an edge-clearance margin or that the path map
 must include it. Broad, compound, variable-backed, unnamed, and other nonliteral
 scopes are skipped. The rule defaults to `review` and has its own project mode.
 
+`pcb.signal_path_unmapped_from_to_length_rule` uses the same gate to prompt
+when an exact native `length` rule targets two literal pads that share a
+source-netlist net but whose unordered endpoint pair is absent from the
+signal-path map. Reversed endpoint order is treated as the same pair. This can
+surface an omitted path entry even when a per-net rule does not mention it.
+Wildcard, compound, variable-backed, malformed, ambiguous, and
+source-netlist-unconfirmed scopes are skipped. The prompt is a coverage review;
+it does not infer criticality, PCB copper continuity, or that the map must be
+expanded. It cannot catch disconnected pins unless a matching rule and common
+source-netlist assignment exist. The rule defaults to `review` and has its own
+project mode.
+
 The focused synthetic unit and CLI/MCP regressions, architecture boundary, and
 exact-version native selector case are:
 
@@ -6781,12 +6793,22 @@ KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
 KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_pcb_signal_path_native.py \
   -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.signal_path_unmapped_edge_clearance_rule")'
+
+.venv/bin/python -I -m pytest \
+  tests/test_pcb_signal_path_unmapped_fromto_rules.py \
+  tests/test_design_lint_mcp_parity_pcb_signal_path_unmapped_fromto.py \
+  tests/test_design_lint_architecture_pcb_signal_path_unmapped_fromto.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.signal_path_unmapped_from_to_length_rule")'
+
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_signal_path_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.signal_path_unmapped_from_to_length_rule")'
 ```
 
 The Docker lane confirms that KiCad 10.0.0 and 10.0.5 accept and report the
-synthetic exact-net `length` and `edge_clearance` rules. The lints check scope
-coverage; the native test does not establish the adequacy of route geometry or
-limits.
+synthetic exact-net `length`, exact `fromTo` `length`, and `edge_clearance`
+rules. The lints check scope coverage; the native test does not establish the
+adequacy of route geometry or limits.
 
 ### Review reference-via proximity at pair layer transitions
 

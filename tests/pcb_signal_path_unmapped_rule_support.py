@@ -21,6 +21,7 @@ from kicad_tooling.hwrepo.project_models import ProjectConfig, ProjectKind
 
 LENGTH_RULE_ID = "pcb.signal_path_unmapped_native_rule"
 EDGE_CLEARANCE_RULE_ID = "pcb.signal_path_unmapped_edge_clearance_rule"
+FROM_TO_LENGTH_RULE_ID = "pcb.signal_path_unmapped_from_to_length_rule"
 COVERAGE_RULE_ID = "pcb.signal_path_rule_coverage"
 
 
@@ -64,12 +65,14 @@ def policy(
     coverage_mode: str = "review",
     length_mode: str = "review",
     edge_clearance_mode: str = "review",
+    from_to_length_mode: str = "review",
 ) -> DesignLintPolicy:
     """Return a policy with independently selectable path-map rule modes."""
     overrides = (
         (COVERAGE_RULE_ID, coverage_mode),
         (LENGTH_RULE_ID, length_mode),
         (EDGE_CLEARANCE_RULE_ID, edge_clearance_mode),
+        (FROM_TO_LENGTH_RULE_ID, from_to_length_mode),
     )
     return DesignLintPolicy(
         pcb_signal_path_rule_map=requirements,
@@ -115,11 +118,12 @@ def scan(
     monkeypatch: pytest.MonkeyPatch,
     source: str,
     requirements: PcbSignalPathRuleMap,
-    current_net_names: dict[str, object],
+    current_net_names: dict[str, tuple[str, ...]],
     *,
     coverage_mode: str = "review",
     length_mode: str = "review",
     edge_clearance_mode: str = "review",
+    from_to_length_mode: str = "review",
 ) -> tuple[Candidate, ...]:
     """Invoke the source scan with controlled synthetic evidence."""
     import kicad_tooling.hwrepo.pcb_signal_path_unmapped_rule_scan as owner
@@ -139,6 +143,7 @@ def scan(
             coverage_mode=coverage_mode,
             length_mode=length_mode,
             edge_clearance_mode=edge_clearance_mode,
+            from_to_length_mode=from_to_length_mode,
         ),
         {},
         tmp_path / "build/native",

@@ -23,6 +23,9 @@ from tests.design_lint_pcb_signal_path_unmapped_edge_clearance_fixture_refs impo
 from tests.design_lint_pcb_signal_path_unmapped_fixture_refs import (
     PCB_SIGNAL_PATH_UNMAPPED_PARITY_FIXTURES,
 )
+from tests.design_lint_pcb_signal_path_unmapped_fromto_fixture_refs import (
+    PCB_SIGNAL_PATH_UNMAPPED_FROM_TO_PARITY_FIXTURES,
+)
 from tests.design_lint_power_fixture_refs import (
     OPEN_DRAIN_CONTROL_PARITY_FIXTURES,
     SUPPLY_RANGE_MAP_COVERAGE_PARITY_FIXTURES,
@@ -48,6 +51,7 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
         **PCB_LAYOUT_PARITY_FIXTURES,
         **PCB_SIGNAL_PATH_UNMAPPED_PARITY_FIXTURES,
         **PCB_SIGNAL_PATH_UNMAPPED_EDGE_CLEARANCE_PARITY_FIXTURES,
+        **PCB_SIGNAL_PATH_UNMAPPED_FROM_TO_PARITY_FIXTURES,
         "bus.i2c_missing_pullup": MappingProxyType(
             {
                 "fault_fixtures": _refs(

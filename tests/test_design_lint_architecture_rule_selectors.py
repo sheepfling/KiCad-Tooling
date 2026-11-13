@@ -10,6 +10,9 @@ from tests.design_lint_pcb_rule_selector_cases import PCB_RULE_NODE_CASES
 from tests.design_lint_pcb_signal_path_unmapped_edge_clearance_rule_selector_cases import (
     PCB_SIGNAL_PATH_UNMAPPED_EDGE_CLEARANCE_RULE_NODE_CASES,
 )
+from tests.design_lint_pcb_signal_path_unmapped_fromto_rule_selector_cases import (
+    PCB_SIGNAL_PATH_UNMAPPED_FROM_TO_RULE_NODE_CASES,
+)
 from tests.design_lint_pcb_signal_path_unmapped_rule_selector_cases import (
     PCB_SIGNAL_PATH_UNMAPPED_RULE_NODE_CASES,
 )
@@ -24,6 +27,7 @@ RULE_NODE_CASES = (
     *PCB_RULE_NODE_CASES,
     *PCB_SIGNAL_PATH_UNMAPPED_RULE_NODE_CASES,
     *PCB_SIGNAL_PATH_UNMAPPED_EDGE_CLEARANCE_RULE_NODE_CASES,
+    *PCB_SIGNAL_PATH_UNMAPPED_FROM_TO_RULE_NODE_CASES,
     *CONNECTOR_RULE_NODE_CASES,
     *POWER_SUPPLY_RANGE_RULE_NODE_CASES,
 )
