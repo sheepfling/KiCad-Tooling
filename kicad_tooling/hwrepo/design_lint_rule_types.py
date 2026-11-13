@@ -291,6 +291,7 @@ DesignLintRuleId = Literal[
     "pcb.differential_pair_reference_via_stitching",
     "pcb.mechanical_edge_clearance_rule_coverage",
     "pcb.track_angle_rule_coverage",
+    "pcb.track_angle_geometry_review",
     "pcb.signal_path_rule_coverage",
     "pcb.keepout_intent_coverage",
     "pcb.rf_module_antenna_keepout_coverage",

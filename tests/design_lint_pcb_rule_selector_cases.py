@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from tests.design_lint_pcb_track_angle_geometry_rule_selector_cases import (
+    PCB_TRACK_ANGLE_GEOMETRY_RULE_NODE_CASES,
+)
 from tests.design_lint_pcb_track_angle_rule_selector_cases import (
     PCB_TRACK_ANGLE_RULE_NODE_CASES,
 )
@@ -481,4 +484,8 @@ PCB_RULE_NODE_CASES = (
     ),
 )
 
-PCB_RULE_NODE_CASES = (*PCB_RULE_NODE_CASES, *PCB_TRACK_ANGLE_RULE_NODE_CASES)
+PCB_RULE_NODE_CASES = (
+    *PCB_RULE_NODE_CASES,
+    *PCB_TRACK_ANGLE_RULE_NODE_CASES,
+    *PCB_TRACK_ANGLE_GEOMETRY_RULE_NODE_CASES,
+)

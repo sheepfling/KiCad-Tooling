@@ -152,6 +152,7 @@ def _install_geometry_scan(monkeypatch, *, measured_clearance_nm: int) -> None:
             ),
             PcbComponentInventoryCoverageReport(),
             PcbThermalViaCoverageReport(),
+            (),
         )
 
     monkeypatch.setattr(design_lint_project_inspection, "scan_pcb_geometry", scan)

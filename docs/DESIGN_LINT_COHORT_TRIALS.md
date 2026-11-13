@@ -21,15 +21,19 @@ for dispositions and timing; leave unmeasured values unstated.
   custom DRC constraints, but a project must select the net scopes and angle
   limits. `pcb.track_angle_rule_coverage` checks an authored per-net
   requirement against the saved rules, blocking severity, ignored-check and
-  exclusion evidence, and later potentially overlapping rules. Native fault
-  and collinear-control boards are exercised on digest-pinned KiCad 10.0.0 and
-  10.0.5 images. This adopts the configurable concern without importing
-  implementation code or assuming a universal right-angle policy.
-- **Disposition and gap:** The direct geometry heuristic is deferred because
-  the documented pad, arc, and junction limits leave meaningful false-positive
-  and miss boundaries. The local coverage rule does not infer which nets need
-  angle requirements; missing-map discovery remains open. No real-board
-  precision or reviewer-time result is claimed.
+  exclusion evidence, and later potentially overlapping rules. The opt-in
+  `pcb.track_angle_geometry_review` cross-check measures only reciprocal,
+  same-net, same-layer endpoint contacts between two straight segments and
+  reports exact track UUIDs, coordinates, and measured angles. Its synthetic
+  fault/control snapshots were captured with digest-pinned KiCad 10.0.0 and
+  10.0.5 images. No upstream implementation code was imported.
+- **Disposition and gap:** The direct check is default-off and requires the
+  same explicitly authored net and angle map. It skips arcs, pads, vias,
+  branches, and ambiguous or mid-span contacts. It does not claim additional
+  defect detection over native `track_angle` DRC when that rule is correctly
+  configured; its incremental value is independent measurement and review
+  evidence. The broad cohort detector remains unadopted, missing-map discovery
+  remains open, and real-board precision and reviewer time are unmeasured.
 - **References:** [cohort repository][corner-lint] and
   [KiCad 10 PCB Editor manual][kicad-10-pcb-manual]. See
   [LINT-448][lint448-track-angle] and the
@@ -37,7 +41,7 @@ for dispositions and timing; leave unmeasured values unstated.
 
 ## LINT-031 — Candidate analyzer trial and incremental-value register
 
-- **Status:** Partial v30; includes the LINT-448 track-angle source screen and
+- **Status:** Partial v31; includes the LINT-448 and LINT-449 track-angle source screen and
   read-only synthetic comparisons across seven cohort
   repositories, a first-party public-template applicability replay,
   kicad_skills schematic-rule trials, a ThomsonLint board-export trial, and

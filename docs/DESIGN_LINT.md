@@ -1280,6 +1280,62 @@ KICAD_RUN_NATIVE_TRACK_ANGLE_FIXTURES=1 .venv/bin/python -I -m pytest \
 See [LINT-448][lint448-track-angle] and the
 [synthetic fixture note][track-angle-fixture].
 
+### Opt-in track-angle geometry cross-check
+
+`pcb.track_angle_geometry_review` independently measures configured route
+angles and reports a mapped corner with its net, board coordinate, track UUIDs,
+and measured value. It is **off by default**. To enable it, add this project
+override beside the same `pcb_track_angle_map` shown above:
+
+```json
+{
+  "design_lint": {
+    "rules": [
+      {
+        "rule_id": "pcb.track_angle_geometry_review",
+        "mode": "review",
+        "reason": "Cross-check approved track-angle requirements against native geometry"
+      }
+    ]
+  }
+}
+```
+
+The checker measures only reciprocal endpoint contacts between two straight
+segments on the same net and layer, with no pad or via at the shared vertex.
+It skips arcs, branches, pads, vias, ambiguous contact records, and contacts at
+a segment's mid-span. A skipped vertex produces no angle conclusion. The
+project still owns the nets and integer-degree bounds; this check does not set
+a universal corner policy. Use `mode: "block"` to promote findings or
+`mode: "off"` to disable the check for that project. Existing exact-fingerprint
+ignores can record reviewed exceptions.
+
+This check adds an independent measurement and useful PCB coordinates beside
+the native DRC result. It does not claim unique detection when KiCad's authored
+`track_angle` rule already catches the same mapped corner. Native fault/control
+snapshots are validated only on digest-pinned KiCad 10.0.0 and 10.0.5.
+
+Run the focused unit, selector, and architecture regressions:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_pcb_track_angle_geometry.py \
+  tests/test_design_lint_architecture_pcb_track_angle_geometry.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.track_angle_geometry_review")'
+```
+
+The native snapshot lane uses the synthetic fault and collinear control in the
+digest-pinned containers:
+
+```sh
+KICAD_RUN_NATIVE_TRACK_ANGLE_GEOMETRY_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_track_angle_geometry_native_fixture_lane.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.track_angle_geometry_review")'
+```
+
+See [LINT-449](DESIGN_LINT_BACKLOG.md) and the
+[cohort source screen](DESIGN_LINT_COHORT_TRIALS.md).
+
 ### Distinct mapped connector supply domains sharing a net
 
 `connector.mapped_supply_domains_share_net` prompts when complete,

@@ -115,6 +115,7 @@ def _install_geometry_scan(monkeypatch, *, connected_count: int) -> None:
             PcbTouchPadClearanceCoverageReport(),
             PcbComponentInventoryCoverageReport(),
             thermal,
+            (),
         )
 
     monkeypatch.setattr(design_lint_project_inspection, "scan_pcb_geometry", scan)

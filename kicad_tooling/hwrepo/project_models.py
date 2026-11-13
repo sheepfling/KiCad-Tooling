@@ -239,6 +239,10 @@ class ProjectConfig(StrictModel):
                 or self.design_lint.pcb_touch_pad_clearance_map is not None
                 or self.design_lint.pcb_thermal_via_map is not None
                 or self.design_lint.pcb_fiducial_map is not None
+                or any(
+                    item.rule_id == "pcb.track_angle_geometry_review" and item.mode != "off"
+                    for item in self.design_lint.rules
+                )
             )
             and self.kind is not ProjectKind.PCB
         ):

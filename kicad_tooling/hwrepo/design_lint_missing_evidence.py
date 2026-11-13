@@ -153,6 +153,19 @@ def missing_evidence_report(data: DesignLintMissingEvidenceInput) -> DesignLintR
                 "rule-coverage review."
             ),
         )
+    track_angle_geometry_mode = next(
+        (item.mode for item in policy.rules if item.rule_id == "pcb.track_angle_geometry_review"),
+        "off",
+    )
+    if track_angle_geometry_mode != "off":
+        missing_evidence_issues += (
+            (
+                "Track-angle geometry review requires an explicit pcb_track_angle_map."
+                if policy.pcb_track_angle_map is None
+                else "Source-bound native PCB geometry evidence is unavailable for the enabled "
+                "track-angle geometry review."
+            ),
+        )
     return DesignLintReport(
         status="BLOCKED",
         project_id=data.project_id,

@@ -26221,8 +26221,58 @@ acceptance threads while new lint features proceed:
   rebuilt-sdist wheel, installed-origin/version checks, and the external and
   adapted checkout inventory, surface, verification, and playtest stages all
   passed. Receipt: `build/ci/run-mu_xzsdu`.
-- **Hosted acceptance:** Pending the annotated rule-gate tag
+- **Hosted acceptance:** Passed run `43452236080` for annotated rule-gate tag
   `v0.5.3rc739`.
+
+#### LINT-449 — Opt-in source-bound track-angle geometry cross-check
+
+- **Status:** Implemented as default-OFF rule
+  `pcb.track_angle_geometry_review`. A project must enable it with an explicit
+  review/block override and provide `pcb_track_angle_map` requirements.
+- **Priority:** P3 independent review evidence. This adds a direct geometry
+  measurement and exact routed-track localization beside native
+  `track_angle` DRC coverage; it does not claim new defect detection over a
+  correctly configured native DRC rule.
+- **Cohort basis:** `kicad-corner-lint` documents a configurable angle
+  heuristic and machine-readable findings. Its broader detector limitations
+  include arcs, pad contacts, and junction topology. The local implementation
+  uses no upstream source and limits itself to native, reciprocal
+  endpoint-to-endpoint segment pairs. See the updated
+  [source screen](DESIGN_LINT_COHORT_TRIALS.md#source-screen-kicad-corner-lint-track-angle-heuristic).
+- **Predicate:** For each project-authored net bound, inspect only two straight
+  segments on the same net and layer where each native endpoint records exactly
+  one reciprocal track contact and neither endpoint touches a pad or via.
+  Measure the interior angle from integer nanometer coordinates, round to
+  0.001 degree, and compare it with the authored integer minimum/maximum.
+  Report incomplete evidence on failed capture or an unvalidated KiCad version.
+- **Boundary:** This is opt-in because 90-degree routing is not universally a
+  design fault. The project owner must author the exact nets and bounds.
+  Arcs, branched vertices, pads, vias, mid-span contacts, nonreciprocal contact
+  records, and zone-only copper are skipped; no clean result is inferred for
+  those cases. Existing `pcb.track_angle_rule_coverage` remains the check that
+  verifies native DRC enforcement. The geometry finding adds measured angle,
+  board coordinates, and track UUIDs for review.
+- **Fixtures:** Tooling-owned 135-degree fault and collinear control snapshots,
+  acute/right-angle/boundary unit cases, branch/pad/via/arc exclusions, exact
+  source hashes, and the opt-in/missing-map controls. Native PCB snapshot
+  capture is tested on digest-pinned KiCad 10.0.0 and 10.0.5 with separate
+  synthetic checkout roots.
+- **Selection:** Run the unit and architecture slices with
+  `tests/test_pcb_track_angle_geometry.py` and
+  `tests/test_design_lint_architecture_pcb_track_angle_geometry.py`, selecting
+  `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.track_angle_geometry_review")`. Run
+  `tests/test_pcb_track_angle_geometry_native_fixture_lane.py` with Docker,
+  `KICAD_RUN_NATIVE_TRACK_ANGLE_GEOMETRY_FIXTURES=1`, and the same rule selector.
+- **Local scoped acceptance:** Passed scoped CI receipt
+  `build/ci/run-ko1ywg_0`: 80 passed and 2 native-only skips across the selected
+  catalog, architecture, selector, parity, and scanner modules; selected Pyright
+  and Windows type checks passed; wheel/sdist builds, installed-wheel origin and
+  version, external and adapted template checks, and playtest passed. The
+  focused rule selector passed 16 tests with 2 native-only skips. The final
+  digest-pinned KiCad 10.0.0/10.0.5 fault/control lane passed separately (2
+  tests).
+- **Hosted acceptance:** Pending the annotated rule-gate tag.
 
 ## Completion and release gate
 

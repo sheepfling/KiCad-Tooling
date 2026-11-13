@@ -197,6 +197,7 @@ def test_enabled_rf_antenna_fault_and_control_match_cli_and_mcp(
             PcbTouchPadClearanceCoverageReport(),
             PcbComponentInventoryCoverageReport(),
             PcbThermalViaCoverageReport(),
+            (),
         )
 
     monkeypatch.setattr(

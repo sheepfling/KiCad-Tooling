@@ -215,7 +215,12 @@ def inspect_design_lint_request(
             pcb_touch_pad_clearance_coverage,
             pcb_component_inventory_coverage,
             pcb_thermal_via_coverage,
+            pcb_track_angle_geometry_candidates,
         ) = scan_pcb_geometry(root, config, coach, policy, native_summary)
+        pcb_source_candidates = (
+            *pcb_source_candidates,
+            *pcb_track_angle_geometry_candidates,
+        )
         pair_map: PcbDifferentialPairRuleMap | None = policy.pcb_differential_pair_rule_map
         pair_override = next(
             (

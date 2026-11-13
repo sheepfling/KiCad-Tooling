@@ -258,6 +258,7 @@ def test_component_inventory_findings_match_cli_and_mcp(
                 ),
             ),
             PcbThermalViaCoverageReport(),
+            (),
         )
 
     monkeypatch.setattr(
