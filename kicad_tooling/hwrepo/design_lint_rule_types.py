@@ -287,6 +287,7 @@ DesignLintRuleId = Literal[
     "pcb.alternate_reference_plane_run",
     "pcb.switching_loop_geometry",
     "pcb.differential_pair_rule_coverage",
+    "pcb.differential_pair_unmapped_native_rule",
     "pcb.differential_pair_route_skew",
     "pcb.differential_pair_route_layer_mismatch",
     "pcb.differential_pair_reference_via_stitching",

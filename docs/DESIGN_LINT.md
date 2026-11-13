@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 373 active rules.
+The catalog currently contains 374 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -5481,6 +5481,30 @@ When no pair map is present, `pcb.differential_pair_rule_coverage` remains
 `signal.named_pair_without_reviewed_requirement` heuristic can still identify
 common complementary net-name patterns and ask for review; it does not convert
 those names into requirements or geometric limits.
+
+When the map is present and pair-rule coverage is enabled,
+`pcb.differential_pair_unmapped_native_rule` also reviews supported native pair
+constraints whose exact literal `A.inDiffPair('<selector>')` selector is absent
+from the map. Repeated native rules are grouped by selector, with their names,
+constraints, bounds, conditions, severities, source hash, and bound DRC receipt
+shown as evidence. Wildcard, variable-backed, compound, malformed, and
+unsupported-constraint rules are skipped. The finding asks whether the omitted
+scope needs an independently reviewed map entry; it does not infer net identity,
+pair intent, limits, layer scope, or board geometry. The rule defaults to
+`review` and can be set to `block`, `off`, or an exact fingerprint ignore.
+Disabling either this rule or `pcb.differential_pair_rule_coverage` avoids the
+source read. The rule audits authored source coverage only; native DRC and
+engineering review remain responsible for rule execution and interface limits.
+
+Select this check with:
+
+```sh
+python -I -m pytest \
+  tests/test_pcb_differential_pair_unmapped.py \
+  tests/test_design_lint_mcp_parity_pcb_pairs.py \
+  tests/test_design_lint_architecture_pcb_differential_pair_unmapped.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.differential_pair_unmapped_native_rule")'
+```
 
 ## Verify that custom PCB rules load in native DRC
 

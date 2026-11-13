@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 373 rules are implemented with synthetic regression coverage.
+The following 374 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 373 active rules.
+The catalog currently contains 374 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -717,6 +717,7 @@ skipped under prerelease policy.
 - `pcb.alternate_reference_plane_run`
 - `pcb.switching_loop_geometry`
 - `pcb.differential_pair_rule_coverage`
+- `pcb.differential_pair_unmapped_native_rule`
 - `pcb.signal_path_rule_coverage`
 - `pcb.signal_path_unmapped_native_rule`
 - `pcb.signal_path_unmapped_edge_clearance_rule`
@@ -26487,6 +26488,38 @@ acceptance threads while new lint features proceed:
   and playtest passed. Package and preview jobs were skipped by prerelease
   policy. The earlier tag `v0.5.3rc755` stopped at a Rumdl MD013 line-length
   finding; `v0.5.3rc756` includes the formatting correction.
+
+#### LINT-455 — Review exact differential-pair DRC selectors omitted from the map
+
+- **Status:** Implemented as a default-REVIEW rule; focused local acceptance
+  passed. Hosted acceptance is pending the prerelease tag push.
+- **Rule:** `pcb.differential_pair_unmapped_native_rule` runs for PCB projects
+  with `pcb_differential_pair_rule_map` while
+  `pcb.differential_pair_rule_coverage` is enabled. It reads source-bound KiCad
+  custom-rule evidence and groups supported pair constraints by exact literal
+  `A.inDiffPair('<selector>')` selectors absent from the authored map. It keeps
+  rule names, conditions, constraints, bounds, layers, severities, source hash,
+  and native DRC receipt identity in one REVIEW finding per selector.
+- **Boundary:** Wildcard, variable-backed, compound, malformed, and unsupported
+  constraint forms are skipped. The finding asks for review of coverage; it
+  does not infer pair identity, map intent, limits, layer scope, or geometry.
+  It uses existing source-bound DRC receipts and adds no native execution lane,
+  since it does not claim native rule semantics or measure the board.
+- **Fixtures:** Synthetic exact-selector fault, mapped and unsupported controls,
+  independently disabled modes, deterministic rule-order behavior, catalog
+  reachability, and CLI/MCP parity use tooling-owned inputs only.
+- **Local acceptance:** The scoped tooling runner passed 441 tests with 9,248
+  deselected, Ruff, Alphus, Rumdl, mdrepo, Linux and Windows Pyright, wheel and
+  sdist builds, installed-origin/version checks, separate and adapted public
+  template rehearsals, and playtest. The exact-version pair edge-clearance
+  fault/control also passed in digest-pinned KiCad 10.0.0 and 10.0.5 Docker
+  images; this corroborates the native pair-rule syntax used by the parser but
+  does not exercise LINT-455 as a native geometry check.
+- **Selection:** Run `tests/test_pcb_differential_pair_unmapped.py`,
+  `tests/test_design_lint_mcp_parity_pcb_pairs.py`, and
+  `tests/test_design_lint_architecture_pcb_differential_pair_unmapped.py` with
+  `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.differential_pair_unmapped_native_rule")`.
 
 ## Completion and release gate
 

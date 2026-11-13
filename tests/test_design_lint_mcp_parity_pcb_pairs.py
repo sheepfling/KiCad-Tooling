@@ -9,9 +9,11 @@ pytestmark = [
     pytest.mark.slow,
     pytest.mark.template_checkout,
     pytest.mark.design_lint,
+    pytest.mark.pcb_lint,
 ]
 
 import json
+from pathlib import Path
 
 from mcp import Client
 
@@ -41,6 +43,10 @@ from tests.mcp_parity_support import (
 from tests.test_pcb_drc_coverage import pair_map as synthetic_differential_pair_map
 from tests.test_pcb_drc_coverage import rules_text as synthetic_differential_pair_rules
 
+DIFFERENTIAL_PAIR_BOARD = (
+    Path(__file__).parent / "fixtures/design_lint/differential-pair/control.kicad_pcb"
+)
+
 
 class _DesignLintMcpParityPcbPairsCases(McpParityHarness):
     async def _case_test_pcb_differential_pair_rule_coverage_parity(self) -> None:
@@ -60,7 +66,7 @@ class _DesignLintMcpParityPcbPairsCases(McpParityHarness):
                 }
             ),
         )
-        board.write_text("(kicad_pcb (version 20250114))", encoding="utf-8")
+        board.write_text(DIFFERENTIAL_PAIR_BOARD.read_text(encoding="utf-8"), encoding="utf-8")
         (native.parent / "netlist.xml").write_text(
             "<export><components>"
             '<comp ref="R1"><value>1k</value><footprint>Synthetic:R</footprint>'
@@ -77,8 +83,11 @@ class _DesignLintMcpParityPcbPairsCases(McpParityHarness):
             drc_path.write_text(
                 json.dumps(
                     {
+                        "$schema": "https://schemas.kicad.org/drc.v1.json",
                         "kicad_version": config.kicad_version,
                         "source": board.name,
+                        "coordinate_units": "mm",
+                        "included_severities": ["error", "warning", "exclusion"],
                         "ignored_checks": [{"key": key} for key in ignored],
                         "violations": [],
                         "unconnected_items": [],
@@ -131,6 +140,7 @@ class _DesignLintMcpParityPcbPairsCases(McpParityHarness):
         async with Client(create_server(self.root), mode="legacy") as client:
             for scenario, expected, ignored, mode in (
                 ("exact", "COMPLETE", (), "review"),
+                ("unmapped", "COMPLETE", (), "review"),
                 ("missing", "INCOMPLETE", (), "review"),
                 ("ignored", "INCOMPLETE", ("skew_out_of_range",), "review"),
                 ("disabled", "DISABLED", (), "off"),
@@ -139,7 +149,14 @@ class _DesignLintMcpParityPcbPairsCases(McpParityHarness):
                     if scenario == "missing":
                         rules.unlink(missing_ok=True)
                     else:
-                        rules.write_text(synthetic_differential_pair_rules(), encoding="utf-8")
+                        native_rules = synthetic_differential_pair_rules()
+                        if scenario == "unmapped":
+                            native_rules = (
+                                '\n(rule "unmapped-motor-pair-width" (severity warning) '
+                                "(condition \"A.inDiffPair('MOTOR_')\") "
+                                "(constraint track_width (min 0.2mm)))\n"
+                            ) + native_rules
+                        rules.write_text(native_rules, encoding="utf-8")
                     manifest_path = self.island / "project.json"
                     manifest = read_model(manifest_path, ProjectManifest)
                     required_inputs = set(manifest.required_inputs)
@@ -195,7 +212,11 @@ class _DesignLintMcpParityPcbPairsCases(McpParityHarness):
                     )
                     self.assertEqual(cli_report, mcp_report)
                     coverage = mcp_report.pcb_differential_pair_rules
-                    self.assertEqual(coverage.status, expected, (coverage.issue, mcp_report.issues))
+                    self.assertEqual(
+                        coverage.status,
+                        expected,
+                        (scenario, coverage.issue, mcp_report.issues),
+                    )
                     self.assertEqual(process.returncode, 0 if mcp_report.status == "PASS" else 1)
                     if scenario == "ignored":
                         pair = coverage.entries[0]
@@ -205,8 +226,23 @@ class _DesignLintMcpParityPcbPairsCases(McpParityHarness):
                         self.assertIsNotNone(coverage.map_sha256)
                     else:
                         self.assertIsNotNone(coverage.native_drc_sha256)
+                    unmapped = tuple(
+                        item
+                        for item in mcp_report.findings
+                        if item.rule_id == "pcb.differential_pair_unmapped_native_rule"
+                    )
+                    if scenario == "unmapped":
+                        self.assertEqual(len(unmapped), 1)
+                        self.assertEqual(
+                            unmapped[0].evidence["pair_selector"],
+                            ("MOTOR_",),
+                        )
+                    else:
+                        self.assertFalse(unmapped)
 
 
+@pytest.mark.design_lint_rule(rule_id="pcb.differential_pair_rule_coverage")
+@pytest.mark.design_lint_rule(rule_id="pcb.differential_pair_unmapped_native_rule")
 def test_pcb_differential_pair_rule_coverage_parity() -> None:
     run_mcp_parity(
         _DesignLintMcpParityPcbPairsCases, "_case_test_pcb_differential_pair_rule_coverage_parity"

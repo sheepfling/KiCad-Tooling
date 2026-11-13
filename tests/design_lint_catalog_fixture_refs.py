@@ -52,6 +52,18 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
         **PCB_SIGNAL_PATH_UNMAPPED_PARITY_FIXTURES,
         **PCB_SIGNAL_PATH_UNMAPPED_EDGE_CLEARANCE_PARITY_FIXTURES,
         **PCB_SIGNAL_PATH_UNMAPPED_FROM_TO_PARITY_FIXTURES,
+        "pcb.differential_pair_unmapped_native_rule": MappingProxyType(
+            {
+                "fault_fixtures": _refs(
+                    "tests.test_design_lint_mcp_parity_pcb_pairs",
+                    "test_pcb_differential_pair_rule_coverage_parity",
+                ),
+                "valid_control_fixtures": _refs(
+                    "tests.test_design_lint_mcp_parity_pcb_pairs",
+                    "test_pcb_differential_pair_rule_coverage_parity",
+                ),
+            }
+        ),
         "bus.i2c_missing_pullup": MappingProxyType(
             {
                 "fault_fixtures": _refs(

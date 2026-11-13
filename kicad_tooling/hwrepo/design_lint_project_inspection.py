@@ -49,6 +49,7 @@ from .native_netlist_evidence import (
 )
 from .native_project_validation_models import ValidationSummary
 from .native_summary_binding import validate_native_toolchain
+from .pcb_differential_pair_unmapped_scan import scan_unmapped_differential_pair_rules
 from .pcb_drc_exclusion_native import native_pcb_drc_report_matches
 from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageReport,
@@ -176,6 +177,13 @@ def inspect_design_lint_request(
                 native_summary,
                 coach.observed.nets,
                 coach.netlist_sha256,
+            ),
+            *scan_unmapped_differential_pair_rules(
+                root,
+                config,
+                policy,
+                coach.source_hashes,
+                native_summary,
             ),
         )
         pcb_native_drc_candidates = collect_pcb_native_drc_candidates(

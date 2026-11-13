@@ -80,6 +80,8 @@ PCB_LINT_TEST_MODULES = frozenset(
         "tests/test_design_lint_mcp_parity_pcb_layout.py",
         "tests/test_design_lint_mcp_parity_pcb_alternate_reference_plane.py",
         "tests/test_design_lint_mcp_parity_pcb_pairs.py",
+        "tests/test_pcb_differential_pair_unmapped.py",
+        "tests/test_design_lint_architecture_pcb_differential_pair_unmapped.py",
         "tests/test_design_lint_mcp_parity_protection.py",
         "tests/test_design_lint_mcp_parity_usb_data.py",
         "tests/test_pcb_reference_plane_lint.py",

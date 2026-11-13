@@ -12718,6 +12718,49 @@
       ]
     },
     {
+      "rule_id": "pcb.differential_pair_unmapped_native_rule",
+      "title": "Exact differential-pair DRC selectors are absent from the enabled pair map",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_differential_pair_unmapped.py#unmapped_differential_pair_rule_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact literal A.inDiffPair selectors in source-bound KiCad custom DRC rules compared with the project-authored differential-pair map used by enabled pair-rule coverage",
+      "predicate": "When pcb.differential_pair_rule_coverage is enabled and a PCB project supplies pcb_differential_pair_rule_map, emit one REVIEW candidate per exact supported pair selector used by a named native pair constraint when that selector is absent from the map. Group repeated rules for the same selector and preserve rule names, conditions, constraints, bounds, layers, severities, and source/native receipt identity. Do not infer nets, pair intent, limits, or geometry.",
+      "supported_kicad_versions": [
+        "Version-1 KiCad 10 custom-rule source accepted by the shared parser; the configured exact KiCad version is bound through the source-bound native DRC receipt. This source review does not independently establish native rule execution semantics."
+      ],
+      "limitations": [
+        "This review runs only for PCB projects with a differential-pair rule map and while pcb.differential_pair_rule_coverage and this rule are enabled. A missing map or disabled coverage rule does not establish omitted intent.",
+        "Only exact literal A.inDiffPair('<selector>') conditions on supported pair constraint names are recognized. Wildcard, variable-backed, compound, malformed, and other conditions are skipped rather than guessed.",
+        "An omitted selector is a coverage prompt, not a claim that the native rule is wrong or that the project must add that pair. The map remains independently authored; the check does not infer pair identity, required limits, layer scope, DRC geometry, or electrical adequacy."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_differential_pair_unmapped.test_exact_native_pair_selector_missing_from_map_is_reviewed",
+        "tests.test_design_lint_mcp_parity_pcb_pairs.test_pcb_differential_pair_rule_coverage_parity"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_differential_pair_unmapped.test_mapped_selector_and_non_pair_rules_are_quiet",
+        "tests.test_pcb_differential_pair_unmapped.test_nonliteral_or_compound_pair_conditions_are_skipped",
+        "tests.test_pcb_differential_pair_unmapped.test_disabled_rules_do_not_read_native_sources",
+        "tests.test_pcb_differential_pair_unmapped.test_missing_map_and_non_pcb_projects_do_not_read_native_sources",
+        "tests.test_design_lint_mcp_parity_pcb_pairs.test_pcb_differential_pair_rule_coverage_parity"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_differential_pair_unmapped.test_native_rule_order_does_not_change_review_grouping"
+      ],
+      "required_native_fixtures": [],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_differential_pair_unmapped.py#unmapped_differential_pair_rule_candidates",
+        "kicad_tooling/hwrepo/pcb_differential_pair_unmapped_scan.py#scan_unmapped_differential_pair_rules",
+        "kicad_tooling/hwrepo/pcb_drc_conditions.py#native_exact_diff_pair_condition",
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_constraints",
+        "kicad_tooling/hwrepo/pcb_drc_source_evidence.py#source_bound_drc_evidence",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
+      ]
+    },
+    {
       "rule_id": "pcb.reference_plane_coverage",
       "title": "Mapped PCB signal track has limited adjacent reference-copper coverage",
       "status": "active",
