@@ -15140,20 +15140,21 @@
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
-      "evidence_adapter": "Exact SHA-256 hashed KiCad PCB source, direct footprint/pad S-expressions, assigned pad numbers, source lines, and pinned KiCad 10.0.0/10.0.5 DRC fault/control comparison",
-      "predicate": "For KiCad 10.0.0 and 10.0.5 schematic-backed PCB projects, inspect each non-DNP, non-board-only footprint with a matching native schematic pin inventory and at least one numbered copper-layer pad assigned to a net. Emit a separate REVIEW candidate for each numbered copper-layer pad whose assignment is absent or net 0 and whose exact pad number is absent from the schematic pin inventory. Do not infer the pad's schematic function or expected net.",
+      "evidence_adapter": "Exact SHA-256 hashed KiCad PCB source, direct footprint/pad S-expressions, assigned pad numbers or unnumbered-pad ordinals, source lines, and pinned KiCad 10.0.0/10.0.5 DRC fault/control comparison",
+      "predicate": "For KiCad 10.0.0 and 10.0.5 schematic-backed PCB projects, inspect each non-DNP, non-board-only footprint with a matching native schematic pin inventory and at least one copper-layer pad assigned to a net. Emit a separate REVIEW candidate for each unassigned copper-layer pad that is either unnumbered or has a unique pad number absent from the schematic pin inventory. Do not infer the pad's schematic function or expected net.",
       "supported_kicad_versions": [
         "10.0.0",
         "10.0.5"
       ],
       "limitations": [
         "This heuristic only identifies an unassigned copper pad in a mixed-net footprint. Intentional NC, mechanical, shield, thermal, BGA, connector mounting, or alternate-footprint pads may be reported and require project review.",
-        "PCB-only projects lack an authoritative schematic pin inventory and are outside scope. All-netless footprints, board-only footprints, DNP footprints, unnumbered pads, non-copper pads, duplicate pad numbers, and KiCad versions other than 10.0.0 and 10.0.5 are also outside the predicate.",
-        "The complementary pcb.schematic_pcb_pad_net_mismatch rule covers known schematic pins whose same-numbered PCB pads are unassigned when that comparison is enabled. This rule filters those known pin numbers to avoid duplicating that finding and reviews only extra pad numbers absent from the native schematic pin inventory.",
-        "Pinned native DRC produces identical reports for both synthetic cases, with the same missing synthetic footprint-library warning and no unconnected-item findings. A reported pad is a review prompt, not an electrical defect or a fabrication blocker by itself."
+        "PCB-only projects lack an authoritative schematic pin inventory and are outside scope. All-netless footprints, board-only footprints, DNP footprints, non-copper pads, duplicate-numbered pads, and KiCad versions other than 10.0.0 and 10.0.5 are outside the predicate. An unnumbered pad's source line and copper-pad ordinal identify the review location because no schematic pin number exists.",
+        "The complementary pcb.schematic_pcb_pad_net_mismatch rule covers known schematic pins whose same-numbered PCB pads are unassigned when that comparison is enabled. This rule filters those known pin numbers to avoid duplicating that finding; unnumbered pads have no schematic pin number to compare.",
+        "Pinned native DRC produces identical reports within each numbered and unnumbered synthetic fault/control pair, with the same missing synthetic footprint-library warning and no unconnected-item findings. A reported pad is a review prompt, not an electrical defect or a fabrication blocker by itself."
       ],
       "fault_fixtures": [
         "tests.test_pcb_unassigned_copper_pad.test_mixed_net_footprint_reports_unassigned_copper_pad",
+        "tests.test_pcb_unassigned_copper_pad.test_mixed_net_footprint_reports_unassigned_unnumbered_copper_pad",
         "tests.test_design_lint_mcp_parity_pcb_unassigned_copper_pad.test_unassigned_pad_review_matches_between_cli_and_mcp",
         "tests.test_pcb_unassigned_copper_pad_native.test_native_drc_does_not_distinguish_unassigned_pad_fault_from_control"
       ],
@@ -15166,7 +15167,8 @@
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_pcb_unassigned_copper_pad.test_irrelevant_source_edit_preserves_candidate_identity_and_refreshes_hash",
-        "tests.test_pcb_unassigned_copper_pad.test_assigning_only_the_candidate_pad_clears_the_finding"
+        "tests.test_pcb_unassigned_copper_pad.test_assigning_only_the_candidate_pad_clears_the_finding",
+        "tests.test_pcb_unassigned_copper_pad.test_assigning_only_an_unnumbered_candidate_pad_clears_the_finding"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_PCB_FIXTURES"

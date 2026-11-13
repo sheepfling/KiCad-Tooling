@@ -26005,6 +26005,54 @@ acceptance threads while new lint features proceed:
   facade is 129 lines against a 100-line ceiling, and `native_pcb_probe.py.in` is 527 lines against
   its 500-line ceiling.
 
+#### LINT-445 — Review unnumbered copper pads in mixed-net footprints
+
+- **Status:** Implemented; local scoped package acceptance passed. Hosted
+  acceptance is pending.
+- **Priority:** P2 PCB review. This extends LINT-444 to a pad shape it explicitly
+  excluded; an unnumbered copper pad cannot be matched to the schematic pin
+  inventory by number.
+- **Rule:** `pcb.unassigned_copper_pad_review` now reports each unassigned
+  unnumbered copper pad in an eligible, mixed-net, schematic-backed footprint.
+  Evidence identifies the exact source line, reference, and 1-based ordinal
+  among copper-layer pads. Existing numbered-pad behavior remains as documented
+  in LINT-444.
+- **Cohort basis:** The public MIT `kicad-board-lint` `ghost-pad` detector
+  prompted the original LINT-444 review. This follow-up closes a pad-numbering
+  boundary found during evaluation of that class of heuristic. No cohort
+  implementation or board data was copied or installed.
+- **Incremental coverage:** Known numbered schematic pins remain covered by
+  `pcb.schematic_pcb_pad_net_mismatch` when enabled. Unnumbered pads have no
+  pin number to compare, so this review rule identifies only the suspicious
+  mixed-net footprint context; it does not infer the pad's electrical role or
+  expected net.
+- **Native evidence:** Tooling-owned unnumbered fault/control boards produce
+  identical DRC reports under digest-pinned KiCad 10.0.0 and 10.0.5 Docker
+  images, with no unconnected-item findings. The source heuristic adds review
+  evidence where native DRC does not distinguish the pad cases. The fixtures'
+  synthetic footprint-library warning is unchanged and unrelated to the pad.
+- **Boundary:** Exact KiCad 10.0.0 and 10.0.5 schematic-backed PCB sources only.
+  The rule requires a matching native schematic pin inventory, at least one
+  assigned copper pad, and a non-DNP, non-board-only footprint. Unnumbered pads
+  are reported by ordinal; intentional mechanical/contact/shield/thermal/NC
+  cases can still be false positives. Findings default to REVIEW and remain
+  configurable by project policy or exact fingerprint ignore.
+- **Fixtures:** Tooling-owned unnumbered fault/control files cover source
+  evidence, CLI/MCP parity, and native DRC behavior. Metamorphic coverage
+  assigns only the unnumbered pad and confirms that the finding clears. No
+  proprietary board source or customer/project fixture is used or stored.
+- **Selection:** Run `tests/test_pcb_unassigned_copper_pad.py` and
+  `tests/test_design_lint_mcp_parity_pcb_unassigned_copper_pad.py` with
+  `design_lint and pcb_lint and design_lint_rule(rule_id="pcb.unassigned_copper_pad_review")`.
+  Run `tests/test_pcb_unassigned_copper_pad_native.py` with Docker,
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, `native_kicad`, and the same rule selector.
+- **Focused local evidence:** The release-candidate rule scope passed 436 tests
+  with 9,105 deselected, including the pinned KiCad 10.0.0/10.0.5 Docker
+  comparison. Ruff format and lint, Alphus module-role/shared-utility checks,
+  Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist builds, installed-
+  wheel checks against separate and adapted project checkouts, and playtest
+  passed. Receipt: `build/ci/run-ysn_48m3`. Hosted acceptance is pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

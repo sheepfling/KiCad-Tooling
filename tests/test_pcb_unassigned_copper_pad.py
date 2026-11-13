@@ -109,6 +109,23 @@ def test_mixed_net_footprint_reports_unassigned_copper_pad(tmp_path: Path) -> No
     assert candidate.evidence["assigned_pad_numbers"] == ("1",)
 
 
+def test_mixed_net_footprint_reports_unassigned_unnumbered_copper_pad(
+    tmp_path: Path,
+) -> None:
+    root, board, config, _hashes = _project(tmp_path)
+    source = board.read_text(encoding="utf-8").replace('(pad "2" smd', '(pad "" smd', 1)
+    board.write_text(source, encoding="utf-8")
+
+    (candidate,) = _scan(root, config, {BOARD: digest(board)})
+
+    assert candidate.rule_id == RULE_ID
+    assert candidate.subject.endswith(":J1.unnumbered-copper-pad-2")
+    assert "unnumbered copper pad 2" in candidate.message
+    assert candidate.evidence["pad_number"] == ("<unnumbered>",)
+    assert candidate.evidence["pad_index"] == ("2",)
+    assert candidate.evidence["assigned_pad_numbers"] == ("1",)
+
+
 def test_extra_pad_is_not_covered_by_schematic_pad_net_comparison(tmp_path: Path) -> None:
     root, _board, config, hashes = _project(tmp_path)
     observed = _observed()
@@ -157,6 +174,11 @@ def test_assigned_pads_and_non_suspicious_footprints_are_controls(tmp_path: Path
     root, board, config, _hashes = _project(tmp_path / "all-netless")
     source = board.read_text(encoding="utf-8")
     source = source.replace('(net 1 "SIGNAL"))\n    (pad "2"', '(net 0 ""))\n    (pad "2"', 1)
+    board.write_text(source, encoding="utf-8")
+    assert _scan(root, config, {BOARD: digest(board)}) == ()
+
+    root, board, config, _hashes = _project(tmp_path / "unnumbered-assigned", "control")
+    source = board.read_text(encoding="utf-8").replace('(pad "2" smd', '(pad "" smd', 1)
     board.write_text(source, encoding="utf-8")
     assert _scan(root, config, {BOARD: digest(board)}) == ()
 
@@ -287,3 +309,25 @@ def test_assigning_only_the_candidate_pad_clears_the_finding(tmp_path: Path) -> 
 
     assert _scan(root, config, {BOARD: digest(board)}) == ()
     assert fault.evidence["pad_number"] == ("2",)
+
+
+def test_assigning_only_an_unnumbered_candidate_pad_clears_the_finding(
+    tmp_path: Path,
+) -> None:
+    root, board, config, _hashes = _project(tmp_path)
+    source = board.read_text(encoding="utf-8").replace('(pad "2" smd', '(pad "" smd', 1)
+    board.write_text(source, encoding="utf-8")
+    (fault,) = _scan(root, config, {BOARD: digest(board)})
+
+    source = board.read_text(encoding="utf-8").replace(
+        '(net 0 "")))\n  (gr_line', '(net 2 "RETURN")))\n  (gr_line', 1
+    )
+    source = source.replace(
+        '(net 0 "") (net 1 "SIGNAL")',
+        '(net 0 "") (net 1 "SIGNAL") (net 2 "RETURN")',
+        1,
+    )
+    board.write_text(source, encoding="utf-8")
+
+    assert fault.evidence["pad_number"] == ("<unnumbered>",)
+    assert _scan(root, config, {BOARD: digest(board)}) == ()

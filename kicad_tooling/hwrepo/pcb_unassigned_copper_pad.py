@@ -26,7 +26,7 @@ def unassigned_copper_pad_candidates(
     source_hashes: SourceHashInventory,
     netlist: NetlistContract,
 ) -> tuple[Candidate, ...]:
-    """Review extra unassigned copper pads outside the exact schematic pin inventory."""
+    """Review unassigned copper pads that the schematic pin inventory cannot identify."""
     if config.kind is not ProjectKind.PCB or config.kicad_version not in _SUPPORTED_KICAD_VERSIONS:
         return ()
     board = read_source_bound_pcb_board(root, config, source_hashes)
@@ -74,38 +74,45 @@ def unassigned_copper_pad_candidates(
         for _pad, number, _assigned in pad_states:
             if number:
                 pad_number_counts[number] = pad_number_counts.get(number, 0) + 1
-        if not any(assigned for _pad, number, assigned in pad_states if number):
+        if not any(assigned is True for _pad, _number, assigned in pad_states):
             continue
         assigned_numbers = tuple(
             sorted({number for _pad, number, assigned in pad_states if number and assigned is True})
         )
-        for pad, number, assigned in pad_states:
-            if (
-                not number
-                or pad_number_counts[number] != 1
-                or number in schematic_pin_numbers
-                or assigned is not False
-            ):
+        for pad_index, (pad, number, assigned) in enumerate(pad_states, start=1):
+            if assigned is not False:
+                continue
+            if number and (pad_number_counts[number] != 1 or number in schematic_pin_numbers):
                 continue
             line = bisect_right(line_breaks, pad.start) + 1
+            subject_pad = number if number else f"unnumbered-copper-pad-{pad_index}"
+            message = (
+                f"PCB footprint {reference} has unnumbered copper pad {pad_index} with no "
+                "assigned net while other copper pads in the footprint are netted. Review "
+                "whether this is an intentional mechanical/contact pad or an omitted pad "
+                "assignment."
+                if not number
+                else f"PCB footprint {reference} has copper pad {number} with no assigned net "
+                "while other copper pads in the footprint are netted and that pad number is "
+                "absent from the schematic pin inventory. Confirm whether this is an intentional "
+                "NC/mechanical pad or a missing footprint-to-symbol mapping."
+            )
+            evidence = {
+                "source_path": (board.relative_path,),
+                "source_sha256": (board.sha256,),
+                "reference": (reference,),
+                "pad_number": (number if number else "<unnumbered>",),
+                "assigned_pad_numbers": assigned_numbers,
+                "source_line": (str(line),),
+            }
+            if not number:
+                evidence["pad_index"] = (str(pad_index),)
             candidates.append(
                 Candidate(
                     rule_id=_RULE_ID,
-                    subject=f"{board.relative_path}:{line}:{reference}.{number}",
-                    message=(
-                        f"PCB footprint {reference} has copper pad {number} with no assigned net "
-                        "while other copper pads in the footprint are netted and that pad number "
-                        "is absent from the schematic pin inventory. Confirm whether this is an "
-                        "intentional NC/mechanical pad or a missing footprint-to-symbol mapping."
-                    ),
-                    evidence={
-                        "source_path": (board.relative_path,),
-                        "source_sha256": (board.sha256,),
-                        "reference": (reference,),
-                        "pad_number": (number,),
-                        "assigned_pad_numbers": assigned_numbers,
-                        "source_line": (str(line),),
-                    },
+                    subject=f"{board.relative_path}:{line}:{reference}.{subject_pad}",
+                    message=message,
+                    evidence=evidence,
                 )
             )
 

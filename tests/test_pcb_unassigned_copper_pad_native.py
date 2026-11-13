@@ -22,7 +22,7 @@ RULE_ID = "pcb.unassigned_copper_pad_review"
 FIXTURES = Path(__file__).parent / "fixtures/design_lint/pcb-unassigned-copper-pad"
 BOARD = "projects/synthetic/controller.kicad_pcb"
 PROJECT = "projects/synthetic/controller.kicad_pro"
-CASES = ("fault", "control")
+CASE_PAIRS = (("fault", "control"), ("unnumbered-fault", "unnumbered-control"))
 pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.pcb_lint,
@@ -85,7 +85,7 @@ def _native_report(tmp_path: Path, version: str, case: str) -> dict:
         ),
     )
     assert tuple(candidate.rule_id for candidate in candidates) == (
-        (RULE_ID,) if case == "fault" else ()
+        (RULE_ID,) if case in {"fault", "unnumbered-fault"} else ()
     )
     return report
 
@@ -105,10 +105,15 @@ def test_native_drc_does_not_distinguish_unassigned_pad_fault_from_control(
     tmp_path: Path,
 ) -> None:
     for version in ("10.0.0", "10.0.5"):
-        reports = {case: _native_report(tmp_path, version, case) for case in CASES}
-        assert reports["fault"]["unconnected_items"] == []
-        assert reports["control"]["unconnected_items"] == []
-        for report in reports.values():
-            assert [item["type"] for item in report["violations"]] == ["lib_footprint_issues"]
-            assert "Synthetic" in report["violations"][0]["description"]
-        assert _native_semantics(reports["fault"]) == _native_semantics(reports["control"])
+        for fault_case, control_case in CASE_PAIRS:
+            reports = {
+                case: _native_report(tmp_path, version, case) for case in (fault_case, control_case)
+            }
+            assert reports[fault_case]["unconnected_items"] == []
+            assert reports[control_case]["unconnected_items"] == []
+            for report in reports.values():
+                assert [item["type"] for item in report["violations"]] == ["lib_footprint_issues"]
+                assert "Synthetic" in report["violations"][0]["description"]
+            assert _native_semantics(reports[fault_case]) == _native_semantics(
+                reports[control_case]
+            )

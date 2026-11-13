@@ -6701,20 +6701,19 @@ Source-bound fault/control, metamorphic, CLI/MCP parity, and native evidence are
 
 ## Review extra unassigned copper pads in mixed-net footprints
 
-`pcb.unassigned_copper_pad_review` reviews a numbered copper-layer pad when its
-footprint has another net-assigned copper pad, the pad number is absent from the
-source-bound schematic pin inventory, and the footprint is neither DNP nor
-board-only. This adds a narrow prompt for extra footprint pads that the
-schematic-to-PCB pad assignment comparison cannot classify. Known schematic
-pins remain with `pcb.schematic_pcb_pad_net_mismatch`, avoiding a duplicate
-warning for that case.
+`pcb.unassigned_copper_pad_review` reviews an unassigned copper-layer pad when
+its footprint has another net-assigned copper pad and the footprint is neither
+DNP nor board-only. For numbered pads, the number must be absent from the
+source-bound schematic pin inventory, so known schematic pins remain with
+`pcb.schematic_pcb_pad_net_mismatch`. Unnumbered pads cannot be matched to a
+schematic pin; evidence identifies them by source line and copper-pad ordinal.
 
 This is a heuristic clue, not an electrical defect declaration. Extra NC,
 mechanical, shield, thermal, BGA, connector mounting, or alternate-footprint
 pads can be intentional. PCB-only projects lack an authoritative schematic pin
 inventory and are outside scope. All-netless footprints, unknown schematic pin
-inventories, unnumbered and non-copper pads, and duplicate pad numbers are also
-outside the predicate. The rule defaults to `review`; project policy can set
+inventories, non-copper pads, and duplicate-numbered pads are also outside the
+predicate. The rule defaults to `review`; project policy can set
 `block`, `off`, or ignore an exact fingerprint. Only KiCad 10.0.0 and 10.0.5
 are supported by the measured native fixture.
 
@@ -6722,10 +6721,11 @@ The idea comes from the `ghost-pad` check in the public MIT
 [`kicad-board-lint` candidate](https://github.com/94xhn/kicad-board-lint/tree/3296d711b9d9b0d6c724cb3b4e404202ca0a13c4).
 This implementation reuses the tooling's source-bound board reader and
 S-expression parser; it does not install the candidate or copy its board data.
-Pinned native DRC produced identical reports for the synthetic unassigned-pad
-fault and assigned control on both supported KiCad versions. Each report had
-the same missing synthetic footprint-library warning and no unconnected-item
-findings; changing this pad assignment did not change native DRC evidence.
+Pinned native DRC produced identical reports within each numbered and
+unnumbered synthetic fault/control pair on both supported KiCad versions. Each
+report had the same missing synthetic footprint-library warning and no
+unconnected-item findings; these pad differences did not change native DRC
+evidence.
 
 The tooling-owned synthetic board pair and native DRC details are in the
 [fixture note](../tests/fixtures/design_lint/pcb-unassigned-copper-pad/README.md).

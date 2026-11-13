@@ -22,7 +22,7 @@ from tests.synthetic_design_lint_project import (
 )
 
 RULE_ID = "pcb.unassigned_copper_pad_review"
-FAULT = Path(__file__).parent / ("fixtures/design_lint/pcb-unassigned-copper-pad/fault.kicad_pcb")
+FIXTURE_DIR = Path(__file__).parent / "fixtures/design_lint/pcb-unassigned-copper-pad"
 pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.pcb_lint,
@@ -31,11 +31,22 @@ pytestmark = [
 ]
 
 
-def test_unassigned_pad_review_matches_between_cli_and_mcp(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("fixture_name", "expected_pad_number"),
+    (
+        ("fault.kicad_pcb", "2"),
+        ("unnumbered-fault.kicad_pcb", "<unnumbered>"),
+    ),
+)
+def test_unassigned_pad_review_matches_between_cli_and_mcp(
+    tmp_path: Path,
+    fixture_name: str,
+    expected_pad_number: str,
+) -> None:
     root, native = synthetic_design_lint_project(
         tmp_path,
         parity_design_lint_policy(DesignLintPolicy()),
-        board_source=FAULT.read_text(encoding="utf-8"),
+        board_source=(FIXTURE_DIR / fixture_name).read_text(encoding="utf-8"),
     )
     observed = netlist(
         components={"J1": "Synthetic:TwoPadConnector"},
@@ -67,4 +78,4 @@ def test_unassigned_pad_review_matches_between_cli_and_mcp(tmp_path: Path) -> No
     findings = [item for item in mcp_report.findings if item.rule_id == RULE_ID]
     assert len(findings) == 1
     assert findings[0].evidence["reference"] == ("J1",)
-    assert findings[0].evidence["pad_number"] == ("2",)
+    assert findings[0].evidence["pad_number"] == (expected_pad_number,)
