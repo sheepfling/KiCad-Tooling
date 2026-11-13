@@ -20,6 +20,7 @@ SHARED_BOARD = (
 pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.pcb_lint,
+    pytest.mark.evidence_lint,
     pytest.mark.design_lint_rule(rule_id=RULE_ID),
     pytest.mark.native_kicad,
     pytest.mark.slow,

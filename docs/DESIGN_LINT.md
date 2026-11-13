@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 376 active rules.
+The catalog currently contains 377 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -966,6 +966,39 @@ inspect copper, determine whether a class has assigned nets, or judge the
 constraint's electrical suitability. The tooling-owned inputs are documented
 in the
 [exact-netclass scope fixture record](../tests/fixtures/design_lint/pcb-drc-exact-netclass-scope/README.md).
+
+For PCB and PCB-only projects on KiCad 10.0.5,
+`pcb.drc_exact_reference_scope_unmatched` reviews exact literal
+`A.Reference == '…'` selectors in supported custom DRC constraints when no
+case-insensitive match exists in the complete, unique footprint-reference
+inventory from the current source-bound PCB. A footprint can be renamed or
+removed while a saved custom rule still selects its old reference. The finding
+preserves selector spellings, rule and constraint details, the board reference
+inventory, and project, board, rule, DRC, and summary identities. Its default
+is `review`; project policy can select `block`, `off`, or an exact-fingerprint
+ignore.
+
+Digest-pinned native fixtures show that `J1` and lowercase `j1` select the
+same footprint and apply the custom edge-clearance constraint in KiCad 10.0.5.
+KiCad 10.0.0 does not apply that selector in this fixture, so the lint is not
+enabled there. This is a stale-scope prompt: a reference may be reserved for
+another board variant. The check skips malformed or case-insensitive duplicate
+footprint references, wildcard, variable, function, compound, ignored,
+excluded, malformed, and unsupported rules. It does not infer schematic
+intent, connector-pin similarity, electrical relationships, or copper
+continuity. The tooling-owned inputs are documented in the
+[exact-reference scope fixture record](../tests/fixtures/design_lint/pcb-drc-exact-reference-scope/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_pcb_drc_exact_reference_scope.py \
+  tests/test_design_lint_mcp_parity_pcb_drc_exact_reference_scope.py \
+  tests/test_design_lint_architecture_pcb_drc_exact_reference_scope.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.drc_exact_reference_scope_unmatched")'
+
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_drc_exact_reference_scope_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.drc_exact_reference_scope_unmatched")'
+```
 
 ```sh
 .venv/bin/python -I -m pytest tests/test_pcb_drc_exact_netclass_scope.py \

@@ -8,7 +8,6 @@ from pathlib import Path
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .kicad_sexpr import (
-    SExprSpan,
     sexpr_atoms,
     sexpr_children,
     sexpr_nodes,
@@ -19,6 +18,7 @@ from .pcb_board_source_binding import (
     read_source_bound_pcb_board,
     verify_source_bound_pcb_board_unchanged,
 )
+from .pcb_footprint_reference_inventory import pcb_footprint_reference
 from .pcb_source_identity import canonical_pcb_uuid
 from .project_models import ProjectConfig, ProjectKind
 from .source_state_models import SourceHashInventory
@@ -62,7 +62,7 @@ def pcb_footprint_path_trailing_separator_candidates(
         if path_uuid_segments is None:
             continue
 
-        reference = _footprint_reference(document, footprint)
+        reference = pcb_footprint_reference(document, footprint) or "<no ref>"
         line = bisect_right(line_breaks, path_node.start) + 1
         candidates.append(
             Candidate(
@@ -99,16 +99,3 @@ def _trailing_path_uuid_segments(instance_path: str) -> tuple[str, ...] | None:
     if any(value is None for value in canonical):
         return None
     return tuple(value for value in canonical if value is not None)
-
-
-def _footprint_reference(document: str, footprint: SExprSpan) -> str:
-    """Read the direct reference property, with legacy fp_text fallback."""
-    for prop in sexpr_nodes(document, footprint, "property"):
-        atoms = sexpr_atoms(document, prop)
-        if len(atoms) == 3 and atoms[1] == "Reference":
-            return atoms[2]
-    for text in sexpr_nodes(document, footprint, "fp_text"):
-        atoms = sexpr_atoms(document, text)
-        if len(atoms) >= 3 and atoms[1] == "reference":
-            return atoms[2]
-    return "<no ref>"

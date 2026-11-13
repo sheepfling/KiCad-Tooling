@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 376 rules are implemented with synthetic regression coverage.
+The following 377 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 376 active rules.
+The catalog currently contains 377 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -756,6 +756,7 @@ skipped under prerelease policy.
 - `pcb.drc_netclass_pattern_unmatched`
 - `pcb.drc_exact_net_scope_unmatched`
 - `pcb.drc_exact_netclass_scope_unmatched`
+- `pcb.drc_exact_reference_scope_unmatched`
 - `pcb.duplicate_object_uuid`
 - `pcb.footprint_path_trailing_separator`
 - `pcb.drc_duplicate_severity_key`
@@ -4439,7 +4440,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 376 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 377 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -26619,6 +26620,44 @@ acceptance threads while new lint features proceed:
   `design_lint and pcb_lint and
   design_lint_rule(rule_id="pcb.drc_exact_netclass_scope_unmatched")`. Run
   `tests/test_pcb_drc_exact_netclass_scope_native.py` with Docker,
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, `native_kicad`, and the same rule selector.
+
+#### LINT-458 — Review exact custom DRC reference selectors absent from the PCB
+
+- **Status:** Implemented as a default-REVIEW rule. Local focused acceptance,
+  including digest-pinned Docker fixtures, must pass before tagging.
+- **Priority:** P2 saved-constraint coverage. A footprint rename or removal
+  can leave a syntactically valid custom DRC condition scoped to no object.
+- **Rule:** Adds `pcb.drc_exact_reference_scope_unmatched` for exact ASCII
+  `A.Reference == '…'` selectors on named supported custom DRC constraints.
+  The check compares case-insensitively with the complete, unique reference
+  inventory in the source-bound PCB and groups equivalent absent selectors.
+  Findings retain the selector, affected rule and constraint details, current
+  reference inventory, and project, board, custom-rule, native DRC, and summary
+  identities.
+- **Native evidence:** Digest-pinned KiCad 10.0.5 DRC fixtures show that `J1`
+  and lowercase `j1` apply the custom edge-clearance constraint, while absent
+  `GHOST` does not. KiCad 10.0.0 does not apply the condition in this fixture;
+  the lint is intentionally limited to 10.0.5.
+- **Boundary:** Only exact ASCII selectors, a complete unique board reference
+  inventory, named supported constraints, PCB/PCB-only projects, and KiCad
+  10.0.5 are in scope. Wildcard, variable, function, compound, malformed,
+  ignored, excluded, ambiguous, unsupported, and other-version inputs stay
+  quiet. A selector may be reserved for another assembly variant. This prompt
+  does not claim an electrical defect, infer schematic intent or connector
+  equivalence, inspect copper, or require the footprint to exist. Project
+  policy may choose `review`, `block`, `off`, or an exact-fingerprint ignore.
+- **Fixtures:** The custom rules are synthetic and reuse the tooling-owned J1
+  board from the mechanical-edge fixture. Source tests cover absent and present
+  selectors, case-insensitive grouping, unsupported shapes, duplicate board
+  references, disabled policy, and the native-version boundary. CLI/MCP parity
+  and repeatable native DRC controls contain no external board source.
+- **Selection:** Run `tests/test_pcb_drc_exact_reference_scope.py`,
+  `tests/test_design_lint_mcp_parity_pcb_drc_exact_reference_scope.py`, and
+  `tests/test_design_lint_architecture_pcb_drc_exact_reference_scope.py` with
+  `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.drc_exact_reference_scope_unmatched")`. Run
+  `tests/test_pcb_drc_exact_reference_scope_native.py` with Docker,
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, `native_kicad`, and the same rule selector.
 
 ## Completion and release gate

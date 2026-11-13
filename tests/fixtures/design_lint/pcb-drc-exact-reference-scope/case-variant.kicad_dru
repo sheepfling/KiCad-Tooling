@@ -1,0 +1,5 @@
+(version 1)
+(rule "case-variant-reference-clearance"
+  (severity warning)
+  (condition "A.Reference == 'j1'")
+  (constraint edge_clearance (min 5mm)))

@@ -1,0 +1,5 @@
+(version 1)
+(rule "absent-reference-clearance"
+  (severity warning)
+  (condition "A.Reference == 'GHOST'")
+  (constraint edge_clearance (min 5mm)))

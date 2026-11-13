@@ -6,6 +6,7 @@ import re
 
 _EXACT_NET_CONDITION = re.compile(r"A\.NetName == '([^'\\*?\r\n]+)'")
 _EXACT_NETCLASS_CONDITION = re.compile(r"A\.NetClass == '([^'\\*?,$\x00-\x1f\x7f]+)'")
+_EXACT_REFERENCE_CONDITION = re.compile(r"A\.Reference == '([^'\\*?$\x00-\x1f\x7f]+)'")
 _EXACT_FROM_TO_CONDITION = re.compile(
     r"A\.fromTo\('([A-Za-z0-9_-]+-[A-Za-z0-9_-]+)', "
     r"'([A-Za-z0-9_-]+-[A-Za-z0-9_-]+)'\)"
@@ -22,6 +23,12 @@ def native_exact_net_condition(condition: str) -> str | None:
 def native_exact_netclass_condition(condition: str) -> str | None:
     """Return one supported literal class selector, excluding composite lists."""
     match = _EXACT_NETCLASS_CONDITION.fullmatch(condition)
+    return None if match is None else match.group(1)
+
+
+def native_exact_reference_condition(condition: str) -> str | None:
+    """Return one supported exact component-reference selector."""
+    match = _EXACT_REFERENCE_CONDITION.fullmatch(condition)
     return None if match is None else match.group(1)
 
 

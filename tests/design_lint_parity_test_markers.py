@@ -74,6 +74,7 @@ PARITY_LINT_TEST_MODULES = frozenset(
         "tests/test_design_lint_mcp_parity_pcb_drc_netclass_pattern_unmatched.py",
         "tests/test_design_lint_mcp_parity_pcb_drc_exact_net_scope.py",
         "tests/test_design_lint_mcp_parity_pcb_drc_exact_netclass_scope.py",
+        "tests/test_design_lint_mcp_parity_pcb_drc_exact_reference_scope.py",
         "tests/test_design_lint_mcp_parity_pcb_drc_malformed_netclass_numeric_constraints.py",
     }
 )

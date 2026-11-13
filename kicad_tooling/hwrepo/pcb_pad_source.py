@@ -8,6 +8,7 @@ from typing import Literal
 
 from .kicad_sexpr import SExprSpan, sexpr_atoms, sexpr_children, sexpr_nodes, sexpr_root
 from .pcb_board_source_binding import SourceBoundPcbBoard
+from .pcb_footprint_reference_inventory import pcb_footprint_reference
 
 PcbPadNetState = Literal["assigned", "unassigned", "unknown"]
 
@@ -54,7 +55,7 @@ def source_bound_pcb_footprint_pads(
             for node in sexpr_nodes(document, footprint, "attr")
             for flag in sexpr_atoms(document, node)[1:]
         }
-        reference = _footprint_reference(document, footprint)
+        reference = pcb_footprint_reference(document, footprint)
         if reference is None:
             continue
         pads: list[PcbCopperPadSource] = []
@@ -82,18 +83,6 @@ def source_bound_pcb_footprint_pads(
             )
         )
     return tuple(footprints)
-
-
-def _footprint_reference(document: str, footprint: SExprSpan) -> str | None:
-    """Read one direct KiCad footprint Reference property."""
-    references: list[str] = []
-    for node in sexpr_nodes(document, footprint, "property"):
-        atoms = sexpr_atoms(document, node)
-        if len(atoms) == 3 and atoms[1] == "Reference":
-            references.append(atoms[2])
-    if len(references) != 1 or not references[0].strip():
-        return None
-    return references[0]
 
 
 def _has_copper_layer(document: str, pad: SExprSpan) -> bool:

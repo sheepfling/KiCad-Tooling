@@ -16,6 +16,7 @@ from .pcb_drc_duplicate_severity_key_review import (
     source_bound_pcb_drc_duplicate_severity_key_candidates,
 )
 from .pcb_drc_exact_netclass_scope_scan import scan_unmatched_exact_netclass_drc_scopes
+from .pcb_drc_exact_reference_scope_scan import scan_unmatched_exact_reference_drc_scopes
 from .pcb_drc_exclusion_review import source_bound_pcb_drc_exclusion_candidates
 from .pcb_drc_global_severity_review import (
     downgraded_electrical_drc_check_candidates,
@@ -82,6 +83,13 @@ def collect_pcb_dru_candidates(
             native_summary,
         ),
         *scan_unmatched_exact_netclass_drc_scopes(
+            root,
+            config,
+            policy,
+            source_hashes,
+            native_summary,
+        ),
+        *scan_unmatched_exact_reference_drc_scopes(
             root,
             config,
             policy,
