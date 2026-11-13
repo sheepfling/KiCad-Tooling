@@ -117,6 +117,79 @@ def test_custom_drc_layer_evidence_and_predicate_have_thematic_owners() -> None:
     assert "custom_drc_layer_reference_candidates" in functions
 
 
+def test_contradictory_bounds_have_focused_source_and_evidence_owners() -> None:
+    evidence_owner = HWREPO / "design_lint_pcb_dru_contradictory_bounds_evidence.py"
+    evidence_tree = ast.parse(evidence_owner.read_text(encoding="utf-8"))
+    assert line_count(evidence_owner) < IMPLEMENTATION_MAX_LINES
+    classes = {node.name for node in evidence_tree.body if isinstance(node, ast.ClassDef)}
+    functions = {node.name for node in evidence_tree.body if isinstance(node, ast.FunctionDef)}
+    assert {
+        "PcbDruContradictoryBoundsFindingEvidence",
+        "PcbDruContradictoryBoundsCandidate",
+    } <= classes
+    assert "project_pcb_dru_contradictory_bounds_evidence" in functions
+    projections = {
+        node
+        for node in evidence_tree.body
+        if isinstance(node, ast.FunctionDef) and node.name.startswith("project_")
+    }
+    assert len(projections) == 1
+    assert not any(
+        isinstance(node, ast.Attribute) and node.attr == "local_path"
+        for function in projections
+        for node in ast.walk(function)
+    )
+
+    predicate_owner = HWREPO / "pcb_dru_contradictory_bounds_review.py"
+    predicate_tree = ast.parse(predicate_owner.read_text(encoding="utf-8"))
+    functions = {node.name for node in predicate_tree.body if isinstance(node, ast.FunctionDef)}
+    assert line_count(predicate_owner) < IMPLEMENTATION_MAX_LINES
+    assert "contradictory_custom_drc_constraint_candidates" in functions
+
+    collector = HWREPO / "design_lint_pcb_dru_candidates.py"
+    collector_tree = ast.parse(collector.read_text(encoding="utf-8"))
+    assert line_count(collector) < IMPLEMENTATION_MAX_LINES
+    collector_functions = {
+        node.name for node in collector_tree.body if isinstance(node, ast.FunctionDef)
+    }
+    assert {
+        "collect_pcb_dru_candidates",
+        "collect_pcb_native_drc_candidates",
+    } <= collector_functions
+    predicate_imports = {
+        alias.name
+        for node in collector_tree.body
+        if isinstance(node, ast.ImportFrom) and node.module == "pcb_dru_contradictory_bounds_review"
+        for alias in node.names
+    }
+    assert predicate_imports == {"contradictory_custom_drc_constraint_candidates"}
+    assert any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "contradictory_custom_drc_constraint_candidates"
+        for node in ast.walk(collector_tree)
+    )
+
+    inspection = HWREPO / "design_lint_project_inspection.py"
+    inspection_tree = ast.parse(inspection.read_text(encoding="utf-8"))
+    collector_imports = {
+        alias.name
+        for node in inspection_tree.body
+        if isinstance(node, ast.ImportFrom) and node.module == "design_lint_pcb_dru_candidates"
+        for alias in node.names
+    }
+    assert collector_imports == {
+        "collect_pcb_dru_candidates",
+        "collect_pcb_native_drc_candidates",
+    }
+    assert any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "collect_pcb_dru_candidates"
+        for node in ast.walk(inspection_tree)
+    )
+
+
 def test_deprecated_custom_drc_function_evidence_has_a_focused_owner() -> None:
     evidence_owner = HWREPO / "design_lint_pcb_dru_deprecated_function_evidence.py"
     evidence_tree = ast.parse(evidence_owner.read_text(encoding="utf-8"))

@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 356 active rules.
+The catalog currently contains 357 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -5524,6 +5524,41 @@ native fault/control probes. See the
 KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_pcb_dru_layer_reference_native.py \
   -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.custom_drc_layer_reference")'
+```
+
+## Review contradictory custom DRC constraint bounds
+
+`pcb.custom_drc_contradictory_constraint_bounds` asks for review when a
+source-bound KiCad 10 `.kicad_dru` constraint has explicit positive minimum
+and maximum values with the minimum greater than the maximum. The finding
+retains the exact source hash, configured KiCad version, rule and constraint
+names, and both values in nanometers. Its default is `review`; project policy
+can choose `block`, `off`, or an exact-fingerprint ignore.
+
+A project may intentionally use an impossible interval to prohibit every
+matching object, so the finding does not decide whether the rule is intended.
+In the pinned KiCad 10.0.8 synthetic probe, a `track_width` rule with minimum
+0.3 mm and maximum 0.1 mm was accepted and reported two width violations on
+0.2 mm tracks, describing the 0.1 mm maximum as the minimum. Ordered and equal
+bound controls produced no width findings. This result is limited to that
+constraint, geometry, version, and image. The check does not evaluate rule
+conditions, prove board applicability, or establish a design defect. Rules
+with unresolved text variables, repeated or malformed bounds, or unsupported
+expressions are left to existing source diagnostics.
+
+Tooling-owned fixtures cover contradictory, ordered, equal, one-sided,
+repeated, and variable-bound cases, source freshness, review policy,
+CLI/MCP parity, and repeated pinned native DRC results. See the
+[fixture note](../tests/fixtures/design_lint/pcb-dru-contradictory-bounds/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_pcb_dru_contradictory_bounds.py \
+  tests/test_design_lint_mcp_parity_pcb_dru_contradictory_bounds.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.custom_drc_contradictory_constraint_bounds")'
+
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_dru_contradictory_bounds_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.custom_drc_contradictory_constraint_bounds")'
 ```
 
 ## Review deprecated custom DRC condition functions

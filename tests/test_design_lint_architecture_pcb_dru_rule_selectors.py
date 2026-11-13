@@ -15,6 +15,26 @@ pytestmark = [
 
 RULE_NODE_CASES = (
     (
+        "pcb.custom_drc_contradictory_constraint_bounds",
+        "tests/test_pcb_dru_contradictory_bounds.py::test_minimum_above_maximum_requests_one_source_bound_review_per_constraint",
+    ),
+    (
+        "pcb.custom_drc_contradictory_constraint_bounds",
+        "tests/test_pcb_dru_contradictory_bounds.py::test_valid_or_ambiguous_bounds_stay_quiet",
+    ),
+    (
+        "pcb.custom_drc_contradictory_constraint_bounds",
+        "tests/test_pcb_dru_contradictory_bounds.py::test_supported_scope_source_binding_and_review_policy_are_exact",
+    ),
+    (
+        "pcb.custom_drc_contradictory_constraint_bounds",
+        "tests/test_design_lint_mcp_parity_pcb_dru_contradictory_bounds.py::test_contradictory_custom_drc_bounds_match_between_cli_and_mcp",
+    ),
+    (
+        "pcb.custom_drc_contradictory_constraint_bounds",
+        "tests/test_pcb_dru_contradictory_bounds_native.py::test_contradictory_bounds_are_accepted_and_produce_native_width_findings_repeatably",
+    ),
+    (
         "pcb.custom_drc_conflicting_severities",
         "tests/test_pcb_dru_conflicting_severities.py::test_conflicting_direct_severities_request_source_bound_review",
     ),

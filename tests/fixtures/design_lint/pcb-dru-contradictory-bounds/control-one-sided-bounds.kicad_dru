@@ -1,0 +1,9 @@
+(version 1)
+(rule "MinimumOnly"
+  (condition "A.Type == 'Track'")
+  (severity error)
+  (constraint track_width (min 0.2mm)))
+(rule "MaximumOnly"
+  (condition "A.Type == 'Track'")
+  (severity error)
+  (constraint diff_pair_gap (max 0.3mm)))

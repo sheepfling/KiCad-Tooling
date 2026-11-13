@@ -18,6 +18,10 @@ from .design_lint_evaluation_types import DesignLintEvaluationRequest
 from .design_lint_evaluator import evaluate_request
 from .design_lint_inspection_models import DesignLintInspectionRequest
 from .design_lint_pcb_coverage_policy import PcbMappedCoverageInputs
+from .design_lint_pcb_dru_candidates import (
+    collect_pcb_dru_candidates,
+    collect_pcb_native_drc_candidates,
+)
 from .design_lint_pcb_geometry_coverage_policy import PcbInputCoverageInputs
 from .design_lint_pcb_geometry_scan import scan_pcb_geometry
 from .design_lint_peer_evaluation import PeerDesignLintScanInputs
@@ -44,56 +48,12 @@ from .native_netlist_evidence import (
 )
 from .native_project_validation_models import ValidationSummary
 from .native_summary_binding import validate_native_toolchain
-from .pcb_drc_duplicate_board_section_review import (
-    source_bound_pcb_drc_duplicate_board_section_candidates,
-)
-from .pcb_drc_duplicate_net_settings_section_review import (
-    source_bound_pcb_drc_duplicate_net_settings_section_candidates,
-)
-from .pcb_drc_duplicate_severity_key_review import (
-    source_bound_pcb_drc_duplicate_severity_key_candidates,
-)
 from .pcb_drc_exclusion_native import native_pcb_drc_report_matches
-from .pcb_drc_exclusion_review import source_bound_pcb_drc_exclusion_candidates
-from .pcb_drc_global_severity_review import (
-    downgraded_electrical_drc_check_candidates,
-    downgraded_miscellaneous_drc_check_candidates,
-    downgraded_signal_integrity_drc_check_candidates,
-    ignored_core_native_drc_check_candidates,
-    ignored_dfm_native_drc_check_candidates,
-    ignored_warning_default_native_drc_check_candidates,
-    warning_core_native_drc_check_candidates,
-    warning_dfm_native_drc_check_candidates,
-)
-from .pcb_drc_invalid_severity_value_review import (
-    source_bound_pcb_drc_invalid_severity_value_candidates,
-)
 from .pcb_drc_models import (
     PcbDifferentialPairRuleCoverageReport,
     PcbDifferentialPairRuleMap,
 )
-from .pcb_drc_netclass_settings_review import source_bound_pcb_netclass_settings_candidates
-from .pcb_drc_nonstring_severity_value_review import (
-    source_bound_pcb_drc_nonstring_severity_value_candidates,
-)
 from .pcb_drc_source_scan import scan_source_bound_rule_map
-from .pcb_drc_unknown_severity_key_review import (
-    source_bound_pcb_drc_unknown_severity_key_candidates,
-)
-from .pcb_dru_deprecated_function_review import (
-    custom_drc_deprecated_condition_function_candidates,
-)
-from .pcb_dru_layer_review import custom_drc_layer_reference_candidates
-from .pcb_dru_rule_review import (
-    custom_drc_casefold_rule_name_collision_candidates,
-    custom_drc_conflicting_severity_candidates,
-    custom_drc_duplicate_rule_name_candidates,
-    custom_drc_rule_without_constraint_candidates,
-    excluded_custom_drc_rule_candidates,
-    ignored_custom_drc_rule_candidates,
-    text_variable_custom_drc_rule_candidates,
-)
-from .pcb_mechanical_edge_clearance import mechanical_edge_rule_coverage_candidates
 from .pcb_object_uuid_integrity import duplicate_pcb_object_uuid_candidates
 from .project_models import ProjectManifest
 from .project_source_hashes import hash_project_sources as hashes
@@ -176,71 +136,18 @@ def inspect_design_lint_request(
         validate_native_toolchain(read_model(summary_path, ValidationSummary), config)
         if hashes(root, config.source_roots) != coach.source_hashes:
             raise ValueError("Declared source changed while reading design-lint policy")
-        mechanical_edge_rule_candidates = mechanical_edge_rule_coverage_candidates(
+        pcb_dru_rule_candidates = collect_pcb_dru_candidates(
             root,
             config,
             policy,
             coach.source_hashes,
             native_summary,
         )
-        pcb_dru_rule_candidates = (
-            *mechanical_edge_rule_candidates,
-            *ignored_custom_drc_rule_candidates(root, config, coach.source_hashes),
-            *excluded_custom_drc_rule_candidates(root, config, coach.source_hashes),
-            *text_variable_custom_drc_rule_candidates(root, config, coach.source_hashes),
-            *custom_drc_rule_without_constraint_candidates(root, config, coach.source_hashes),
-            *custom_drc_duplicate_rule_name_candidates(root, config, coach.source_hashes),
-            *custom_drc_casefold_rule_name_collision_candidates(root, config, coach.source_hashes),
-            *custom_drc_conflicting_severity_candidates(root, config, coach.source_hashes),
-            *custom_drc_layer_reference_candidates(root, config, coach.source_hashes),
-            *custom_drc_deprecated_condition_function_candidates(root, config, coach.source_hashes),
-        )
-        pcb_native_drc_candidates = (
-            *source_bound_pcb_drc_duplicate_board_section_candidates(
-                root,
-                config,
-                coach.source_hashes,
-            ),
-            *source_bound_pcb_drc_duplicate_net_settings_section_candidates(
-                root,
-                config,
-                coach.source_hashes,
-            ),
-            *source_bound_pcb_netclass_settings_candidates(root, config, coach.source_hashes),
-            *source_bound_pcb_drc_duplicate_severity_key_candidates(
-                root,
-                config,
-                coach.source_hashes,
-            ),
-            *source_bound_pcb_drc_invalid_severity_value_candidates(
-                root,
-                config,
-                coach.source_hashes,
-            ),
-            *source_bound_pcb_drc_nonstring_severity_value_candidates(
-                root,
-                config,
-                coach.source_hashes,
-            ),
-            *source_bound_pcb_drc_unknown_severity_key_candidates(
-                root,
-                config,
-                coach.source_hashes,
-            ),
-            *ignored_core_native_drc_check_candidates(root, config, coach.source_hashes),
-            *ignored_dfm_native_drc_check_candidates(root, config, coach.source_hashes),
-            *ignored_warning_default_native_drc_check_candidates(root, config, coach.source_hashes),
-            *warning_core_native_drc_check_candidates(root, config, coach.source_hashes),
-            *warning_dfm_native_drc_check_candidates(root, config, coach.source_hashes),
-            *downgraded_signal_integrity_drc_check_candidates(root, config, coach.source_hashes),
-            *downgraded_electrical_drc_check_candidates(root, config, coach.source_hashes),
-            *downgraded_miscellaneous_drc_check_candidates(root, config, coach.source_hashes),
-            *source_bound_pcb_drc_exclusion_candidates(
-                root,
-                config,
-                coach.source_hashes,
-                native_summary=native_summary,
-            ),
+        pcb_native_drc_candidates = collect_pcb_native_drc_candidates(
+            root,
+            config,
+            coach.source_hashes,
+            native_summary,
         )
         schematic_source_candidates = (
             *source_bound_schematic_erc_candidates(root, config, coach.source_hashes),

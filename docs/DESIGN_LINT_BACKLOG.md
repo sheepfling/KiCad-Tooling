@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 356 rules are implemented with synthetic regression coverage.
+The following 357 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 356 active rules.
+The catalog currently contains 357 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -725,6 +725,7 @@ skipped under prerelease policy.
 - `pcb.custom_drc_conflicting_severities`
 - `pcb.custom_drc_text_variable_review`
 - `pcb.custom_drc_layer_reference`
+- `pcb.custom_drc_contradictory_constraint_bounds`
 - `pcb.custom_drc_deprecated_condition_function`
 - `pcb.core_drc_check_ignored`
 - `pcb.core_drc_check_warning`
@@ -4364,7 +4365,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 356 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 357 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -25588,6 +25589,59 @@ acceptance threads while new lint features proceed:
   `build/ci/run-6zbqyzl5`. Hosted acceptance passed in GitHub Actions run
   `43336208310`, including the installed-wheel external-project rehearsal.
   Package and preview jobs were skipped under prerelease policy.
+
+#### LINT-437 — Review contradictory custom DRC constraint bounds
+
+- **Priority:** P1 PCB rule integrity. A custom rule can contain explicit
+  positive minimum and maximum values where the minimum exceeds the maximum;
+  KiCad 10.0.8 accepted the tested source and produced a native width finding
+  using the maximum as the reported minimum.
+- **Rule:** Adds
+  [`pcb.custom_drc_contradictory_constraint_bounds`](DESIGN_LINT.md#review-contradictory-custom-drc-constraint-bounds).
+- **Status:** Implemented as a source-bound default-REVIEW prompt for parsed
+  KiCad 10.x version-1 custom DRC constraints. The initial native behavior
+  trial is limited to the exact digest-pinned KiCad 10.0.8 image.
+- **Predicate:** For each parsed constraint with one supported positive
+  explicit minimum and maximum and no parser issue, emit one candidate when
+  the minimum is greater than the maximum. Preserve the exact `.kicad_dru`
+  hash, configured version, rule identity, constraint name, and both bounds in
+  integer nanometers. Do not choose an intended value or evaluate rule
+  conditions.
+- **Native evidence:** A tooling-owned track-width rule with minimum 0.3 mm and
+  maximum 0.1 mm was accepted on KiCad 10.0.8. Two 0.2 mm tracks each produced
+  one `track_width` error whose description reported the 0.1 mm maximum as its
+  minimum. Ordered 0.1–0.3 mm and equal 0.2–0.2 mm controls produced no width
+  findings. All normalized violation records repeated exactly. This result
+  measures only the tested constraint, board, values, version, and image.
+- **Boundary:** A contradictory interval may be intentionally authored to
+  reject every matching object. The lint prompts for review without asserting
+  the rule is accidental or a board is defective. It skips text-variable
+  substitutions, repeated or malformed bounds, unsupported expressions, and
+  nonpositive values rejected by the shared source parser. Native behavior
+  for other constraints, versions, and project setups remains unmeasured.
+- **Fixtures:** Tooling-owned rule sources cover the contradictory fault,
+  ordered and equal controls, one-sided bounds, repeated bounds, and an
+  unresolved variable. Tests cover source freshness, exact version/project
+  scope, default REVIEW with BLOCK/OFF/ignore controls, CLI/MCP parity, and
+  repeated digest-pinned native exports. The native board and project settings
+  are the existing tooling-owned two-track DRC fixtures; no cohort or product
+  design was copied.
+- **Selection:** Run
+  `tests/test_pcb_dru_contradictory_bounds.py` and
+  `tests/test_design_lint_mcp_parity_pcb_dru_contradictory_bounds.py` with
+  `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.custom_drc_contradictory_constraint_bounds")`.
+  Run `tests/test_pcb_dru_contradictory_bounds_native.py` with
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, Docker, `native_kicad`, and the same rule
+  selector.
+- **Focused local acceptance (2026-11-12):** Source and CLI/MCP selection
+  passed 8 cases. The digest-pinned KiCad 10.0.8 Docker fixture passed with
+  repeated fault and control exports. The scoped package gate passed 414 tests
+  with 9,031 deselected; Ruff, both Alphus profiles, Rumdl, mdrepo, Linux and
+  Windows Pyright, wheel/sdist construction and equality, installed-wheel
+  checks, external project verification, adapted-project verification, and
+  playtest passed. Receipt: `build/ci/run-kcxeebfx`. Hosted acceptance is not
+  yet recorded.
 
 ## Completion and release gate
 
