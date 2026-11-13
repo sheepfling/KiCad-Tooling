@@ -26345,7 +26345,11 @@ acceptance threads while new lint features proceed:
   `tests/test_design_lint_architecture_pcb_track_width_unmapped.py` with
   `design_lint and pcb_lint and
   design_lint_rule(rule_id="pcb.track_width_unmapped_native_rule")`.
-- **Hosted acceptance:** Pending the annotated rule-gate tag.
+- **Hosted acceptance:** Passed run `43481234963` for annotated rule-gate tag
+  `v0.5.3rc747`: 433 scoped tests passed; Ruff, Alphus boundary checks,
+  rumdl, mdrepo, Pyright, Windows type checks, wheel/sdist builds,
+  installed-origin/version checks, and external/adapted template
+  inventory, surface, verification, and playtest stages passed.
 
 ## Completion and release gate
 
