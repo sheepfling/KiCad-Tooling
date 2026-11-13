@@ -68,7 +68,9 @@ def test_unmapped_edge_clearance_scope_matches_cli_and_mcp(tmp_path: Path) -> No
 
     assert_signal_path_cli_mcp_parity(cli_report, mcp_report)
     assert mcp_report.status == "REVIEW", mcp_report.issues
-    (finding,) = tuple(item for item in mcp_report.findings if item.rule_id == EDGE_CLEARANCE_RULE_ID)
+    (finding,) = tuple(
+        item for item in mcp_report.findings if item.rule_id == EDGE_CLEARANCE_RULE_ID
+    )
     assert finding.subject == (
         "unmapped-extra-edge-clearance: EDGE_EXTRA is absent from signal-path coverage"
     )
