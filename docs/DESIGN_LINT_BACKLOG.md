@@ -26308,7 +26308,11 @@ acceptance threads while new lint features proceed:
   `tests/test_design_lint_architecture_pcb_track_angle.py` with
   `design_lint and pcb_lint and
   design_lint_rule(rule_id="pcb.track_angle_unmapped_native_rule")`.
-- **Hosted acceptance:** Pending the annotated rule-gate tag.
+- **Hosted acceptance:** The `v0.5.3rc743` tagged run `43472617156` passed
+  setup and scoped-gate resolution, then found one architecture failure: the
+  shared PCB reachability registry reached its 500-line ceiling (432 tests
+  passed). This follow-up moves the new synthetic reachability case into its
+  own module; the next tagged run is pending.
 
 ## Completion and release gate
 

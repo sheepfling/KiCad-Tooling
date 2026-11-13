@@ -45,6 +45,9 @@ from tests.design_lint_fixtures.catalog_reachability_pcb_routes import pcb_route
 from tests.design_lint_fixtures.catalog_reachability_pcb_track_angle_geometry import (
     track_angle_geometry_rule_ids,
 )
+from tests.design_lint_fixtures.catalog_reachability_pcb_track_angle_unmapped import (
+    unmapped_track_angle_rule_ids,
+)
 from tests.design_lint_fixtures.jtag_generic_connector_pair import generic_jtag_connector_netlist
 from tests.design_lint_fixtures.pcb_signal_path import incomplete_signal_report, path_map
 from tests.test_pcb_drc_coverage import incomplete_report as incomplete_pair_report
@@ -267,12 +270,6 @@ def pcb_rule_ids() -> set[str]:
         message="Synthetic source-bound track-angle rule coverage is incomplete.",
         evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
     )
-    unmapped_track_angle_rule = Candidate(
-        rule_id="pcb.track_angle_unmapped_native_rule",
-        subject="projects/synthetic/controller.kicad_dru#data-track-angle",
-        message="Synthetic per-net track-angle rule is absent from mapped geometry scope.",
-        evidence={"source_path": ("projects/synthetic/controller.kicad_dru",)},
-    )
     report = evaluate(
         coach.project_id,
         coach,
@@ -288,7 +285,6 @@ def pcb_rule_ids() -> set[str]:
             conflicting_custom_rule_severity,
             mechanical_edge_rule,
             track_angle_rule,
-            unmapped_track_angle_rule,
         ),
         pcb_native_drc_candidates=(
             ignored_core_check,
@@ -497,4 +493,5 @@ def pcb_rule_ids() -> set[str]:
     result.update(custom_drc_layer_rule_ids())
     result.update(custom_drc_deprecated_function_rule_ids())
     result.update(track_angle_geometry_rule_ids())
+    result.update(unmapped_track_angle_rule_ids())
     return result
