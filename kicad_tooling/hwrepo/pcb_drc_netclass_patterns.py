@@ -1,0 +1,149 @@
+"""Deterministic analysis of KiCad PCB netclass pattern assignments."""
+
+from __future__ import annotations
+
+import fnmatch
+import json
+import re
+from dataclasses import dataclass
+from typing import cast
+
+from .json_object_pairs import JsonObjectPairs, retain_json_object_pairs
+from .kicad_sexpr import sexpr_atoms, sexpr_children, sexpr_root
+
+
+@dataclass(frozen=True, slots=True)
+class PcbUnmatchedNetClassPattern:
+    """One valid non-default netclass pattern that matches no current board net."""
+
+    pattern_index: int
+    pattern: str
+    netclass: str
+
+
+def unmatched_pcb_netclass_patterns(
+    project_settings_document: str,
+    board_document: str,
+) -> tuple[PcbUnmatchedNetClassPattern, ...]:
+    """Find supported explicit class patterns that currently match no PCB net.
+
+    KiCad patterns accept filename-style wildcards and regular expressions.
+    Malformed or ambiguous project/board inventories are outside this review.
+    """
+    board_nets = _pcb_board_net_names(board_document)
+    if board_nets is None:
+        return ()
+    configured = _configured_netclass_patterns(project_settings_document)
+    if configured is None:
+        return ()
+    class_names, patterns = configured
+    return tuple(
+        PcbUnmatchedNetClassPattern(index, pattern, netclass)
+        for index, pattern, netclass in patterns
+        if netclass != "Default"
+        and netclass in class_names
+        and not any(_kicad_netclass_pattern_matches(pattern, net) for net in board_nets)
+    )
+
+
+def _pcb_board_net_names(document: str) -> tuple[str, ...] | None:
+    """Read unique top-level named nets from one complete board expression."""
+    try:
+        root = sexpr_root(document, "kicad_pcb")
+        children = sexpr_children(document, root.start + 1, root.end - 1)
+    except ValueError:
+        return None
+
+    names: list[str] = []
+    seen_codes: set[int] = set()
+    seen_names: set[str] = set()
+    found_net_record = False
+    for child in children:
+        atoms = sexpr_atoms(document, child)
+        if not atoms or atoms[0] != "net":
+            continue
+        found_net_record = True
+        if len(atoms) != 3:
+            return None
+        try:
+            code = int(atoms[1])
+        except ValueError:
+            return None
+        name = atoms[2]
+        if code < 0 or code in seen_codes:
+            return None
+        seen_codes.add(code)
+        if code == 0 and name == "":
+            continue
+        if code == 0 or not name or name in seen_names:
+            return None
+        seen_names.add(name)
+        names.append(name)
+    if not found_net_record:
+        return None
+    return tuple(sorted(names))
+
+
+def _configured_netclass_patterns(
+    document: str,
+) -> tuple[frozenset[str], tuple[tuple[int, str, str], ...]] | None:
+    """Read only unique, well-shaped class and pattern inventories."""
+    try:
+        root = json.loads(document, object_pairs_hook=retain_json_object_pairs)
+    except (json.JSONDecodeError, RecursionError):
+        return None
+    if not isinstance(root, JsonObjectPairs):
+        return None
+    net_settings = _unique_object_member(root, "net_settings")
+    if not isinstance(net_settings, JsonObjectPairs):
+        return None
+    classes = _unique_array_member(net_settings, "classes")
+    pattern_entries = _unique_array_member(net_settings, "netclass_patterns")
+    if classes is None or pattern_entries is None:
+        return None
+
+    class_names: list[str] = []
+    for entry in classes:
+        if not isinstance(entry, JsonObjectPairs):
+            return None
+        name = _unique_string_member(entry, "name")
+        if name is None or not name or name in class_names:
+            return None
+        class_names.append(name)
+    if "Default" not in class_names:
+        return None
+
+    patterns: list[tuple[int, str, str]] = []
+    for index, entry in enumerate(pattern_entries):
+        if not isinstance(entry, JsonObjectPairs):
+            continue
+        pattern = _unique_string_member(entry, "pattern")
+        netclass = _unique_string_member(entry, "netclass")
+        if pattern and netclass:
+            patterns.append((index, pattern, netclass))
+    return frozenset(class_names), tuple(patterns)
+
+
+def _unique_object_member(source: JsonObjectPairs, name: str) -> object | None:
+    values = tuple(value for key, value in source.pairs if key == name)
+    return values[0] if len(values) == 1 else None
+
+
+def _unique_array_member(source: JsonObjectPairs, name: str) -> list[object] | None:
+    value = _unique_object_member(source, name)
+    return cast(list[object], value) if isinstance(value, list) else None
+
+
+def _unique_string_member(source: JsonObjectPairs, name: str) -> str | None:
+    value = _unique_object_member(source, name)
+    return value if isinstance(value, str) else None
+
+
+def _kicad_netclass_pattern_matches(pattern: str, net: str) -> bool:
+    """Match the measured KiCad combined wildcard/regular-expression syntax."""
+    if fnmatch.fnmatchcase(net, pattern):
+        return True
+    try:
+        return re.fullmatch(pattern, net) is not None
+    except re.error:
+        return False

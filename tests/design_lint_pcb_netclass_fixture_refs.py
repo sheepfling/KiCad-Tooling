@@ -4,6 +4,22 @@ from types import MappingProxyType
 
 PCB_NETCLASS_PARITY_FIXTURES = MappingProxyType(
     {
+        "pcb.drc_netclass_pattern_unmatched": MappingProxyType(
+            {
+                "fault_fixtures": (
+                    (
+                        "tests.test_design_lint_mcp_parity_pcb_drc_netclass_pattern_unmatched"
+                        ".test_netclass_pattern_review_matches_between_cli_and_mcp"
+                    ),
+                ),
+                "valid_control_fixtures": (
+                    (
+                        "tests.test_design_lint_mcp_parity_pcb_drc_netclass_pattern_unmatched"
+                        ".test_netclass_pattern_review_matches_between_cli_and_mcp"
+                    ),
+                ),
+            }
+        ),
         "pcb.drc_conflicting_netclass_definitions": MappingProxyType(
             {
                 "fault_fixtures": (

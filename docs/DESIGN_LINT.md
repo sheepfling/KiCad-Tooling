@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 365 active rules.
+The catalog currently contains 366 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -913,6 +913,16 @@ the full array in evidence. A mixed array can still have a valid declared
 class applied, so an unresolved entry prompts review without claiming that
 the whole assignment falls back to `Default`. Malformed value shapes are
 reviewed separately by `pcb.drc_malformed_netclass_assignment`.
+
+For KiCad 10.0.8, `pcb.drc_netclass_pattern_unmatched` compares each explicit
+non-Default class pattern with the exact named-net inventory in the current
+source-hashed board. A pattern that matches no net can silently leave those
+nets at Default constraints, so the rule prompts for review. Matching uses
+case-sensitive KiCad-style wildcards and regular expressions. A pattern
+reserved for a future board variant is an expected review case and can be
+ignored through project policy. This check requires both the current
+`.kicad_pro` and `.kicad_pcb`
+source hashes; it skips ambiguous inputs and does not inspect copper.
 
 ### Placed schematic symbol has no embedded definition
 

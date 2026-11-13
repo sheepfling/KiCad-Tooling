@@ -14316,6 +14316,64 @@
       ]
     },
     {
+      "rule_id": "pcb.drc_netclass_pattern_unmatched",
+      "title": "PCB netclass pattern matches no current board net",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_drc_netclass_patterns.py#unmatched_pcb_netclass_patterns",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact SHA-256-bound KiCad 10.0.8 project settings and PCB board source, including pattern index, expression, target class, and full source identities",
+      "predicate": "For PCB and PCB-only projects configured for exact KiCad 10.0.8, inspect one source-hashed net_settings.netclass_patterns array against the unique top-level named-net inventory in the source-hashed board. Review each uniquely formed nonempty pattern assigned to a declared non-Default class when neither case-sensitive KiCad-style wildcard matching nor full regular-expression matching finds a current named board net. Preserve both source paths and hashes, the pattern index, expression, and class name. Skip absent, duplicate, malformed, or incomplete settings, class inventories, pattern entries, and board net inventories; skip Default and unresolved class names.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.8 only; pinned native DRC confirms a matching literal, wildcard, and regex pattern applies Narrow clearance, while unmatched literal GHOST and case-mismatched n1 silently fall back to Default. Other patches remain unmeasured."
+      ],
+      "limitations": [
+        "This is a REVIEW heuristic: patterns reserved for future or variant-specific nets can be intentional and must be suppressed or documented by project policy. A finding does not establish that the class choice is wrong or that the board has an electrical defect.",
+        "Native behavior was measured only for the tooling-owned two-track board, N1/N2 nets, Default/Narrow classes, literal N1, wildcard N*, regex N[0-9]+, unmatched GHOST, case-mismatched n1, and the digest-pinned KiCad 10.0.8 image. It does not inspect copper continuity or run native DRC on adopter projects.",
+        "Only unique, well-formed project settings and board net inventories, declared non-Default target classes, PCB/PCB-only projects, and KiCad 10.0.8 are in scope. Malformed or ambiguous inputs are skipped. Project policy may select review, block, off, or an exact-fingerprint ignore."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_drc_netclass_pattern_unmatched.test_unmatched_pattern_fixture_has_reviewed_source_hash",
+        "tests.test_pcb_drc_netclass_pattern_unmatched.test_case_mismatch_fixture_has_reviewed_source_hash",
+        "tests.test_pcb_drc_netclass_pattern_unmatched.test_unmatched_pattern_candidate_binds_both_current_sources",
+        "tests.test_design_lint_mcp_parity_pcb_drc_netclass_pattern_unmatched.test_netclass_pattern_review_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_netclass_pattern_unmatched_native.test_unmatched_patterns_fall_back_while_literal_wildcard_and_regex_match"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_drc_netclass_pattern_unmatched.test_matching_literal_wildcard_and_regex_patterns_are_controls",
+        "tests.test_pcb_drc_netclass_pattern_unmatched.test_default_and_undeclared_class_patterns_are_outside_this_rule",
+        "tests.test_design_lint_mcp_parity_pcb_drc_netclass_pattern_unmatched.test_netclass_pattern_review_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_netclass_pattern_unmatched_native.test_unmatched_patterns_fall_back_while_literal_wildcard_and_regex_match"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_drc_netclass_pattern_unmatched.test_pattern_matching_is_case_sensitive_and_retains_source_index",
+        "tests.test_pcb_drc_netclass_pattern_unmatched.test_ambiguous_settings_or_board_inventory_stays_quiet",
+        "tests.test_pcb_drc_netclass_pattern_unmatched.test_unmeasured_versions_and_non_pcb_projects_are_out_of_scope",
+        "tests.test_pcb_drc_netclass_pattern_unmatched.test_missing_board_hash_does_not_create_finding",
+        "tests.test_pcb_drc_netclass_pattern_unmatched.test_stale_board_hash_is_rejected"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_netclass_patterns.py#unmatched_pcb_netclass_patterns",
+        "kicad_tooling/hwrepo/pcb_drc_netclass_patterns.py#_configured_netclass_patterns",
+        "kicad_tooling/hwrepo/pcb_drc_netclass_patterns.py#_pcb_board_net_names",
+        "kicad_tooling/hwrepo/pcb_drc_netclass_pattern_review.py#source_bound_pcb_netclass_pattern_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_netclass_pattern_review.py#project_pcb_unmatched_netclass_pattern_evidence",
+        "kicad_tooling/hwrepo/pcb_drc_netclass_settings_review.py#source_bound_pcb_netclass_settings_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#read_source_bound_pcb_project_settings",
+        "kicad_tooling/hwrepo/pcb_board_source_binding.py#read_source_bound_pcb_board",
+        "kicad_tooling/hwrepo/pcb_drc_project_settings_evidence.py#verify_source_bound_pcb_project_settings_unchanged",
+        "kicad_tooling/hwrepo/pcb_board_source_binding.py#verify_source_bound_pcb_board_unchanged",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request",
+        "kicad_tooling/hwrepo/design_lint_candidate_inputs.py#DesignLintCandidateInputs",
+        "kicad_tooling/hwrepo/design_lint_evaluation_preparation.py#prepare_evaluation"
+      ]
+    },
+    {
       "rule_id": "pcb.duplicate_object_uuid",
       "title": "PCB object UUID repeats within one board source",
       "theme": "pcb",

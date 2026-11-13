@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 365 rules are implemented with synthetic regression coverage.
+The following 366 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 365 active rules.
+The catalog currently contains 366 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -748,6 +748,7 @@ skipped under prerelease policy.
 - `pcb.drc_malformed_netclass_assignment`
 - `pcb.drc_malformed_netclass_inventory`
 - `pcb.drc_malformed_netclass_numeric_constraints`
+- `pcb.drc_netclass_pattern_unmatched`
 - `pcb.duplicate_object_uuid`
 - `pcb.footprint_path_trailing_separator`
 - `pcb.drc_duplicate_severity_key`
@@ -4425,7 +4426,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 365 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 366 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -26126,6 +26127,54 @@ acceptance threads while new lint features proceed:
   wheel/sdist checks, and installed-wheel rehearsals against the external and
   adapted template checkouts all passed. Corrected tagged hosted acceptance
   passed in GitHub Actions run `43422145172` for tag `v0.5.3rc737`.
+
+#### LINT-447 — Review PCB netclass patterns with no current net match
+
+- **Status:** Implemented as the default-REVIEW rule
+  `pcb.drc_netclass_pattern_unmatched` on the active feature branch.
+- **Priority:** P2 saved-constraint coverage. An explicit netclass pattern can
+  silently match no current board net, leaving intended constraints unapplied.
+- **Cohort basis:** The public MIT
+  [`kicad-board-lint` candidate](https://github.com/94xhn/kicad-board-lint/tree/3296d711b9d9b0d6c724cb3b4e404202ca0a13c4)
+  contains a related orphan-netclass check. Its `.kicad_pro` `classes[*].nets`
+  interpretation did not affect pinned KiCad 10.0.8 DRC in the tooling-owned
+  probe, so that predicate was not adopted. The implemented check targets the
+  active `net_settings.netclass_patterns` setting instead.
+- **Predicate:** For PCB and PCB-only projects configured for exact KiCad
+  10.0.8, compare each uniquely formed, nonempty pattern assigned to a declared
+  non-Default class against the unique named-net inventory in the current
+  source-hashed board. Review patterns with no match under the measured
+  wildcard and regular-expression syntax. Preserve both source paths and
+  digests, source index, pattern, and class. Skip malformed or ambiguous
+  inventories and unsupported versions.
+- **Native result:** The digest-pinned KiCad 10.0.8 Docker probe confirms
+  literal `N1`, wildcard `N*`, and regex `N[0-9]+` patterns apply the configured
+  Narrow clearance to the synthetic board; unmatched `GHOST` and case-mismatched
+  `n1` do not and silently fall back to Default. The committed native fault/control test
+  repeats each case and checks identical report types across two runs.
+- **Boundary:** A future-variant pattern can intentionally have no match on
+  this board, so this remains a REVIEW prompt. It does not infer desired class
+  coverage, inspect copper, or establish an electrical defect. It requires
+  exact project and board hashes and is measured only for KiCad 10.0.8.
+- **Fixtures:** Source tests exercise exact board/settings binding, stale and
+  missing board evidence, case sensitivity, malformed/ambiguous input, and
+  out-of-scope projects. CLI/MCP parity covers fault and literal/wildcard/regex
+  controls. Fixtures are synthetic and tooling-owned.
+- **Selection:** Run
+  `tests/test_pcb_drc_netclass_pattern_unmatched.py` and
+  `tests/test_design_lint_mcp_parity_pcb_drc_netclass_pattern_unmatched.py`
+  with `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.drc_netclass_pattern_unmatched")`. Run
+  `tests/test_pcb_drc_netclass_pattern_unmatched_native.py` with Docker,
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, `native_kicad`, and the same rule selector.
+- **Local scoped acceptance:** `scripts/ci.py` passed 440 tests with 9,137
+  deselected, including two source fault cases, wildcard/literal/regex controls,
+  CLI/MCP parity, exact KiCad 10.0.8 Docker fixtures, catalog and architecture
+  integrity, Linux/Windows Pyright, wheel/sdist, installed-wheel checks, and the
+  public external/adapted-template verification and playtest. Receipt:
+  `build/ci/run-2bdw98vn`.
+- **Hosted acceptance:** Pending the annotated rule-gate tag
+  `v0.5.3rc738`.
 
 ## Completion and release gate
 

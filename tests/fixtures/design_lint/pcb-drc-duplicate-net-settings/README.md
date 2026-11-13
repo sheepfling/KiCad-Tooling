@@ -286,6 +286,16 @@ limited to clearance and this synthetic board.
 | `control-netclass-clearance-default-assignment.kicad_pro` | `0.2`                  | `2f2ca16e74fa331f446195d8345fc37cd01786118ced157b6b05d7e4e63677de` |
 | `control-netclass-clearance-property-omitted.kicad_pro`   | omitted                | `c578f1a087127e7765a517b64e19bf6e5da2ee3e233a3b4f5687f749a1188b46` |
 
+The unmatched-pattern rule uses these source-hashed project settings:
+
+| Fixture                         | Pattern assigned to `Narrow` | SHA-256                                                            |
+| ------------------------------- | ---------------------------- | ------------------------------------------------------------------ |
+| `fault-unmatched.kicad_pro`     | `GHOST`                      | `35abfae4d4c3d4ceb286eee4cd2458a50a19737c4874739875650973cac27ede` |
+| `fault-case-mismatch.kicad_pro` | `n1`                         | `ce1892fa119f1dfb4023a7cc327904c56e265be99d75540bbf9edf6615424e14` |
+| `control-literal.kicad_pro`     | `N1`                         | `c2b92f4aa1aaa5bb98dfbc54d4190b87d8147518db304e2b360d609882d8d4f3` |
+| `control-wildcard.kicad_pro`    | `N*`                         | `321b8fcdc1af338bae910107a9885e2a98702e437f8bd6610eb9e0b644751df3` |
+| `control-regex.kicad_pro`       | `N[0-9]+`                    | `7908026a2cb32e45fa7bba59a3c7aede0b09cf9c04b3a3b75f3c470ea4ec6160` |
+
 The DRC regression runs every fault and control twice and requires matching
 violation types. The numeric Narrow control reports a clearance violation;
 malformed values, explicit Default assignment, and the omitted-property case
@@ -307,4 +317,27 @@ python -I -m pytest -q \
 KICAD_RUN_NATIVE_PCB_FIXTURES=1 python -I -m pytest -q \
   tests/test_pcb_drc_malformed_netclass_numeric_constraints_native.py \
   -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.drc_malformed_netclass_numeric_constraints")'
+```
+
+## Netclass patterns with no current match
+
+`fault-unmatched.kicad_pro` assigns the valid `GHOST` pattern to the declared
+`Narrow` class while the board contains only `N1` and `N2`. The control files
+use a matching literal (`N1`), wildcard (`N*`), and regular expression
+(`N[0-9]+`). KiCad 10.0.8 applies the Narrow clearance for each matching form;
+the unmatched literal and case-mismatched `n1` silently fall back to Default.
+The design-lint rule therefore emits a source-bound REVIEW prompt for patterns
+with no current board-net match. Reserved patterns for future variants remain
+possible and can be suppressed by project policy.
+
+Run the focused source, CLI/MCP, and native regressions with:
+
+```sh
+python -I -m pytest -q \
+  tests/test_pcb_drc_netclass_pattern_unmatched.py \
+  tests/test_design_lint_mcp_parity_pcb_drc_netclass_pattern_unmatched.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.drc_netclass_pattern_unmatched")'
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 python -I -m pytest -q \
+  tests/test_pcb_drc_netclass_pattern_unmatched_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.drc_netclass_pattern_unmatched")'
 ```
