@@ -26459,9 +26459,11 @@ acceptance threads while new lint features proceed:
   copper, or establish continuity. It cannot find disconnected pins unless
   there is both a native rule and shared source-netlist membership.
 - **Owner:**
-  `kicad_tooling/hwrepo/pcb_signal_path_unmapped_native.py#unmapped_signal_path_from_to_length_rule_candidates`
+  `kicad_tooling/hwrepo/pcb_signal_path_unmapped_native.py`
+  (`unmapped_signal_path_from_to_length_rule_candidates`)
   using
-  `kicad_tooling/hwrepo/pcb_drc_conditions.py#native_exact_from_to_condition`.
+  `kicad_tooling/hwrepo/pcb_drc_conditions.py`
+  (`native_exact_from_to_condition`).
 - **Regression scope:** Focused source-scan faults and controls, CLI/MCP
   semantic parity, architecture and selector ownership, and native rule
   diagnostics in digest-pinned KiCad 10.0.0 and 10.0.5 Docker fixtures.
