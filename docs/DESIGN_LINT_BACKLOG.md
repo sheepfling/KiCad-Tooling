@@ -26280,7 +26280,9 @@ acceptance threads while new lint features proceed:
   CLI/MCP fixture with source-bound synthetic DRC receipts.
 - **Hosted acceptance:** Tag `v0.5.3rc749` exposed a missing source-bound
   synthetic DRC receipt in the CLI/MCP parity fixture. The fixture now supplies
-  that receipt; retest is pending on annotated tag `v0.5.3rc750`.
+  that receipt. Annotated tag `v0.5.3rc750` passed hosted run `43485932344`:
+  441 passed, 9,207 deselected, with the focused lint, type, package, external
+  project, and playtest stages all passing.
 
 #### LINT-450 — Review native track-angle rules omitted from geometry scope
 
