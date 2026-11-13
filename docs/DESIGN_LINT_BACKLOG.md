@@ -823,14 +823,15 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc752):** LINT-452 reviews
-  exact native length-rule nets omitted from signal-path coverage. Hosted
-  acceptance passed in GitHub Actions run `43494579159`: 434 tests passed and
-  9,223 were deselected, including the digest-pinned KiCad 10.0.0/10.0.5 native
-  fixture. Ruff, Alphus boundaries, Rumdl, mdrepo, Pyright, Windows type checks,
-  wheel and sdist builds, installed-origin and version checks, external and
-  adapted project rehearsals, and playtest passed. Package and preview jobs
-  were skipped under prerelease policy.
+- **Latest published lint-gate checkpoint (v0.5.3rc754):** LINT-453 reviews
+  exact native edge-clearance rule nets omitted from signal-path coverage.
+  Hosted acceptance passed in GitHub Actions run `43500046265`: 435 tests
+  passed and 9,231 were deselected, including the digest-pinned KiCad
+  10.0.0/10.0.5 native fault/control fixture. Ruff formatting and lint,
+  Alphus boundaries, Rumdl, mdrepo, Pyright, Windows type checks, wheel and
+  sdist builds, installed-origin and version checks, external and adapted
+  project rehearsals, and playtest passed. Package and preview jobs were
+  skipped under prerelease policy.
 - **Latest published lint-gate checkpoint (v0.5.3rc734):** LINT-444 reviews an
   extra unassigned copper pad in a mixed-net footprint. Hosted acceptance passed
   in GitHub Actions run `43409299897`: 433 tests passed, 9,105 were deselected,
@@ -26435,7 +26436,14 @@ acceptance threads while new lint features proceed:
   `tests/test_design_lint_architecture_pcb_signal_path_unmapped_edge_clearance.py`
   with `design_lint and pcb_lint and
   design_lint_rule(rule_id="pcb.signal_path_unmapped_edge_clearance_rule")`.
-- **Hosted acceptance:** Pending.
+- **Hosted acceptance:** Passed run `43500046265` for annotated rule-gate tag
+  `v0.5.3rc754`: 435 tests passed and 9,231 were deselected. The run included
+  repeated native fault/control execution in digest-pinned KiCad 10.0.0 and
+  10.0.5 containers; Ruff, Alphus boundary checks, Rumdl, mdrepo, Linux and
+  Windows Pyright, wheel and sdist builds, installed-origin/version checks,
+  external/adapted project rehearsal, and playtest passed. Package and preview
+  jobs were skipped under prerelease policy. The earlier `v0.5.3rc753` stopped
+  at the formatter gate; `v0.5.3rc754` includes that correction.
 
 ## Completion and release gate
 
