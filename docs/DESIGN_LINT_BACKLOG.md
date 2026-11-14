@@ -27439,7 +27439,7 @@ acceptance threads while new lint features proceed:
 #### LINT-476 — Review connector peer electrical-type disagreement on a shared assignment
 
 - **Rule:** `connector.footprint_peer_pin_electrical_type_disagreement`
-- **Status:** Scoped local acceptance passed; hosted tagged acceptance is pending.
+- **Status:** Scoped local and hosted acceptance passed for `v0.5.3rc788`.
 - **Gap:** Connector peer metadata checks already surface electrical-type
   differences when paired with split assignments. They stay quiet when the
   peer pin assignments are common, even if the native symbol pin types differ.
@@ -27474,8 +27474,9 @@ acceptance threads while new lint features proceed:
   unrelated tests deselected, including digest-pinned Docker exports on KiCad
   10.0.0 and 10.0.5. Ruff, Rumdl, mdrepo, Linux and Windows Pyright,
   wheel/sdist builds, installed-wheel origin/version checks, and separate plus
-  adapted public-template rehearsals passed. Hosted tagged acceptance is
-  pending.
+- **Hosted acceptance:** Tagged prerelease run `43621744472` passed the scoped
+  lint gate and installed-wheel rehearsal against the separate public
+  template. Package and preview jobs were skipped under prerelease policy.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
