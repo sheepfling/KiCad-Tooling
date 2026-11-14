@@ -929,7 +929,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 383 active rules.
+The catalog currently contains 384 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -1510,6 +1510,63 @@ KICAD_RUN_NATIVE_TRACK_ANGLE_GEOMETRY_FIXTURES=1 .venv/bin/python -I -m pytest \
 
 See [LINT-449](DESIGN_LINT_BACKLOG.md) and the
 [cohort source screen](DESIGN_LINT_COHORT_TRIALS.md).
+
+### Unmapped acute track-corner review
+
+`pcb.unmapped_acute_track_corner_review` is an opt-in REVIEW cue for a measured
+interior corner below 89.000 degrees when its net is not present in the
+project's `pcb_track_angle_map`. If no map exists, each eligible corner is
+unmapped. This prompt is silent for a net present in the map; mapped geometry
+is checked only when `pcb.track_angle_geometry_review` is enabled separately.
+
+Enable the cue with a project rule override:
+
+```json
+{
+  "design_lint": {
+    "rules": [
+      {
+        "rule_id": "pcb.unmapped_acute_track_corner_review",
+        "mode": "review",
+        "reason": "Review sharp route corners that lack authored angle scope"
+      }
+    ]
+  }
+}
+```
+
+The measurement uses source-bound native KiCad endpoint contacts and integer
+nanometer coordinates. It only considers reciprocal contacts between two
+straight segments on the same net and layer. Arcs, pads, vias, branches,
+ambiguous contacts, mid-span connections, and zone-only copper are skipped.
+The 89-degree threshold is a review prompt adapted from cohort documentation,
+not a universal design limit. The cue checks map coverage; it does not inspect
+saved native DRC rules or determine whether another rule governs that net. The
+synthetic no-angle-rule fixture shows a case where native DRC emits no
+`track_angle` diagnostic while the cue asks for review. This does not prove an
+electrical defect or approve a quiet result. The rule defaults to `off` and
+supports the usual project `review`, `block`, `off`, and exact-fingerprint
+ignore controls.
+
+Run its synthetic, CLI/MCP, and architecture regressions:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_pcb_track_angle_unmapped_acute.py \
+  tests/test_pcb_track_angle_geometry_mcp_parity.py \
+  tests/test_design_lint_architecture_pcb_track_angle_unmapped_acute.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.unmapped_acute_track_corner_review")'
+```
+
+The native source snapshot and default-DRC comparison use only the synthetic
+acute and 135-degree control boards, with digest-pinned KiCad 10.0.0 and
+10.0.5:
+
+```sh
+KICAD_RUN_NATIVE_TRACK_ANGLE_GEOMETRY_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_track_angle_geometry_native_fixture_lane.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.unmapped_acute_track_corner_review")'
+```
 
 ### Distinct mapped connector supply domains sharing a net
 

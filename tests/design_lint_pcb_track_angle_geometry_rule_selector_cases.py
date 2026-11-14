@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from tests.design_lint_pcb_track_angle_unmapped_acute_rule_selector_cases import (
+    PCB_TRACK_ANGLE_UNMAPPED_ACUTE_RULE_NODE_CASES,
+)
+
 PCB_TRACK_ANGLE_GEOMETRY_RULE_NODE_CASES = (
     (
         "pcb.track_angle_geometry_review",
@@ -55,4 +59,5 @@ PCB_TRACK_ANGLE_GEOMETRY_RULE_NODE_CASES = (
         "pcb.track_angle_geometry_review",
         "tests/test_pcb_track_angle_geometry_native_fixture_lane.py::test_native_snapshot_angle_matches_synthetic_fault_and_control",
     ),
+    *PCB_TRACK_ANGLE_UNMAPPED_ACUTE_RULE_NODE_CASES,
 )

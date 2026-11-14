@@ -240,7 +240,12 @@ class ProjectConfig(StrictModel):
                 or self.design_lint.pcb_thermal_via_map is not None
                 or self.design_lint.pcb_fiducial_map is not None
                 or any(
-                    item.rule_id == "pcb.track_angle_geometry_review" and item.mode != "off"
+                    item.rule_id
+                    in {
+                        "pcb.track_angle_geometry_review",
+                        "pcb.unmapped_acute_track_corner_review",
+                    }
+                    and item.mode != "off"
                     for item in self.design_lint.rules
                 )
             )
@@ -346,6 +351,10 @@ class ProjectTestContract(StrictModel):
                 or self.design_lint.pcb_signal_path_rule_map is not None
                 or self.design_lint.pcb_mechanical_edge_clearance_map is not None
                 or self.design_lint.pcb_track_angle_map is not None
+                or any(
+                    item.rule_id == "pcb.unmapped_acute_track_corner_review" and item.mode != "off"
+                    for item in self.design_lint.rules
+                )
                 or self.design_lint.pcb_keepout_map is not None
                 or self.design_lint.pcb_rf_module_antenna_map is not None
                 or self.design_lint.pcb_touch_pad_clearance_map is not None

@@ -26,6 +26,7 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_pcb_track_angle_rule_coverage.py": frozenset({"pcb_lint"}),
         "test_pcb_track_angle_native_fixture_lane.py": frozenset({"pcb_lint"}),
         "test_pcb_track_angle_geometry.py": frozenset({"pcb_lint"}),
+        "test_pcb_track_angle_unmapped_acute.py": frozenset({"pcb_lint"}),
         "test_pcb_track_angle_geometry_native_fixture_lane.py": frozenset({"pcb_lint"}),
         "test_design_lint_mcp_parity_pcb_track_angle.py": frozenset({"pcb_lint", "parity_lint"}),
         "test_pcb_dru_duplicate_rule_names_native.py": frozenset({"pcb_lint", "evidence_lint"}),

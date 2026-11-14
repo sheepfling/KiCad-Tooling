@@ -15464,6 +15464,55 @@
       ]
     },
     {
+      "rule_id": "pcb.unmapped_acute_track_corner_review",
+      "title": "Review acute routed corners outside authored track-angle scope",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_track_angle_unmapped_geometry.py#unmapped_acute_track_corner_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Source-bound native KiCad PCB schema 8+ reciprocal track endpoint contacts and integer-nanometer segment geometry, compared with the project-authored pcb_track_angle_map",
+      "predicate": "For each unambiguous reciprocal same-net, same-layer endpoint contact between two straight segments, measure the interior corner angle from native integer-nanometer coordinates and round to the nearest 0.001 degree. Emit a REVIEW prompt when the measured value is below 89.000 degrees and the net is absent from pcb_track_angle_map; when no map exists, all eligible nets are unmapped. A net present in the authored map does not receive this coverage prompt; its geometry is checked only when pcb.track_angle_geometry_review is enabled separately. The rule is opt-in and emits an incomplete-evidence candidate when native capture fails or uses an unvalidated KiCad version.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned pcbnew snapshot fixtures only; other versions remain unconfirmed."
+      ],
+      "limitations": [
+        "The 89.000-degree threshold is a conservative review cue adapted from cohort documentation, not a universal electrical or manufacturing limit. A finding does not establish a defect; a quiet result does not approve all routing.",
+        "Only reciprocal endpoint-to-endpoint contacts between two straight segments on the same net and layer are measured. Arcs, pad and via vertices, branched or ambiguous junctions, contacts at a segment mid-span, and zone-only copper are skipped.",
+        "The authored map suppresses discovery for nets it already covers, even when mapped geometry review is disabled. The checker does not infer whether an omitted net needs an angle requirement.",
+        "The predicate checks only authored map coverage; it does not inspect native DRC rules or determine whether another rule already governs the net. The native comparison demonstrates one synthetic no-angle-rule case, not unique detection across other rule configurations."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_track_angle_unmapped_acute.test_unmapped_acute_corner_is_source_bound_and_names_track_geometry",
+        "tests.test_pcb_track_angle_unmapped_acute.test_threshold_is_exclusive_and_uses_millidegree_measurement",
+        "tests.test_pcb_track_angle_geometry_mcp_parity.test_unmapped_acute_corner_finding_matches_cli_and_mcp",
+        "tests.test_pcb_track_angle_geometry_native_fixture_lane.test_native_acute_corner_is_found_without_explicit_angle_rule"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_track_angle_unmapped_acute.test_threshold_is_exclusive_and_uses_millidegree_measurement",
+        "tests.test_pcb_track_angle_unmapped_acute.test_authored_angle_map_suppresses_unmapped_scope_prompt",
+        "tests.test_pcb_track_angle_unmapped_acute.test_arc_and_nonreciprocal_contacts_are_not_measured",
+        "tests.test_pcb_track_angle_unmapped_acute.test_review_is_opt_in_and_missing_or_unsupported_evidence_is_incomplete",
+        "tests.test_pcb_track_angle_geometry_native_fixture_lane.test_native_acute_corner_is_found_without_explicit_angle_rule",
+        "tests.test_pcb_track_angle_unmapped_acute.test_acute_corner_override_requires_a_pcb_project",
+        "tests.test_pcb_track_angle_unmapped_acute.test_rule_override_can_be_promoted_or_disabled_per_project"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_track_angle_unmapped_acute.test_metamorphic_translation_and_snapshot_order_preserve_angle"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_TRACK_ANGLE_GEOMETRY_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_track_angle_unmapped_geometry.py#unmapped_acute_track_corner_candidates",
+        "kicad_tooling/hwrepo/pcb_track_angle_geometry.py#track_angle_corner_measurements",
+        "kicad_tooling/hwrepo/design_lint_pcb_track_angle_geometry_scan.py#track_angle_geometry_candidates_for_scan",
+        "kicad_tooling/hwrepo/design_lint_pcb_geometry_scan.py#scan_pcb_geometry",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_summary"
+      ]
+    },
+    {
       "rule_id": "pcb.touch_pad_reference_clearance",
       "title": "Configured pad-to-reference-copper clearance is below its project minimum",
       "status": "active",

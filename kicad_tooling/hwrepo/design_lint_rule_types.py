@@ -299,6 +299,7 @@ DesignLintRuleId = Literal[
     "pcb.mechanical_edge_clearance_rule_coverage",
     "pcb.track_angle_rule_coverage",
     "pcb.track_angle_geometry_review",
+    "pcb.unmapped_acute_track_corner_review",
     "pcb.track_angle_unmapped_native_rule",
     "pcb.signal_path_rule_coverage",
     "pcb.signal_path_unmapped_native_rule",

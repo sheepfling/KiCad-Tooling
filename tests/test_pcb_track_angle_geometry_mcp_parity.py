@@ -44,6 +44,7 @@ from tests.pcb_drc_parity_support import install_source_bound_drc_receipt
 from tests.synthetic_design_lint_project import synthetic_design_lint_project
 
 RULE_ID = "pcb.track_angle_geometry_review"
+UNMAPPED_ACUTE_RULE_ID = "pcb.unmapped_acute_track_corner_review"
 pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.pcb_lint,
@@ -181,3 +182,111 @@ def test_mapped_track_angle_finding_matches_cli_and_mcp(
     (finding,) = findings
     assert finding.subject == "CLOCK_OUT F.Cu corner at 1000000,0 nm"
     assert finding.message == _candidate().message
+
+
+@pytest.mark.design_lint_rule(rule_id=UNMAPPED_ACUTE_RULE_ID)
+def test_unmapped_acute_corner_finding_matches_cli_and_mcp(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    policy = DesignLintPolicy(
+        rules=(
+            DesignLintRuleOverride(
+                rule_id=UNMAPPED_ACUTE_RULE_ID,
+                mode="review",
+                reason="Exercise opt-in acute-corner review through both public surfaces",
+            ),
+        )
+    )
+    root, native = synthetic_design_lint_project(tmp_path, policy)
+    install_source_bound_drc_receipt(root, native)
+    candidate = Candidate(
+        rule_id=UNMAPPED_ACUTE_RULE_ID,
+        subject="DATA F.Cu corner at 1000000,0 nm",
+        message=(
+            "Measured 45.000 degree acute corner is on a net outside the project-authored "
+            "track-angle map; review whether this net needs an explicit angle requirement."
+        ),
+        evidence={
+            "net": ("DATA",),
+            "measured_angle_degrees": ("45.000",),
+            "track_uuids": (
+                "00000000-0000-0000-0000-000000000001",
+                "00000000-0000-0000-0000-000000000002",
+            ),
+            "board_sha256": ("d" * 64,),
+            "snapshot_sha256": ("e" * 64,),
+            "probe_sha256": ("f" * 64,),
+            "angle_map_sha256": ("<absent>",),
+        },
+    )
+
+    def synthetic_geometry_scan(*_args, **_kwargs):
+        return (
+            PcbDecouplingCoverageReport(),
+            PcbProtectionPathCoverageReport(),
+            PcbTrackWidthCoverageReport(),
+            PcbReferencePlaneCoverageReport(),
+            PcbSwitchingLoopCoverageReport(),
+            PcbSignalPathRuleCoverageReport(),
+            PcbKeepoutCoverageReport(),
+            PcbRfModuleAntennaCoverageReport(),
+            PcbTouchPadClearanceCoverageReport(),
+            PcbComponentInventoryCoverageReport(),
+            PcbThermalViaCoverageReport(),
+            (candidate,),
+        )
+
+    monkeypatch.setattr(
+        design_lint_project_inspection,
+        "scan_pcb_geometry",
+        synthetic_geometry_scan,
+    )
+    monkeypatch.setattr(
+        design_lint_project_inspection,
+        "collect_pcb_dru_candidates",
+        lambda *_args, **_kwargs: (),
+    )
+    monkeypatch.setattr(
+        design_lint_project_inspection,
+        "collect_pcb_native_drc_candidates",
+        lambda *_args, **_kwargs: (),
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "kicad-team-design-lint",
+            "--root",
+            str(root),
+            "--project",
+            "controller",
+            "--native-summary",
+            native.relative_to(root).as_posix(),
+            "--format",
+            "json",
+        ],
+    )
+    assert design_lint_cli.main() == 1
+    cli_report = parse_model_text(capsys.readouterr().out, DesignLintReport)
+
+    async def inspect_mcp() -> DesignLintReport:
+        async with Client(create_server(root), mode="legacy") as client:
+            result = await client.call_tool(
+                "inspect_design_lint",
+                {
+                    "project_id": "controller",
+                    "native_summary": native.relative_to(root).as_posix(),
+                },
+            )
+        assert not result.is_error, result.content
+        assert result.structured_content is not None
+        return DesignLintReport.model_validate_json(json.dumps(result.structured_content))
+
+    mcp_report = asyncio.run(inspect_mcp())
+    assert semantic_design_lint_report(cli_report) == semantic_design_lint_report(mcp_report)
+    findings = tuple(item for item in mcp_report.findings if item.rule_id == UNMAPPED_ACUTE_RULE_ID)
+    assert len(findings) == 1
+    (finding,) = findings
+    assert finding.mode == "review" and finding.disposition == "OPEN"
+    assert finding.subject == candidate.subject
+    assert finding.evidence["measured_angle_degrees"] == ("45.000",)

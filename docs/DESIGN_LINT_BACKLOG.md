@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 383 rules are implemented with synthetic regression coverage.
+The following 384 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 383 active rules.
+The catalog currently contains 384 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -773,6 +773,7 @@ skipped under prerelease policy.
 - `pcb.track_angle_rule_coverage`
 - `pcb.track_angle_geometry_review`
 - `pcb.track_angle_unmapped_native_rule`
+- `pcb.unmapped_acute_track_corner_review`
 - `pcb.rf_module_antenna_keepout_coverage`
 - `pcb.keepout_intent_coverage`
 - `pcb.schematic_component_inventory`
@@ -4451,7 +4452,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 383 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 384 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -27053,6 +27054,59 @@ acceptance threads while new lint features proceed:
   `design_lint and pcb_lint and power_lint` plus the rule selector. The native
   suite also requires Docker and
   `KICAD_RUN_NATIVE_SWITCHING_REGULATOR_LOOP_MAP_FIXTURES=1`.
+
+#### LINT-469 — Review acute track corners outside authored angle scope
+
+- **Status:** Implemented as opt-in default-OFF rule
+  `pcb.unmapped_acute_track_corner_review`.
+- **Priority:** P2 heuristic coverage prompt. Native DRC only checks the
+  per-net `track_angle` limits a project has authored. A sharp corner on an
+  unmapped net can therefore have no angle requirement to evaluate.
+- **Cohort basis:** The public MIT `kicad-corner-lint` documentation classifies
+  corners below 89 degrees as acute while treating standard 135-degree
+  routing as clean. The first-party cue uses the concern and threshold only;
+  it imports no upstream implementation. See the
+  [cohort source screen](DESIGN_LINT_COHORT_TRIALS.md#source-screen-kicad-corner-lint-track-angle-heuristic).
+- **Predicate:** Measure the interior angle of reciprocal, same-net,
+  same-layer endpoint contacts between two straight native PCB segments using
+  integer nanometer geometry, rounded to 0.001 degree. Prompt below 89.000
+  degrees when the net is absent from `pcb_track_angle_map`, or when no map is
+  authored. A net present in the map does not receive this prompt; the separate
+  mapped geometry rule checks it only when that rule is enabled.
+- **Configuration:** The rule defaults to `off`; project owners can select
+  `review`, `block`, or `off` and use the standard exact-fingerprint ignore
+  mechanism. Enabling it triggers source-bound native PCB geometry capture
+  even without a track-angle map.
+- **Controls and limits:** The synthetic controls cover the 89.000-degree
+  exclusive boundary, 90-degree and 135-degree interior angles, mapped nets,
+  arcs, nonreciprocal contacts, failed evidence, unsupported versions, and
+  rule-mode opt-in. Branches, pad/via contacts, mid-span intersections, and
+  zone-only copper remain out of scope. This is a prompt to decide whether a
+  net needs an authored limit; it does not infer design intent or declare a
+  universal routing defect.
+- **Incremental evidence:** The acute fault and 135-degree control were
+  captured on digest-pinned KiCad 10.0.0 and 10.0.5. With an empty native angle
+  rules file, repeated native DRC reports no `track_angle` violation for
+  either board while the local heuristic reviews only the acute fault. The
+  predicate checks authored map coverage and does not determine whether a
+  different native rule already governs a net. This demonstrates a specific
+  configuration gap on synthetic inputs; field precision and reviewer value
+  remain unmeasured.
+- **Selection:** Run
+  `tests/test_pcb_track_angle_unmapped_acute.py`,
+  `tests/test_pcb_track_angle_geometry_mcp_parity.py`, and
+  `tests/test_design_lint_architecture_pcb_track_angle_unmapped_acute.py`
+  with `design_lint and pcb_lint` and the rule selector. Run
+  `tests/test_pcb_track_angle_geometry_native_fixture_lane.py` with Docker,
+  `KICAD_RUN_NATIVE_TRACK_ANGLE_GEOMETRY_FIXTURES=1`, `native_kicad`, and the
+  same selector.
+- **Local scoped acceptance:** `scripts/ci.py` passed at
+  `build/ci/run-ewbfe3ow`: 457 passed and 9,423 deselected, including the
+  digest-pinned native cases on KiCad 10.0.0 and 10.0.5. Ruff, Alphus module
+  and utility checks, Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist
+  builds, installed-origin/version checks, and external/adapted template
+  inventory, surface, verification, and playtest stages passed.
+- **Hosted acceptance:** Pending the annotated lint-gate tag.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 

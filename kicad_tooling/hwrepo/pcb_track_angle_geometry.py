@@ -17,7 +17,19 @@ from .project_models import ProjectConfig
 from .source_state_models import SourceHashInventory
 
 RULE_ID: DesignLintRuleId = "pcb.track_angle_geometry_review"
-_SUPPORTED_KICAD_VERSIONS = frozenset({"10.0.0", "10.0.5"})
+SUPPORTED_TRACK_ANGLE_KICAD_VERSIONS = frozenset({"10.0.0", "10.0.5"})
+
+
+@dataclass(frozen=True, slots=True)
+class PcbTrackAngleMeasurement:
+    """One measured, reciprocal, same-net and same-layer native track corner."""
+
+    net: str
+    first_track_uuid: str
+    second_track_uuid: str
+    layer: str
+    vertex_nm: tuple[int, int]
+    angle_millidegrees: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -122,26 +134,47 @@ def track_angle_geometry_violations(
     angle_map: PcbTrackAngleMap, snapshot: PcbConnectivitySnapshot
 ) -> tuple[PcbTrackAngleCorner, ...]:
     """Measure mapped corners only when native endpoint topology is reciprocal and simple."""
+    requirements = {item.net.casefold(): item for item in angle_map.requirements}
+    found: list[PcbTrackAngleCorner] = []
+    for measurement in track_angle_corner_measurements(snapshot):
+        requirement = requirements.get(measurement.net.casefold())
+        if requirement is None:
+            continue
+        issue = _bound_issue(requirement, measurement.angle_millidegrees)
+        if issue is not None:
+            found.append(
+                PcbTrackAngleCorner(
+                    requirement=requirement,
+                    first_track_uuid=measurement.first_track_uuid,
+                    second_track_uuid=measurement.second_track_uuid,
+                    layer=measurement.layer,
+                    vertex_nm=measurement.vertex_nm,
+                    angle_millidegrees=measurement.angle_millidegrees,
+                    bound_issue=issue,
+                )
+            )
+    return tuple(found)
+
+
+def track_angle_corner_measurements(
+    snapshot: PcbConnectivitySnapshot,
+) -> tuple[PcbTrackAngleMeasurement, ...]:
+    """Measure only reciprocal straight-segment endpoint corners with clear topology."""
     if int(snapshot.schema_version) < 8:
         raise ValueError("PCB track-angle geometry requires native endpoint-contact schema 8+")
-    requirements = {item.net.casefold(): item for item in angle_map.requirements}
     tracks_by_id = {item.uuid.casefold(): item for item in snapshot.tracks}
-    found: list[PcbTrackAngleCorner] = []
+    found: list[PcbTrackAngleMeasurement] = []
     seen: set[tuple[str, str, tuple[int, int]]] = set()
     for track in sorted(snapshot.tracks, key=lambda item: item.uuid.casefold()):
-        if track.net is None or track.net.casefold() not in requirements:
+        if track.net is None:
             continue
-        requirement = requirements[track.net.casefold()]
         for endpoint in _endpoints(track):
             neighbor_pair = _reciprocal_neighbor(track, endpoint, tracks_by_id)
             if neighbor_pair is None:
                 continue
             neighbor, neighbor_endpoint = neighbor_pair
-            corner_key = (
-                min(track.uuid.casefold(), neighbor.uuid.casefold()),
-                max(track.uuid.casefold(), neighbor.uuid.casefold()),
-                endpoint.point_nm,
-            )
+            first_uuid, second_uuid = sorted((track.uuid, neighbor.uuid), key=str.casefold)
+            corner_key = (first_uuid.casefold(), second_uuid.casefold(), endpoint.point_nm)
             if corner_key in seen:
                 continue
             seen.add(corner_key)
@@ -152,25 +185,21 @@ def track_angle_geometry_violations(
             )
             if angle is None:
                 continue
-            issue = _bound_issue(requirement, angle)
-            if issue is not None:
-                first_uuid, second_uuid = sorted((track.uuid, neighbor.uuid), key=str.casefold)
-                found.append(
-                    PcbTrackAngleCorner(
-                        requirement=requirement,
-                        first_track_uuid=first_uuid,
-                        second_track_uuid=second_uuid,
-                        layer=track.layer,
-                        vertex_nm=endpoint.point_nm,
-                        angle_millidegrees=angle,
-                        bound_issue=issue,
-                    )
+            found.append(
+                PcbTrackAngleMeasurement(
+                    net=track.net,
+                    first_track_uuid=first_uuid,
+                    second_track_uuid=second_uuid,
+                    layer=track.layer,
+                    vertex_nm=endpoint.point_nm,
+                    angle_millidegrees=angle,
                 )
+            )
     return tuple(
         sorted(
             found,
             key=lambda item: (
-                item.requirement.net.casefold(),
+                item.net.casefold(),
                 item.layer.casefold(),
                 item.vertex_nm,
                 item.first_track_uuid.casefold(),
@@ -232,7 +261,7 @@ def track_angle_geometry_candidates(
     netlist_sha256: str,
 ) -> tuple[Candidate, ...]:
     """Project exact geometry mismatches into source-bound design-lint findings."""
-    if evidence.snapshot.kicad_version not in _SUPPORTED_KICAD_VERSIONS:
+    if evidence.snapshot.kicad_version not in SUPPORTED_TRACK_ANGLE_KICAD_VERSIONS:
         return (
             _capture_unavailable_candidate(
                 board_path=evidence.board_path,

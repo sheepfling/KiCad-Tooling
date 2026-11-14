@@ -166,6 +166,18 @@ def missing_evidence_report(data: DesignLintMissingEvidenceInput) -> DesignLintR
                 "track-angle geometry review."
             ),
         )
+    acute_track_corner_mode = next(
+        (
+            item.mode
+            for item in policy.rules
+            if item.rule_id == "pcb.unmapped_acute_track_corner_review"
+        ),
+        "off",
+    )
+    if acute_track_corner_mode != "off":
+        missing_evidence_issues += (
+            "Source-bound native PCB geometry evidence is unavailable for enabled acute track-corner review.",
+        )
     return DesignLintReport(
         status="BLOCKED",
         project_id=data.project_id,

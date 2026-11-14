@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 
 from kicad_tooling.hwrepo.command_evidence_models import CommandEvidence
@@ -13,12 +14,15 @@ from kicad_tooling.hwrepo.pcb_track_angle_models import (
     PcbTrackAngleMap,
     PcbTrackAngleRequirement,
 )
+from kicad_tooling.hwrepo.pcb_track_angle_unmapped_geometry import (
+    unmapped_acute_track_corner_candidates,
+)
 
 _SHA = "a" * 64
 
 
 def track_angle_geometry_rule_ids() -> set[str]:
-    """Reach the active rule with a measured 135-degree synthetic corner."""
+    """Reach mapped and unmapped track-angle rules with synthetic corners."""
     first = PcbTrackObservation(
         uuid="00000000-0000-0000-0000-000000000001",
         net="CLOCK_OUT",
@@ -94,4 +98,17 @@ def track_angle_geometry_rule_ids() -> set[str]:
             ),
         ),
     )
-    return {item.rule_id for item in track_angle_geometry_candidates(angle_map, evidence, _SHA)}
+    mapped_ids = {
+        item.rule_id for item in track_angle_geometry_candidates(angle_map, evidence, _SHA)
+    }
+    acute_tracks = (
+        first,
+        second.model_copy(update={"end_nm": (0, 1_000_000)}),
+    )
+    acute_evidence = replace(
+        evidence, snapshot=snapshot.model_copy(update={"tracks": acute_tracks})
+    )
+    acute_ids = {
+        item.rule_id for item in unmapped_acute_track_corner_candidates(None, acute_evidence, _SHA)
+    }
+    return mapped_ids | acute_ids

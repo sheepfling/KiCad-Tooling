@@ -26,14 +26,19 @@ for dispositions and timing; leave unmeasured values unstated.
   same-net, same-layer endpoint contacts between two straight segments and
   reports exact track UUIDs, coordinates, and measured angles. Its synthetic
   fault/control snapshots were captured with digest-pinned KiCad 10.0.0 and
-  10.0.5 images. No upstream implementation code was imported.
-- **Disposition and gap:** The direct check is default-off and requires the
+  10.0.5 images. `pcb.unmapped_acute_track_corner_review` adds a separate,
+  default-off prompt for measured interior corners below 89.000 degrees when
+  the net has no authored angle-map entry. A synthetic acute fault and
+  135-degree control show that the cue can identify the unscoped geometry
+  when no native angle rule exists. No upstream implementation code was imported.
+- **Disposition and gap:** The direct mapped check is default-off and requires the
   same explicitly authored net and angle map. It skips arcs, pads, vias,
   branches, and ambiguous or mid-span contacts. It does not claim additional
   defect detection over native `track_angle` DRC when that rule is correctly
   configured; its incremental value is independent measurement and review
-  evidence. The broad cohort detector remains unadopted, missing-map discovery
-  remains open, and real-board precision and reviewer time are unmeasured.
+  evidence. The unmapped cue addresses the documented missing-map discovery
+  gap with the same topology limits. The broad cohort detector remains
+  unadopted, and real-board precision and reviewer time are unmeasured.
 - **References:** [cohort repository][corner-lint] and
   [KiCad 10 PCB Editor manual][kicad-10-pcb-manual]. See
   [LINT-448][lint448-track-angle] and the
@@ -2688,10 +2693,10 @@ Source: [kicad-happy release notes][happy-fiducial-release-notes].
   proprietary project, cohort board, or upstream source was stored.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 383 active rules. Each entry has a deterministic predicate, evidence
+contains 384 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
-Of the 383 active rules, 321 default to `review`, 61 to `off`, and
+Of the 384 active rules, 321 default to `review`, 62 to `off`, and
 `pcb.required_fitted_reference` to `block`. Off-by-default checks include
 schematic geometry, generic peer assignment, selected component topology
 reviews such as the BJT base-bias and base/collector same-net prompts, and
