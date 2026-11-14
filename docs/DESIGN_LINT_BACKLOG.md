@@ -27615,11 +27615,11 @@ acceptance threads while new lint features proceed:
   three-process hash-seed fault/control regression. A separate full inventory
   audit passed across all 341 serialized reports; the focused catalog,
   documentation, and fixture-reachability selection also passed 19 tests.
-- **Hosted acceptance:** The base feature tag `v0.5.3rc792` passed the scoped
-  GitHub Actions gate (run `43640218152`), including digest-pinned native KiCad
-  10.0.0 and 10.0.5 Docker fixtures and the installed-wheel rehearsal against
-  the separate public project template. Hosted acceptance for this hash-seed
-  coverage extension is pending the next scoped tag.
+- **Hosted acceptance:** Base feature tag `v0.5.3rc792` passed the scoped
+  GitHub Actions gate (run `43640218152`). Hash-seed extension tag
+  `v0.5.3rc793` passed run `43642908253` in 5m24s, including the scoped native
+  KiCad 10.0.0/10.0.5 fixtures and installed-wheel rehearsal against the
+  separate public project template.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
