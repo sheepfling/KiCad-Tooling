@@ -833,10 +833,15 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
+- **Latest published lint-gate checkpoint (v0.5.3rc771):** LINT-460 reviews
+  connector alias pin assignments without a reviewed comparison scope. Hosted
+  acceptance passed in workflow run 43563826701:
+  460 tests passed and 9,355 were deselected. Linux/Windows Pyright, the
+  installed-wheel external-project playtest, and release checks passed; package
+  and preview jobs were skipped under prerelease policy.
 - **Latest published lint-gate checkpoint (v0.5.3rc756):** LINT-454 reviews
   exact native `fromTo` length-rule pairs omitted from signal-path coverage.
-  Hosted acceptance passed in GitHub Actions run
-  [43504915100](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43504915100):
+  Hosted acceptance passed in workflow run 43504915100:
   436 tests passed and 9,239 were deselected, including digest-pinned KiCad
   10.0.0/10.0.5 native fault/control fixtures. Ruff formatting and lint,
   Alphus boundaries, Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist
@@ -26500,7 +26505,7 @@ acceptance threads while new lint features proceed:
   with `design_lint and pcb_lint and
   design_lint_rule(rule_id="pcb.signal_path_unmapped_from_to_length_rule")`.
 - **Hosted acceptance:** Passed run
-  [43504915100](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43504915100)
+  workflow run 43504915100
   for annotated rule-gate tag `v0.5.3rc756`: 436 tests passed, 9,239 were
   deselected, and native fixtures passed in both pinned KiCad versions. Ruff,
   Alphus, Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist builds,
@@ -26536,7 +26541,7 @@ acceptance threads while new lint features proceed:
   images; this corroborates the native pair-rule syntax used by the parser but
   does not exercise LINT-455 as a native geometry check.
 - **Hosted acceptance:** Passed run
-  [43512754166](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43512754166)
+  workflow run 43512754166
   for annotated gate tag `v0.5.3rc757`: 441 tests passed, 9,248 were
   deselected, and the scoped quality, packaging, installed-wheel, separate and
   adapted project rehearsal, and playtest stages passed. Package and preview
@@ -26580,7 +26585,7 @@ acceptance threads while new lint features proceed:
   (18 tests); catalog synchronization passed (24 tests), and selector/module
   architecture checks passed (9 tests).
 - **Hosted acceptance:** Passed run
-  [43520553891](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43520553891)
+  workflow run 43520553891
   for annotated gate tag `v0.5.3rc758`: 440 tests passed, 9,263 were
   deselected, and digest-pinned native fixtures passed on KiCad 10.0.0 and
   10.0.5. Ruff, Alphus, Rumdl, mdrepo, Linux and Windows Pyright, wheel and
@@ -26902,6 +26907,35 @@ acceptance threads while new lint features proceed:
   as the vertical offset. It is not exact copper-layer center spacing, copper
   route length, return-loop geometry, inductance, decoupling adequacy, or
   electrical approval. No proprietary project sources or examples were used.
+
+#### LINT-465 — Review partial-open connector aliases with split assigned nets
+
+- **Status:** Extends the existing
+  [`connector.footprint_peer_unanchored_scope_unreviewed` rule](DESIGN_LINT.md)
+  as a REVIEW heuristic. It does not infer that aliases must be peers or that
+  their pins should be joined.
+- **Predicate:** For a fitted, exact value-and-footprint alias cohort with
+  identical complete pin inventory and matching native pin metadata, report a
+  generic pin when at least one alias is open, at least two assigned aliases
+  have different exact nets, and the pin has no common anchor. Require complete
+  current source-matched pin maps, reviewed connector inventory, and no authored
+  peer-assignment group. Preserve the existing behavior for fully assigned
+  splits. Missing maps stay with the coverage rule; ambiguous, named, all-open,
+  common-anchor, or reviewed-scope cases stay quiet.
+- **Evidence:** Include each alias pin's exact net or `<unassigned>` state.
+  Group contacts once per alias cohort and revalidate them against the current
+  netlist and coverage records before projecting a finding. Net or alias order
+  changes must not alter the finding fingerprint.
+- **Fault and controls:** Synthetic regressions cover a three-alias split-open
+  case, an authored peer scope, controls where assigned peers agree or share a
+  common anchor, mapping-order stability, and clearing after scope review.
+  CLI/MCP parity uses the same
+  complete-map fault. The existing digest-pinned KiCad 10.0.0/10.0.5 native
+  connector fixture lane repeats the split-open fault and anchored control.
+- **Boundary:** This is a source-bound schematic review. It does not establish
+  connector role, electrical intent, PCB copper continuity, off-board wiring,
+  or physical continuity. Only tooling-owned synthetic fixtures are used; no
+  proprietary project source or fixture is stored here.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 

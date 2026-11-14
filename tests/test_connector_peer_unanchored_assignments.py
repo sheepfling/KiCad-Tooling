@@ -420,6 +420,46 @@ def test_native_unanchored_alias_fault_and_common_control_repeat(
     assert split_open_fault_reports[1].model_dump(mode="json") == (
         split_open_fault_reports[0].model_dump(mode="json")
     )
+    split_open_scope_fault_reports = tuple(
+        lint_report(
+            context.observed_contracts[COVERAGE_NATIVE_SPLIT_OPEN_FAULT_CASE, run],
+            reviewed_coverage(
+                context.observed_contracts[COVERAGE_NATIVE_SPLIT_OPEN_FAULT_CASE, run],
+                (None, None, None),
+            ),
+        )
+        for run in ("first", "repeat")
+    )
+    split_open_scope_control_reports = tuple(
+        lint_report(
+            context.observed_contracts[COVERAGE_NATIVE_SPLIT_OPEN_CONTROL_CASE, run],
+            reviewed_coverage(
+                context.observed_contracts[COVERAGE_NATIVE_SPLIT_OPEN_CONTROL_CASE, run],
+                (None, None, None),
+            ),
+        )
+        for run in ("first", "repeat")
+    )
+    split_open_scope_findings = tuple(
+        item for item in split_open_scope_fault_reports[0].findings if item.rule_id == SCOPE_RULE_ID
+    )
+    assert len(split_open_scope_findings) == 1
+    assert split_open_scope_findings[0].evidence["references"] == ("J1", "J2", "J3")
+    assert split_open_scope_findings[0].evidence["unanchored_partial_open_pin_numbers"] == ("1",)
+    assert split_open_scope_findings[0].evidence["partial_open_pin_assignments"] == (
+        "pin 1: J1.1=SPLIT_OPEN_A; J2.1=SPLIT_OPEN_B; J3.1=<unassigned>",
+    )
+    assert split_open_scope_fault_reports[1].model_dump(mode="json") == (
+        split_open_scope_fault_reports[0].model_dump(mode="json")
+    )
+    assert not any(
+        item.rule_id == SCOPE_RULE_ID
+        for report in split_open_scope_control_reports
+        for item in report.findings
+    )
+    assert split_open_scope_control_reports[1].model_dump(mode="json") == (
+        split_open_scope_control_reports[0].model_dump(mode="json")
+    )
     assert not any(
         item.rule_id == COVERAGE_RULE_ID
         for report in split_open_control_reports

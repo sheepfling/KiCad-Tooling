@@ -9,6 +9,7 @@ from .connector_coverage import source_matched_connector_pin_evidence
 from .connector_coverage_models import ConnectorCoverageEntry, ConnectorCoverageReport
 from .connector_footprint_peer_pin_types import (
     ConnectorFootprintPeerPinDivergence,
+    ConnectorFootprintPeerPinOpenOutlier,
     ConnectorFootprintPeerPinScan,
 )
 from .design_lint_connector_unanchored_source_evidence import (
@@ -58,9 +59,11 @@ class ConnectorUnanchoredPeerScopeEvidence:
     observed: NetlistContract
     coverage: ConnectorCoverageReport
     divergences: tuple[ConnectorFootprintPeerPinDivergence, ...]
+    partial_opens: tuple[ConnectorFootprintPeerPinOpenOutlier, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "divergences", tuple(self.divergences))
+        object.__setattr__(self, "partial_opens", tuple(self.partial_opens))
         _validate_current_unanchored_scope_evidence(self)
 
     @classmethod
@@ -71,6 +74,7 @@ class ConnectorUnanchoredPeerScopeEvidence:
         observed: NetlistContract,
         coverage: ConnectorCoverageReport,
         divergences: tuple[ConnectorFootprintPeerPinDivergence, ...],
+        partial_opens: tuple[ConnectorFootprintPeerPinOpenOutlier, ...] = (),
     ) -> ConnectorUnanchoredPeerScopeEvidence:
         """Capture one selected alias cohort from the current peer scan."""
         return cls(
@@ -78,6 +82,7 @@ class ConnectorUnanchoredPeerScopeEvidence:
             observed=observed,
             coverage=coverage,
             divergences=divergences,
+            partial_opens=partial_opens,
         )
 
 
@@ -97,7 +102,7 @@ def _validate_current_unanchored_scope_evidence(
     references, group_references = validate_current_unanchored_peer_contacts(
         scan=evidence.scan,
         divergences=evidence.divergences,
-        partial_opens=(),
+        partial_opens=evidence.partial_opens,
     )
     if tuple(reference.casefold() for reference in references) != tuple(
         reference.casefold() for reference in group_references
@@ -114,7 +119,8 @@ def project_connector_unanchored_peer_scope_evidence(
 ) -> CandidateEvidenceProjection:
     """Project the established review fields from a current typed source."""
     _validate_current_unanchored_scope_evidence(source)
-    first = source.divergences[0]
+    items = (*source.divergences, *source.partial_opens)
+    first = items[0]
     references = connector_footprint_peer_unanchored_references(first)
     entries_by_reference: dict[str, list[ConnectorCoverageEntry]] = defaultdict(list)
     for entry in source.coverage.entries:
@@ -148,6 +154,26 @@ def project_connector_unanchored_peer_scope_evidence(
     }
     if source.coverage.interface_catalog_path is not None:
         evidence["interface_catalog_path"] = (str(source.coverage.interface_catalog_path),)
+    if source.partial_opens:
+        partial_opens = tuple(
+            sorted(
+                source.partial_opens,
+                key=lambda item: (item.pin_number.casefold(), item.pin_number),
+            )
+        )
+        evidence["unanchored_partial_open_pin_numbers"] = tuple(
+            item.pin_number for item in partial_opens
+        )
+        evidence["partial_open_pin_assignments"] = tuple(
+            f"pin {item.pin_number}: "
+            + "; ".join(
+                f"{pin}={nets[0] if nets else '<unassigned>'}"
+                for pin, nets in sorted(
+                    item.assignments.items(), key=lambda pair: (pair[0].casefold(), pair[0])
+                )
+            )
+            for item in partial_opens
+        )
     return CandidateEvidenceProjection(rule_id=RULE_ID, evidence=evidence)
 
 

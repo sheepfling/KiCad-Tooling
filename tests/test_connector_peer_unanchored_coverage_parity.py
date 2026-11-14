@@ -14,6 +14,7 @@ from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import DesignLintPolicy, DesignLintReport, ValidationSummary
 from tests.mcp_parity_support import semantic_design_lint_report
+from tests.pcb_drc_parity_support import install_source_bound_drc_receipt
 from tests.synthetic_design_lint_project import run_design_lint_cli, synthetic_design_lint_project
 
 RULE_ID = "connector.footprint_peer_unanchored_scope_coverage_missing"
@@ -30,6 +31,7 @@ def test_unanchored_partial_open_connector_coverage_matches_cli_and_mcp(
     tmp_path: Path,
 ) -> None:
     root, native = synthetic_design_lint_project(tmp_path, DesignLintPolicy())
+    install_source_bound_drc_receipt(root, native)
     netlist = native.parent / "netlist.xml"
     summary = read_model(native, ValidationSummary)
     fixture_root = Path(__file__).parent / "fixtures/design_lint/connector-peer-unanchored-scope"

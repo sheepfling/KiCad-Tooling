@@ -9,7 +9,7 @@ from mcp import Client
 
 from kicad_tooling.hwrepo.connector_coverage_models import ConnectorCoverageReport
 from kicad_tooling.hwrepo.contracts import read_model, repo_path, write_model
-from kicad_tooling.hwrepo.discovery import load_registry
+from kicad_tooling.hwrepo.discovery import load_config, load_registry
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import (
     ConnectorInterfaceReview,
@@ -27,9 +27,11 @@ from tests.connector_peer_unanchored_scope_support import (
     PEER_GROUP,
     lint_report,
     reviewed_coverage,
+    three_peer_partial_open_netlist,
 )
 from tests.design_lint_mcp_parity_report_support import DesignLintMcpParityReportHarness
 from tests.mcp_parity_support import run_mcp_parity
+from tests.pcb_drc_parity_support import install_source_bound_drc_receipt
 
 RULE_ID = "connector.footprint_peer_unanchored_scope_unreviewed"
 
@@ -65,6 +67,82 @@ def test_complete_source_matched_maps_without_peer_scope_prompt_once_per_alias_g
     assert report.connector_peer_pin_coverage is not None
     alias_coverage = report.connector_peer_pin_coverage.footprint_alias_coverage
     assert alias_coverage.unreviewed_peer_assignment_scope_finding_count == 1
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_partial_open_split_assignments_need_peer_scope_review() -> None:
+    observed = three_peer_partial_open_netlist()
+    coverage = reviewed_coverage(observed, (None, None, None))
+
+    report = lint_report(observed, coverage)
+    findings = [item for item in report.findings if item.rule_id == RULE_ID]
+
+    assert report.status == "REVIEW"
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.evidence["references"] == ("J1", "J2", "J3")
+    assert finding.evidence["unanchored_generic_pin_numbers"] == ()
+    assert finding.evidence["unanchored_partial_open_pin_numbers"] == ("1", "2")
+    assert finding.evidence["partial_open_pin_assignments"] == (
+        "pin 1: J1.1=PORT_A; J2.1=PORT_B; J3.1=<unassigned>",
+        "pin 2: J1.2=DATA_A; J2.2=DATA_B; J3.2=<unassigned>",
+    )
+    assert not any(
+        item.rule_id == "connector.footprint_peer_unanchored_scope_coverage_missing"
+        for item in report.findings
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+@pytest.mark.parametrize(
+    ("common_anchor", "assigned_peers_agree", "groups"),
+    (
+        pytest.param(False, False, (PEER_GROUP, PEER_GROUP, PEER_GROUP), id="reviewed-peer-scope"),
+        pytest.param(True, False, (None, None, None), id="common-anchor"),
+        pytest.param(False, True, (None, None, None), id="assigned-peers-agree"),
+    ),
+)
+def test_partial_open_scope_controls_are_quiet(
+    common_anchor: bool,
+    assigned_peers_agree: bool,
+    groups: tuple[str | None, ...],
+) -> None:
+    observed = three_peer_partial_open_netlist(
+        common_anchor=common_anchor, assigned_peers_agree=assigned_peers_agree
+    )
+    report = lint_report(observed, reviewed_coverage(observed, groups))
+
+    assert not any(item.rule_id == RULE_ID for item in report.findings)
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_partial_open_scope_fingerprint_is_stable_and_reviewed_scope_clears_it() -> None:
+    observed = three_peer_partial_open_netlist()
+    reordered = observed.model_copy(
+        update={
+            "nets": dict(reversed(tuple(observed.nets.items()))),
+            "component_symbols": dict(reversed(tuple(observed.component_symbols.items()))),
+            "component_pin_numbers": dict(reversed(tuple(observed.component_pin_numbers.items()))),
+            "pin_functions": dict(reversed(tuple(observed.pin_functions.items()))),
+            "pin_electrical_types": dict(reversed(tuple(observed.pin_electrical_types.items()))),
+        }
+    )
+    coverage = reviewed_coverage(observed, (None, None, None))
+    first = lint_report(observed, coverage)
+    second = lint_report(reordered, reviewed_coverage(reordered, (None, None, None)))
+    first_findings = tuple(item for item in first.findings if item.rule_id == RULE_ID)
+    second_findings = tuple(item for item in second.findings if item.rule_id == RULE_ID)
+
+    assert tuple((item.fingerprint, item.evidence) for item in first_findings) == tuple(
+        (item.fingerprint, item.evidence) for item in second_findings
+    )
+    assert not any(
+        item.rule_id == RULE_ID
+        for item in lint_report(
+            observed,
+            reviewed_coverage(observed, (PEER_GROUP, PEER_GROUP, PEER_GROUP)),
+        ).findings
+    )
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -191,6 +269,13 @@ def test_scope_prompt_exact_ignore_matches_only_its_fingerprint() -> None:
 class _UnanchoredScopeParityCases(DesignLintMcpParityReportHarness):
     async def _case_unanchored_scope_review_matches_cli_and_mcp(self) -> None:
         native = self.native_evidence()
+        config = load_config(self.root, self.island / "project.json")
+        install_source_bound_drc_receipt(
+            self.root,
+            native,
+            board_path=repo_path(self.root, config.project).with_suffix(".kicad_pcb"),
+            kicad_version=config.kicad_version,
+        )
         netlist = native.parent / "netlist.xml"
         fixture = (
             Path(__file__).parent
@@ -300,6 +385,41 @@ class _UnanchoredScopeParityCases(DesignLintMcpParityReportHarness):
         self.assertEqual(
             report.connector_peer_pin_coverage.footprint_alias_coverage.unreviewed_peer_assignment_scope_finding_count,
             1,
+        )
+
+        split_open_fixture = fixture.with_name("partial-open-divergent-netlist.xml")
+        netlist.write_text(split_open_fixture.read_text(encoding="utf-8"), encoding="utf-8")
+        self.rehash_native_netlist(native)
+        manifest = read_model(manifest_path, ProjectManifest)
+        write_model(
+            manifest_path,
+            manifest.model_copy(
+                update={
+                    "connector_reviews": tuple(
+                        ConnectorInterfaceReview(
+                            reference=reference,
+                            disposition="interface",
+                            basis=f"Synthetic source-matched interface map for {reference}",
+                            interface_id=interface_id,
+                            pin_map={"1": "1", "2": "2"},
+                        )
+                        for reference in ("J1", "J2", "J3")
+                    )
+                }
+            ),
+        )
+        async with Client(create_server(self.root), mode="legacy") as client:
+            split_open_report = await self.compare_lint_report(client, native, "REVIEW", 1)
+        split_open_findings = [
+            item for item in split_open_report.findings if item.rule_id == RULE_ID
+        ]
+        self.assertEqual(len(split_open_findings), 1)
+        self.assertEqual(
+            split_open_findings[0].evidence["unanchored_partial_open_pin_numbers"], ("1",)
+        )
+        self.assertNotIn(
+            "connector.footprint_peer_unanchored_scope_coverage_missing",
+            {item.rule_id for item in split_open_report.findings},
         )
 
 

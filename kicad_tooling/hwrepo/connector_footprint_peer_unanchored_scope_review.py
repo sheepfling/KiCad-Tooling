@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
-from collections.abc import Sequence
+from collections.abc import MutableMapping
+from dataclasses import dataclass
 
 from .connector_coverage_models import ConnectorCoverageReport
 from .connector_footprint_peer_pin_types import (
     ConnectorFootprintPeerPinDivergence,
+    ConnectorFootprintPeerPinOpenOutlier,
     ConnectorFootprintPeerPinScan,
 )
 from .connector_identity import pin_function_is_generic
@@ -16,8 +17,20 @@ from .design_lint_connector_unanchored_scope_evidence import (
     ConnectorUnanchoredPeerScopeEvidence,
     references_have_current_unscoped_maps,
 )
+from .design_lint_connector_unanchored_source_evidence import (
+    connector_footprint_peer_unanchored_cohort_key,
+    connector_footprint_peer_unanchored_references,
+)
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
+
+
+@dataclass(slots=True)
+class _UnanchoredAliasCohort:
+    """Eligible divergent and partial-open contacts for one alias cohort."""
+
+    divergences: list[ConnectorFootprintPeerPinDivergence]
+    partial_opens: list[ConnectorFootprintPeerPinOpenOutlier]
 
 
 def unreviewed_unanchored_connector_alias_scope(
@@ -34,10 +47,7 @@ def unreviewed_unanchored_connector_alias_scope(
     ):
         return ()
 
-    cohorts: dict[
-        tuple[str, str, tuple[str, ...], tuple[str, ...]],
-        list[ConnectorFootprintPeerPinDivergence],
-    ] = defaultdict(list)
+    cohorts: dict[tuple[str, str, tuple[str, ...], tuple[str, ...]], _UnanchoredAliasCohort] = {}
     for divergence in scan.unanchored_divergences:
         if (
             divergence.peer_assignment_group is not None
@@ -48,40 +58,59 @@ def unreviewed_unanchored_connector_alias_scope(
             or len({nets[0] for nets in divergence.assignments.values()}) < 2
         ):
             continue
-        references = tuple(
-            sorted(
-                {pin.rsplit(".", 1)[0] for pin in divergence.assignments},
-                key=lambda reference: (reference.casefold(), reference),
-            )
-        )
+        references = connector_footprint_peer_unanchored_references(divergence)
         if not references_have_current_unscoped_maps(observed, references, coverage):
             continue
-        cohort_key = (
-            divergence.value.casefold(),
-            divergence.footprint.casefold(),
-            tuple(reference.casefold() for reference in references),
-            tuple(symbol.casefold() for symbol in divergence.symbols),
-        )
-        cohorts[cohort_key].append(divergence)
+        _cohort_for(divergence, cohorts).divergences.append(divergence)
+
+    for partial_open in scan.unanchored_open_outliers:
+        assignments = partial_open.assignments
+        assigned_nets = {nets[0] for nets in assignments.values() if len(nets) == 1}
+        if (
+            partial_open.peer_assignment_group is not None
+            or partial_open.common_anchor_pin_numbers
+            or not pin_function_is_generic(partial_open.pin_function)
+            or len(assignments) < 2
+            or any(len(nets) > 1 for nets in assignments.values())
+            or not any(not nets for nets in assignments.values())
+            or len(assigned_nets) < 2
+        ):
+            continue
+        references = connector_footprint_peer_unanchored_references(partial_open)
+        if not references_have_current_unscoped_maps(observed, references, coverage):
+            continue
+        _cohort_for(partial_open, cohorts).partial_opens.append(partial_open)
 
     return tuple(
-        _candidate(scan, observed, divergences, coverage)
-        for _, divergences in sorted(cohorts.items())
+        _candidate(scan, observed, cohort, coverage) for _, cohort in sorted(cohorts.items())
     )
+
+
+def _cohort_for(
+    item: ConnectorFootprintPeerPinDivergence | ConnectorFootprintPeerPinOpenOutlier,
+    cohorts: MutableMapping[
+        tuple[str, str, tuple[str, ...], tuple[str, ...]], _UnanchoredAliasCohort
+    ],
+) -> _UnanchoredAliasCohort:
+    """Return the bounded alias cohort owning this current scan record."""
+    key = connector_footprint_peer_unanchored_cohort_key(item)
+    return cohorts.setdefault(key, _UnanchoredAliasCohort(divergences=[], partial_opens=[]))
 
 
 def _candidate(
     scan: ConnectorFootprintPeerPinScan,
     observed: NetlistContract,
-    divergences: Sequence[ConnectorFootprintPeerPinDivergence],
+    cohort: _UnanchoredAliasCohort,
     coverage: ConnectorCoverageReport,
 ) -> Candidate:
-    first = divergences[0]
+    items = (*cohort.divergences, *cohort.partial_opens)
+    first = items[0]
     source_evidence = ConnectorUnanchoredPeerScopeEvidence.from_scan(
         scan=scan,
         observed=observed,
         coverage=coverage,
-        divergences=tuple(divergences),
+        divergences=tuple(cohort.divergences),
+        partial_opens=tuple(cohort.partial_opens),
     )
     return ConnectorUnanchoredPeerScopeCandidate.from_source_evidence(
         source_evidence,

@@ -157,8 +157,11 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
             raise ValueError("Reviewed unanchored findings must be eligible generic differences")
         if self.unreviewed_peer_assignment_scope_finding_count > (
             self.unanchored_different_assignment_pin_group_count
+            + self.unanchored_open_peer_pin_group_count
         ):
-            raise ValueError("Unreviewed peer-scope findings must identify unanchored differences")
+            raise ValueError(
+                "Unreviewed peer-scope findings must identify unanchored splits or partial assignments"
+            )
         if self.uncovered_peer_assignment_scope_finding_count > (
             self.unanchored_different_assignment_pin_group_count
             + self.unanchored_open_peer_pin_group_count
