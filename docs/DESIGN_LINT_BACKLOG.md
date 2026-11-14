@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 386 rules are implemented with synthetic regression coverage.
+The following 387 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 386 active rules.
+The catalog currently contains 387 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -27260,10 +27260,13 @@ acceptance threads while new lint features proceed:
   design_lint_rule(rule_id="power.ic_decoupling_map_pin_coverage")`. The
   native fixture uses `KICAD_RUN_NATIVE_IC_RAIL_CAPACITOR_FIXTURES=1` and
   Docker.
-- **Acceptance:** Local synthetic/parity/catalog/selector/architecture checks
-  passed (26 tests); the exact-version Docker fixture lane passed on KiCad
-  10.0.0 and 10.0.5 (2 tests). Linux and Windows Pyright reported 0 errors;
-  Ruff check/format, Rumdl, and mdrepo passed. Hosted CI has not run yet.
+- **Acceptance:** The tag-scoped local `scripts/ci.py` run passed all stages:
+  455 selected tests (9,470 deselected), exact-version Docker fixtures on
+  KiCad 10.0.0 and 10.0.5, Linux and Windows Pyright, wheel/sdist builds, and
+  installed-wheel checks against external and adapted template projects. Ruff,
+  repository-wide Rumdl, and mdrepo passed. The first hosted attempt found two
+  MD060 alignment issues in this fixture README; they are fixed and hosted
+  acceptance will rerun on the follow-up tag.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 

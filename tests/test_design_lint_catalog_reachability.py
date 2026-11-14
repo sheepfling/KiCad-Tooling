@@ -318,6 +318,14 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
             external_protection_coverage=unreviewed_protection,
         )
     )
+    _, capacitance_budget_report = _external_protection_support.protection_lint_report(
+        _external_protection_support.protection_map(
+            channel_capacitance_pf=2.4,
+            signal_capacitance_limit_pf=2.0,
+        ),
+        _external_protection_support.observed_netlist(),
+    )
+    emitted.update(item.rule_id for item in capacitance_budget_report.findings)
     mismatched_protection = evaluate_external_protection(
         _external_protection_support.protection_map(),
         _external_protection_support.observed_netlist(fault="protector-wrong-net"),

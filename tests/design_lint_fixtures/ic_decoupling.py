@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from kicad_tooling.hwrepo.design_lint import evaluate
+from kicad_tooling.hwrepo.design_lint_policy_models import DesignLintRuleOverride
 from kicad_tooling.hwrepo.ic_decoupling_models import (
     IcDecouplingCapacitorRequirement,
     IcDecouplingMap,
@@ -143,10 +144,26 @@ def ic_decoupling_map_coverage_map(
 
 
 def catalog_reachability_rule_ids() -> set[str]:
-    """Return rule IDs reached by the synthetic below-minimum requirement."""
+    """Return rule IDs reached by synthetic IC decoupling fault cases."""
     report = evaluate(
         "synthetic-catalog-ic-decoupling",
         coach(ic_decoupling_netlist(("47nF",))),
         DesignLintPolicy(ic_decoupling_map=ic_decoupling_map()),
     )
-    return {item.rule_id for item in report.findings}
+    reached = {item.rule_id for item in report.findings}
+    coverage_report = evaluate(
+        "synthetic-catalog-ic-decoupling-map-coverage",
+        coach(ic_decoupling_map_coverage_netlist()),
+        DesignLintPolicy(
+            ic_decoupling_map=ic_decoupling_map_coverage_map(),
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id="power.ic_decoupling_map_pin_coverage",
+                    mode="review",
+                    reason="Catalog reachability synthetic coverage case",
+                ),
+            ),
+        ),
+    )
+    reached.update(item.rule_id for item in coverage_report.findings)
+    return reached
