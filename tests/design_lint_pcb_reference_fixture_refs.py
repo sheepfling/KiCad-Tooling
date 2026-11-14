@@ -20,5 +20,21 @@ PCB_REFERENCE_PARITY_FIXTURES = MappingProxyType(
                 ),
             }
         ),
+        "pcb.drc_exact_reference_pad_scope_unmatched": MappingProxyType(
+            {
+                "fault_fixtures": (
+                    (
+                        "tests.test_design_lint_mcp_parity_pcb_drc_exact_reference_pad_scope"
+                        ".test_unmatched_exact_reference_pad_scope_matches_between_cli_and_mcp"
+                    ),
+                ),
+                "valid_control_fixtures": (
+                    (
+                        "tests.test_design_lint_mcp_parity_pcb_drc_exact_reference_pad_scope"
+                        ".test_unmatched_exact_reference_pad_scope_matches_between_cli_and_mcp"
+                    ),
+                ),
+            }
+        ),
     }
 )

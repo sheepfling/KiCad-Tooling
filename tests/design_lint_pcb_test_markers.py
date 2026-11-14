@@ -9,6 +9,7 @@ PCB_EVIDENCE_LINT_TEST_MODULES = frozenset(
         "tests/test_pcb_dru_empty_disallow_native.py",
         "tests/test_design_lint_mcp_parity_pcb_dru_empty_disallow.py",
         "tests/test_pcb_drc_exact_reference_scope_native.py",
+        "tests/test_pcb_drc_exact_reference_pad_scope_native.py",
     }
 )
 
@@ -58,6 +59,10 @@ PCB_LINT_TEST_MODULES = frozenset(
         "tests/test_pcb_drc_exact_reference_scope_native.py",
         "tests/test_design_lint_mcp_parity_pcb_drc_exact_reference_scope.py",
         "tests/test_design_lint_architecture_pcb_drc_exact_reference_scope.py",
+        "tests/test_pcb_drc_exact_reference_pad_scope.py",
+        "tests/test_pcb_drc_exact_reference_pad_scope_native.py",
+        "tests/test_design_lint_mcp_parity_pcb_drc_exact_reference_pad_scope.py",
+        "tests/test_design_lint_architecture_pcb_drc_exact_reference_pad_scope.py",
         "tests/test_pcb_differential_pair_route_skew.py",
         "tests/test_pcb_differential_pair_route_skew_native.py",
         "tests/test_pcb_mechanical_edge_clearance.py",

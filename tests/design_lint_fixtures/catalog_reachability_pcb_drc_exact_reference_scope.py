@@ -3,14 +3,19 @@
 from __future__ import annotations
 
 import hashlib
+from dataclasses import replace
 from pathlib import Path
 
+from kicad_tooling.hwrepo.pcb_drc_exact_reference_pad_scope import (
+    unmatched_exact_reference_pad_scope_candidates,
+)
 from kicad_tooling.hwrepo.pcb_drc_exact_reference_scope import (
     unmatched_exact_reference_scope_candidates,
 )
 from kicad_tooling.hwrepo.pcb_drc_rule_parser import native_constraints
 from kicad_tooling.hwrepo.pcb_drc_source_evidence import BoundDrcEvidence
 from kicad_tooling.hwrepo.pcb_footprint_reference_inventory import (
+    pcb_board_footprint_pad_number_inventory,
     pcb_board_footprint_reference_names,
 )
 
@@ -22,7 +27,7 @@ BOARD = (
 
 
 def pcb_drc_exact_reference_scope_rule_ids() -> set[str]:
-    """Return the rule ID reached by a tooling-owned absent-reference selector."""
+    """Return rule IDs reached by tooling-owned absent reference and pad selectors."""
     rules = (FIXTURES / "absent.kicad_dru").read_text(encoding="utf-8")
     board = BOARD.read_text(encoding="utf-8")
     references = pcb_board_footprint_reference_names(board)
@@ -54,4 +59,18 @@ def pcb_drc_exact_reference_scope_rule_ids() -> set[str]:
     candidates = unmatched_exact_reference_scope_candidates(
         native_constraints(rules), references, evidence, kicad_version="10.0.5"
     )
-    return {candidate.rule_id for candidate in candidates}
+    pad_rules = (
+        FIXTURES.parent / "pcb-drc-exact-reference-pad-scope" / "absent-pad.kicad_dru"
+    ).read_text(encoding="utf-8")
+    pad_evidence = replace(
+        evidence,
+        rules_sha256=hashlib.sha256(pad_rules.encode("utf-8")).hexdigest(),
+        rules_source=pad_rules,
+    )
+    footprint_pads = pcb_board_footprint_pad_number_inventory(board)
+    if footprint_pads is None:
+        return set()
+    pad_candidates = unmatched_exact_reference_pad_scope_candidates(
+        native_constraints(pad_rules), footprint_pads, pad_evidence, kicad_version="10.0.5"
+    )
+    return {candidate.rule_id for candidate in (*candidates, *pad_candidates)}

@@ -46,3 +46,36 @@ def pcb_board_footprint_reference_names(document: str) -> tuple[str, ...] | None
     if len(set(folded)) != len(folded):
         return None
     return tuple(sorted(references, key=lambda value: (value.casefold(), value)))
+
+
+def pcb_board_footprint_pad_number_inventory(
+    document: str,
+) -> tuple[tuple[str, tuple[str, ...]], ...] | None:
+    """Return each unambiguous footprint reference and its complete pad-number inventory."""
+    try:
+        root = sexpr_root(document, "kicad_pcb")
+        children = sexpr_children(document, root.start + 1, root.end - 1)
+    except ValueError:
+        return None
+
+    footprints: list[tuple[str, tuple[str, ...]]] = []
+    for child in children:
+        if sexpr_atoms(document, child)[:1] != ("footprint",):
+            continue
+        reference = pcb_footprint_reference(document, child)
+        if reference is None or not reference.isascii():
+            return None
+        pad_numbers: list[str] = []
+        for pad in sexpr_nodes(document, child, "pad"):
+            atoms = sexpr_atoms(document, pad)
+            if len(atoms) < 4 or not atoms[1].isascii():
+                return None
+            pad_numbers.append(atoms[1])
+        footprints.append(
+            (reference, tuple(sorted(pad_numbers, key=lambda value: (value.casefold(), value))))
+        )
+
+    folded_references = tuple(reference.casefold() for reference, _ in footprints)
+    if len(set(folded_references)) != len(folded_references):
+        return None
+    return tuple(sorted(footprints, key=lambda item: (item[0].casefold(), item[0])))

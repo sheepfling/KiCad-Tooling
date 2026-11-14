@@ -1,0 +1,5 @@
+(version 1)
+(rule "absent-reference-pad-clearance"
+  (severity warning)
+  (condition "A.Reference == 'J1' && A.Pad_Number == '9'")
+  (constraint edge_clearance (min 5mm)))

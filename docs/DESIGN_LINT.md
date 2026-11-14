@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 377 active rules.
+The catalog currently contains 378 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -998,6 +998,38 @@ continuity. The tooling-owned inputs are documented in the
 KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_pcb_drc_exact_reference_scope_native.py \
   -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.drc_exact_reference_scope_unmatched")'
+```
+
+For PCB and PCB-only projects on KiCad 10.0.5,
+`pcb.drc_exact_reference_pad_scope_unmatched` reviews exact literal
+`A.Reference == '…' && A.Pad_Number == '…'` custom DRC scopes when the
+footprint exists but has no pad with that number. Reference and pad-number
+matching are case-insensitive, and the two conditions may appear in either
+order. The complete source-bound pad inventory, rule details, and project,
+board, rules, native DRC, and summary identities accompany each default
+`review` finding. Project policy can select `block`, `off`, or an
+exact-fingerprint ignore.
+
+Digest-pinned native fixtures confirm that KiCad 10.0.5 applies the selector
+for existing `J1` pad `1` and does not apply it for absent pad `9`; KiCad
+10.0.0 does not apply these selectors in this fixture, so the lint is limited
+to 10.0.5. Missing footprint references remain covered by
+`pcb.drc_exact_reference_scope_unmatched`. A pad number can be reserved for
+another board variant, so this check prompts for review and does not declare a
+missing-pin electrical defect. It does not compare schematic intent, infer
+connector-pin similarity, or establish copper continuity. Tooling-owned cases
+are in the
+[exact-reference pad-scope fixture record](../tests/fixtures/design_lint/pcb-drc-exact-reference-pad-scope/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_pcb_drc_exact_reference_pad_scope.py \
+  tests/test_design_lint_mcp_parity_pcb_drc_exact_reference_pad_scope.py \
+  tests/test_design_lint_architecture_pcb_drc_exact_reference_pad_scope.py \
+  -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.drc_exact_reference_pad_scope_unmatched")'
+
+KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_pcb_drc_exact_reference_pad_scope_native.py \
+  -m 'design_lint and pcb_lint and native_kicad and design_lint_rule(rule_id="pcb.drc_exact_reference_pad_scope_unmatched")'
 ```
 
 ```sh

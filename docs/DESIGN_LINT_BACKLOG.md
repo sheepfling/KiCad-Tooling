@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 377 rules are implemented with synthetic regression coverage.
+The following 378 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 377 active rules.
+The catalog currently contains 378 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -757,6 +757,7 @@ skipped under prerelease policy.
 - `pcb.drc_exact_net_scope_unmatched`
 - `pcb.drc_exact_netclass_scope_unmatched`
 - `pcb.drc_exact_reference_scope_unmatched`
+- `pcb.drc_exact_reference_pad_scope_unmatched`
 - `pcb.duplicate_object_uuid`
 - `pcb.footprint_path_trailing_separator`
 - `pcb.drc_duplicate_severity_key`
@@ -4440,7 +4441,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 377 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 378 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -26663,6 +26664,52 @@ acceptance threads while new lint features proceed:
   design_lint_rule(rule_id="pcb.drc_exact_reference_scope_unmatched")`. Run
   `tests/test_pcb_drc_exact_reference_scope_native.py` with Docker,
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, `native_kicad`, and the same rule selector.
+
+#### LINT-459 — Review exact custom DRC reference and pad selectors absent from a footprint
+
+- **Status:** Implemented as a default-REVIEW rule. Digest-pinned Docker fixtures
+  passed on KiCad 10.0.0 and 10.0.5. The scoped acceptance passed 443 tests,
+  both Pyright target configurations, wheel and sdist builds, installed-wheel
+  checks, and separate plus relocated template-project rehearsals. Hosted
+  acceptance is pending.
+- **Priority:** P2 saved-constraint coverage. A pad rename or removal can leave
+  a syntactically valid custom DRC rule scoped to a reference and pad number
+  that no longer exists together.
+- **Rule:** Adds `pcb.drc_exact_reference_pad_scope_unmatched` for an exact
+  `A.Reference` and `A.Pad_Number` pair on named supported custom DRC
+  constraints. It compares case-insensitively against the complete pad-number
+  inventory for an existing source-bound footprint and groups equivalent
+  selectors. Missing references stay with LINT-458. Findings preserve selector
+  spellings, rule and constraint details, current pad inventory, and project,
+  board, custom-rule, native DRC, and summary identities.
+- **Native evidence:** Digest-pinned KiCad 10.0.5 fixtures show that the exact
+  reference/pad selector applies in either condition order and matches
+  reference and pad-number case variants. The rule applies to an existing pad
+  and does not apply to an absent pad. KiCad 10.0.0 does not apply the selector
+  in this fixture, so the lint is intentionally limited to 10.0.5.
+- **Boundary:** Exact ASCII reference and pad literals only, either condition
+  order, named supported constraints, an unambiguous complete PCB footprint
+  and pad inventory, PCB/PCB-only projects, and KiCad 10.0.5. Wildcard,
+  variable, function, compound, malformed, ignored, excluded, unsupported,
+  missing-reference, ambiguous, and other-version inputs stay quiet. A pad
+  number may be reserved for another assembly variant. This is a saved-rule
+  scope prompt, not a claim that the pin should exist or that the board has an
+  electrical fault; it does not inspect schematic intent or copper continuity.
+  Project policy may choose `review`, `block`, `off`, or an exact-fingerprint
+  ignore.
+- **Fixtures:** Synthetic DRC snippets reuse the tooling-owned J1 board and a
+  pad-number variant derived from it. Source tests cover absent and present pad
+  selectors, case-insensitive matching and grouping, reversed condition order,
+  unsupported conditions, missing references, disabled policy, and version
+  limits. CLI/MCP parity and repeated native DRC controls contain no external
+  board source.
+- **Selection:** Run `tests/test_pcb_drc_exact_reference_pad_scope.py`,
+  `tests/test_design_lint_mcp_parity_pcb_drc_exact_reference_pad_scope.py`, and
+  `tests/test_design_lint_architecture_pcb_drc_exact_reference_pad_scope.py`
+  with `design_lint and pcb_lint and
+  design_lint_rule(rule_id="pcb.drc_exact_reference_pad_scope_unmatched")`.
+  Run `tests/test_pcb_drc_exact_reference_pad_scope_native.py` with Docker,
+  `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, `native_kicad`, and the same selector.
 
 ## Completion and release gate
 

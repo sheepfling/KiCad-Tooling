@@ -7,6 +7,12 @@ import re
 _EXACT_NET_CONDITION = re.compile(r"A\.NetName == '([^'\\*?\r\n]+)'")
 _EXACT_NETCLASS_CONDITION = re.compile(r"A\.NetClass == '([^'\\*?,$\x00-\x1f\x7f]+)'")
 _EXACT_REFERENCE_CONDITION = re.compile(r"A\.Reference == '([^'\\*?$\x00-\x1f\x7f]+)'")
+_EXACT_REFERENCE_PAD_CONDITION = re.compile(
+    r"(?:A\.Reference\s*==\s*'([^'\\*?$\x00-\x1f\x7f]+)'\s*&&\s*"
+    r"A\.Pad_Number\s*==\s*'([^'\\*?$\x00-\x1f\x7f]+)'|"
+    r"A\.Pad_Number\s*==\s*'([^'\\*?$\x00-\x1f\x7f]+)'\s*&&\s*"
+    r"A\.Reference\s*==\s*'([^'\\*?$\x00-\x1f\x7f]+)')"
+)
 _EXACT_FROM_TO_CONDITION = re.compile(
     r"A\.fromTo\('([A-Za-z0-9_-]+-[A-Za-z0-9_-]+)', "
     r"'([A-Za-z0-9_-]+-[A-Za-z0-9_-]+)'\)"
@@ -30,6 +36,16 @@ def native_exact_reference_condition(condition: str) -> str | None:
     """Return one supported exact component-reference selector."""
     match = _EXACT_REFERENCE_CONDITION.fullmatch(condition)
     return None if match is None else match.group(1)
+
+
+def native_exact_reference_pad_condition(condition: str) -> tuple[str, str] | None:
+    """Return exact reference and pad literals in either supported condition order."""
+    match = _EXACT_REFERENCE_PAD_CONDITION.fullmatch(condition)
+    if match is None:
+        return None
+    if match.group(1) is not None:
+        return match.group(1), match.group(2)
+    return match.group(4), match.group(3)
 
 
 def native_exact_from_to_condition(condition: str) -> tuple[str, str] | None:

@@ -14745,6 +14745,54 @@
       ]
     },
     {
+      "rule_id": "pcb.drc_exact_reference_pad_scope_unmatched",
+      "title": "Exact custom DRC reference and pad selector is absent from the current footprint",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_drc_exact_reference_pad_scope.py#unmatched_exact_reference_pad_scope_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Exact literal A.Reference and A.Pad_Number scopes in source-bound KiCad custom DRC rules compared with the complete pad-number inventory for the matching source-bound PCB footprint",
+      "predicate": "For PCB and PCB-only projects configured for KiCad 10.0.5, emit one default-REVIEW candidate per case-insensitive group of exact ASCII A.Reference and A.Pad_Number selectors used by a named, supported custom DRC constraint when the footprint exists but has no matching pad number. Preserve selector spellings, rule names, constraints, complete footprint pad inventory, and project, board, rules, native DRC, and summary identities. Skip malformed or ambiguous board inventories and scopes whose footprint is absent, which are owned by the exact-reference-scope lint.",
+      "supported_kicad_versions": [
+        "Exact KiCad 10.0.5 only. Digest-pinned native DRC confirms that exact A.Reference plus A.Pad_Number selectors apply in either condition order and match references and pad numbers case-insensitively; KiCad 10.0.0 does not apply these selectors in this fixture."
+      ],
+      "limitations": [
+        "A pad selector may intentionally reserve a pad number for another board variant or future board revision. The finding requests review and does not establish a board defect or require a pad to be added.",
+        "Only one exact ASCII A.Reference and A.Pad_Number equality pair is recognized, in either condition order. Wildcard, variable-backed, function, compound, malformed, ignored, excluded, and unsupported conditions or constraints are skipped. Malformed pad inventories or case-insensitive duplicate footprint references suppress analysis.",
+        "The check compares saved DRC scope with current PCB footprint pad numbers. It does not infer schematic intent, connector-pin similarity, electrical relationships, pin presence requirements, or copper continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_drc_exact_reference_pad_scope.test_absent_exact_pad_selector_is_reviewed_with_source_identity",
+        "tests.test_design_lint_mcp_parity_pcb_drc_exact_reference_pad_scope.test_unmatched_exact_reference_pad_scope_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_exact_reference_pad_scope_native.test_reference_pad_selector_behavior_is_version_bounded_and_deterministic"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_drc_exact_reference_pad_scope.test_casefolded_absent_pads_group_stably_and_existing_pad_is_a_control",
+        "tests.test_pcb_drc_exact_reference_pad_scope.test_unsupported_scopes_and_missing_footprints_stay_quiet",
+        "tests.test_design_lint_mcp_parity_pcb_drc_exact_reference_pad_scope.test_unmatched_exact_reference_pad_scope_matches_between_cli_and_mcp",
+        "tests.test_pcb_drc_exact_reference_pad_scope_native.test_reference_pad_selector_behavior_is_version_bounded_and_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_drc_exact_reference_pad_scope.test_casefolded_absent_pads_group_stably_and_existing_pad_is_a_control",
+        "tests.test_pcb_drc_exact_reference_pad_scope.test_unsupported_scopes_and_missing_footprints_stay_quiet",
+        "tests.test_pcb_drc_exact_reference_pad_scope.test_scan_skips_disabled_unsupported_and_non_pcb_requests_before_reading"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_drc_exact_reference_pad_scope.py#unmatched_exact_reference_pad_scope_candidates",
+        "kicad_tooling/hwrepo/pcb_drc_exact_reference_pad_scope_scan.py#scan_unmatched_exact_reference_pad_drc_scopes",
+        "kicad_tooling/hwrepo/pcb_footprint_reference_inventory.py#pcb_board_footprint_pad_number_inventory",
+        "kicad_tooling/hwrepo/pcb_drc_conditions.py#native_exact_reference_pad_condition",
+        "kicad_tooling/hwrepo/pcb_drc_rule_parser.py#native_constraints",
+        "kicad_tooling/hwrepo/pcb_drc_source_evidence.py#source_bound_drc_evidence",
+        "kicad_tooling/hwrepo/design_lint_pcb_dru_candidates.py#collect_pcb_dru_candidates"
+      ]
+    },
+    {
       "rule_id": "pcb.duplicate_object_uuid",
       "title": "PCB object UUID repeats within one board source",
       "theme": "pcb",

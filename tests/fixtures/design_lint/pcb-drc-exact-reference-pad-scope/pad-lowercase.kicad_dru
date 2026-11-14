@@ -1,0 +1,5 @@
+(version 1)
+(rule "lowercase-pad-number-clearance"
+  (severity warning)
+  (condition "A.Reference == 'J1' && A.Pad_Number == 'a1'")
+  (constraint edge_clearance (min 5mm)))
