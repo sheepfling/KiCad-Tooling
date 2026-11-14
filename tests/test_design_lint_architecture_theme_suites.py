@@ -191,6 +191,11 @@ POWER_PATH_HOSTED_THEME_SUITES = (
     "test_power_path_native_fixture_lane.py",
 )
 IC_RAIL_NATIVE_THEME_SUITES = ("test_ic_rail_capacitor_native_fixture_lane.py",)
+IC_DECOUPLING_MAP_COVERAGE_THEME_SUITES = (
+    "test_ic_decoupling_map_pin_coverage.py",
+    "test_ic_decoupling_map_pin_coverage_parity.py",
+    "test_design_lint_architecture_ic_decoupling_map_coverage.py",
+)
 POWER_INPUT_THEME_SUITES = (
     "test_power_input_source_paths.py",
     "test_power_input_source_anchors.py",
@@ -401,6 +406,7 @@ def test_design_lint_theme_suites_stay_below_review_limit() -> None:
                     *USB_INLINE_COMPONENT_THEME_SUITES,
                     *POWER_PATH_HOSTED_THEME_SUITES,
                     *IC_RAIL_NATIVE_THEME_SUITES,
+                    *IC_DECOUPLING_MAP_COVERAGE_THEME_SUITES,
                     *POWER_INPUT_THEME_SUITES,
                     *REVIEWED_CONNECTOR_POWER_INPUT_THEME_SUITES,
                     *DIGITAL_PEER_FIXTURE_THEME_SUITES,

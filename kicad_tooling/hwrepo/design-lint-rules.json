@@ -16825,6 +16825,56 @@
       "implementation_owner": "kicad_tooling/hwrepo/design_lint_power_decoupling.py#ic_decoupling_candidates"
     },
     {
+      "rule_id": "power.ic_decoupling_map_pin_coverage",
+      "title": "Mapped IC omits native power-input pins from decoupling requirements",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted U/IC reference present in the optional project-authored ic_decoupling_map, compare the mapped IC value, native symbol, footprint, complete pin-number inventory, and per-pin electrical types. Emit REVIEW when native power_in pins are omitted from the per-pin requirements, or when pin inventory/type evidence is incomplete or contradictory.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The rule covers only fitted U/IC references already present in ic_decoupling_map. It does not discover ICs omitted from the map or establish that every native symbol pin corresponds to a physical package pin.",
+        "A power_in pin is a KiCad symbol classification, not a project decoupling requirement. The finding asks whether the authored map is complete; it does not require a capacitor, choose a value, or determine that a datasheet requirement applies.",
+        "A current map identity and complete pin coverage do not verify the source basis, capacitor suitability, DC-bias derating, voltage rating, temperature behavior, placement, PCB copper, or return-path adequacy. The rule is optional and defaults off."
+      ],
+      "fault_fixtures": [
+        "tests.test_ic_decoupling_map_pin_coverage.test_unmapped_native_power_input_pin_needs_review",
+        "tests.test_ic_decoupling_map_pin_coverage.test_incomplete_pin_metadata_needs_review",
+        "tests.test_ic_decoupling_map_pin_coverage.test_stale_map_identity_needs_review",
+        "tests.test_ic_decoupling_map_pin_coverage_parity.test_ic_decoupling_map_pin_coverage_review_matches_between_cli_and_mcp",
+        "tests.test_ic_rail_capacitor_native_fixture_lane.test_missing_capacitor_and_controls_export_repeatably"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_ic_decoupling_map_pin_coverage.test_complete_current_pin_map_is_quiet",
+        "tests.test_ic_decoupling_map_pin_coverage.test_dnp_non_ic_and_unmapped_ic_scope_are_not_candidates",
+        "tests.test_ic_decoupling_map_pin_coverage_parity.test_ic_decoupling_map_pin_coverage_review_matches_between_cli_and_mcp",
+        "tests.test_ic_rail_capacitor_native_fixture_lane.test_missing_capacitor_and_controls_export_repeatably",
+        "tests.test_ic_decoupling_map_pin_coverage.test_rule_is_opt_in_and_supports_review_block_off_and_exact_ignore"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_ic_decoupling_map_pin_coverage.test_requirement_order_does_not_change_issue_identity_or_order",
+        "tests.test_ic_decoupling_map_pin_coverage.test_pin_and_map_mapping_order_does_not_change_finding"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_IC_RAIL_CAPACITOR_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/power_ic_decoupling_map_coverage.py#ic_decoupling_map_coverage_issues",
+        "kicad_tooling/hwrepo/design_lint_power_ic_decoupling_map_coverage.py#ic_decoupling_map_pin_coverage_candidates",
+        "kicad_tooling/hwrepo/design_lint_power_candidate_evidence.py#project_power_candidate_evidence",
+        "kicad_tooling/hwrepo/design_lint_power_candidates.py#scan_power_candidates",
+        "kicad_tooling/hwrepo/ic_decoupling_models.py#IcDecouplingMap",
+        "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
+        "kicad_tooling/ci_hosted_ic_decoupling_map_coverage.py#evaluate_ic_decoupling_map_coverage_native_probe"
+      ],
+      "theme": "power",
+      "implementation_owner": "kicad_tooling/hwrepo/power_ic_decoupling_map_coverage.py#ic_decoupling_map_coverage_issues"
+    },
+    {
       "rule_id": "power.mapped_series_path_mismatch",
       "title": "Mapped series power path differs from the schematic",
       "status": "active",

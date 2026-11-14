@@ -2,6 +2,8 @@
 
 from types import MappingProxyType
 
+from tests.design_lint_fixture_ref_support import _refs
+
 OPEN_DRAIN_CONTROL_PARITY_FIXTURES = MappingProxyType(
     {
         "power.open_drain_control_input_pullup_voltage_review": MappingProxyType(
@@ -36,6 +38,23 @@ SUPPLY_RANGE_MAP_COVERAGE_PARITY_FIXTURES = MappingProxyType(
                         "tests.test_component_supply_range_map_coverage_parity."
                         "test_component_supply_range_map_coverage_review_matches_between_cli_and_mcp"
                     ),
+                ),
+            }
+        ),
+    }
+)
+
+IC_DECOUPLING_MAP_COVERAGE_PARITY_FIXTURES = MappingProxyType(
+    {
+        "power.ic_decoupling_map_pin_coverage": MappingProxyType(
+            {
+                "fault_fixtures": _refs(
+                    "tests.test_ic_decoupling_map_pin_coverage_parity",
+                    "test_ic_decoupling_map_pin_coverage_review_matches_between_cli_and_mcp",
+                ),
+                "valid_control_fixtures": _refs(
+                    "tests.test_ic_decoupling_map_pin_coverage_parity",
+                    "test_ic_decoupling_map_pin_coverage_review_matches_between_cli_and_mcp",
                 ),
             }
         ),

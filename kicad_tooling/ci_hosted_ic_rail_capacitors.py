@@ -10,6 +10,10 @@ import tempfile
 from pathlib import Path
 
 from .ci_hosted_ic_decoupling import source_backed_ic_decoupling_result
+from .ci_hosted_ic_decoupling_map_coverage import (
+    evaluate_ic_decoupling_map_coverage_native_probe,
+    ic_decoupling_map_coverage_event_fields,
+)
 from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.component_role_models import (
     ComponentRoleBinding,
@@ -52,6 +56,7 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
         "source-backed-dnp-ic": "source-backed-dnp-ic.kicad_sch",
         "custom-capacitor-role-control": "custom-capacitor-role-control.kicad_sch",
         "custom-capacitor-role-wrong-return": "custom-capacitor-role-wrong-return.kicad_sch",
+        "decoupling-map-coverage": "decoupling-map-coverage.kicad_sch",
     }
     source_hashes = {case: digest(fixture_root / name) for case, name in cases.items()}
     scratch = Path(
@@ -152,6 +157,7 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
         "source-backed-dnp-ic": set(),
         "custom-capacitor-role-control": set(),
         "custom-capacitor-role-wrong-return": {("+3V3", ("U1.1",), ("U1",))},
+        "decoupling-map-coverage": set(),
     }
     expected_findings: dict[str, set[str]] = {
         "positive-rail-no-cap": {"+3V3: IC supply decoupling review"},
@@ -165,6 +171,7 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
         "source-backed-dnp-ic": set(),
         "custom-capacitor-role-control": set(),
         "custom-capacitor-role-wrong-return": {"+3V3: IC supply decoupling review"},
+        "decoupling-map-coverage": set(),
     }
     expected_source_path_findings: dict[str, set[str]] = {
         "positive-rail-no-cap": set(),
@@ -178,6 +185,7 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
         "source-backed-dnp-ic": set(),
         "custom-capacitor-role-control": set(),
         "custom-capacitor-role-wrong-return": set(),
+        "decoupling-map-coverage": set(),
     }
     expected_power_pin_not_driven = {
         "positive-rail-no-cap",
@@ -205,6 +213,7 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
     raw_hashes: dict[tuple[str, str], str] = {}
     reports: dict[tuple[str, str], DesignLintReport] = {}
     ic_decoupling_results: dict[tuple[str, str], tuple[str, tuple[str, ...]]] = {}
+    map_coverage_probe = None
     for case in cases:
         for run in ("first", "repeat"):
             netlist_path = output / f"{case}.{run}.netlist.xml"
@@ -212,6 +221,8 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
                 raise ValueError(f"Native IC rail-capacitor fixture omitted {netlist_path.name}")
             raw_hashes[(case, run)] = digest(netlist_path)
             observed = read_netlist(netlist_path)
+            if case == "decoupling-map-coverage" and run == "first":
+                map_coverage_probe = evaluate_ic_decoupling_map_coverage_native_probe(observed)
             normalized = json.dumps(
                 observed.model_dump(mode="json"),
                 sort_keys=True,
@@ -319,6 +330,7 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
                 "source-backed-dnp-ic",
                 "custom-capacitor-role-control",
                 "custom-capacitor-role-wrong-return",
+                "decoupling-map-coverage",
             }:
                 expected_source_net = (
                     {"U1.1", "U2.1"} if case == "source-backed-no-cap" else {"C1.1", "U1.1", "U2.1"}
@@ -460,6 +472,7 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
                 else "not_run"
             )
             or "none",
+            **ic_decoupling_map_coverage_event_fields(case, map_coverage_probe),
             source_path_findings=";".join(sorted(source_path_findings)) or "none",
             repeatable="true",
             repeatability_basis="normalized_netlist_and_erc",

@@ -19,6 +19,7 @@ from tests.design_lint_fixtures.component_supply_voltage_ranges import (
 )
 from tests.electrical_parity_support import contract_netlist_xml
 from tests.mcp_parity_support import parity_design_lint_policy, semantic_design_lint_report
+from tests.pcb_drc_parity_support import install_source_bound_drc_receipt
 from tests.synthetic_design_lint_project import (
     install_synthetic_netlist,
     run_design_lint_cli,
@@ -51,6 +52,7 @@ def test_component_supply_range_map_coverage_review_matches_between_cli_and_mcp(
     )
     root, native = synthetic_design_lint_project(tmp_path, parity_design_lint_policy(policy))
     install_synthetic_netlist(native, contract_netlist_xml(supply_range_map_coverage_netlist()))
+    install_source_bound_drc_receipt(root, native)
     process = run_design_lint_cli(tmp_path, root, native)
     assert process.returncode in {0, 1}, process.stderr + process.stdout
     cli = DesignLintReport.model_validate_json(process.stdout)

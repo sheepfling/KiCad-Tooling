@@ -52,6 +52,7 @@ def test_missing_capacitor_and_controls_export_repeatably(
         "source-backed-dnp-ic": "2c2604a13e52edd20b2e41beab5504a5f8380a59d3f6f95a52907e21cb796bd6",
         "custom-capacitor-role-control": "338b39009694575fae172d6691ddd8d17804d74503ad73c374a53661373e789d",
         "custom-capacitor-role-wrong-return": "52edf68703b6fc4052fbb7197778108fc52c0a4ac4195bd533a1d1aaead8669a",
+        "decoupling-map-coverage": "7d32eb3d4ab7d073e2be12f6ad6683f38ffdbbe6f72b8906068edeb79ed81e8d",
     }
     expected_findings: dict[str, tuple[str, set[str]]] = {
         "positive-rail-no-cap": ("REVIEW", {"+3V3: IC supply decoupling review"}),
@@ -71,6 +72,7 @@ def test_missing_capacitor_and_controls_export_repeatably(
             "REVIEW",
             {"+3V3: IC supply decoupling review"},
         ),
+        "decoupling-map-coverage": ("PASS", set()),
     }
     expected_source_path_findings = {
         "positive-rail-no-cap": "none",
@@ -84,6 +86,7 @@ def test_missing_capacitor_and_controls_export_repeatably(
         "source-backed-dnp-ic": "none",
         "custom-capacitor-role-control": "none",
         "custom-capacitor-role-wrong-return": "none",
+        "decoupling-map-coverage": "none",
     }
     expected_power_pin_not_driven = {
         "positive-rail-no-cap",
@@ -119,6 +122,7 @@ def test_missing_capacitor_and_controls_export_repeatably(
         "ic-rail-cap-fixture/source-backed-dnp-ic",
         "ic-rail-cap-fixture/custom-capacitor-role-control",
         "ic-rail-cap-fixture/custom-capacitor-role-wrong-return",
+        "ic-rail-cap-fixture/decoupling-map-coverage",
     }
     native = results["ic-rail-cap-fixture/native-export"]
     assert native["status"] == "PASS"
@@ -179,3 +183,6 @@ def test_missing_capacitor_and_controls_export_repeatably(
         results["ic-rail-cap-fixture/source-backed-dnp-ic"]["ic_decoupling_findings"]
         == "synthetic-u1-vdd-decoupling: U1.1"
     )
+    map_coverage = results["ic-rail-cap-fixture/decoupling-map-coverage"]
+    assert map_coverage["ic_decoupling_map_pin_coverage_control"] == "quiet"
+    assert map_coverage["ic_decoupling_map_pin_coverage_fault"] == "U1.1"

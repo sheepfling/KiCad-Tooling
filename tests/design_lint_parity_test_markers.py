@@ -3,6 +3,7 @@
 PARITY_LINT_TEST_MODULES = frozenset(
     {
         "tests/test_component_supply_range_map_coverage_parity.py",
+        "tests/test_ic_decoupling_map_pin_coverage_parity.py",
         "tests/test_design_lint_mcp_parity_connector_named_power_peers.py",
         "tests/test_design_lint_mcp_parity_mapped_interface_signal.py",
         "tests/test_design_lint_mcp_parity_mapped_contact_sharing.py",

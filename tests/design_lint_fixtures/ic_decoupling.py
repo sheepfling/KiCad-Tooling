@@ -85,6 +85,63 @@ def ic_decoupling_map(
     )
 
 
+def ic_decoupling_map_coverage_netlist() -> NetlistContract:
+    """Return one mapped IC with two native supply pins left outside the map."""
+    observed = ic_decoupling_netlist(("47nF", "47nF", "47nF"))
+    nets = dict(observed.nets)
+    nets["+3V3"] = (*nets["+3V3"], "U1.3", "U1.4")
+    return observed.model_copy(
+        update={
+            "nets": nets,
+            "pin_functions": {
+                **observed.pin_functions,
+                "U1.3": "VDDIO",
+                "U1.4": "VDDA",
+            },
+            "pin_electrical_types": {
+                **observed.pin_electrical_types,
+                "U1.3": "power_in",
+                "U1.4": "power_in",
+            },
+            "component_pin_numbers": {**observed.component_pin_numbers, "U1": ("1", "2", "3", "4")},
+        }
+    )
+
+
+def ic_decoupling_map_coverage_map(
+    covered_supply_pins: tuple[str, ...] = ("U1.1",),
+) -> IcDecouplingMap:
+    """Return exact synthetic requirements for the selected IC supply pins."""
+    capacitor_for_pin = {"U1.1": "C1", "U1.3": "C2", "U1.4": "C3"}
+    requirements = []
+    for pin in covered_supply_pins:
+        capacitor = capacitor_for_pin[pin]
+        requirements.append(
+            IcDecouplingRequirement(
+                id=f"{pin.casefold().replace('.', '-')}-decoupling",
+                basis="Synthetic coverage test only; this does not claim a datasheet requirement",
+                ic_reference="U1",
+                expected_ic_value="Synthetic IC",
+                expected_ic_symbol="Synthetic:Logic",
+                expected_ic_footprint="Synthetic:QFN",
+                power_pin=pin,
+                power_net="+3V3",
+                return_net="GND",
+                minimum_total_capacitance_pf=47_000.0,
+                capacitors=(
+                    IcDecouplingCapacitorRequirement(
+                        reference=capacitor,
+                        expected_symbol="Device:C",
+                        expected_footprint="Synthetic:0603",
+                        power_pin=f"{capacitor}.1",
+                        return_pin=f"{capacitor}.2",
+                    ),
+                ),
+            )
+        )
+    return IcDecouplingMap(requirements=tuple(requirements))
+
+
 def catalog_reachability_rule_ids() -> set[str]:
     """Return rule IDs reached by the synthetic below-minimum requirement."""
     report = evaluate(

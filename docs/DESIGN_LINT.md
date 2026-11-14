@@ -10147,6 +10147,43 @@ rating or transient response, check PCB placement, or prove copper/return-path
 continuity. Pair it with the separate PCB decoupling and return-path checks
 where those requirements apply.
 
+### Review IC decoupling-map pin coverage
+
+`power.ic_decoupling_map_pin_coverage` is an optional completeness prompt for
+fitted `U`/`IC` components already named in `ic_decoupling_map`. It compares
+the map's exact component identity and mapped pin numbers with KiCad's native
+pin inventory and electrical types. Unmapped `power_in` pins, incomplete pin
+metadata, pin-inventory disagreement, or a stale component identity produce a
+review finding. Recognized return-function pins such as `GND`, `VSS`, and
+`0V` are excluded even if a symbol classifies one as `power_in`.
+
+Enable this review for a project by adding the following rule override beside
+its existing `ic_decoupling_map`:
+
+```json
+{
+  "design_lint": {
+    "rules": [
+      {
+        "rule_id": "power.ic_decoupling_map_pin_coverage",
+        "mode": "review",
+        "reason": "Review every mapped IC power-input pin against native pin metadata"
+      }
+    ]
+  }
+}
+```
+
+The rule is off by default and only scopes to references that the project has
+already entered in the map. It does not discover unmapped ICs or claim that a
+capacitor is required for every `power_in` pin; it asks the project reviewer to
+decide whether each pin needs a requirement or an exact documented exception.
+A quiet result depends on KiCad's exported symbol metadata and cannot prove
+that the symbol lists every physical package pin, that the authored basis is
+correct, or that PCB placement, copper, or return paths are adequate. Native
+coverage is exercised by the digest-pinned KiCad 10.0.0 and 10.0.5 fixture
+lane.
+
 ## Require mapped power-sequence dependencies
 
 Use `design_lint.power_sequence_map` when an approved requirement says one

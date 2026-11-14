@@ -27228,6 +27228,43 @@ acceptance threads while new lint features proceed:
   wheel/sdist builds, installed-wheel checks, and external/adapted template
   acceptance also passed.
 
+#### LINT-472 — Review omitted native IC power-input pins in the decoupling map
+
+- **Status:** Implemented as an opt-in power-theme coverage review. It adds no
+  automatic capacitor requirement and defaults off.
+- **Gap:** The existing exact IC decoupling check verifies each requirement
+  already present in `ic_decoupling_map`; it cannot identify other native
+  `power_in` pins that the project has not entered in that map. This can leave
+  a per-pin map looking complete when the native symbol exposes more supply
+  inputs.
+- **Scenario:** For fitted `U`/`IC` references already named in the map, compare
+  exact mapped identity, complete native pin-number inventory, and per-pin
+  electrical types. Prompt for unmapped `power_in` pins, unavailable metadata,
+  inventory disagreement, or stale identity. A complete map is quiet; DNP
+  devices, non-IC references, and unmapped ICs stay outside this review. Known
+  return-function pins such as `GND`, `VSS`, and `0V` are excluded from the
+  missing-supply set.
+- **Interpretation:** This is a heuristic coverage prompt, not an electrical
+  rule. A KiCad `power_in` classification does not prove that decoupling is
+  required. Reviewers decide whether to add an independently approved
+  requirement or record an exact exception. The check does not discover ICs
+  omitted from the map, confirm physical package-pin completeness, establish
+  the source basis, or assess placement, copper, or return-path adequacy.
+- **Evidence boundary:** Unit and CLI/MCP parity fixtures use synthetic
+  `NetlistContract` data. The exact-native fixture is a tooling-owned schematic
+  with a synthetic component identity, exported and normalized twice with
+  digest-pinned KiCad 10.0.0 and 10.0.5. No external project schematic or
+  proprietary design data is imported into this repository.
+- **Selection:** Run the rule-scoped selector with
+  `design_lint and power_lint and
+  design_lint_rule(rule_id="power.ic_decoupling_map_pin_coverage")`. The
+  native fixture uses `KICAD_RUN_NATIVE_IC_RAIL_CAPACITOR_FIXTURES=1` and
+  Docker.
+- **Acceptance:** Local synthetic/parity/catalog/selector/architecture checks
+  passed (26 tests); the exact-version Docker fixture lane passed on KiCad
+  10.0.0 and 10.0.5 (2 tests). Linux and Windows Pyright reported 0 errors;
+  Ruff check/format, Rumdl, and mdrepo passed. Hosted CI has not run yet.
+
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
 ## Completion and release gate

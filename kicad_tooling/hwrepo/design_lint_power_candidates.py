@@ -18,6 +18,9 @@ from .design_lint_component_unconnected_pin_candidate_evidence import (
 from .design_lint_power_candidate_evidence import PowerCandidate
 from .design_lint_power_capacitor_hold_up import capacitor_hold_up_candidates
 from .design_lint_power_decoupling import ic_decoupling_candidates
+from .design_lint_power_ic_decoupling_map_coverage import (
+    ic_decoupling_map_pin_coverage_candidates,
+)
 from .design_lint_power_inputs import PowerCandidateInputs
 from .design_lint_power_regulator_passives import regulator_required_passive_candidates
 from .design_lint_power_regulator_pin_roles import regulator_pin_role_candidates
@@ -152,6 +155,7 @@ def scan_power_candidates(
             )
         )
     found.extend(ic_decoupling_candidates(observed, ic_decoupling_map))
+    found.extend(ic_decoupling_map_pin_coverage_candidates(observed, ic_decoupling_map))
     found.extend(positive_supply_pins_on_negative_rails(observed))
     found.extend(enable_control_tied_to_return_candidates(observed))
     found.extend(open_drain_control_pullup_voltage_candidates(observed))
