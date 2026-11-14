@@ -17,6 +17,10 @@ CONNECTOR_RULE_NODE_CASES = (
     ),
     (
         "connector.footprint_peer_pin_inventory_disagreement",
+        "tests/test_design_lint_determinism_connector_peer_pin_inventory.py::test_fault_and_control_reports_are_stable_across_hash_seed_processes",
+    ),
+    (
+        "connector.footprint_peer_pin_inventory_disagreement",
         "tests/test_design_lint_mcp_parity_connector_peer_inventory.py::test_connector_peer_inventory_review_matches_between_cli_and_mcp",
     ),
     (

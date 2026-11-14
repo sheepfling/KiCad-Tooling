@@ -151,6 +151,7 @@ CONNECTOR_LINT_TEST_MODULES = frozenset(
         "tests/test_design_lint_mcp_parity_connector_peer_pin_function.py",
         "tests/test_connector_footprint_peer_pin_inventory_consistency.py",
         "tests/test_connector_footprint_peer_pin_inventory_consistency_native.py",
+        "tests/test_design_lint_determinism_connector_peer_pin_inventory.py",
         "tests/test_design_lint_mcp_parity_connector_peer_inventory.py",
         "tests/test_connector_footprint_peer_architecture.py",
         "tests/test_connector_footprint_named_signal_divergence.py",

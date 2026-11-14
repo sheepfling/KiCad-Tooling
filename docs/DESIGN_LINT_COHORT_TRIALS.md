@@ -1329,7 +1329,9 @@ for dispositions and timing; leave unmeasured values unstated.
   be common with peers.
 - **Evidence and disposition:** Tooling-owned synthetic cases and repeated
   digest-pinned KiCad 10.0.0/10.0.5 exports cover one assigned `VBUS` pin in
-  only one symbol plus a matching-inventory control. This first-party gap
+  only one symbol plus a matching-inventory control. The complete fault and
+  control reports now also match across three independently hash-seeded Python
+  processes. This first-party gap
   check imports no candidate code, public board, or proprietary project
   fixture. Applicability outside the synthetic case, reviewer value, and field
   precision remain unmeasured.

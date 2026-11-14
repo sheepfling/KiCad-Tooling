@@ -679,6 +679,9 @@ Docker exports are recorded in the
   tests/test_design_lint_mcp_parity_connector_peer_inventory.py \
   -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.footprint_peer_pin_inventory_disagreement")'
 
+.venv/bin/python -I -m pytest tests/test_design_lint_determinism_connector_peer_pin_inventory.py \
+  -m 'design_lint and slow and connector_lint and interface_lint and design_lint_rule(rule_id="connector.footprint_peer_pin_inventory_disagreement")'
+
 KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_connector_footprint_peer_pin_inventory_consistency_native.py \
   -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.footprint_peer_pin_inventory_disagreement")'

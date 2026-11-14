@@ -848,7 +848,8 @@
         "tests.test_connector_footprint_peer_pin_inventory_consistency_native.test_native_connector_peer_pin_inventory_difference_and_control_repeat"
       ],
       "metamorphic_fixtures": [
-        "tests.test_connector_footprint_peer_pin_inventory_consistency.test_finding_is_stable_under_source_mapping_reordering"
+        "tests.test_connector_footprint_peer_pin_inventory_consistency.test_finding_is_stable_under_source_mapping_reordering",
+        "tests.test_design_lint_determinism_connector_peer_pin_inventory.test_fault_and_control_reports_are_stable_across_hash_seed_processes"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_footprint_peer_pin_inventory_consistency.py#connector_footprint_peer_pin_inventory_disagreements",

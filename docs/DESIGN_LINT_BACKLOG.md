@@ -4648,8 +4648,8 @@ Current catalog audit: 392 covered, 0 not applicable, 0 unreviewed.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v94. The cross-process probe supports themed report
-  selectors and retains the complete 338-report inventory gate. Fault/control
+- **Status:** Implemented v95. The cross-process probe supports themed report
+  selectors and retains the complete 341-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -4833,8 +4833,12 @@ Current catalog audit: 392 covered, 0 not applicable, 0 unreviewed.
   are included in this rule's selector.
   The v94 extension adds source-bound duplicate PCB object UUID fault and
   unique-ID control reports. The three-process comparison includes the full
-  REVIEW report and confirms the control stays quiet; the complete inventory
-  now contains 338 reports.
+  REVIEW report and confirms the control stays quiet; the v95 complete
+  inventory contains 341 reports.
+  The v95 extension adds complete reports for LINT-479's one-extra-pin fault
+  and matching-inventory control. Three independently hash-seeded processes
+  preserve the REVIEW finding and quiet control; the full report inventory now
+  contains 341 reports.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
@@ -27588,7 +27592,8 @@ acceptance threads while new lint features proceed:
 - **Fixtures:** Tooling-owned synthetic cases cover the pin addition on either
   peer, matching inventory, multiple differences, generic or incomplete pin
   metadata, inconsistent common-pin metadata, mismatched/missing `PART_ID`,
-  DNP, no shared anchor, policy, determinism, and CLI/MCP parity. A native
+  DNP, no shared anchor, policy, input-order and cross-process hash-seed
+  determinism, and CLI/MCP parity. A native
   schematic fault adds one named pin to one of two exact-part peer symbols; a
   matching-inventory control exports on digest-pinned KiCad 10.0.0 and 10.0.5
   Docker images. No cohort board or proprietary project source is stored.
@@ -27596,21 +27601,25 @@ acceptance threads while new lint features proceed:
   `tests/test_connector_footprint_peer_pin_inventory_consistency.py` and
   `tests/test_design_lint_mcp_parity_connector_peer_inventory.py` with
   `design_lint and connector_lint and interface_lint` plus the rule ID. Run
+  `tests/test_design_lint_determinism_connector_peer_pin_inventory.py` with
+  `slow` and the same rule selector. Run
   `tests/test_connector_footprint_peer_pin_inventory_consistency_native.py`
   with Docker, `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`, `native_kicad`, and the
   same selector.
-- **Local acceptance:** The scoped package runner passed 470 tests with 9,553
+- **Local acceptance:** The scoped package runner passed 471 tests with 9,553
   unrelated tests deselected, including repeated digest-pinned Docker exports
   on KiCad 10.0.0 and 10.0.5. Ruff format/check, Alphus module-role and
   shared-utility checks, Rumdl, mdrepo, Linux and Windows Pyright, wheel/sdist
   builds, installed-wheel origin/version checks, and separate plus adapted
-  public-template rehearsals passed. After synchronizing this backlog entry,
-  the focused catalog/documentation/fixture-reachability selection passed 19
-  tests; Rumdl and mdrepo passed on the updated docs.
-- **Hosted acceptance:** `v0.5.3rc792` passed the scoped GitHub Actions gate
-  (run `43640218152`), including the digest-pinned native KiCad 10.0.0 and
-  10.0.5 Docker fixtures and the installed-wheel rehearsal against the separate
-  public project template.
+  public-template rehearsals passed. The selected run includes the new
+  three-process hash-seed fault/control regression. A separate full inventory
+  audit passed across all 341 serialized reports; the focused catalog,
+  documentation, and fixture-reachability selection also passed 19 tests.
+- **Hosted acceptance:** The base feature tag `v0.5.3rc792` passed the scoped
+  GitHub Actions gate (run `43640218152`), including digest-pinned native KiCad
+  10.0.0 and 10.0.5 Docker fixtures and the installed-wheel rehearsal against
+  the separate public project template. Hosted acceptance for this hash-seed
+  coverage extension is pending the next scoped tag.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 

@@ -100,6 +100,7 @@ CONNECTOR_PEER_PIN_CONSISTENCY_THEME_SUITES = (
     "test_design_lint_mcp_parity_connector_peer_pin_function.py",
     "test_connector_footprint_peer_pin_inventory_consistency.py",
     "test_connector_footprint_peer_pin_inventory_consistency_native.py",
+    "test_design_lint_determinism_connector_peer_pin_inventory.py",
     "test_design_lint_mcp_parity_connector_peer_inventory.py",
 )
 HOSTED_ORCHESTRATION_THEME_SUITES = ("test_ci_hosted_native_orchestration.py",)
