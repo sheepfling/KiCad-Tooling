@@ -29,7 +29,9 @@ PCB_SWITCHING_LOOP_MODULES = (
     "pcb_switching_loop_route_topology.py",
     "pcb_switching_loop_route_coverage.py",
     "pcb_switching_loop_review.py",
+    "pcb_switching_loop_map_coverage.py",
 )
+SWITCHING_REGULATOR_PIN_MODULES = ("switching_regulator_pins.py",)
 
 
 PCB_DRC_COVERAGE_MODULES = (
@@ -89,6 +91,17 @@ def test_pcb_switching_loop_rule_refs_point_to_the_owning_modules() -> None:
         "kicad_tooling/hwrepo/pcb_switching_loop_route_topology.py#resolve_switching_loop_trace_edge"
         in text
     )
+    assert (
+        "kicad_tooling/hwrepo/pcb_switching_loop_map_coverage.py#"
+        "switching_regulator_loop_map_candidates"
+    ) in text
+
+
+def test_switching_regulator_pin_recognition_stays_in_a_small_shared_owner() -> None:
+    modules = [HWREPO / name for name in SWITCHING_REGULATOR_PIN_MODULES]
+
+    assert all(path.is_file() for path in modules)
+    assert all(_line_count(path) < IMPLEMENTATION_MAX_LINES for path in modules)
 
 
 def test_pcb_drc_coverage_stays_split_by_responsibility() -> None:

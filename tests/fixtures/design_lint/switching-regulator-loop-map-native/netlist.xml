@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export>
+  <components>
+    <comp ref="U1">
+      <value>Synthetic buck regulator</value>
+      <footprint>Synthetic:QFN</footprint>
+      <libsource lib="Regulator_Switching" part="SyntheticBuck"/>
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="Regulator_Switching" part="SyntheticBuck">
+      <pins>
+        <pin num="1" name="VIN" type="power_in"/>
+        <pin num="2" name="SW" type="passive"/>
+        <pin num="3" name="LX1" type="passive"/>
+        <pin num="4" name="GND" type="power_in"/>
+      </pins>
+    </libpart>
+  </libparts>
+  <nets>
+    <net name="INPUT"><node ref="U1" pin="1"/></net>
+    <net name="SWITCH_A"><node ref="U1" pin="2"/></net>
+    <net name="SWITCH_B"><node ref="U1" pin="3"/></net>
+    <net name="RETURN"><node ref="U1" pin="4"/></net>
+  </nets>
+</export>

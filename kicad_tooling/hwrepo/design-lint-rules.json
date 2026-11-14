@@ -13153,6 +13153,52 @@
       "implementation_owner": "kicad_tooling/hwrepo/pcb_switching_loop_review.py#pcb_switching_loop_entries"
     },
     {
+      "rule_id": "pcb.switching_regulator_loop_map_coverage",
+      "title": "Fitted switching regulator has unmapped switch-node pads",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "evidence_adapter": "Native KiCad schematic netlist with complete component pin inventory, native pin functions and electrical types, exact symbol library identity, and current project-authored switching-loop map",
+      "predicate": "For PCB and PCB-only projects, identify each fitted component with an exact Regulator_Switching library prefix, nonempty footprint, complete native pin inventory and metadata, and one unambiguous net per exact SW, SW1.., LX.., or PH.. function. Emit a REVIEW candidate when any identified switch-node pin is absent from every authored pcb_switching_loop_map requirement.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 native netlist exports; exact project toolchain version and image digest remain checked"
+      ],
+      "limitations": [
+        "This is a default-off coverage prompt limited to the exact Regulator_Switching symbol library prefix and bounded native SW/LX/PH function names. Custom libraries and undocumented pin aliases are outside the predicate.",
+        "Incomplete pin inventories or function/type metadata, open or multiply assigned switch-node pins, DNP components, schematic-only projects, and components without an assigned footprint remain quiet.",
+        "The check does not infer converter topology, required loop geometry, return-net identity, acceptable area, copper continuity, switching behavior, or whether an unlisted switch-node pad is intentionally out of scope. Existing source-bound map validation remains responsible for checking authored pads against the board.",
+        "A candidate means only that the exact observed pins are not covered by a project-authored loop map. Configure review, block, off, or an exact-fingerprint ignore in the project policy."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_switching_regulator_loop_map_coverage.test_unmapped_fitted_switching_regulator_prompts_with_exact_pad_evidence",
+        "tests.test_pcb_switching_regulator_loop_map_coverage.test_partial_and_complete_maps_report_only_unmapped_switch_pads",
+        "tests.test_design_lint_mcp_parity_switching_regulator_loop_map.test_switching_regulator_loop_map_fault_and_control_match_cli_and_mcp",
+        "tests.test_pcb_switching_regulator_loop_map_coverage_native.test_native_switching_regulator_pin_inventory_and_map_coverage"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_switching_regulator_loop_map_coverage.test_partial_and_complete_maps_report_only_unmapped_switch_pads",
+        "tests.test_pcb_switching_regulator_loop_map_coverage.test_ambiguous_or_out_of_scope_symbol_data_stays_quiet",
+        "tests.test_pcb_switching_regulator_loop_map_coverage.test_non_pcb_project_kinds_stay_quiet",
+        "tests.test_design_lint_mcp_parity_switching_regulator_loop_map.test_switching_regulator_loop_map_fault_and_control_match_cli_and_mcp",
+        "tests.test_pcb_switching_regulator_loop_map_coverage_native.test_native_switching_regulator_pin_inventory_and_map_coverage"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_pcb_switching_regulator_loop_map_coverage.test_candidate_order_and_fingerprint_ignore_native_mapping_order"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SWITCHING_REGULATOR_LOOP_MAP_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_switching_loop_map_coverage.py#switching_regulator_loop_map_candidates",
+        "kicad_tooling/hwrepo/switching_regulator_pins.py#is_switch_node_function",
+        "tests/fixtures/design_lint/switching-regulator-loop-map-native/unmapped.kicad_sch",
+        "tests/design_lint_fixtures/pcb_switching_regulator_loop_map.py#regulator_netlist"
+      ],
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_switching_loop_map_coverage.py#switching_regulator_loop_map_candidates"
+    },
+    {
       "rule_id": "pcb.differential_pair_rule_coverage",
       "title": "Authored differential-pair constraints lack exact active native DRC coverage",
       "status": "active",

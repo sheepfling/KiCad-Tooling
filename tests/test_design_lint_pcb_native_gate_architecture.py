@@ -37,3 +37,21 @@ def test_pcb_decoupling_rule_selects_layer_aware_native_fault_control_case() -> 
     assert native_fixture in rule.required_native_fixtures
     assert native_test in rule.fault_fixtures
     assert native_test in rule.valid_control_fixtures
+
+
+@pytest.mark.rule_gate_integrity
+def test_switching_regulator_coverage_rule_selects_exact_native_inventory_case() -> None:
+    rule = next(
+        entry
+        for entry in rule_catalog().rules
+        if entry.rule_id == "pcb.switching_regulator_loop_map_coverage"
+    )
+    native_fixture = "KICAD_RUN_NATIVE_SWITCHING_REGULATOR_LOOP_MAP_FIXTURES"
+    native_test = (
+        "tests.test_pcb_switching_regulator_loop_map_coverage_native."
+        "test_native_switching_regulator_pin_inventory_and_map_coverage"
+    )
+
+    assert native_fixture in rule.required_native_fixtures
+    assert native_test in rule.fault_fixtures
+    assert native_test in rule.valid_control_fixtures

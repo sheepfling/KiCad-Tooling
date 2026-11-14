@@ -119,6 +119,7 @@ def test_catalog_ids_match_the_closed_policy_rule_type() -> None:
             "pcb.board_only_footprint",
             "pcb.required_fitted_reference",
             "pcb.track_angle_geometry_review",
+            "pcb.switching_regulator_loop_map_coverage",
             "power.component_supply_voltage_outside_range",
             "power.component_supply_range_pin_coverage",
             "power.component_supply_range_map_coverage",

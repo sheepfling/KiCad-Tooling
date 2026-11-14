@@ -929,7 +929,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 382 active rules.
+The catalog currently contains 383 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -5556,6 +5556,45 @@ KICAD_RUN_NATIVE_PCB_FIXTURES=1 .venv/bin/python -I -m pytest \
 
 The exact source and boundaries of the tooling-owned native board are in the
 [alternate-net fixture notes](../kicad_tooling/hwrepo/fixtures/pcb-reference-alternate-net-README.md).
+
+## Find switching regulators missing loop-map coverage
+
+`pcb.switching_regulator_loop_map_coverage` is a default-off review prompt for
+PCB and PCB-only projects. It recognizes fitted components with a nonempty
+footprint, an exact `Regulator_Switching` native symbol-library identity, a
+complete native pin inventory and function/type metadata, and one unambiguous
+net assignment for each exact `SW`, `SW1`…`SWn`, `LX`…`LXn`, or `PH`…`PHn`
+pin function. It asks for review if any recognized pad is absent from all
+`pcb_switching_loop_map.requirements[*].loop_pads` entries. A missing map leaves
+all recognized pads uncovered.
+
+The rule does not infer converter topology, a required return net or copper
+path, loop geometry, an area limit, or a defect. It remains quiet for DNP parts,
+incomplete metadata, open or multiply assigned switch-node pins, unsupported
+symbol libraries or function aliases, and non-PCB project kinds. Enable it
+through the normal per-project rule policy:
+
+```json
+{
+  "rule_id": "pcb.switching_regulator_loop_map_coverage",
+  "mode": "review",
+  "reason": "Review every fitted switching converter's loop-map coverage"
+}
+```
+
+The synthetic native fixture checks exported pin identities on digest-pinned
+KiCad 10.0.0 and 10.0.5. Its source hash and synthetic-only scope are recorded
+in the [fixture notes](../tests/fixtures/design_lint/switching-regulator-loop-map-native/README.md).
+Run the focused suite with:
+
+```sh
+KICAD_RUN_NATIVE_SWITCHING_REGULATOR_LOOP_MAP_FIXTURES=1 \
+  .venv/bin/python -I -m pytest \
+  tests/test_pcb_switching_regulator_loop_map_coverage.py \
+  tests/test_design_lint_mcp_parity_switching_regulator_loop_map.py \
+  tests/test_pcb_switching_regulator_loop_map_coverage_native.py \
+  -m 'design_lint and pcb_lint and power_lint'
+```
 
 ## Review switching-current loop geometry
 

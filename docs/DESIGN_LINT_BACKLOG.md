@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 382 rules are implemented with synthetic regression coverage.
+The following 383 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 382 active rules.
+The catalog currently contains 383 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -720,6 +720,7 @@ skipped under prerelease policy.
 - `pcb.reference_plane_unanchored_island`
 - `pcb.alternate_reference_plane_run`
 - `pcb.switching_loop_geometry`
+- `pcb.switching_regulator_loop_map_coverage`
 - `pcb.differential_pair_rule_coverage`
 - `pcb.differential_pair_unmapped_native_rule`
 - `pcb.signal_path_rule_coverage`
@@ -4450,7 +4451,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 382 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 383 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -27008,6 +27009,50 @@ acceptance threads while new lint features proceed:
   Run `tests/test_connector_footprint_peer_generic_power_partial_open_native.py`
   with Docker, `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`, `native_kicad`, and the
   same selector.
+
+#### LINT-468 — Review switching-regulator pads missing loop-map coverage
+
+- **Status:** Implemented as the default-off REVIEW heuristic
+  `pcb.switching_regulator_loop_map_coverage`.
+- **Priority:** P2 coverage review. Existing switching-loop checks validate
+  authored maps against exact native board geometry, but do not ask whether a
+  fitted converter in the schematic was omitted from the map entirely.
+- **Predicate:** For PCB and PCB-only projects, recognize fitted components
+  whose exact native symbol identity uses the `Regulator_Switching` library,
+  whose assigned footprint is nonempty, whose full native pin inventory has
+  function and electrical-type metadata, and whose exact `SW`, `SW1`…`SWn`,
+  `LX`…`LXn`, or `PH`…`PHn` pins each have one assigned net. Review when any
+  such pin does not occur in an authored `pcb_switching_loop_map` requirement.
+  With no map, all recognized switch-node pads are uncovered.
+- **Incremental value:** Existing mapped loop review checks the quality and
+  native board evidence for declared converter paths. This cue helps reviewers
+  notice when a converter has no map or only partial pad coverage. It does not
+  identify a topology or claim a unique electrical defect.
+- **Controls and policy:** Fully mapped switch pads, other symbol libraries,
+  unrecognized exact function names, DNP parts, missing footprint or pin
+  metadata, open and multiply assigned switch pins, and non-PCB project kinds
+  stay quiet. The shared `SW`/`LX`/`PH` recognizer preserves the existing
+  bootstrap-capacitor check's exact function boundary. Standard `review`,
+  `block`, `off`, and exact-fingerprint ignore policy applies.
+- **Evidence:** Synthetic tests cover missing and partial maps, complete-map
+  controls, scope and metadata boundaries, mapping-order stability, policy,
+  exact ignore, and CLI/MCP parity. A tooling-owned four-pin symbol fixture is
+  exported twice with digest-pinned KiCad 10.0.0 and 10.0.5; native library
+  identity, complete pin inventory, pin functions, electrical types, and map
+  fault/control behavior are asserted. No project or cohort board source is
+  included.
+- **Boundary:** Recognition is limited to the exact KiCad symbol-library
+  prefix and bounded native function names. The candidate only states that
+  observed pads are absent from the authored map. It does not infer a
+  switching topology, return domain, required geometry, area threshold, copper
+  continuity, or electrical correctness.
+- **Selection:** Run
+  `tests/test_pcb_switching_regulator_loop_map_coverage.py`,
+  `tests/test_design_lint_mcp_parity_switching_regulator_loop_map.py`, and
+  `tests/test_pcb_switching_regulator_loop_map_coverage_native.py` with
+  `design_lint and pcb_lint and power_lint` plus the rule selector. The native
+  suite also requires Docker and
+  `KICAD_RUN_NATIVE_SWITCHING_REGULATOR_LOOP_MAP_FIXTURES=1`.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 

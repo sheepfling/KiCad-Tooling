@@ -49,6 +49,10 @@ from kicad_tooling.hwrepo.i2c_pullup_heuristics import i2c_pullup_heuristic_cove
 from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     NetlistContract,
+    ProjectKind,
+)
+from kicad_tooling.hwrepo.pcb_switching_loop_map_coverage import (
+    switching_regulator_loop_map_candidates,
 )
 from kicad_tooling.hwrepo.stm32_pin_map import parse_cubemx_ioc, stm32_pin_map_mismatches
 from kicad_tooling.hwrepo.stm32_pin_map_models import Stm32PinMapCoverageReport
@@ -65,6 +69,7 @@ from tests.design_lint_fixtures.catalog_reachability_protocols import protocol_r
 from tests.design_lint_fixtures.component_catalog_reachability import (
     reachable_component_rule_ids,
 )
+from tests.design_lint_fixtures.pcb_switching_regulator_loop_map import regulator_netlist
 from tests.design_lint_fixtures.unconnected_protocol_reachability import (
     unconnected_protocol_candidate_rule_ids,
 )
@@ -267,6 +272,12 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         )
     )
     emitted.update(pcb_rule_ids())
+    emitted.update(
+        item.rule_id
+        for item in switching_regulator_loop_map_candidates(
+            regulator_netlist(), ProjectKind.PCB, None, "a" * 64
+        )
+    )
     emitted.update(mapped_connector_rule_ids())
     scoped_returns, scoped_coverage = _tests_test_scope_singleton.two_usb_one_serial_return_case(
         common_return=True,

@@ -10,6 +10,7 @@ from .connector_identity import power_function_key
 from .netlist_contract_models import NetlistContract
 from .resistor_paths import visible_resistor_paths
 from .return_nets import is_return_like_net_name
+from .switching_regulator_pins import is_switch_node_function
 
 OUTPUT_CAPABLE_TYPES = frozenset(
     {
@@ -24,7 +25,6 @@ OUTPUT_CAPABLE_TYPES = frozenset(
 
 _CONTROL_INPUT_TYPES = frozenset({"input", "input_low"})
 _BOOTSTRAP_CAPACITOR_SYMBOLS = frozenset({"device:c", "device:c_small"})
-_SWITCH_NODE_FUNCTION = re.compile(r"(?:sw|lx|ph)\d*")
 
 # A power-stage BOOTSTRAP terminal is not an MCU boot-mode strap. Keep the
 # ambiguous bare BOOT alias reviewable, but do not classify the distinct word.
@@ -154,9 +154,7 @@ def _bootstrap_power_pin_keys(observed: NetlistContract) -> frozenset[str]:
                 device_reference = pin.rsplit(".", maxsplit=1)[0].casefold()
                 has_same_device_switch_pin = any(
                     switch_pin.rsplit(".", maxsplit=1)[0].casefold() == device_reference
-                    and _SWITCH_NODE_FUNCTION.fullmatch(
-                        pin_functions.get(switch_pin.casefold(), "")
-                    )
+                    and is_switch_node_function(pin_functions.get(switch_pin.casefold(), ""))
                     for switch_pin in pins_by_net.get(switch_net, set())
                 )
                 if has_same_device_switch_pin:
