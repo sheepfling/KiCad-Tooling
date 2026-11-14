@@ -416,7 +416,7 @@ intended requirement.
 The following 390 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 390 active rules.
+The catalog currently contains 391 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -27513,6 +27513,48 @@ acceptance threads while new lint features proceed:
   Rumdl, mdrepo, Linux and Windows Pyright, wheel/sdist builds, installed-wheel
   origin/version checks, and separate plus adapted public-template rehearsals
   passed. Hosted tagged acceptance is pending.
+- **Hosted acceptance:** Pending.
+
+#### LINT-478 — Review connector peer pin-function disagreement
+
+- **Rule:** `connector.footprint_peer_pin_function_disagreement`, default
+  `review`.
+- **Gap:** Existing peer checks covered assignment and electrical-type
+  differences, but not a meaningful function-name mismatch when the peers
+  otherwise shared exact part metadata and a common assignment.
+- **Predicate:** Require fitted connector symbols with distinct native symbol
+  IDs, matching nonempty trimmed/case-folded `PART_ID`, value, footprint, and
+  complete identical pin inventories. Require complete pin-function and
+  electrical-type metadata, exactly one non-generic function mismatch, and
+  matching electrical types for every pin. The mismatched pin must have one
+  exact common net assignment, plus at least one other matching-function pin
+  with one common assignment as an anchor.
+- **Interpretation:** This is a deterministic similarity heuristic, not a
+  part-identity contract. Even exact project metadata and assignments cannot
+  establish which native function is correct. It does not infer board copper,
+  off-board wiring, or physical pinout. Project policy can promote the review,
+  turn it off, or ignore an exact fingerprint.
+- **Controls and evidence:** Synthetic tests cover matching, generic, missing
+  or different PART_ID, incomplete inventory/metadata, DNP, shared-symbol,
+  open/split assignment, additional mismatch, policy, deterministic ordering,
+  and candidate evidence. CLI/MCP parity checks fault, matching, and generic
+  controls. Tooling-owned native fault/control schematics have identical
+  electrical types and net assignments; only J2 pin 2's function differs in
+  the fault. Repeated exports use pinned KiCad 10.0.0 and 10.0.5 Docker images.
+  No cohort board or proprietary source is stored.
+- **Selection:** Run `tests/test_connector_footprint_peer_pin_function_consistency.py`
+  and `tests/test_design_lint_mcp_parity_connector_peer_pin_function.py` with
+  `design_lint and connector_lint and interface_lint` plus the rule ID. Run
+  `tests/test_connector_footprint_peer_pin_function_consistency_native.py`
+  with `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` and `native_kicad` plus the rule
+  ID.
+- **Local acceptance:** The rule-scoped `scripts/ci.py` gate passed all stages:
+  Ruff format/check, both Alphus profiles, Rumdl, mdrepo, 23 selected tests
+  with 9,976 unrelated tests deselected, Linux and Windows-targeted Pyright,
+  wheel/sdist builds, installed-wheel origin/version checks. The rule-selected
+  tests include repeated digest-pinned Docker exports on KiCad 10.0.0 and
+  10.0.5. Focused catalog/architecture checks also passed 57 tests; the two
+  native cases were separately executed in the Docker lane.
 - **Hosted acceptance:** Pending.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md

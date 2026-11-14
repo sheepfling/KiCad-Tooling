@@ -234,6 +234,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "connector.footprint_peer_pin_electrical_type_disagreement": {
             "tests.test_connector_footprint_peer_pin_type_consistency_native.test_native_connector_pin_type_disagreement_and_matching_control_repeat",
         },
+        "connector.footprint_peer_pin_function_disagreement": {
+            "tests.test_connector_footprint_peer_pin_function_consistency_native.test_native_connector_pin_function_disagreement_and_matching_control_repeat",
+        },
         "connector.footprint_peer_pin_missing_metadata_assignment_divergence": {
             "tests.test_connector_footprint_peer_missing_metadata_native_fixture_lane.test_native_missing_metadata_fault_and_control_are_repeatable",
         },

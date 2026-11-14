@@ -33,6 +33,7 @@ DesignLintRuleId = Literal[
     "connector.footprint_peer_unanchored_scope_coverage_missing",
     "connector.footprint_peer_pin_metadata_assignment_divergence",
     "connector.footprint_peer_pin_electrical_type_disagreement",
+    "connector.footprint_peer_pin_function_disagreement",
     "connector.footprint_peer_pin_missing_metadata_assignment_divergence",
     "connector.footprint_peer_pin_missing_metadata_open_outlier",
     "connector.footprint_peer_pin_metadata_open_outlier",

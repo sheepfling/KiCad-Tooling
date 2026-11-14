@@ -4,6 +4,34 @@ from __future__ import annotations
 
 CONNECTOR_RULE_NODE_CASES = (
     (
+        "connector.footprint_peer_pin_function_disagreement",
+        "tests/test_connector_footprint_peer_pin_function_consistency.py::test_one_meaningful_function_mismatch_on_a_common_part_pin_is_localized",
+    ),
+    (
+        "connector.footprint_peer_pin_function_disagreement",
+        "tests/test_connector_footprint_peer_pin_function_consistency.py::test_part_ids_match_after_trim_and_casefold",
+    ),
+    (
+        "connector.footprint_peer_pin_function_disagreement",
+        "tests/test_connector_footprint_peer_pin_function_consistency.py::test_project_can_block_disable_or_ignore_the_exact_finding",
+    ),
+    (
+        "connector.footprint_peer_pin_function_disagreement",
+        "tests/test_connector_footprint_peer_pin_function_consistency.py::test_finding_is_stable_under_source_mapping_reordering",
+    ),
+    (
+        "connector.footprint_peer_pin_function_disagreement",
+        "tests/test_connector_footprint_peer_pin_function_consistency.py::test_candidate_fields_cannot_be_forged_away_from_native_source",
+    ),
+    (
+        "connector.footprint_peer_pin_function_disagreement",
+        "tests/test_design_lint_mcp_parity_connector_peer_pin_function.py::test_connector_peer_function_review_matches_between_cli_and_mcp",
+    ),
+    (
+        "connector.footprint_peer_pin_function_disagreement",
+        "tests/test_connector_footprint_peer_pin_function_consistency_native.py::test_native_connector_pin_function_disagreement_and_matching_control_repeat",
+    ),
+    (
         "connector.footprint_peer_pin_electrical_type_disagreement",
         "tests/test_connector_footprint_peer_pin_type_consistency.py::test_same_assigned_pin_with_native_type_disagreement_is_localized",
     ),

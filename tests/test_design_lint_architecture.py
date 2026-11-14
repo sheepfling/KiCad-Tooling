@@ -45,6 +45,7 @@ PIN_ANALYSIS_MODULES = (
     "connector_footprint_peer_pins.py",
     "connector_footprint_peer_pin_types.py",
     "connector_footprint_peer_pin_type_consistency.py",
+    "connector_footprint_peer_pin_function_consistency.py",
     "connector_peer_pin_coverage.py",
     "connector_peer_pin_findings.py",
     "connector_peer_pin_scan.py",

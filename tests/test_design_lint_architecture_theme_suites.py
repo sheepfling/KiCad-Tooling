@@ -94,6 +94,11 @@ CONNECTOR_COVERAGE_THEME_SUITES = (
     "test_ci_hosted_connector_returns.py",
     "test_ci_hosted_connector_inventory_native.py",
 )
+CONNECTOR_PEER_PIN_CONSISTENCY_THEME_SUITES = (
+    "test_connector_footprint_peer_pin_function_consistency.py",
+    "test_connector_footprint_peer_pin_function_consistency_native.py",
+    "test_design_lint_mcp_parity_connector_peer_pin_function.py",
+)
 HOSTED_ORCHESTRATION_THEME_SUITES = ("test_ci_hosted_native_orchestration.py",)
 OPEN_DRAIN_THEME_SUITES = ("test_open_drain_bias_fixture_lane.py",)
 I2C_ADDRESS_THEME_SUITES = (
@@ -392,6 +397,7 @@ def test_design_lint_theme_suites_stay_below_review_limit() -> None:
                     *PCB_SOURCE_INTEGRITY_SUITES,
                     *PCB_REFERENCE_PLANE_THEME_SUITES,
                     *CONNECTOR_COVERAGE_THEME_SUITES,
+                    *CONNECTOR_PEER_PIN_CONSISTENCY_THEME_SUITES,
                     *HOSTED_ORCHESTRATION_THEME_SUITES,
                     *OPEN_DRAIN_THEME_SUITES,
                     *I2C_ADDRESS_THEME_SUITES,

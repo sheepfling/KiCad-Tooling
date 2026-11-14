@@ -59,6 +59,9 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
                 "template_checkout",
             }
         ),
+        "test_connector_footprint_peer_pin_function_consistency_native.py": frozenset(
+            {"connector_lint", "interface_lint", "native_kicad", "slow"}
+        ),
         "test_jtag_connector_return_review.py": frozenset(
             {"connector_lint", "interface_lint", "return_path_lint"}
         ),
