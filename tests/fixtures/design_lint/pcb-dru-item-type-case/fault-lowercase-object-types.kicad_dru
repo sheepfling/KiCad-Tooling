@@ -1,0 +1,13 @@
+(version 1)
+(rule "SyntheticViaHoleSize"
+  (condition "A.Type == 'via'")
+  (severity error)
+  (constraint hole_size (min 0.5mm)))
+(rule "SyntheticPadHoleSize"
+  (condition "A.Type == 'pad'")
+  (severity error)
+  (constraint hole_size (min 0.5mm)))
+(rule "KTT_ITEM_TYPE_CASE_SENTINEL"
+  (condition "A.Type == 'Track' && B.Type == 'Track'")
+  (severity error)
+  (constraint clearance (min 2mm)))

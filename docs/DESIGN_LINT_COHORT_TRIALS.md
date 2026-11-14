@@ -46,7 +46,7 @@ for dispositions and timing; leave unmeasured values unstated.
 
 ## LINT-031 — Candidate analyzer trial and incremental-value register
 
-- **Status:** Partial v31; includes the LINT-448 and LINT-449 track-angle source screen and
+- **Status:** Partial v32; includes the LINT-448 and LINT-449 track-angle source screen and
   read-only synthetic comparisons across seven cohort
   repositories, a first-party public-template applicability replay,
   kicad_skills schematic-rule trials, a ThomsonLint board-export trial, and
@@ -98,7 +98,10 @@ for dispositions and timing; leave unmeasured values unstated.
   tooling-owned fault/control fixtures and existing native I2C lanes. A
   follow-up built the pinned `kicad_skills` Docker image and ran its two analog
   checks through the image's KiCad CLI on synthetic inputs; this closed the
-  documented Docker-workflow gap without finding unique detection.
+  documented Docker-workflow gap without finding unique detection. A same-day
+  native custom-DRC follow-up tested lowercase `via` and `pad` type literals
+  against canonical spellings on KiCad 10.0.0, 10.0.5, and 10.0.8; it found no
+  case-dependent behavior and did not justify a new lint.
 
 ### Source review: kicad-druid custom DRC rule lint
 
@@ -120,7 +123,8 @@ for dispositions and timing; leave unmeasured values unstated.
   supports only the tested condition and constraint; it does not generalize to
   all expression literals or custom-rule behavior.
 - **Disposition:** No item-type case lint was adopted from this claim. The
-  native probe covers only `track`; lowercase `via` and `pad` remain untested.
+  first native probe covered only `track`; `via` and `pad` are tested in the
+  follow-up below.
   LINT-283 adds a source-bound default-REVIEW prompt for named custom rules
   with no direct `(constraint ...)` clauses. LINT-284 independently
   adds a default-REVIEW prompt for exact repeated names, consistent with KiCad's unique-name
@@ -132,6 +136,33 @@ for dispositions and timing; leave unmeasured values unstated.
   the tooling-owned
   [negative case fixture record](../tests/fixtures/design_lint/pcb-dru-item-type-case/README.md),
   and its [native test](../tests/test_pcb_dru_item_type_case_native.py).
+
+### Native follow-up: custom DRC `via` and `pad` type literals (2026-11-14)
+
+- **Question:** The track-only trial left open whether KiCad treats lowercase
+  `via` or `pad` differently from canonical `Via` or `Pad` in a custom DRC
+  `A.Type` comparison.
+- **Inputs and method:** Tooling-owned source fixtures contain two 0.3 mm
+  drilled objects: one via and one plated through-hole pad. Lowercase and
+  canonical `.kicad_dru` files apply a 0.5 mm `hole_size` minimum. A separate
+  track-clearance sentinel must appear in each native report, confirming that
+  the custom-rule source loaded. The exact native test repeats both files
+  twice on these digest-pinned images:
+  `10.0.0@sha256:9549d3a08e0822f9434a9eda0782c812451ab4a733c73535f9e8beed42039bc3`,
+  `10.0.5@sha256:fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c`,
+  and
+  `10.0.8@sha256:3f4a01786dfbe803a65f345c3342b765db9add913f5e9448f8356793714ddc34`.
+  Fixture hashes and the complete result are in the
+  [tooling-owned fixture record](../tests/fixtures/design_lint/pcb-dru-item-type-case/README.md).
+- **Observed result:** Lowercase and canonical pad rules each match once on all
+  three versions. Via rules match zero times on both spellings with 10.0.0 and
+  once on both spellings with 10.0.5 and 10.0.8. Repeated runs agree, and the
+  track sentinel appears in every report.
+- **Disposition and limits:** The new object types show no case-dependent
+  result, so this cohort claim still does not justify a lint. The test only
+  covers `hole_size` on one via and one plated through-hole pad, plus the
+  terminal track sentinel. It does not generalize to other condition
+  properties, constraints, or KiCad versions.
 
 ### Follow-up source review: custom DRC layer references
 

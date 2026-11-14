@@ -35,6 +35,11 @@ KICAD_10_PCB_TYPE_CASE_TOOLCHAINS = tuple(
     if version in {"10.0.0", "10.0.5", "10.0.8"}
 )
 EXPECTED_AUTHORED_TRACK_WIDTH_MATCHES = {"10.0.0": 0, "10.0.5": 2, "10.0.8": 2}
+OBJECT_TYPE_EXPECTED_HOLE_MATCHES = {
+    "10.0.0": {"SyntheticViaHoleSize": 0, "SyntheticPadHoleSize": 1},
+    "10.0.5": {"SyntheticViaHoleSize": 1, "SyntheticPadHoleSize": 1},
+    "10.0.8": {"SyntheticViaHoleSize": 1, "SyntheticPadHoleSize": 1},
+}
 
 
 @pytest.mark.parametrize(("kicad_version", "image"), KICAD_10_PCB_TYPE_CASE_TOOLCHAINS)
@@ -114,3 +119,82 @@ def test_native_case_variants_have_equal_behavior_on_pinned_versions(
     assert lowercase.native_returncode == canonical.native_returncode == 5
     assert lowercase_matches == canonical_matches
     assert lowercase_matches == EXPECTED_AUTHORED_TRACK_WIDTH_MATCHES[kicad_version]
+
+
+@pytest.mark.parametrize(("kicad_version", "image"), KICAD_10_PCB_TYPE_CASE_TOOLCHAINS)
+def test_native_via_and_pad_type_case_variants_have_equal_behavior(
+    tmp_path: Path,
+    kicad_version: str,
+    image: str,
+) -> None:
+    root = tmp_path / "synthetic-object-type-project"
+    root.mkdir()
+    board_name = "pcb-dru-object-type-case-probe"
+    board = root / f"{board_name}.kicad_pcb"
+    board.write_bytes((FIXTURES / "object-types.kicad_pcb").read_bytes())
+    project = root / f"{board_name}.kicad_pro"
+    project.write_bytes((FIXTURES / "object-types.kicad_pro").read_bytes())
+    sentinel_name = "KTT_ITEM_TYPE_CASE_SENTINEL"
+
+    def run_case(source_fixture: str, case: str, repeat: str) -> tuple[int, dict[str, int]]:
+        rules = root / f"{board_name}.kicad_dru"
+        rules.write_bytes((FIXTURES / source_fixture).read_bytes())
+        output = root / "build/native" / f"{case}-{repeat}"
+        output.mkdir(parents=True)
+        report_path = output / "drc.json"
+        command = execute_kicad_cli(
+            image,
+            (
+                "kicad-cli",
+                "pcb",
+                "drc",
+                "--format",
+                "json",
+                "--severity-all",
+                "--exit-code-violations",
+                "--output",
+                str(report_path),
+                str(board),
+            ),
+            root,
+            home_directory=f"dru-type-object-{kicad_version}-{case}-{repeat}",
+        )
+        write_model(output / "native-command.json", command)
+        assert command.error is None
+        assert command.returncode == 5
+        assert report_path.is_file()
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        assert report["kicad_version"] == kicad_version
+        violations = report["violations"]
+        descriptions = tuple(
+            str(item.get("description", "")) for item in violations if isinstance(item, dict)
+        )
+        counts = {
+            name: sum(
+                1
+                for item in violations
+                if isinstance(item, dict)
+                and item.get("type") == "drill_out_of_range"
+                and name in str(item.get("description", ""))
+            )
+            for name in ("SyntheticViaHoleSize", "SyntheticPadHoleSize")
+        }
+        assert any(sentinel_name in description for description in descriptions)
+        return command.returncode, counts
+
+    results = {
+        case: tuple(run_case(source_fixture, case, repeat) for repeat in ("first", "repeat"))
+        for case, source_fixture in (
+            ("lowercase", "fault-lowercase-object-types.kicad_dru"),
+            ("canonical", "control-canonical-object-types.kicad_dru"),
+        )
+    }
+    for first, repeat in results.values():
+        assert first == repeat
+
+    lowercase_returncode, lowercase_matches = results["lowercase"][0]
+    canonical_returncode, canonical_matches = results["canonical"][0]
+    assert lowercase_returncode == canonical_returncode == 5
+    assert (
+        lowercase_matches == canonical_matches == OBJECT_TYPE_EXPECTED_HOLE_MATCHES[kicad_version]
+    )
