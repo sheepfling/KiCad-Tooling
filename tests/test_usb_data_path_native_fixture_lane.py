@@ -158,6 +158,14 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
     assert external_protection["unmapped_coverage_status"] == "UNDECLARED"
     assert external_protection["unmapped_rule"] == "protection.unreviewed_interface_pin"
     assert external_protection["unmapped_subject"] == "J1.1: USB_D+"
+    assert external_protection["capacitance_fault_rule"] == (
+        "protection.channel_capacitance_budget_exceeded"
+    )
+    assert external_protection["capacitance_fault_subject"] == (
+        "USB_DP: external-protection capacitance budget"
+    )
+    assert external_protection["capacitance_fault_netlist_sha256"]
+    assert external_protection["capacitance_control_findings"] == "none"
     bonded_control = results["usb-data-path-fixture/external-series-reference-bond-control"]
     assert bonded_control["usb_reference_findings"] == "none"
     series_peer_fault = results["usb-data-path-fixture/external-series-reference-fault"]

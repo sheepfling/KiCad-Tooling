@@ -104,6 +104,8 @@ def protection_map(
     *,
     disposition: Literal["required", "not_required"] = "required",
     unmapped_pin_reasons: Mapping[str, str] | None = None,
+    channel_capacitance_pf: float | None = None,
+    signal_capacitance_limit_pf: float | None = None,
 ) -> ExternalProtectionMap:
     channels = (
         (
@@ -112,6 +114,12 @@ def protection_map(
                 signal_pin="D1.1",
                 reference_pin="D1.2",
                 reference_net="GND",
+                maximum_channel_capacitance_pf=channel_capacitance_pf,
+                capacitance_basis=(
+                    "Synthetic vendor maximum for D1 pin 1"
+                    if channel_capacitance_pf is not None
+                    else None
+                ),
             ),
         )
         if disposition == "required"
@@ -123,6 +131,7 @@ def protection_map(
                 reference="D1",
                 expected_symbol="Synthetic:TVS",
                 expected_footprint="Synthetic:SOD323",
+                expected_value=("Synthetic TVS" if channel_capacitance_pf is not None else None),
                 pin_nets={"D1.1": "USB_DP", "D1.2": "GND"},
                 unmapped_pin_reasons=unmapped_pin_reasons or {},
             ),
@@ -146,6 +155,12 @@ def protection_map(
                     else "Synthetic reviewed interface has integrated protection"
                 ),
                 channels=channels,
+                maximum_signal_capacitance_pf=signal_capacitance_limit_pf,
+                capacitance_limit_basis=(
+                    "Synthetic interface capacitance budget"
+                    if signal_capacitance_limit_pf is not None
+                    else None
+                ),
             ),
         ),
         devices=devices,
@@ -208,6 +223,7 @@ def connector_coverage() -> ConnectorCoverageReport:
 def protection_lint_report(
     requirements: ExternalProtectionMap | None,
     observed: NetlistContract,
+    policy: DesignLintPolicy | None = None,
 ) -> tuple[str, DesignLintReport]:
     """Bind the synthetic native-netlist model and project protection map to lint evidence."""
     netlist_sha256 = hashlib.sha256(observed.model_dump_json().encode("utf-8")).hexdigest()
@@ -221,7 +237,7 @@ def protection_lint_report(
     report = evaluate_design_lint(
         coach.project_id,
         coach,
-        DesignLintPolicy(),
+        policy or DesignLintPolicy(),
         external_protection_coverage=coverage,
     )
     return netlist_sha256, report

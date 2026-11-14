@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 385 rules are implemented with synthetic regression coverage.
+The following 386 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 385 active rules.
+The catalog currently contains 386 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -702,6 +702,7 @@ skipped under prerelease policy.
 - `schematic.wire_through_symbol_body`
 - `protection.unreviewed_interface_pin`
 - `protection.mapped_device_mismatch`
+- `protection.channel_capacitance_budget_exceeded`
 - `oscillator.crystal_load_network_mismatch`
 - `power.regulator_feedback_mismatch`
 - `power.regulator_required_passive_topology_mismatch`
@@ -4453,7 +4454,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 385 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 386 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -17127,12 +17128,16 @@ control are documented in the
 
 #### LINT-034 — External-interface protection coverage contract
 
-- **Status:** Implemented v1 with synthetic tests and exact-version native
-  source-to-netlist acceptance. Exact direct-shunt channel maps and explicit
-  `not_required` decisions are supported.
+- **Status:** Implemented v2 with synthetic regressions, CLI/MCP parity, and
+  exact-version native source-to-netlist acceptance. Exact direct-shunt channel
+  maps and explicit `not_required` decisions are supported; project-authored
+  protector capacitance budgets are an opt-in review extension.
 - **Inspiration:** [kicad-happy](https://github.com/aklofas/kicad-happy)
   documents ESD/protection coverage and mapping protection devices to
-  interfaces.
+  interfaces. [CircuitCI's protection review][circuitci-protection-review]
+  documents line-capacitance limits when component metadata and scenario limits
+  are declared. This tooling uses that as a review gap; no cohort code, part
+  metadata, or project board data was copied.
 - **Evidence and check:** A project contract names each reviewed connector pin,
   its expected connector symbol/footprint/net, and either an exact direct-shunt
   protection channel or a reasoned `not_required` disposition. Protector
@@ -17143,9 +17148,18 @@ control are documented in the
   Existing USB-C contract coverage handles CC, connector-side VBUS, and ground
   pins; connector pins whose observed net matches a mapped USB-C protector pin
   are also handled by that contract without duplicate prompts.
+- **Capacitance extension:** A project may bind each mapped protection device
+  to an exact native `Value` property, author a maximum per signal channel and
+  the source basis, and supply a per-net signal capacitance budget. For complete
+  mappings, the checker sums unique protector channels and emits
+  `protection.channel_capacitance_budget_exceeded` when those maxima alone
+  exceed the project limit. No universal USB capacitance threshold is inferred.
 - **Boundary:** Never infer that every connector or signal requires a TVS/ESD
   part. A schematic does not establish clamp voltage, pulse rating, device
   suitability, placement, return-via geometry, or protection effectiveness.
+  The capacitance extension does not verify the authored datasheet figures or
+  include receiver, connector, cable, or PCB parasitics; a pass is not a total
+  line-capacitance or signal-integrity approval.
   Existing USB-C contract findings must not be emitted a second time by a
   generic rule.
 - **Fixtures:** Correct mapped protector; missing device; protector on the
@@ -17154,6 +17168,11 @@ control are documented in the
   missing applicability; duplicate coverage against USB-C CC and signal
   protection contracts; CLI/MCP parity for a matching and mismatched map. All
   fixtures are synthetic.
+- **Capacitance fixtures:** Over-budget, at-limit, no-declaration, changed
+  native-value, duplicate-channel, order-stability, and project-blocking
+  cases are covered. A CLI/MCP case compares the new source-bound review, and
+  the existing digest-pinned KiCad 10.0.0/10.0.5 fixture lane checks an
+  over-budget synthetic authored limit beside an at-limit control.
 - **Native source evidence:** The digest-pinned USB fixture lane also evaluates
   the external-protection contract against its repeated KiCad 10.0.0 and 10.0.5
   exports. The common-reference protection-array map is a clear control; the
@@ -17164,7 +17183,7 @@ control are documented in the
   distinct connector-protection contract path and makes no incremental-detector
   claim. Local focused acceptance passed on KiCad 10.0.0 and 10.0.5. Native
   export confirms schematic pin/net evidence only; hosted acceptance is pending.
-- **Done:** Typed contract, source-bound coverage report, two catalogued
+- **Done:** Typed contract, source-bound coverage report, three catalogued
   review rules, review/block/ignore controls, CLI/MCP parity, synthetic
   fault/control tests, and exact-version native fault/control checks are
   implemented. This is not a field benchmark and does not validate protection
@@ -27261,6 +27280,7 @@ quality, or first-article continuity.
 [st-usb-uart-isolation]: https://www.st.com/resource/en/user_manual/um2945-getting-started-with-the-stevalpcc020v2-usb-to-ic-uart-interface-board-for-stnrg01x-products-stmicroelectronics.pdf
 [dstat-pcb]: https://microfluidics.utoronto.ca/gitlab/mdryden/dstat-hardware/-/raw/b6b2bbfdb7f8b2997d3035b083edbab2348333dc/dstat-mainboard.kicad_pcb
 [happy-cross-analysis]: <https://github.com/aklofas/kicad-happy/blob/06840467ad0f5d76af45f64449b1f5ecb10f052f/skills/kicad/scripts/cross_analysis.py>
+[circuitci-protection-review]: <https://github.com/lzbgt/circuitci/blob/master/docs/common_iot_board_readiness_gaps.md>
 [pcbdraft-rc-fixture]: https://github.com/qixuancao/pcbdraft/blob/a19485657383934de8e9a8a8029795165f12eb14/examples/results/2026-09-09-single-attempts/cases/rc-1k-100nf/native/rc-1k-100nf-9e558fd9.kicad_sch
 [pcbdraft-i2c-fixture]: https://github.com/qixuancao/pcbdraft/blob/a19485657383934de8e9a8a8029795165f12eb14/examples/results/2026-09-09-single-attempts/cases/i2c-3v3-pullups/native/i2c-3v3-pullups-a844fc2a.kicad_sch
 [pcbdraft-led-fixture]: https://github.com/qixuancao/pcbdraft/blob/a19485657383934de8e9a8a8029795165f12eb14/examples/results/2026-09-09-single-attempts/cases/led-3v3-330r/native/led-3v3-330r-308123ef.kicad_sch

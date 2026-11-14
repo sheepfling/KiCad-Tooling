@@ -5,12 +5,16 @@ from __future__ import annotations
 from collections.abc import Mapping
 from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
+from decimal import Decimal
 
 from .connector_coverage_models import ConnectorCoverageReport
 from .external_protection_models import (
+    ExternalProtectionCapacitanceChannelEvidence,
+    ExternalProtectionCapacitanceReview,
     ExternalProtectionCoverageEntry,
     ExternalProtectionCoverageReport,
     ExternalProtectionDeviceRequirement,
+    ExternalProtectionInterfaceRequirement,
     ExternalProtectionMap,
     external_protection_netlist_binding_issue,
 )
@@ -80,6 +84,11 @@ def _device_issues(
             issues.append(
                 f"{requirement.reference} footprint is {component.footprint or 'empty'}; "
                 f"expected {requirement.expected_footprint}"
+            )
+        if requirement.expected_value is not None and component.value != requirement.expected_value:
+            issues.append(
+                f"{requirement.reference} value is {component.value or 'empty'}; "
+                f"expected {requirement.expected_value}"
             )
     observed_symbol = symbols.get(key)
     if observed_symbol != requirement.expected_symbol:
@@ -337,4 +346,79 @@ def evaluate(
         electrical_contract_path=electrical_contract_path,
         electrical_contract_sha256=electrical_contract_sha256,
         entries=tuple(entries),
+        capacitance_reviews=_capacitance_reviews(requirements, entries, components),
     )
+
+
+def _capacitance_reviews(
+    requirements: ExternalProtectionMap | None,
+    entries: list[ExternalProtectionCoverageEntry],
+    components: Mapping[str, tuple[str, ComponentContract]],
+) -> tuple[ExternalProtectionCapacitanceReview, ...]:
+    """Assess only complete, project-authored budgets with exact native part values."""
+    if requirements is None:
+        return ()
+    entries_by_pin = {item.connector_pin.casefold(): item for item in entries}
+    devices_by_reference = {item.reference.casefold(): item for item in requirements.devices}
+    interfaces_by_net: dict[str, list[ExternalProtectionInterfaceRequirement]] = {}
+    for interface in requirements.interfaces:
+        if interface.disposition == "required":
+            interfaces_by_net.setdefault(interface.signal_net, []).append(interface)
+
+    reviews: list[ExternalProtectionCapacitanceReview] = []
+    for interfaces in interfaces_by_net.values():
+        first = interfaces[0]
+        if first.maximum_signal_capacitance_pf is None:
+            continue
+        mapped_entries = tuple(
+            entries_by_pin.get(interface.connector_pin.casefold()) for interface in interfaces
+        )
+        if any(entry is None or entry.status != "PROTECTED" for entry in mapped_entries):
+            continue
+
+        channels: dict[tuple[str, str], ExternalProtectionCapacitanceChannelEvidence] = {}
+        for interface in interfaces:
+            for channel in interface.channels:
+                cap = channel.maximum_channel_capacitance_pf
+                device = devices_by_reference.get(channel.device_reference.casefold())
+                component_entry = components.get(channel.device_reference.casefold())
+                if (
+                    cap is None
+                    or channel.capacitance_basis is None
+                    or device is None
+                    or device.expected_value is None
+                    or component_entry is None
+                    or component_entry[1].value != device.expected_value
+                ):
+                    channels.clear()
+                    break
+                evidence = ExternalProtectionCapacitanceChannelEvidence(
+                    device_reference=channel.device_reference,
+                    signal_pin=channel.signal_pin,
+                    expected_value=device.expected_value,
+                    observed_value=component_entry[1].value,
+                    maximum_channel_capacitance_pf=cap,
+                    capacitance_basis=channel.capacitance_basis,
+                )
+                key = (channel.device_reference.casefold(), channel.signal_pin.casefold())
+                channels[key] = evidence
+            if not channels and interface.channels:
+                break
+        if not channels or first.capacitance_limit_basis is None:
+            continue
+
+        ordered_channels = tuple(channels[key] for key in sorted(channels))
+        total = sum(
+            (Decimal(str(item.maximum_channel_capacitance_pf)) for item in ordered_channels),
+            Decimal(0),
+        )
+        reviews.append(
+            ExternalProtectionCapacitanceReview(
+                signal_net=first.signal_net,
+                maximum_signal_capacitance_pf=first.maximum_signal_capacitance_pf,
+                total_channel_capacitance_pf=float(total),
+                capacitance_limit_basis=first.capacitance_limit_basis,
+                channels=ordered_channels,
+            )
+        )
+    return tuple(sorted(reviews, key=lambda item: (item.signal_net.casefold(), item.signal_net)))

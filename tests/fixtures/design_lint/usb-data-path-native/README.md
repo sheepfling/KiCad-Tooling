@@ -154,3 +154,11 @@ control is supported with a common-reference map. The fault assigns U6.2 to
 USB_DP_PORT and must produce one `bus.usb_data_path_mismatch` finding naming
 that pin. This checks schematic assignments only; it does not establish
 resistor suitability, protection behavior, or PCB continuity.
+
+The same native USB protection export now drives a synthetic capacitance
+review control and fault. Tooling-owned requirements bind U6's exact schematic
+`Value` property, the channel maximum, and the project signal budget; an
+over-budget value produces one review and an at-limit value remains clear. The
+authored maxima are test inputs, not copied vendor data. This verifies native
+value extraction and source binding, not datasheet correctness or full USB
+signal integrity.

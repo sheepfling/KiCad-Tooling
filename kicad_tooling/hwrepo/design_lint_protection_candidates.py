@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .design_lint_interfaces_protection_capacitance import protection_capacitance_candidates
 from .design_lint_protection_candidate_evidence import (
     ProtectionMismatchCandidate,
     ProtectionMismatchFindingEvidence,
@@ -55,4 +56,4 @@ def protection_candidates(
                         ),
                     )
                 )
-    return tuple(found)
+    return (*found, *protection_capacitance_candidates(external_protection_coverage))

@@ -23,7 +23,13 @@ from .hwrepo.external_protection_models import (
 )
 from .hwrepo.netlist_contract_models import NetlistContract
 
-RULE_IDS = frozenset({"protection.mapped_device_mismatch", "protection.unreviewed_interface_pin"})
+RULE_IDS = frozenset(
+    {
+        "protection.channel_capacitance_budget_exceeded",
+        "protection.mapped_device_mismatch",
+        "protection.unreviewed_interface_pin",
+    }
+)
 
 
 def _requirements() -> ExternalProtectionMap:
@@ -63,6 +69,31 @@ def _requirements() -> ExternalProtectionMap:
                 unmapped_pin_reasons={"U6.6": "Synthetic package pin is not connected"},
             ),
         ),
+    )
+
+
+def _capacitance_requirements(maximum_signal_capacitance_pf: float) -> ExternalProtectionMap:
+    """Add a synthetic authored capacitance rating to the fixture's exact U6 identity."""
+    requirements = _requirements()
+    interface = requirements.interfaces[0]
+    channel = interface.channels[0].model_copy(
+        update={
+            "maximum_channel_capacitance_pf": 1.2,
+            "capacitance_basis": "Synthetic vendor maximum for U6 pin 1",
+        }
+    )
+    reviewed_interface = interface.model_copy(
+        update={
+            "channels": (channel,),
+            "maximum_signal_capacitance_pf": maximum_signal_capacitance_pf,
+            "capacitance_limit_basis": "Synthetic interface capacitance budget",
+        }
+    )
+    device = requirements.devices[0].model_copy(update={"expected_value": "UsbProtectionArray"})
+    return ExternalProtectionMap(
+        basis=requirements.basis,
+        interfaces=(reviewed_interface,),
+        devices=(device,),
     )
 
 
@@ -163,9 +194,27 @@ def validate_usb_external_protection_fixture_reports(
         netlist_hashes[control_key],
         requirements=None,
     )
+    capacitance_fault, capacitance_fault_coverage = _report(
+        "capacitance-fault",
+        observations[control_key],
+        netlist_hashes[control_key],
+        requirements=_capacitance_requirements(1.0),
+    )
+    capacitance_control, capacitance_control_coverage = _report(
+        "capacitance-control",
+        observations[control_key],
+        netlist_hashes[control_key],
+        requirements=_capacitance_requirements(1.2),
+    )
     control_findings = tuple(item for item in control.findings if item.rule_id in RULE_IDS)
     fault_findings = tuple(item for item in fault.findings if item.rule_id in RULE_IDS)
     unreviewed_findings = tuple(item for item in unreviewed.findings if item.rule_id in RULE_IDS)
+    cap_fault_findings = tuple(
+        item for item in capacitance_fault.findings if item.rule_id in RULE_IDS
+    )
+    cap_control_findings = tuple(
+        item for item in capacitance_control.findings if item.rule_id in RULE_IDS
+    )
     if control_coverage != "COMPLETE" or control_findings:
         raise ValueError("Native mapped protection control did not remain covered and clear")
     if fault_coverage != "INCOMPLETE" or len(fault_findings) != 1:
@@ -180,6 +229,15 @@ def validate_usb_external_protection_fixture_reports(
         item.rule_id for item in unreviewed_findings
     ) != ("protection.unreviewed_interface_pin",):
         raise ValueError("Native unmapped connector control omitted its applicability prompt")
+    if capacitance_fault_coverage != "COMPLETE" or tuple(
+        item.rule_id for item in cap_fault_findings
+    ) != ("protection.channel_capacitance_budget_exceeded",):
+        raise ValueError("Native over-budget protection capacitance did not prompt for review")
+    if capacitance_control_coverage != "COMPLETE" or cap_control_findings:
+        raise ValueError("Native within-budget protection capacitance control did not remain clear")
+    cap_fault = cap_fault_findings[0]
+    if cap_fault.evidence.get("channel_maxima") != ("U6.1: 1.2 pF max (UsbProtectionArray)",):
+        raise ValueError("Native capacitance finding omitted its exact protector identity evidence")
 
     log.event(
         "usb-data-path-fixture/external-protection-contract",
@@ -199,4 +257,8 @@ def validate_usb_external_protection_fixture_reports(
         unmapped_coverage_status=unreviewed_coverage,
         unmapped_rule=unreviewed_findings[0].rule_id,
         unmapped_subject=unreviewed_findings[0].subject,
+        capacitance_fault_rule=cap_fault.rule_id,
+        capacitance_fault_subject=cap_fault.subject,
+        capacitance_fault_netlist_sha256=netlist_hashes[control_key],
+        capacitance_control_findings="none",
     )

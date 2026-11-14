@@ -41,6 +41,7 @@ RETURN_PATH_LINT_TEST_MODULES = frozenset(
         "tests/test_design_lint_mcp_parity_spi_reference.py",
         "tests/test_design_lint_mcp_parity_usb_reference.py",
         "tests/test_design_lint_numbered_returns.py",
+        "tests/test_verify_design_lint.py",
         "tests/test_serial_connector_return_review.py",
         "tests/test_serial_connector_return_native_fixture_lane.py",
         "tests/test_serial_connector_return_native_fixture_registry.py",

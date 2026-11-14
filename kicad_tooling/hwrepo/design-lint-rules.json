@@ -9836,6 +9836,47 @@
       "implementation_owner": "kicad_tooling/hwrepo/differential_pair_names.py#named_differential_pairs"
     },
     {
+      "rule_id": "protection.channel_capacitance_budget_exceeded",
+      "title": "Mapped protector channel maxima exceed the project signal capacitance budget",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Project-authored protector channel maxima and signal budget checked against exact component values in the source-bound KiCad 10 native XML netlist",
+      "predicate": "For each explicitly reviewed signal net, the sum of unique mapped protection-channel maximum capacitances exceeds the project-authored signal capacitance budget, and each mapped device's native component value exactly matches its project-authored expected value.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "This opt-in check trusts project-authored maximum capacitance values, their source bases, and the project budget; it does not retrieve or validate datasheets.",
+        "It sums only mapped protector channels. It excludes connector, receiver, cable, and PCB parasitic capacitance, so a passing result does not establish total signal integrity or prove the interface meets its electrical specification.",
+        "Incomplete protection mappings or a changed native component value suppress this assessment and remain visible through protection.mapped_device_mismatch."
+      ],
+      "fault_fixtures": [
+        "tests.test_external_protection_capacitance.test_protector_channel_maximum_above_project_budget_prompts_review",
+        "tests.test_usb_data_path_native_fixture_lane.test_native_usb_data_path_fixture_lane_is_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_external_protection_capacitance.test_channel_maximum_equal_to_project_budget_is_a_valid_control",
+        "tests.test_external_protection_capacitance.test_capacitance_review_is_opt_in_when_protector_data_is_not_authored",
+        "tests.test_external_protection_capacitance.test_changed_native_part_value_blocks_budget_assessment",
+        "tests.test_usb_data_path_native_fixture_lane.test_native_usb_data_path_fixture_lane_is_repeatable"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_external_protection_capacitance.test_budget_finding_is_stable_when_native_mapping_order_changes"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/external_protection.py#_capacitance_reviews",
+        "kicad_tooling/hwrepo/design_lint_interfaces_protection_capacitance.py#project_protection_capacitance_evidence",
+        "kicad_tooling/hwrepo/design_lint_interfaces_protection_capacitance.py#protection_capacitance_candidates"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/design_lint_interfaces_protection_capacitance.py#protection_capacitance_candidates"
+    },
+    {
       "rule_id": "protection.unreviewed_interface_pin",
       "title": "Reviewed interface pin has no protection disposition",
       "status": "active",
@@ -9881,21 +9922,23 @@
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "evidence_adapter": "Project-authored protection channel and component pin-net map compared with source-bound KiCad 10 native XML netlist evidence",
-      "predicate": "A required interface protector is absent, DNP, has a different symbol or footprint, has an incomplete pin disposition, or its declared connector, signal, or reference pins use different native net assignments.",
+      "predicate": "A required interface protector is absent, DNP, has a different symbol or footprint, has an explicitly expected native component value that differs, has an incomplete pin disposition, or its declared connector, signal, or reference pins use different native net assignments.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
-        "The project datasheet map supplies device purpose and internal topology; the netlist only verifies exact component identity and pin-to-net assignments.",
+        "The project map supplies device purpose and internal topology; the netlist verifies symbol, footprint, any explicitly authored exact Value property, and pin-to-net assignments.",
         "This does not evaluate clamp voltage, pulse rating, capacitance, package suitability, placement, return-via geometry, or protection effectiveness."
       ],
       "fault_fixtures": [
         "tests.test_external_protection_contract.test_wrong_connector_or_protector_net_is_a_project_requirement_mismatch",
         "tests.test_external_protection_contract.test_wrong_identity_dnp_and_unaccounted_device_pin_fail",
+        "tests.test_external_protection_capacitance.test_changed_native_part_value_blocks_budget_assessment",
         "tests.test_usb_data_path_native_fixture_lane.test_native_usb_data_path_fixture_lane_is_repeatable"
       ],
       "valid_control_fixtures": [
         "tests.test_external_protection_contract.test_exact_tvs_channel_matches_native_component_pin_and_net_inventory",
+        "tests.test_external_protection_capacitance.test_channel_maximum_equal_to_project_budget_is_a_valid_control",
         "tests.test_external_protection_contract.test_explicit_not_required_decision_remains_covered",
         "tests.test_external_protection_contract.test_explicit_unmapped_pin_reason_and_usb_c_contract_suppress_duplicate_prompt",
         "tests.test_usb_data_path_native_fixture_lane.test_native_usb_data_path_fixture_lane_is_repeatable"

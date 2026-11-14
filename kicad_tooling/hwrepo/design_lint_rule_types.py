@@ -271,6 +271,7 @@ DesignLintRuleId = Literal[
     "interface.signal_divider_input_range_mismatch",
     "protection.unreviewed_interface_pin",
     "protection.mapped_device_mismatch",
+    "protection.channel_capacitance_budget_exceeded",
     "oscillator.crystal_load_network_mismatch",
     "oscillator.output_load_path_mismatch",
     "component.mapped_led_current_range_mismatch",

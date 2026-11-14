@@ -15,6 +15,7 @@ from kicad_tooling.hwrepo import (
     design_lint_connectors_named_peer_supply_splits,
     design_lint_crystal_candidate_evidence,
     design_lint_crystal_candidates,
+    design_lint_interfaces_protection_capacitance,
     design_lint_power_path_candidate_evidence,
     design_lint_power_path_candidates,
     design_lint_power_sequence_candidate_evidence,
@@ -85,6 +86,13 @@ def test_mapped_candidate_translators_use_theme_owned_evidence() -> None:
             design_lint_protection_candidates,
             "protection_candidates",
             "project_protection_mismatch_evidence",
+        ),
+        (
+            design_lint_interfaces_protection_capacitance,
+            design_lint_interfaces_protection_capacitance.ProtectionCapacitanceCandidate,
+            design_lint_protection_candidates,
+            "protection_candidates",
+            "project_protection_capacitance_evidence",
         ),
         (
             design_lint_power_sequence_candidate_evidence,

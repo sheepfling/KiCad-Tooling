@@ -30,8 +30,20 @@ EXTERNAL_PROTECTION_MODEL_NAMES = (
     "ExternalProtectionInterfaceRequirement",
     "ExternalProtectionDeviceRequirement",
     "ExternalProtectionMap",
+    "ExternalProtectionCapacitanceChannelEvidence",
+    "ExternalProtectionCapacitanceReview",
     "ExternalProtectionCoverageEntry",
     "ExternalProtectionCoverageReport",
+)
+COMPATIBILITY_MODEL_NAMES = frozenset(
+    {
+        "ExternalProtectionChannelRequirement",
+        "ExternalProtectionInterfaceRequirement",
+        "ExternalProtectionDeviceRequirement",
+        "ExternalProtectionMap",
+        "ExternalProtectionCoverageEntry",
+        "ExternalProtectionCoverageReport",
+    }
 )
 
 EXPECTED_OWNER_IMPORTS = MappingProxyType(
@@ -48,6 +60,8 @@ EXPECTED_OWNER_IMPORTS = MappingProxyType(
         ),
         "external_protection.py": frozenset(
             {
+                "ExternalProtectionCapacitanceChannelEvidence",
+                "ExternalProtectionCapacitanceReview",
                 "ExternalProtectionCoverageEntry",
                 "ExternalProtectionCoverageReport",
                 "ExternalProtectionDeviceRequirement",
@@ -80,7 +94,10 @@ def test_external_protection_models_live_in_owner_and_registry_exports_keep_iden
     registry_classes = {node.name for node in registry_tree.body if isinstance(node, ast.ClassDef)}
     assert not (set(EXTERNAL_PROTECTION_MODEL_NAMES) & registry_classes)
     for name in EXTERNAL_PROTECTION_MODEL_NAMES:
-        assert getattr(shared_models, name) is getattr(external_protection_models, name)
+        if name in COMPATIBILITY_MODEL_NAMES:
+            assert getattr(shared_models, name) is getattr(external_protection_models, name)
+        else:
+            assert not hasattr(shared_models, name)
 
 
 def test_internal_external_protection_services_import_models_from_owner() -> None:

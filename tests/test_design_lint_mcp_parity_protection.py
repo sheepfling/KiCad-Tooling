@@ -17,6 +17,7 @@ from kicad_tooling.hwrepo.contracts import (
     read_model,
     write_model,
 )
+from kicad_tooling.hwrepo.discovery import load_config
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import (
@@ -38,12 +39,20 @@ from tests.mcp_parity_support import (
     McpParityHarness,
     run_mcp_parity,
 )
+from tests.pcb_drc_parity_support import install_source_bound_drc_receipt
 
 
 class _DesignLintMcpParityProtectionCases(McpParityHarness):
     async def _case_test_external_protection_map_parity(self) -> None:
         """Compare exact external-protection coverage through CLI and MCP."""
         native = self.native_evidence()
+        config = load_config(self.root, self.island / "project.json")
+        install_source_bound_drc_receipt(
+            self.root,
+            native,
+            board_path=self.island / "kicad/controller.kicad_pcb",
+            kicad_version=config.kicad_version,
+        )
         netlist = native.parent / "netlist.xml"
         netlist.write_text(
             "<export><components>"
@@ -139,7 +148,10 @@ class _DesignLintMcpParityProtectionCases(McpParityHarness):
         )
         contract_path = self.island / "tests/contract.json"
         contract = read_model(contract_path, ProjectTestContract)
-        protection = synthetic_protection_map()
+        protection = synthetic_protection_map(
+            channel_capacitance_pf=2.4,
+            signal_capacitance_limit_pf=2.0,
+        )
         protection = protection.model_copy(
             update={
                 "interfaces": (
@@ -196,6 +208,17 @@ class _DesignLintMcpParityProtectionCases(McpParityHarness):
                 "PROTECTED",
             )
             self.assertEqual(matched.external_protection_coverage.netlist_sha256, digest(netlist))
+            cap_review = matched.external_protection_coverage.capacitance_reviews[0]
+            self.assertEqual(cap_review.signal_net, "USB_DP")
+            self.assertEqual(cap_review.total_channel_capacitance_pf, 2.4)
+            self.assertEqual(
+                next(
+                    finding
+                    for finding in matched.findings
+                    if finding.rule_id == "protection.channel_capacitance_budget_exceeded"
+                ).mode,
+                "review",
+            )
             assert matched.connector_coverage is not None
             self.assertEqual(
                 matched.connector_coverage.interface_catalog_path,

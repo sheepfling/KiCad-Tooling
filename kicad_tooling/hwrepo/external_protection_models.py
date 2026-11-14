@@ -8,6 +8,7 @@ from typing import Annotated, Literal
 from pydantic import Field, model_validator
 
 from .model_primitives import (
+    CapacitancePf,
     Digest,
     Identifier,
     NetName,
@@ -25,6 +26,12 @@ class ExternalProtectionChannelRequirement(StrictModel):
     signal_pin: Reference
     reference_pin: Reference
     reference_net: NetName
+    maximum_channel_capacitance_pf: CapacitancePf | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+    capacitance_basis: NonEmptyText | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
     @model_validator(mode="after")
     def distinct_component_pins(self) -> ExternalProtectionChannelRequirement:
@@ -35,6 +42,10 @@ class ExternalProtectionChannelRequirement(StrictModel):
             or self.reference_pin.rsplit(".", 1)[0].casefold() != self.device_reference.casefold()
         ):
             raise ValueError("Protection channel pins must belong to the declared device")
+        if (self.maximum_channel_capacitance_pf is None) != (self.capacitance_basis is None):
+            raise ValueError(
+                "Protection channel capacitance and its source basis must be declared together"
+            )
         return self
 
 
@@ -49,6 +60,12 @@ class ExternalProtectionInterfaceRequirement(StrictModel):
     disposition: Literal["required", "not_required"]
     basis: NonEmptyText
     channels: tuple[ExternalProtectionChannelRequirement, ...] = ()
+    maximum_signal_capacitance_pf: CapacitancePf | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+    capacitance_limit_basis: NonEmptyText | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
     @model_validator(mode="after")
     def complete_protection_disposition(self) -> ExternalProtectionInterfaceRequirement:
@@ -58,6 +75,22 @@ class ExternalProtectionInterfaceRequirement(StrictModel):
             raise ValueError("Required external protection needs at least one mapped channel")
         if self.disposition == "not_required" and self.channels:
             raise ValueError("Not-required external protection cannot map device channels")
+        has_capacitance_limit = self.maximum_signal_capacitance_pf is not None
+        if has_capacitance_limit != (self.capacitance_limit_basis is not None):
+            raise ValueError(
+                "Signal capacitance limit and its project basis must be declared together"
+            )
+        channel_capacitance = tuple(
+            channel.maximum_channel_capacitance_pf is not None for channel in self.channels
+        )
+        if any(channel_capacitance) != has_capacitance_limit or (
+            has_capacitance_limit and not all(channel_capacitance)
+        ):
+            raise ValueError(
+                "A capacitance-reviewed interface needs a limit and a maximum for every channel"
+            )
+        if has_capacitance_limit and self.disposition != "required":
+            raise ValueError("Only required protection channels can have a capacitance budget")
         channel_keys = [
             (item.device_reference.casefold(), item.signal_pin.casefold()) for item in self.channels
         ]
@@ -72,6 +105,9 @@ class ExternalProtectionDeviceRequirement(StrictModel):
     reference: Identifier
     expected_symbol: NonEmptyText
     expected_footprint: NonEmptyText
+    expected_value: NonEmptyText | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
     pin_nets: Mapping[Reference, NetName]
     unmapped_pin_reasons: Mapping[Reference, NonEmptyText] = Field(default_factory=dict)
 
@@ -105,7 +141,29 @@ class ExternalProtectionMap(StrictModel):
         if len(device_map) != len(self.devices):
             raise ValueError("External protection device references must be unique")
         used_devices: set[str] = set()
+        cap_review_by_net: dict[
+            str,
+            tuple[float | None, str | None, dict[tuple[str, str], tuple[float, str]]],
+        ] = {}
         for interface in self.interfaces:
+            net_key = interface.signal_net
+            if interface.disposition == "required":
+                current = cap_review_by_net.setdefault(
+                    net_key,
+                    (
+                        interface.maximum_signal_capacitance_pf,
+                        interface.capacitance_limit_basis,
+                        {},
+                    ),
+                )
+                if current[:2] != (
+                    interface.maximum_signal_capacitance_pf,
+                    interface.capacitance_limit_basis,
+                ):
+                    raise ValueError(
+                        "Protection interfaces on one signal net must share the same "
+                        "capacitance-review decision, limit, and basis"
+                    )
             for channel in interface.channels:
                 key = channel.device_reference.casefold()
                 device = device_map.get(key)
@@ -118,8 +176,75 @@ class ExternalProtectionMap(StrictModel):
                     raise ValueError(
                         "Protection reference pin must map to its declared reference net"
                     )
+                if channel.maximum_channel_capacitance_pf is not None:
+                    if device.expected_value is None:
+                        raise ValueError(
+                            "Capacitance-reviewed protection devices need an exact expected value"
+                        )
+                    ratings = cap_review_by_net[net_key][2]
+                    channel_key = (
+                        channel.device_reference.casefold(),
+                        channel.signal_pin.casefold(),
+                    )
+                    rating = (
+                        channel.maximum_channel_capacitance_pf,
+                        channel.capacitance_basis or "",
+                    )
+                    existing = ratings.get(channel_key)
+                    if existing is not None and existing != rating:
+                        raise ValueError(
+                            "A protection channel on one signal net must have one capacitance "
+                            "rating and source basis"
+                        )
+                    ratings[channel_key] = rating
         if used_devices != set(device_map):
             raise ValueError("Every declared protection device must serve a mapped channel")
+        return self
+
+
+class ExternalProtectionCapacitanceChannelEvidence(StrictModel):
+    """Project-authored maximum tied to the exact native component value."""
+
+    device_reference: Identifier
+    signal_pin: Reference
+    expected_value: NonEmptyText
+    observed_value: NonEmptyText
+    maximum_channel_capacitance_pf: CapacitancePf
+    capacitance_basis: NonEmptyText
+
+    @model_validator(mode="after")
+    def exact_value_is_source_matched(self) -> ExternalProtectionCapacitanceChannelEvidence:
+        if self.expected_value != self.observed_value:
+            raise ValueError("Capacitance evidence requires an exact native component value match")
+        return self
+
+
+class ExternalProtectionCapacitanceReview(StrictModel):
+    """Source-bound aggregate of reviewed channel maxima against a project budget."""
+
+    signal_net: NetName
+    maximum_signal_capacitance_pf: CapacitancePf
+    total_channel_capacitance_pf: CapacitancePf
+    capacitance_limit_basis: NonEmptyText
+    channels: Annotated[
+        tuple[ExternalProtectionCapacitanceChannelEvidence, ...], Field(min_length=1)
+    ]
+
+    @model_validator(mode="after")
+    def aggregate_matches_channels(self) -> ExternalProtectionCapacitanceReview:
+        from decimal import Decimal
+
+        keys = [
+            (item.device_reference.casefold(), item.signal_pin.casefold()) for item in self.channels
+        ]
+        if len(set(keys)) != len(keys):
+            raise ValueError("Capacitance review channels must be unique per device signal pin")
+        total = sum(
+            (Decimal(str(item.maximum_channel_capacitance_pf)) for item in self.channels),
+            Decimal(0),
+        )
+        if total != Decimal(str(self.total_channel_capacitance_pf)):
+            raise ValueError("Capacitance review total must equal its unique channel maxima")
         return self
 
 
@@ -156,12 +281,44 @@ class ExternalProtectionCoverageReport(StrictModel):
     electrical_contract_path: RepositoryPath | None = None
     electrical_contract_sha256: Digest | None = None
     entries: tuple[ExternalProtectionCoverageEntry, ...] = ()
+    capacitance_reviews: tuple[ExternalProtectionCapacitanceReview, ...] = Field(
+        default_factory=tuple,
+        exclude_if=lambda value: not value,
+    )
     issue: NonEmptyText | None = None
 
     @model_validator(mode="after")
     def evidence_is_source_bound(self) -> ExternalProtectionCoverageReport:
         if self.status == "NOT_REQUESTED" and self.entries:
             raise ValueError("Not-requested external-protection coverage cannot contain entries")
+        if self.status == "NOT_REQUESTED" and self.capacitance_reviews:
+            raise ValueError("Not-requested external protection cannot contain capacitance reviews")
+        if self.capacitance_reviews and self.status not in {
+            "COMPLETE",
+            "INCOMPLETE",
+            "UNDECLARED",
+        }:
+            raise ValueError("Capacitance reviews require admitted source-bound coverage")
+        reviewed_nets = [item.signal_net for item in self.capacitance_reviews]
+        if len(set(reviewed_nets)) != len(reviewed_nets):
+            raise ValueError(
+                "External-protection capacitance reviews must be unique per signal net"
+            )
+        for review in self.capacitance_reviews:
+            mapped_devices = {
+                reference.casefold()
+                for entry in self.entries
+                if entry.signal_net == review.signal_net and entry.status == "PROTECTED"
+                for reference in entry.device_references
+            }
+            if (
+                not mapped_devices
+                or not {item.device_reference.casefold() for item in review.channels}
+                <= mapped_devices
+            ):
+                raise ValueError(
+                    "Capacitance reviews must use channels from protected coverage entries"
+                )
         if self.status in {"COMPLETE", "INCOMPLETE", "UNDECLARED"} and (
             self.netlist_sha256 is None
         ):

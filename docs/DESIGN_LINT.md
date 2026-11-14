@@ -929,7 +929,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 385 active rules.
+The catalog currently contains 386 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -3022,13 +3022,28 @@ incomplete and emits `protection.mapped_device_mismatch`; a project may set
 that rule to `block` after reviewing the requirement. The current topology
 models direct shunt channels. It does not model series protection paths.
 
+For an opt-in protector capacitance screen, each device can also declare its
+exact native `Value` property as `expected_value`. Each required channel then
+provides `maximum_channel_capacitance_pf` and a `capacitance_basis`, and its
+interface entry provides `maximum_signal_capacitance_pf` plus a
+`capacitance_limit_basis`. Every required protection entry on the same signal
+net must use the same review decision and limit. When the protection mapping is
+complete and native component values match, the tooling sums the unique mapped
+protector signal channels and emits
+`protection.channel_capacitance_budget_exceeded` when that sum is above the
+project limit. It defaults to `review`; project policy can set it to `block` or
+`off`, or ignore an exact finding fingerprint.
+
 This contract verifies the authored symbol-level mapping against KiCad's
 source-bound native netlist. It does not validate datasheet pinout truth,
-clamp voltage, pulse rating, capacitance, package suitability, placement,
-return-via geometry, copper continuity, or protection effectiveness. An
-intentionally isolated or integrated-protection design needs a clear
-`not_required` basis. These checks are synthetic-validated and use no private
-board fixtures.
+clamp voltage, pulse rating, package suitability, placement, return-via
+geometry, copper continuity, or protection effectiveness. The capacitance
+screen trusts authored values and source bases, and checks only mapped
+protector channels against the project budget. It excludes receiver, connector,
+cable, and PCB parasitics; passing does not establish total interface
+capacitance or signal integrity. An intentionally isolated or
+integrated-protection design needs a clear `not_required` basis. These checks
+use synthetic fixtures and no private board source.
 
 ## Review a mapped USB connector-to-PHY data path
 
