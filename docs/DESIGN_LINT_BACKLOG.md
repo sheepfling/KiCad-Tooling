@@ -27381,8 +27381,8 @@ acceptance threads while new lint features proceed:
   checks, 454 selected pytest cases (including the two exact-version Docker
   fixture cases), Pyright, Windows typing, wheel/sdist builds, installed-wheel
   checks against external and adapted public-template checkouts, and both
-  template playtests. The local run skipped mdrepo; hosted acceptance is
-  pending.
+  template playtests. Hosted acceptance also passed in run 1251 for tag
+  `v0.5.3rc785`; package and preview jobs were skipped under prerelease policy.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
