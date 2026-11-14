@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from .pcb_connectivity_observations import PcbPadConnectivityObservation
 
 
@@ -9,7 +11,7 @@ def nearest_outer_copper_center_distance_squared(
     first: PcbPadConnectivityObservation | None,
     second: PcbPadConnectivityObservation | None,
     board_thickness_nm: int | None,
-) -> tuple[int, str, str] | None:
+) -> tuple[int, Literal["F.Cu", "B.Cu"], Literal["F.Cu", "B.Cu"]] | None:
     """Measure the closest outer-copper pad centers using board thickness across sides."""
     if (
         first is None

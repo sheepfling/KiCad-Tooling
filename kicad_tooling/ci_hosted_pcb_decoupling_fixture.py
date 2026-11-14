@@ -142,8 +142,6 @@ def decoupling_placement_fixture_lane(
             elif retained_snapshot != snapshot:
                 raise ValueError("Repeated native pad centers changed for identical board inputs")
 
-        if retained_snapshot is None:
-            raise ValueError("Repeated native decoupling capture produced no snapshot")
         surface_map = PcbDecouplingMap(
             basis="Synthetic native outer-copper layer-distance regression",
             requirements=(

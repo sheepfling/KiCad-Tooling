@@ -21,3 +21,19 @@ def test_pcb_signal_path_rule_selects_native_fault_control_case() -> None:
     assert native_fixture in rule.required_native_fixtures
     assert native_test in rule.fault_fixtures
     assert native_test in rule.valid_control_fixtures
+
+
+@pytest.mark.rule_gate_integrity
+def test_pcb_decoupling_rule_selects_layer_aware_native_fault_control_case() -> None:
+    rule = next(
+        entry for entry in rule_catalog().rules if entry.rule_id == "pcb.decoupling_proximity"
+    )
+    native_fixture = "KICAD_RUN_NATIVE_PCB_FIXTURES"
+    native_test = (
+        "tests.test_pcb_decoupling_native_fixture_lane."
+        "test_native_decoupling_controls_on_supported_kicad"
+    )
+
+    assert native_fixture in rule.required_native_fixtures
+    assert native_test in rule.fault_fixtures
+    assert native_test in rule.valid_control_fixtures

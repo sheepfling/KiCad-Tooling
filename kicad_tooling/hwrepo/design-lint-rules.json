@@ -12707,13 +12707,18 @@
         "tests.test_pcb_decoupling_surface_distance.test_same_xy_on_opposite_outer_layers_uses_board_thickness",
         "tests.test_pcb_decoupling_surface_distance.test_missing_native_surface_evidence_is_incomplete_when_requested",
         "tests.test_pcb_decoupling_return_vias.test_distant_or_absent_connected_return_via_does_not_satisfy_map",
-        "tests.test_pcb_decoupling.test_wrong_net_disconnected_wrong_footprint_and_dnp_candidates_do_not_satisfy_requirement"
+        "tests.test_pcb_decoupling.test_wrong_net_disconnected_wrong_footprint_and_dnp_candidates_do_not_satisfy_requirement",
+        "tests.test_pcb_decoupling_native_fixture_lane.test_native_decoupling_controls_on_supported_kicad"
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_decoupling.test_near_rotated_and_shared_bank_candidates_satisfy_exact_mapping",
         "tests.test_pcb_decoupling_surface_distance.test_surface_layer_controls",
         "tests.test_pcb_decoupling_return_vias.test_native_connected_return_via_at_inclusive_authored_boundary_passes",
-        "tests.test_pcb_decoupling.test_no_threshold_emits_reviewable_measurement_and_honors_override_and_ignore"
+        "tests.test_pcb_decoupling.test_no_threshold_emits_reviewable_measurement_and_honors_override_and_ignore",
+        "tests.test_pcb_decoupling_native_fixture_lane.test_native_decoupling_controls_on_supported_kicad"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_PCB_FIXTURES"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [

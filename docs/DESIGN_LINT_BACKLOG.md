@@ -26895,7 +26895,9 @@ acceptance threads while new lint features proceed:
   through-layer, opposite-side same-XY, missing-evidence, and map-fingerprint
   cases pass. Digest-pinned Docker KiCad 10.0.0 and 10.0.5 native fixtures
   confirm a 1.6 mm same-XY backside candidate exceeds the test-only 1.5 mm
-  threshold and a same-side control measures zero.
+  threshold and a same-side control measures zero. The rule catalog also
+  binds that native fault/control lane to `KICAD_RUN_NATIVE_PCB_FIXTURES`, so
+  rule-scoped tagged gates select and execute the Docker cases.
 - **Boundary:** This is a layer-aware geometric estimate using board thickness
   as the vertical offset. It is not exact copper-layer center spacing, copper
   route length, return-loop geometry, inductance, decoupling adequacy, or
