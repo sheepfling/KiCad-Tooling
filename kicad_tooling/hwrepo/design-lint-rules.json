@@ -30,6 +30,7 @@
       "fault_fixtures": [
         "tests.test_design_lint_component_power_pins.test_open_findings_include_missing_power_and_separate_returns",
         "tests.test_verify_design_lint.test_empty_connectivity_expectations_still_raise_native_connector_review",
+        "tests.test_verify_design_lint.test_empty_native_contract_blocker_still_surfaces_split_return_review",
         "tests.test_design_lint_connector_returns.test_return_pin_disagreement_within_one_connector_needs_review",
         "tests.test_connector_mapped_interface_power_contact_unassigned.test_open_mapped_return_contacts_are_reported_once_by_peer_rule",
         "tests.test_design_lint_connector_returns.test_return_functions_across_connector_symbols_need_review",

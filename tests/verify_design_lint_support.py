@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
@@ -52,6 +53,41 @@ def synthetic_connector_native(
     )
     write_model(project_output / "netlist.command.json", evidence)
     config = load_config(root, "examples/projects/controller/project.json")
+    project_file = root / config.project
+    board_file = project_file.with_suffix(".kicad_pcb")
+    drc_file = project_output / "drc.json"
+    drc_file.write_text(
+        json.dumps(
+            {
+                "$schema": "https://schemas.kicad.org/drc.v1.json",
+                "coordinate_units": "mm",
+                "kicad_version": config.kicad_version,
+                "included_severities": ["error", "warning", "exclusion"],
+                "ignored_checks": [],
+                "source": board_file.name,
+                "violations": [],
+                "unconnected_items": [],
+                "schematic_parity": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    drc_command = CommandEvidence(
+        argv=(
+            "synthetic-kicad-cli",
+            "pcb",
+            "drc",
+            "--format",
+            "json",
+            "--severity-all",
+            "--output",
+            str(drc_file),
+            str(board_file),
+        ),
+        started_utc=datetime.now(UTC).isoformat(),
+        returncode=0,
+    )
+    write_model(project_output / "drc.command.json", drc_command)
     current = hashes(root, config.source_roots)
     write_model(
         project_output / "summary.json",
@@ -68,12 +104,15 @@ def synthetic_connector_native(
                     observed_version=config.kicad_version,
                     image=config.image,
                 ),
+                "drc": CheckEvidence(status="PASS", returncode=0),
                 "netlist": CheckEvidence(status="PASS", returncode=0),
             },
             status="PASS",
             artifacts_sha256={
                 "netlist.xml": digest(netlist),
                 "netlist.command.json": digest(project_output / "netlist.command.json"),
+                "drc.json": digest(drc_file),
+                "drc.command.json": digest(project_output / "drc.command.json"),
             },
         ),
     )
@@ -103,6 +142,39 @@ def verify_with_synthetic_connector_evidence(root: Path):
         patch(
             "kicad_tooling.hwrepo.project_verification.run_native_project_check",
             side_effect=run_native,
+        ),
+    ):
+        return verify(root, "controller", depth="native", runner="local")
+
+
+def verify_with_empty_contract_native_failure(root: Path):
+    """Keep split-return lint visible when the independent net contract is empty."""
+
+    def native_with_contract_blocker(
+        project_root: Path, request: NativeProjectValidationRequest
+    ) -> ValidationSummary:
+        summary = synthetic_connector_validation(project_root, request)
+        failed = summary.model_copy(
+            update={
+                "checks": {
+                    **summary.checks,
+                    "netlist": CheckEvidence(
+                        status="FAIL",
+                        returncode=0,
+                        error="Independent connectivity contract is empty",
+                    ),
+                },
+                "status": "FAIL",
+            }
+        )
+        write_model(request.output / "summary.json", failed)
+        return failed
+
+    with (
+        runner_environment("10.0.0"),
+        patch(
+            "kicad_tooling.hwrepo.native_project_check.validate_project",
+            side_effect=native_with_contract_blocker,
         ),
     ):
         return verify(root, "controller", depth="native", runner="local")

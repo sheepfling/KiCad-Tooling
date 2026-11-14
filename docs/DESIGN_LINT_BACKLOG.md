@@ -26761,6 +26761,30 @@ acceptance threads while new lint features proceed:
   Docker, `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`, `native_kicad`, and the same
   rule selector.
 
+#### LINT-461 — Preserve connector review when the independent contract blocks
+
+- **Status:** Implemented as an end-to-end verification regression test for
+  `connector.repeated_pin_function`; this adds no lint predicate. It confirms
+  that a failed native connectivity comparison does not suppress a separate
+  connector REVIEW when native netlist export succeeded.
+- **Priority:** P1 diagnostic quality. An empty independent connectivity
+  contract remains a verification blocker, but the report should retain
+  actionable heuristic evidence supported by the exported netlist.
+- **Scenario:** Two otherwise comparable synthetic connector returns land on
+  separate named nets. The project connectivity expectations are empty, the
+  native netlist export succeeds, and native comparison reports FAIL. Overall
+  verification must stay FAIL while design lint reports the exact
+  `connector.repeated_pin_function` REVIEW, both pin assignments, and the
+  rendered report line.
+- **Boundary:** This is tooling-owned synthetic integration evidence. It does
+  not show what any external or proprietary board would produce, establish that
+  the returns should be common, or replace a reviewed connectivity contract.
+- **Selection:** Run
+  `tests/test_verify_design_lint.py -m 'design_lint and connector_lint'` with
+  `KICAD_TEMPLATE_ROOT` set to the separate public template checkout. The
+  targeted regression is
+  `-k empty_native_contract_blocker_still_surfaces_split_return_review`.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

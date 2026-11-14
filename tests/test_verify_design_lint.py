@@ -21,6 +21,7 @@ from kicad_tooling.verify import format_report
 from tests.verify_design_lint_support import (
     check_ci_with_synthetic_connector_evidence,
     create_reference_project,
+    verify_with_empty_contract_native_failure,
     verify_with_synthetic_connector_evidence,
 )
 
@@ -130,6 +131,46 @@ def test_empty_connectivity_expectations_still_raise_native_connector_review(
     assert unchanged.validation.components == {}
     assert unchanged.validation.nets == {}
     assert unchanged.design_lint is None
+    assert (Path(result.run_directory) / "design-lint.json").is_file()
+
+
+def test_empty_native_contract_blocker_still_surfaces_split_return_review(
+    synthetic_project: Path,
+) -> None:
+    contract_path = synthetic_project / "examples/projects/controller/tests/contract.json"
+    contract = read_model(contract_path, ProjectTestContract)
+    incomplete_validation = contract.validation.model_copy(update={"components": {}, "nets": {}})
+    write_model(
+        contract_path,
+        contract.model_copy(update={"validation": incomplete_validation}),
+    )
+
+    result = verify_with_empty_contract_native_failure(synthetic_project)
+
+    assert result.status == "FAIL"
+    assert result.native is not None
+    assert result.native.status == "FAIL"
+    native_validation = read_model(
+        Path(result.run_directory) / "native/controller/summary.json", ValidationSummary
+    )
+    assert native_validation.status == "FAIL"
+    assert native_validation.checks["netlist"].status == "FAIL"
+    assert native_validation.checks["netlist"].returncode == 0
+    assert native_validation.checks["netlist"].error == "Independent connectivity contract is empty"
+    assert result.design_lint is not None
+    assert result.design_lint.status == "REVIEW"
+    finding = next(
+        item
+        for item in result.design_lint.findings
+        if item.rule_id == "connector.repeated_pin_function"
+        and item.subject == "Synthetic:Port: ground/return"
+    )
+    assert finding.evidence == {"J1.7": ("GND1",), "J2.7": ("GND2",)}
+    assert finding.mode == "review"
+    assert finding.disposition == "OPEN"
+    assert "REVIEW connector.repeated_pin_function: Synthetic:Port: ground/return" in format_report(
+        result
+    )
     assert (Path(result.run_directory) / "design-lint.json").is_file()
 
 
