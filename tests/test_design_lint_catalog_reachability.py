@@ -11,7 +11,6 @@ import tests.component_peer_pin_support as _component_peer_pin_support
 import tests.component_peer_power_input_support as _component_peer_power_input_support
 import tests.connector_footprint_peer_support as _connector_footprint_peer_support
 import tests.design_lint_fixtures as _tests_design_lint_fixtures
-import tests.design_lint_fixtures.can_line_named_rail as _can_line_named_rail_fixtures
 import tests.design_lint_fixtures.catalog_reachability_connector_domains as _connector_domains_reachability
 import tests.design_lint_fixtures.catalog_reachability_signal_pairs as _signal_pair_reachability
 import tests.design_lint_fixtures.component_peer_pin_all_open as _component_peer_pin_all_open
@@ -20,43 +19,27 @@ import tests.design_lint_fixtures.connector_named_power_aliases as _connector_na
 import tests.design_lint_fixtures.connector_peer_pin_all_open as _connector_peer_pin_all_open
 import tests.design_lint_fixtures.connector_return_supply as _connector_return_supply_fixtures
 import tests.design_lint_fixtures.connector_role_sharing_reachability as _connector_role_sharing_reachability
-import tests.design_lint_fixtures.gpio_control_voltage as _gpio_control_voltage_fixtures
 import tests.design_lint_fixtures.i2c_addresses as _tests_i2c_address_fixtures
 import tests.design_lint_fixtures.i2c_signal_label as _i2c_signal_label_fixtures
-import tests.design_lint_fixtures.i3c_same_net as _i3c_same_net_fixtures
-import tests.design_lint_fixtures.i3c_signal_named_rail as _i3c_signal_named_rail_fixtures
 import tests.design_lint_fixtures.ic_decoupling as _ic_decoupling_fixtures
 import tests.design_lint_fixtures.jtag_generic_connector_pair as _jtag_fixtures
 import tests.design_lint_fixtures.mosfet_gate_source_bias as _mosfet_gate_source_bias_fixtures
 import tests.design_lint_fixtures.mosfet_terminal_same_net as _mosfet_terminal_same_net_fixtures
-import tests.design_lint_fixtures.open_drain_control_voltage as _open_drain_control_voltage_fixtures
 import tests.design_lint_fixtures.power_enable_control as _power_enable_control_fixtures
 import tests.design_lint_fixtures.power_input_paths as _power_input_paths
 import tests.design_lint_fixtures.power_pin_net_roles as _power_pin_net_roles
 import tests.design_lint_fixtures.repeated_signal_pin_functions as _repeated_signal_pin_fixtures
-import tests.design_lint_fixtures.rs485_line_named_rail as _rs485_line_named_rail_fixtures
-import tests.design_lint_fixtures.usb_c_cc_endpoint_pairing as _usb_c_cc_endpoint_pairing_fixtures
-import tests.design_lint_fixtures.usb_c_cc_named_rail as _usb_c_cc_named_rail_fixtures
-import tests.design_lint_fixtures.usb_c_cc_same_net as _usb_c_cc_same_net_fixtures
-import tests.design_lint_fixtures.usb_c_sbu_named_rail as _usb_c_sbu_fixture_builder
-import tests.design_lint_fixtures.usb_c_sbu_same_net as _usb_c_sbu_same_net_fixture_builders
-import tests.design_lint_fixtures.usb_c_sbu_same_net as _usb_c_sbu_same_net_fixtures
-import tests.design_lint_fixtures.usb_c_superspeed_lanes as _usb_c_superspeed_lane_fixtures
 import tests.external_protection_support as _external_protection_support
-import tests.rs485_peer_reference_support as _rs485_peer_reference_support
 import tests.test_can_excess_termination as _tests_test_can_excess_termination
 import tests.test_connector_peer_comparison_scope_singleton as _tests_test_scope_singleton
 import tests.test_connector_return_distribution as _tests_test_connector_return_distribution
 import tests.test_crystal_networks as _tests_test_crystal_networks
 import tests.test_led_output_heuristics as _tests_test_led_output_heuristics
 import tests.test_mosfet_gate_connectivity as _tests_test_mosfet_gate_connectivity
-import tests.test_open_drain_heuristics as _tests_test_open_drain_heuristics
 import tests.test_power_paths as _tests_test_power_paths
 import tests.test_rc_filters as _tests_test_rc_filters
 import tests.test_regulator_feedback as _tests_test_regulator_feedback
-import tests.test_signal_divider_contract as _tests_test_signal_divider_contract
 import tests.test_stm32_pin_map as _tests_test_stm32_pin_map
-import tests.test_usb_c_ports as _tests_test_usb_c_ports
 import tests.usb_data_path_support as _usb_data_path_support
 import tests.usb_peer_reference_support as _usb_peer_reference_support
 from kicad_tooling.hwrepo.design_lint import candidates, evaluate, rule_catalog
@@ -67,21 +50,18 @@ from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     NetlistContract,
 )
-from kicad_tooling.hwrepo.rs485_peer_reference_scan import scan_rs485_peer_references
-from kicad_tooling.hwrepo.serial_participants import SerialPeerRosterContext
 from kicad_tooling.hwrepo.stm32_pin_map import parse_cubemx_ioc, stm32_pin_map_mismatches
 from kicad_tooling.hwrepo.stm32_pin_map_models import Stm32PinMapCoverageReport
-from kicad_tooling.hwrepo.usb_c_ports import UsbCPortRosterContext
 from tests.design_lint_fixtures.catalog_reachability import (
     catalog_reachability_rule_ids,
     mapped_connector_rule_ids,
     protocol_peer_candidate_rule_ids,
-    usb_c_vbus_and_connector_return_review_rule_ids,
 )
 from tests.design_lint_fixtures.catalog_reachability_mapped_contact_sharing import (
     mapped_contact_sharing_rule_ids,
 )
 from tests.design_lint_fixtures.catalog_reachability_pcb import pcb_rule_ids
+from tests.design_lint_fixtures.catalog_reachability_protocols import protocol_rule_ids
 from tests.design_lint_fixtures.component_catalog_reachability import (
     reachable_component_rule_ids,
 )
@@ -96,7 +76,6 @@ from tests.power_sequence_support import (
     power_sequence_netlist as synthetic_power_sequence_netlist,
 )
 from tests.regulator_support_reachability import regulator_support_rule_ids
-from tests.serial_participant_support import serial_netlist as serial_participant_netlist
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.rule_gate_integrity]
 
@@ -392,110 +371,6 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         item.rule_id
         for item in candidates(_tests_design_lint_fixtures.generic_component_power_output_netlist())
     )
-    emitted.update(
-        item.rule_id
-        for item in candidates(
-            _tests_test_usb_c_ports.usb_c_netlist(),
-            usb_c_port_roster=UsbCPortRosterContext(state="not_configured"),
-        )
-    )
-    emitted.update(usb_c_vbus_and_connector_return_review_rule_ids())
-    emitted.update(
-        item.rule_id for item in candidates(_tests_test_open_drain_heuristics.signal_netlist())
-    )
-    emitted.update(
-        item.rule_id
-        for item in candidates(
-            _tests_test_open_drain_heuristics.signal_netlist(output_type="open_emitter")
-        )
-    )
-    emitted.update(
-        item.rule_id
-        for item in candidates(
-            serial_participant_netlist(),
-            serial_peer_roster=SerialPeerRosterContext(state="not_configured"),
-        )
-    )
-    _, rs485_context, rs485_source = _rs485_peer_reference_support.rs485_peer_reference_fixture(
-        reference_nets={"U1": "GND_A", "U2": "GND_B", "U3": "GND_A"}
-    )
-    rs485_scan = scan_rs485_peer_references(rs485_context, rs485_source)
-    emitted.update(
-        item.rule_id for item in candidates(rs485_source, rs485_peer_reference_scan=rs485_scan)
-    )
-    emitted.update(
-        item.rule_id
-        for item in candidates(_rs485_line_named_rail_fixtures.rs485_line_named_rail_netlist())
-    )
-    emitted.update(
-        item.rule_id
-        for item in candidates(_can_line_named_rail_fixtures.can_line_named_rail_netlist())
-    )
-    emitted.update(
-        item.rule_id
-        for item in candidates(_usb_c_cc_named_rail_fixtures.usb_c_cc_named_rail_netlist())
-    )
-    emitted.update(
-        item.rule_id for item in candidates(_usb_c_cc_same_net_fixtures.usb_c_cc_same_net_netlist())
-    )
-    emitted.update(
-        item.rule_id
-        for item in candidates(
-            _usb_c_superspeed_lane_fixtures.usb_c_superspeed_lane_netlist(swap_tx_lane_labels=True)
-        )
-    )
-    emitted.update(
-        item.rule_id
-        for item in candidates(_usb_c_sbu_fixture_builder.usb_c_sbu_named_rail_netlist())
-    )
-    emitted.update(
-        item.rule_id
-        for item in candidates(
-            _usb_c_sbu_fixture_builder.usb_c_sbu_named_rail_netlist(
-                sbu1_net=None, sbu2_net="SBU2_BUS"
-            )
-        )
-    )
-    emitted.update(
-        item.rule_id
-        for item in candidates(_usb_c_sbu_same_net_fixtures.usb_c_sbu_same_net_netlist())
-    )
-    emitted.update(
-        item.rule_id
-        for item in candidates(
-            _usb_c_sbu_same_net_fixture_builders.usb_c_cc_controller_same_net_netlist()
-        )
-    )
-    emitted.update(
-        item.rule_id
-        for item in candidates(
-            _usb_c_cc_endpoint_pairing_fixtures.usb_c_cc_endpoint_pairing_netlist()
-        )
-    )
-    emitted.update(
-        item.rule_id
-        for item in candidates(_i3c_signal_named_rail_fixtures.i3c_signal_named_rail_netlist())
-    )
-    emitted.update(
-        item.rule_id for item in candidates(_i3c_same_net_fixtures.i3c_same_net_netlist())
-    )
-    i3c_open_sda = _i3c_same_net_fixtures.i3c_same_net_netlist().model_copy(
-        update={"nets": {"I3C_SCL": ("U1.2",)}}
-    )
-    emitted.update(item.rule_id for item in candidates(i3c_open_sda))
-    emitted.update(
-        item.rule_id
-        for item in candidates(_gpio_control_voltage_fixtures.gpio_control_voltage_netlist())
-    )
-    emitted.update(
-        item.rule_id
-        for item in candidates(
-            _open_drain_control_voltage_fixtures.open_drain_control_voltage_netlist()
-        )
-    )
-    emitted.update(
-        item.rule_id
-        for item in _tests_test_signal_divider_contract._report(fault="top-resistor-value").findings
-    )
+    emitted.update(protocol_rule_ids())
     active = {item.rule_id for item in rule_catalog().rules if item.status == "active"}
     assert emitted | _tests_design_lint_fixtures.source_bound_rule_ids() == active
