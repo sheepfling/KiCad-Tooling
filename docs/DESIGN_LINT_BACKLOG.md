@@ -27729,11 +27729,14 @@ acceptance threads while new lint features proceed:
   existing family registry. The same hosted selector then passed locally with
   472 tests, including both pinned Docker native KiCad versions; the full
   345-report hash-seed inventory and focused architecture checks also passed.
-  Follow-up tag `v0.5.3rc796` carries these repairs; hosted acceptance is
-  pending. The installed-wheel/public-template rehearsal did not complete
-  locally: pip spent 10m28s retrying interrupted downloads and reported DNS
-  resolution failures for `files.pythonhosted.org`; the install and
-  external-project stages remain unverified locally.
+  Follow-up tag `v0.5.3rc796` carries these repairs and passed hosted run
+  [43654951786](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43654951786):
+  472 scoped tests passed, including both pinned Docker native KiCad versions,
+  followed by Linux and Windows Pyright, wheel/sdist builds, installed-wheel
+  checks, and external-project verification. The equivalent installed-wheel
+  rehearsal did not complete locally: pip spent 10m28s retrying interrupted
+  downloads and reported DNS resolution failures for
+  `files.pythonhosted.org`.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
