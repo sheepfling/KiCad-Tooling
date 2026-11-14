@@ -27664,7 +27664,9 @@ acceptance threads while new lint features proceed:
   and the 343-report hash-seed comparison. Ruff, architecture-boundary checks,
   Markdown gates, Pyright (including Windows types), wheel/sdist builds, and
   installed-wheel verification against the external project template passed.
-  GitHub Actions acceptance is pending publication.
+  Annotated tag `v0.5.3rc794` resolved to this rule and passed the hosted scoped
+  lint gate and installed-wheel check in
+  [run 43647820391](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43647820391).
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
