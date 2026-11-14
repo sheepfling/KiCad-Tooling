@@ -26721,7 +26721,8 @@ acceptance threads while new lint features proceed:
   profiles, Markdown, mdrepo, Linux/Windows Pyright, wheel/sdist builds, and
   the isolated-wheel rehearsal passed. The separate public template and its
   relocated-layout rehearsal passed inventory, surface, verification, and
-  playtest. Hosted CI is pending the tag.
+  playtest. Hosted tag acceptance run 43541038458 completed successfully
+  for commit `5ed14d0`.
 - **Priority:** P2 review context for repeated connector interfaces. A family
   of otherwise exact footprint peers can leave the same generic native power
   contact open, while the individual connector checks report each contact on
