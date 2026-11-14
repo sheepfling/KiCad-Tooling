@@ -27431,7 +27431,9 @@ acceptance threads while new lint features proceed:
   catalog-derived rule gate passed 461 tests with 9,494 unrelated tests
   deselected. Architecture/catalog selection passed 102 tests, Linux and
   Windows-targeted Pyright reported zero issues, and Ruff/format/JSON/diff
-  checks passed. The annotated-tag hosted gate remains pending.
+  checks passed. Hosted prerelease acceptance passed in
+  [run 43617396766](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43617396766)
+  for tag `v0.5.3rc787`; its wheel rehearsal used the separate public template.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
