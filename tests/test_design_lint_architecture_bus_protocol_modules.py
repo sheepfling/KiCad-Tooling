@@ -33,6 +33,7 @@ BUS_ANALYSIS_MODULES = (
     "bus_signal_pairs.py",
     "can_line_polarity.py",
     "bus_ethernet_pair_labels.py",
+    "bus_ethernet_management_same_net.py",
     "rs485_data_label_mismatch.py",
     "can_tx_rx_label_mismatch.py",
     "can_tx_rx_same_net.py",

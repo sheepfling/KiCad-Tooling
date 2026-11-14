@@ -929,7 +929,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 387 active rules.
+The catalog currently contains 388 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -1937,6 +1937,31 @@ The checked-in native inputs are synthetic and their reviewed hashes are recorde
 KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_LABEL_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_ethernet_management_label_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_label_mismatch")'
+```
+
+### Ethernet management clock/data same-net review
+
+`bus.ethernet_management_same_net` reviews a fitted U/IC with one exact native
+MDC function and one exact MDIO function when both pins have one unambiguous
+assignment to the same schematic net. A complete, unique native pin inventory
+is required; DNP, open, multiply assigned, duplicate-role, non-IC, and
+incomplete-inventory cases remain unclassified. Pins both typed as outputs are
+left for the source-bound ERC result. This is a default `review` clue, not a
+required connection or defect verdict. It uses pin-function role clues and
+does not prove the IC is a PHY, identify the intended endpoint, or validate
+PCB copper or physical continuity. The synthetic fault uses a neutral shared
+net name, so the existing label mismatch check stays quiet while this check
+localizes the two exact pins. The
+[fixture notes](../tests/fixtures/design_lint/ethernet-management-same-net-native/README.md)
+record source hashes and exact-version evidence.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_ethernet_management_same_net.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.ethernet_management_same_net")'
+
+KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_ethernet_management_same_net_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_same_net")'
 ```
 
 ### Ethernet management one-sided open pin review

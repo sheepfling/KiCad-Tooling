@@ -100,6 +100,25 @@ def test_ethernet_management_unconnected_rule_has_a_bounded_theme_owner() -> Non
     assert line_count(HWREPO / "bus_ethernet_unconnected_management.py") < IMPLEMENTATION_MAX_LINES
 
 
+def test_ethernet_management_same_net_rule_uses_a_focused_predicate_owner() -> None:
+    from kicad_tooling.hwrepo.design_lint import rule_catalog
+
+    rule = next(
+        item for item in rule_catalog().rules if item.rule_id == "bus.ethernet_management_same_net"
+    )
+    assert rule.theme == "interfaces"
+    assert rule.implementation_owner == (
+        "kicad_tooling/hwrepo/bus_ethernet_management_same_net.py#"
+        "ethernet_management_same_net_candidates"
+    )
+    assert rule.implementation_owner in rule.implementation_refs
+    assert (
+        "kicad_tooling/hwrepo/bus_signal_pairs.py#ethernet_management_function_role"
+        in rule.implementation_refs
+    )
+    assert line_count(HWREPO / "bus_ethernet_management_same_net.py") < IMPLEMENTATION_MAX_LINES
+
+
 def test_ethernet_label_adapters_retain_the_native_source_and_project_typed_evidence() -> None:
     owner_path = HWREPO / "design_lint_bus_ethernet_label_candidate_evidence.py"
     route_path = HWREPO / "bus_ethernet_pair_labels.py"

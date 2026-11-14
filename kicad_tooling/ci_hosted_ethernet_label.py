@@ -10,7 +10,11 @@ import sys
 import tempfile
 from pathlib import Path
 
-from .ci_hosted_ethernet_label_models import ETHERNET_LABEL_FIXTURES, EthernetLabelFeature
+from .ci_hosted_ethernet_label_models import (
+    ETHERNET_LABEL_FIXTURES,
+    EthernetLabelFeature,
+    EthernetLabelFixtureExpectation,
+)
 from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.contract_coach import pinned_image, run_command
 from .hwrepo.contract_coach_models import ContractCoachReport
@@ -48,11 +52,20 @@ def ethernet_label_fixture_lane(
     version: str | None = None,
     image: str,
     log: HostedLog,
-    feature: EthernetLabelFeature = "data",
+    feature: EthernetLabelFeature | None = None,
+    fixture_expectation: EthernetLabelFixtureExpectation | None = None,
 ) -> None:
     """Export source-hashed Ethernet label controls and evaluate one focused rule."""
     root = root.resolve()
-    fixture = ETHERNET_LABEL_FIXTURES[feature]
+    if fixture_expectation is None:
+        if feature is None:
+            raise ValueError("Ethernet native fixture requires a feature or fixture expectation")
+        fixture = ETHERNET_LABEL_FIXTURES[feature]
+    else:
+        if feature is not None:
+            raise ValueError("Select an Ethernet fixture feature or expectation, not both")
+        fixture = fixture_expectation
+    feature_name = feature or fixture.stage_prefix
     if project is None:
         if version is None or (version, image) not in ETHERNET_LABEL_NATIVE_TOOLCHAINS:
             raise ValueError("Ethernet native fixture requires a configured KiCad 10 toolchain")
@@ -86,7 +99,7 @@ def ethernet_label_fixture_lane(
 
     scratch = Path(
         tempfile.mkdtemp(
-            prefix=f"ethernet-{feature}-label-{project_label}-", dir=log.directory.resolve()
+            prefix=f"ethernet-{feature_name}-label-{project_label}-", dir=log.directory.resolve()
         )
     )
     inputs = scratch / "input"
@@ -160,7 +173,9 @@ def ethernet_label_fixture_lane(
             command_receipt=receipt.relative_to(root).as_posix(),
             error=command.stderr or command.error or f"exit {command.returncode}",
         )
-        raise ValueError(f"Native Ethernet label export failed: {command.stderr or command.error}")
+        raise ValueError(
+            f"Native Ethernet {feature_name} export failed: {command.stderr or command.error}"
+        )
     log.event(
         f"{fixture.stage_prefix}/native-export",
         "PASS",
@@ -179,7 +194,9 @@ def ethernet_label_fixture_lane(
         for run in ("first", "repeat"):
             netlist_path = output / f"{case}.{run}.netlist.xml"
             if not netlist_path.is_file():
-                raise ValueError(f"Native Ethernet export omitted {netlist_path.name}")
+                raise ValueError(
+                    f"Native Ethernet {feature_name} export omitted {netlist_path.name}"
+                )
             raw_hashes[(case, run)] = digest(netlist_path)
             observed = read_netlist(netlist_path)
             observations[(case, run)] = observed
@@ -190,7 +207,7 @@ def ethernet_label_fixture_lane(
                 ensure_ascii=False,
             ).encode("utf-8")
             normalized_hashes[(case, run)] = hashlib.sha256(normalized).hexdigest()
-            project_id = f"synthetic-ethernet-{feature}-label-{case}"
+            project_id = f"synthetic-ethernet-{feature_name}-label-{case}"
             coach = ContractCoachReport(
                 status="READY_FOR_REVIEW",
                 project_id=project_id,
@@ -203,7 +220,7 @@ def ethernet_label_fixture_lane(
         normalized_hashes[(case, "first")] != normalized_hashes[(case, "repeat")]
         for case in sources
     ):
-        raise ValueError("Native Ethernet exports differ after netlist normalization")
+        raise ValueError(f"Native Ethernet {feature_name} exports differ after normalization")
 
     control = reports[("control", "first")]
     fault = reports[("fault", "first")]
@@ -241,7 +258,9 @@ def ethernet_label_fixture_lane(
             )
             expected_nets = () if net is None else (net,)
             if observed.pin_functions.get(pin) != function or assigned_nets != expected_nets:
-                raise ValueError(f"Native Ethernet {feature} {case} evidence changed for {pin}")
+                raise ValueError(
+                    f"Native Ethernet {feature_name} {case} evidence changed for {pin}"
+                )
             if net is None:
                 unconnected_pins = {
                     pin.casefold()
@@ -250,7 +269,7 @@ def ethernet_label_fixture_lane(
                 }
                 if pin.casefold() not in unconnected_pins:
                     raise ValueError(
-                        f"Native Ethernet {feature} {case} omitted the open-pin evidence for {pin}"
+                        f"Native Ethernet {feature_name} {case} omitted the open-pin evidence for {pin}"
                     )
         event_evidence: dict[str, str] = {}
         if feature in {"generic_connector", "management_generic_connector"}:

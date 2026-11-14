@@ -10,6 +10,9 @@ from tests.design_lint_fixtures.can_line_named_rail import can_line_named_rail_n
 from tests.design_lint_fixtures.catalog_reachability import (
     usb_c_vbus_and_connector_return_review_rule_ids,
 )
+from tests.design_lint_fixtures.catalog_reachability_ethernet_management_same_net import (
+    ethernet_management_same_net_rule_ids,
+)
 from tests.design_lint_fixtures.gpio_control_voltage import gpio_control_voltage_netlist
 from tests.design_lint_fixtures.i3c_same_net import i3c_same_net_netlist
 from tests.design_lint_fixtures.i3c_signal_named_rail import i3c_signal_named_rail_netlist
@@ -43,6 +46,7 @@ def protocol_rule_ids() -> set[str]:
             usb_c_port_roster=UsbCPortRosterContext(state="not_configured"),
         )
     }
+    emitted.update(ethernet_management_same_net_rule_ids())
     emitted.update(item.rule_id for item in candidates(signal_netlist()))
     emitted.update(item.rule_id for item in candidates(signal_netlist(output_type="open_emitter")))
     emitted.update(

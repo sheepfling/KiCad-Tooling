@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 387 rules are implemented with synthetic regression coverage.
+The following 388 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 387 active rules.
+The catalog currently contains 388 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -570,6 +570,7 @@ skipped under prerelease policy.
 - `power.gpio_to_control_input_voltage_review`
 - `power.open_drain_control_input_pullup_voltage_review`
 - `power.ic_decoupling_below_project_minimum`
+- `power.ic_decoupling_map_pin_coverage`
 - `power.ic_rail_without_fitted_capacitor`
 - `power.pin_function_net_role_conflict`
 - `power.named_supply_pin_on_negative_rail`
@@ -670,6 +671,7 @@ skipped under prerelease policy.
 - `bus.ethernet_data_label_mismatch`
 - `bus.ethernet_data_unconnected_pin`
 - `bus.ethernet_management_label_mismatch`
+- `bus.ethernet_management_same_net`
 - `bus.ethernet_management_unconnected_pin`
 - `bus.ethernet_management_signal_on_named_rail`
 - `bus.ethernet_signal_on_named_rail`
@@ -4463,7 +4465,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 386 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 388 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -27333,6 +27335,54 @@ acceptance threads while new lint features proceed:
   wheel/sdist builds, installed-wheel checks, external/adapted project checks,
   and playtest passed. Package and preview jobs were skipped under prerelease
   policy.
+
+#### LINT-474 — Review Ethernet MDC/MDIO pins assigned to the same net
+
+- **Status:** Implemented as a default-review interface heuristic. It can be
+  configured `off` or `block`, and exact findings can be ignored by project
+  policy.
+- **Gap:** The existing Ethernet management label check intentionally skips a
+  same-net topology, and the named-rail and open-pin checks do not classify two
+  assigned pins that share a neutral signal name. Such a short can therefore
+  pass those checks without a review prompt.
+- **Predicate:** For a fitted U/IC with one exact native MDC and MDIO function,
+  complete unique native pin/function inventory, and one unambiguous net
+  assignment for each pin, prompt when both roles share the same net. DNP,
+  non-IC, open, ambiguous, duplicate-role, incomplete-inventory, and
+  both-output cases are quiet.
+- **Interpretation:** This is a pin-function heuristic, not a project-authored
+  endpoint requirement or defect verdict. Exact function clues do not prove
+  the device is an Ethernet PHY or that the two contacts must remain separate
+  in every mode. The project owner decides whether to keep the review, add an
+  independently approved connection requirement, or record an exact ignore.
+- **Incremental value:** The synthetic neutral-name fault produces no finding
+  from the existing management label, named-rail, or unconnected-pin checks;
+  this rule emits one localized REVIEW candidate. That establishes a distinct
+  synthetic coverage slice, not field precision or reviewer-value evidence.
+- **Controls and policy:** Fault/control tests cover one shared net versus
+  distinct nets; DNP, open, ambiguous, duplicate role, missing or incomplete
+  pin inventories, non-IC references, both-output pin types, mapping order,
+  REVIEW/BLOCK/OFF, and exact ignore behavior. CLI and MCP continue to use the
+  shared typed design-lint service.
+- **Native evidence:** The tooling-owned synthetic schematics export exact MDC
+  and MDIO functions, distinct neutral control nets, and a shared-net fault.
+  Digest-pinned Docker fixtures run on KiCad 10.0.0 and 10.0.5 and compare
+  repeatable normalized netlists. No project board or proprietary source is
+  included.
+- **Selection:** Run `tests/test_ethernet_management_same_net.py` and the
+  matching catalog-reachability, architecture, marker, and rule-gate tests
+  with `design_lint and interface_lint` plus rule ID
+  `bus.ethernet_management_same_net`. Run
+  `tests/test_ethernet_management_same_net_native_fixture_lane.py` with Docker
+  and `KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_SAME_NET_FIXTURES=1` for exact
+  native exports.
+- **Acceptance:** Local focused acceptance passed on 2026-11-14. The scoped
+  acceptance pipeline passed formatting, lint, architecture and duplication
+  checks, 454 selected pytest cases (including the two exact-version Docker
+  fixture cases), Pyright, Windows typing, wheel/sdist builds, installed-wheel
+  checks against external and adapted public-template checkouts, and both
+  template playtests. The local run skipped mdrepo; hosted acceptance is
+  pending.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
