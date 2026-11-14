@@ -30,6 +30,7 @@ import tests.design_lint_fixtures.jtag_generic_connector_pair as _jtag_fixtures
 import tests.design_lint_fixtures.mosfet_gate_source_bias as _mosfet_gate_source_bias_fixtures
 import tests.design_lint_fixtures.mosfet_terminal_same_net as _mosfet_terminal_same_net_fixtures
 import tests.design_lint_fixtures.open_drain_control_voltage as _open_drain_control_voltage_fixtures
+import tests.design_lint_fixtures.power_enable_control as _power_enable_control_fixtures
 import tests.design_lint_fixtures.power_input_paths as _power_input_paths
 import tests.design_lint_fixtures.power_pin_net_roles as _power_pin_net_roles
 import tests.design_lint_fixtures.repeated_signal_pin_functions as _repeated_signal_pin_fixtures
@@ -189,6 +190,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         ),
         _power_pin_net_roles.positive_supply_on_return_netlist(),
         _power_pin_net_roles.supply_pin_on_rail_netlist("-5V"),
+        _power_enable_control_fixtures.enable_control_netlist(),
         no_can_assignments,
         _i2c_signal_label_fixtures.i2c_signal_same_net_netlist(),
         _tests_design_lint_fixtures.can_peer_netlist(divergent_peer=True),

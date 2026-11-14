@@ -43,6 +43,14 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
         **FOOTPRINT_PEER_PARITY_FIXTURES,
         **OPEN_DRAIN_CONTROL_PARITY_FIXTURES,
         **SUPPLY_RANGE_MAP_COVERAGE_PARITY_FIXTURES,
+        "power.enable_control_tied_to_return": MappingProxyType(
+            {
+                "fault_fixtures": _refs(
+                    "tests.test_design_lint_mcp_parity_power_pin_roles",
+                    "test_enable_control_return_review_cli_mcp_parity",
+                ),
+            }
+        ),
         **CONNECTOR_RETURN_PARITY_FIXTURES,
         **ETHERNET_CONNECTOR_PARITY_FIXTURES,
         **SWD_GENERIC_CONNECTOR_PARITY_FIXTURES,

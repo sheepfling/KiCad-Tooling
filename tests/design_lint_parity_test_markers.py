@@ -9,6 +9,7 @@ PARITY_LINT_TEST_MODULES = frozenset(
         "tests/test_design_lint_mcp_parity_mapped_peer_supply_split.py",
         "tests/test_design_lint_mcp_parity_reviewed_peer_signal_domains.py",
         "tests/test_design_lint_mcp_parity_peer_pin_assignment_outlier.py",
+        "tests/test_design_lint_mcp_parity_power_pin_roles.py",
         "tests/test_connector_footprint_peer_parity.py",
         "tests/test_connector_footprint_peer_metadata_open.py",
         "tests/test_design_lint_mcp_parity_peer_pins.py",

@@ -71,6 +71,7 @@ DesignLintRuleId = Literal[
     "power.gpio_to_control_input_voltage_review",
     "power.open_drain_control_input_pullup_voltage_review",
     "power.named_supply_pin_on_negative_rail",
+    "power.enable_control_tied_to_return",
     "power.component_supply_voltage_outside_range",
     "power.component_supply_range_pin_coverage",
     "power.component_supply_range_map_coverage",

@@ -46,6 +46,12 @@ def test_catalog_implementation_references_resolve_to_sources_or_fixtures() -> N
                 for node in module.body
                 if isinstance(node, (ast.AsyncFunctionDef, ast.ClassDef, ast.FunctionDef))
             }
+            for class_node in (node for node in module.body if isinstance(node, ast.ClassDef)):
+                names.update(
+                    f"{class_node.name}.{node.name}"
+                    for node in class_node.body
+                    if isinstance(node, (ast.AsyncFunctionDef, ast.FunctionDef))
+                )
             names.update(
                 alias.asname or alias.name
                 for node in module.body

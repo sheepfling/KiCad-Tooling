@@ -527,6 +527,31 @@ for the fault/control source hashes and exact-version native fixture.
   -m 'design_lint and component_lint and power_lint and design_lint_rule(rule_id="component.same_voltage_power_inputs_split")'
 ```
 
+## Review an enable input assigned to a return-like label
+
+`power.enable_control_tied_to_return` emits REVIEW for a fitted native input
+whose exact function is `EN` or `ENABLE` and whose unique net assignment has
+an explicitly return-like label such as `GND`, `0V`, or `RTN`. It excludes
+polarity-marked and compound function names, unassigned or ambiguous pins, DNP
+components, and VSS-prefixed labels. The latter may name a negative supply.
+
+This is a bounded prompt, not an assertion that the component is disabled or
+that the connection is wrong. Pin names and net labels do not establish active
+polarity, logic state, or intent; for example, a fixed active-low enable may be
+valid. Project policy can promote the finding to `block`, turn it `off`, or
+ignore its exact fingerprint. The native test exports synthetic fault and
+control schematics with digest-pinned KiCad 10.0.0 and 10.0.5 images; it does
+not inspect PCB copper.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_power_enable_control_to_return.py \
+  -m 'design_lint and power_lint and design_lint_rule(rule_id="power.enable_control_tied_to_return")'
+
+KICAD_RUN_NATIVE_POWER_PIN_NET_ROLE_FIXTURES=1 KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test \
+  .venv/bin/python -I -m pytest tests/test_power_pin_net_role_native_fixture_lane.py \
+  -m 'design_lint and power_lint and native_kicad and design_lint_rule(rule_id="power.enable_control_tied_to_return")'
+```
+
 ## Review mapped IC supply-pin coverage
 
 `power.component_supply_range_pin_coverage` checks each fitted component named
@@ -904,7 +929,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 379 active rules.
+The catalog currently contains 380 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports

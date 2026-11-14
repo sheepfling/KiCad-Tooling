@@ -16152,6 +16152,54 @@
       "implementation_owner": "kicad_tooling/hwrepo/power_negative_rail.py#positive_supply_pins_on_negative_rails"
     },
     {
+      "rule_id": "power.enable_control_tied_to_return",
+      "title": "Enable-like input is assigned to a return-like net label",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted, inventoried component pin whose exact native function is EN or ENABLE, native electrical type is input, and exported net assignment is unique, emit REVIEW when the net label matches the bounded return-like label recognizer, excluding every VSS-prefixed label segment. Polarity-marked and compound function strings are outside the predicate.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "This is a name-based prompt for explicit EN/ENABLE functions only. It cannot establish active polarity, pin behavior, logic level, electrical potential, whether the control is required to change state, or whether grounding is intentional. A fixed active-low enable and other valid designs may be reviewed.",
+        "Only assigned net names recognized by return_nets.is_return_like_net_name are considered. VSS-prefixed label segments are intentionally excluded because VSS may identify a negative supply. Custom return names, polarity-marked or compound enable functions, unassigned pins, ambiguous assignments, DNP components, and PCB copper are outside the predicate."
+      ],
+      "fault_fixtures": [
+        "tests.test_power_enable_control_to_return.test_exact_enable_input_on_return_label_requests_review",
+        "tests.test_power_enable_control_to_return.test_supported_return_label_families_request_review",
+        "tests.test_design_lint_mcp_parity_power_pin_roles.test_enable_control_return_review_cli_mcp_parity",
+        "tests.test_power_pin_net_role_native_fixture_lane.test_enable_control_return_fault_and_controls_export_repeatably"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_power_enable_control_to_return.test_unqualified_scope_and_ambiguous_cases_are_controls",
+        "tests.test_design_lint_mcp_parity_power_pin_roles.test_enable_control_return_review_cli_mcp_parity",
+        "tests.test_power_pin_net_role_native_fixture_lane.test_enable_control_return_fault_and_controls_export_repeatably"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_power_enable_control_to_return.test_assignment_correction_clears_candidate_and_order_does_not_change_fingerprint"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_POWER_PIN_NET_ROLE_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/power_enable_controls.py#enable_control_tied_to_return_candidates",
+        "kicad_tooling/hwrepo/design_lint_power_control_return_evidence.py#EnableControlReturnEvidence",
+        "kicad_tooling/hwrepo/return_nets.py#is_return_like_net_name",
+        "kicad_tooling/hwrepo/return_nets.py#is_vss_prefixed_net_name",
+        "kicad_tooling/hwrepo/netlist_pin_assignments.py#netlist_pin_net_index",
+        "kicad_tooling/hwrepo/design_lint_power_candidate_evidence.py#project_power_candidate_evidence",
+        "kicad_tooling/hwrepo/design_lint_power_candidate_evidence.py#PowerCandidate",
+        "kicad_tooling/hwrepo/design_lint_power_candidates.py#scan_power_candidates",
+        "kicad_tooling/hwrepo/design_lint_power_candidates.py#power_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "power",
+      "implementation_owner": "kicad_tooling/hwrepo/power_enable_controls.py#enable_control_tied_to_return_candidates"
+    },
+    {
       "rule_id": "power.component_supply_voltage_outside_range",
       "title": "Mapped component supply pin label is outside its operating range",
       "status": "active",

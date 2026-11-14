@@ -129,6 +129,64 @@ def test_power_pin_role_rules_use_bounded_source_evidence() -> None:
         )
 
 
+def test_enable_control_return_rule_has_a_small_typed_power_owner() -> None:
+    rule_id = "power.enable_control_tied_to_return"
+    owner_path = HWREPO / "power_enable_controls.py"
+    evidence_path = HWREPO / "design_lint_power_control_return_evidence.py"
+    projection_path = HWREPO / "design_lint_power_candidate_evidence.py"
+    dispatcher_path = HWREPO / "design_lint_power_candidates.py"
+    owner_tree = ast.parse(owner_path.read_text(encoding="utf-8"), filename=owner_path.name)
+    evidence_tree = ast.parse(
+        evidence_path.read_text(encoding="utf-8"), filename=evidence_path.name
+    )
+    projection_tree = ast.parse(
+        projection_path.read_text(encoding="utf-8"), filename=projection_path.name
+    )
+    dispatcher_tree = ast.parse(
+        dispatcher_path.read_text(encoding="utf-8"), filename=dispatcher_path.name
+    )
+
+    assert all(
+        line_count(path) < IMPLEMENTATION_MAX_LINES
+        for path in (owner_path, evidence_path, projection_path, dispatcher_path)
+    )
+    assert any(
+        isinstance(node, ast.FunctionDef)
+        and node.name == "enable_control_tied_to_return_candidates"
+        for node in owner_tree.body
+    )
+    assert any(
+        isinstance(node, ast.ClassDef) and node.name == "EnableControlReturnEvidence"
+        for node in evidence_tree.body
+    )
+    assert any(
+        isinstance(node, ast.Name) and node.id == "EnableControlReturnEvidence"
+        for node in ast.walk(projection_tree)
+    )
+    scan = next(
+        node
+        for node in dispatcher_tree.body
+        if isinstance(node, ast.FunctionDef) and node.name == "scan_power_candidates"
+    )
+    assert any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "enable_control_tied_to_return_candidates"
+        for node in ast.walk(scan)
+    )
+
+    rule = rule_catalog(rule_id=rule_id).rules[0]
+    assert rule.theme == "power"
+    assert (
+        "kicad_tooling/hwrepo/power_enable_controls.py#enable_control_tied_to_return_candidates"
+        == rule.implementation_owner
+    )
+    assert (
+        "kicad_tooling/hwrepo/design_lint_power_control_return_evidence.py#EnableControlReturnEvidence"
+        in rule.implementation_refs
+    )
+
+
 def test_authored_power_map_rules_use_bounded_source_evidence() -> None:
     routes = {
         "design_lint_power_decoupling.py": (

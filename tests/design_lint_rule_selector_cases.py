@@ -84,6 +84,10 @@ RULE_NODE_CASES = (
         "tests/test_power_negative_rail.py::test_named_supply_pin_on_negative_rail_is_reviewed",
     ),
     (
+        "power.enable_control_tied_to_return",
+        "tests/test_power_enable_control_to_return.py::test_exact_enable_input_on_return_label_requests_review",
+    ),
+    (
         "power.mapped_sequence_dependency_mismatch",
         "tests/test_power_sequence_native_fixture_lane.py::test_control_fault_and_cycle_repeat_on_pinned_kicad_versions",
     ),

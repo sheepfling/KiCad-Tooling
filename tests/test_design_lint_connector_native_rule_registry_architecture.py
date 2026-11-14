@@ -285,6 +285,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "power.named_supply_pin_on_negative_rail": {
             "tests.test_power_pin_net_role_native_fixture_lane.test_named_supply_pin_on_negative_rail_fault_and_control_export_repeatably",
         },
+        "power.enable_control_tied_to_return": {
+            "tests.test_power_pin_net_role_native_fixture_lane.test_enable_control_return_fault_and_controls_export_repeatably",
+        },
         "net.numbered_power_rails": {
             "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases",
         },
@@ -357,6 +360,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "KICAD_RUN_NATIVE_COMPONENT_PEER_PIN_FIXTURES"
     )
     native_fixture_by_rule["power.named_supply_pin_on_negative_rail"] = (
+        "KICAD_RUN_NATIVE_POWER_PIN_NET_ROLE_FIXTURES"
+    )
+    native_fixture_by_rule["power.enable_control_tied_to_return"] = (
         "KICAD_RUN_NATIVE_POWER_PIN_NET_ROLE_FIXTURES"
     )
     for rule_id, expected_cases in expected_cases_by_rule.items():

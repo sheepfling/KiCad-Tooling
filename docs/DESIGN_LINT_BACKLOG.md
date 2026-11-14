@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 379 rules are implemented with synthetic regression coverage.
+The following 380 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 379 active rules.
+The catalog currently contains 380 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -572,6 +572,7 @@ skipped under prerelease policy.
 - `power.ic_rail_without_fitted_capacitor`
 - `power.pin_function_net_role_conflict`
 - `power.named_supply_pin_on_negative_rail`
+- `power.enable_control_tied_to_return`
 - `power.mapped_series_path_mismatch`
 - `power.mapped_sequence_dependency_mismatch`
 - `power.input_without_supported_source_path`
@@ -4442,7 +4443,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 379 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 380 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -26786,6 +26787,38 @@ acceptance threads while new lint features proceed:
   `KICAD_TEMPLATE_ROOT` set to the separate public template checkout. The
   targeted regression is
   `-k empty_native_contract_blocker_still_surfaces_split_return_review`.
+
+#### LINT-462 — Review simple enable inputs assigned to return-like labels
+
+- **Status:** Implemented as a deterministic, configurable power-theme REVIEW
+  heuristic. The rule records the exact native function, input electrical type,
+  fitted component, unique net assignment, and recognized return-like label.
+  Project policy supports the normal `review`, `block`, `off`, and exact
+  finding-ignore decisions.
+- **Predicate boundary:** Only exact `EN` and `ENABLE` function strings with
+  native `input` type and exactly one exported net are considered. Polarity-
+  marked and compound names, DNP or unassigned components, and ambiguous net
+  assignments stay quiet. VSS-prefixed label segments are excluded because
+  they may denote a negative supply. The finding does not claim disabled
+  behavior, required connectivity, logic polarity, or PCB continuity.
+- **Fixtures:** Tooling-owned synthetic netlists cover return-like label
+  families, non-return controls, VSS/VSSA controls, polarity-marked and
+  compound function controls, wrong pin type, DNP, open and ambiguous cases,
+  policy, exact ignore, and reassignment determinism. Native fault/control
+  schematics are source-hashed and exported repeatedly with digest-pinned
+  KiCad 10.0.0 and 10.0.5. CLI and MCP reports are compared on the same
+  synthetic source. No cohort board, product source, or proprietary project is
+  stored.
+- **Selection:** Run
+  `tests/test_power_enable_control_to_return.py` with
+  `design_lint and power_lint and
+  design_lint_rule(rule_id="power.enable_control_tied_to_return")`.
+  Run `tests/test_design_lint_mcp_parity_power_pin_roles.py` with
+  `design_lint and power_lint and parity_lint` for cross-surface parity. The
+  native lane is
+  `tests/test_power_pin_net_role_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_POWER_PIN_NET_ROLE_FIXTURES=1`, `native_kicad`, and the same
+  rule selector.
 
 ## Completion and release gate
 

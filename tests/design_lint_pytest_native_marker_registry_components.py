@@ -48,6 +48,10 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_power_paths.py": frozenset({"power_lint"}),
         "test_power_sequence_fixture_lane.py": frozenset({"power_lint"}),
         "test_power_sequence_native_fixture_lane.py": frozenset({"power_lint"}),
+        "test_power_enable_control_to_return.py": frozenset({"power_lint"}),
+        "test_power_pin_net_role_native_fixture_lane.py": frozenset(
+            {"component_lint", "native_kicad", "power_lint", "slow"}
+        ),
         "test_electrical_component_evidence.py": frozenset({"component_lint", "evidence_lint"}),
         "test_mosfet_stress.py": frozenset({"component_lint"}),
         "test_mosfet_gate_connectivity.py": frozenset({"component_lint"}),

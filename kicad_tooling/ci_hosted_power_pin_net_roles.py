@@ -42,6 +42,9 @@ def power_pin_net_role_fixture_lane(
         "fault": "fault.kicad_sch",
         "control": "control.kicad_sch",
         "negative-rail-fault": "negative-rail-fault.kicad_sch",
+        "enable-return-fault": "enable-return-fault.kicad_sch",
+        "enable-signal-control": "enable-signal-control.kicad_sch",
+        "enable-vss-control": "enable-vss-control.kicad_sch",
     }
     if not cases or set(cases) - set(case_files):
         raise ValueError(f"Unsupported named power-pin fixture cases: {cases}")
@@ -116,6 +119,9 @@ def power_pin_net_role_fixture_lane(
         "fault": ("GND", {"U1.1", "U1.2"}, set()),
         "control": ("+3V3", {"U1.1"}, {"U1.2"}),
         "negative-rail-fault": ("-5V", {"U1.1"}, {"U1.2"}),
+        "enable-return-fault": ("+3V3", {"U1.1"}, {"U1.2", "U1.3"}),
+        "enable-signal-control": ("+3V3", {"U1.1", "U1.3"}, {"U1.2"}),
+        "enable-vss-control": ("+3V3", {"U1.1"}, {"U1.2"}),
     }
     for case in cases:
         for run in ("first", "repeat"):
@@ -144,6 +150,18 @@ def power_pin_net_role_fixture_lane(
                 )
             ):
                 raise ValueError(f"Native {case} export lost the expected named-pin assignments")
+            if case.startswith("enable-"):
+                expected_enable_net = {
+                    "enable-return-fault": "GND",
+                    "enable-signal-control": "+3V3",
+                    "enable-vss-control": "VSS",
+                }[case]
+                if (
+                    observed.pin_functions.get("U1.3") != "EN"
+                    or observed.pin_electrical_types.get("U1.3") != "input"
+                    or "U1.3" not in observed.nets.get(expected_enable_net, ())
+                ):
+                    raise ValueError(f"Native {case} export lost the expected EN assignment")
             project_id = f"synthetic-power-pin-net-role-{case}"
             coach = ContractCoachReport(
                 status="READY_FOR_REVIEW",
@@ -159,6 +177,11 @@ def power_pin_net_role_fixture_lane(
         "negative-rail-fault": {
             "power.named_supply_pin_on_negative_rail": "U1.1: VDD pin assigned to -5V"
         },
+        "enable-return-fault": {
+            "power.enable_control_tied_to_return": "U1.3: EN control input assigned to GND"
+        },
+        "enable-signal-control": {},
+        "enable-vss-control": {},
     }
     for case, filename in selected_cases.items():
         if normalized[case, "first"] != normalized[case, "repeat"]:

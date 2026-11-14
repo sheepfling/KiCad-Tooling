@@ -9,6 +9,7 @@ from typing import TypeAlias
 from .component_pin_patterns import RepeatedComponentSupplyPins
 from .component_power_input_domains import SplitPowerInputDomains
 from .design_lint_ic_decoupling_candidate_evidence import IcDecouplingFindingEvidence
+from .design_lint_power_control_return_evidence import EnableControlReturnEvidence
 from .design_lint_power_pin_role_evidence import (
     NamedPowerPinNetRoleConflictEvidence,
     NamedSupplyPinNegativeRailEvidence,
@@ -41,6 +42,7 @@ PowerCandidateSource: TypeAlias = (
     | NumberedPowerRailGroup
     | NamedPowerPinNetRoleConflictEvidence
     | NamedSupplyPinNegativeRailEvidence
+    | EnableControlReturnEvidence
     | IcDecouplingFindingEvidence
     | RegulatorPassiveTopologyFindingEvidence
     | RegulatorPassivePinRoleFindingEvidence
@@ -60,6 +62,7 @@ _REPEATED_SUPPLY_PIN_FUNCTION: DesignLintRuleId = "component.repeated_supply_pin
 _NUMBERED_POWER_RAILS: DesignLintRuleId = "net.numbered_power_rails"
 _POWER_PIN_NET_ROLE_CONFLICT: DesignLintRuleId = "power.pin_function_net_role_conflict"
 _NAMED_SUPPLY_PIN_ON_NEGATIVE_RAIL: DesignLintRuleId = "power.named_supply_pin_on_negative_rail"
+_ENABLE_CONTROL_TIED_TO_RETURN: DesignLintRuleId = "power.enable_control_tied_to_return"
 _IC_DECOUPLING_BELOW_MINIMUM: DesignLintRuleId = "power.ic_decoupling_below_project_minimum"
 _REGULATOR_PASSIVE_TOPOLOGY_MISMATCH: DesignLintRuleId = (
     "power.regulator_required_passive_topology_mismatch"
@@ -138,6 +141,15 @@ def project_power_candidate_evidence(
                 ),
                 "assigned_net": (source.net,),
                 "negative_rail_key": (source.negative_rail_key,),
+            },
+        )
+    if isinstance(source, EnableControlReturnEvidence):
+        return CandidateEvidenceProjection(
+            rule_id=_ENABLE_CONTROL_TIED_TO_RETURN,
+            evidence={
+                source.pin: (f"native_function={source.function}",),
+                "assigned_net": (source.net,),
+                "electrical_type": ("input",),
             },
         )
     if isinstance(source, IcDecouplingFindingEvidence):
