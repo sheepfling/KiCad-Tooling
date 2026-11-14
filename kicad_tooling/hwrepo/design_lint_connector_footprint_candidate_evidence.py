@@ -54,12 +54,14 @@ def project_connector_footprint_peer_pin_evidence(
             raise ValueError("Generic footprint-peer open evidence requires a generic pin function")
         expected_open_pins = tuple(pin for pin, nets in source.assignments.items() if not nets)
         if (
-            not source.common_anchor_pin_numbers
+            (not source.common_anchor_pin_numbers and source.peer_assignment_group is None)
             or not expected_open_pins
             or not any(source.assignments.values())
             or source.open_pins != expected_open_pins
         ):
-            raise ValueError("Footprint-peer open evidence must match anchored open assignments")
+            raise ValueError(
+                "Footprint-peer open evidence requires an anchor or reviewed scope and matching assignments"
+            )
         evidence.update(
             {
                 "open_pins": source.open_pins,

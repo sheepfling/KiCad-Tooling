@@ -26937,6 +26937,32 @@ acceptance threads while new lint features proceed:
   or physical continuity. Only tooling-owned synthetic fixtures are used; no
   proprietary project source or fixture is stored here.
 
+#### LINT-466 — Review anchorless partial-open connector peers with current scope
+
+- **Status:** Extends the existing
+  [`connector.footprint_peer_pin_open_outlier` rule](DESIGN_LINT.md) as a
+  REVIEW heuristic. A source-reviewed peer group scopes comparison; it does
+  not assert that pins or grounds must connect.
+- **Predicate:** For fitted footprint aliases with distinct native symbols,
+  exact nonempty value and footprint, complete identical pin inventories, and
+  matching nonempty pin metadata, report a generic pin assigned to one exact
+  net on one or more peers and open on others when no common-net anchor exists
+  but every peer has a current complete map and the same reviewed
+  `peer_assignment_group`. Exclude ambiguous assignments and groups whose
+  assigned contacts split across nets. A current source-matched intentional
+  unconnected-pin reason for every open contact suppresses the prompt.
+- **Evidence:** Preserve each peer's exact net or `<unassigned>` state, the
+  peer group, and its reviewed basis. Revalidate current map/group evidence
+  before constructing a finding. Coverage reports account separately for
+  anchorless open groups that now receive this review.
+- **Fault and controls:** Synthetic cases cover a current peer group without
+  an anchor, absent peer scope, split assigned nets, documented intentional
+  opens, and mapping-order stability. CLI/MCP parity and digest-pinned KiCad
+  10.0.0/10.0.5 native fixture cases exercise the same boundary.
+- **Boundary:** This is a source-bound schematic review, not proof of pin role,
+  required commonality, PCB copper continuity, or off-board wiring. The
+  tooling-owned fixtures contain no proprietary project data.
+
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
 ## Completion and release gate

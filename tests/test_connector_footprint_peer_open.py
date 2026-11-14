@@ -22,6 +22,13 @@ from tests.connector_footprint_peer_support import (
     lint_report,
     peer_netlist,
 )
+from tests.connector_peer_unanchored_scope_support import (
+    lint_report as reviewed_lint_report,
+)
+from tests.connector_peer_unanchored_scope_support import (
+    reviewed_coverage,
+    three_peer_partial_open_netlist,
+)
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.connector_lint]
 
@@ -76,6 +83,7 @@ def test_version_three_report_defaults_new_footprint_coverage_counts() -> None:
         "unanchored_all_open_peer_pin_group_count",
         "unanchored_all_open_finding_count",
         "all_open_finding_count",
+        "unanchored_open_peer_pin_finding_count",
     ):
         alias.pop(field)
 
@@ -228,6 +236,104 @@ def test_numeric_open_contact_on_one_footprint_peer_is_reviewed() -> None:
     assert findings[0].evidence["pin_function"] == ("7",)
     assert findings[0].evidence["open_pins"] == ("J2.2",)
     assert findings[0].evidence["common_anchor_pin_numbers"] == ("1",)
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_current_reviewed_peer_group_scopes_unanchored_partial_open_review() -> None:
+    source = peer_netlist(assignments=(("PORT_A", "PORT_B"), ("DATA", None)))
+    coverage = reviewed_coverage(source)
+
+    report = reviewed_lint_report(source, coverage)
+    findings = tuple(item for item in report.findings if item.rule_id == RULE_ID)
+
+    assert report.status == "REVIEW"
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.evidence["assignments"] == ("J1.2=DATA", "J2.2=<unassigned>")
+    assert finding.evidence["open_pins"] == ("J2.2",)
+    assert finding.evidence["common_anchor_pin_numbers"] == ()
+    assert finding.evidence["peer_assignment_group"] == ("synthetic-peer-connectors",)
+    assert "source-reviewed peer-assignment group" in finding.message
+    assert report.connector_peer_pin_coverage is not None
+    alias = report.connector_peer_pin_coverage.footprint_alias_coverage
+    assert alias.open_outlier_finding_count == 1
+    assert alias.unanchored_open_peer_pin_finding_count == 1
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_unanchored_partial_open_without_current_peer_group_stays_with_scope_review() -> None:
+    source = peer_netlist(assignments=(("PORT_A", "PORT_B"), ("DATA", None)))
+    coverage = reviewed_coverage(source, (None, None))
+
+    report = reviewed_lint_report(source, coverage)
+
+    assert not any(item.rule_id == RULE_ID for item in report.findings)
+    assert any(
+        item.rule_id == "connector.footprint_peer_unanchored_scope_unreviewed"
+        for item in report.findings
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_separate_current_peer_groups_do_not_compare_partial_open_contacts() -> None:
+    source = peer_netlist(assignments=(("PORT_A", "PORT_B"), ("DATA", None)))
+    coverage = reviewed_coverage(source, ("synthetic-peer-a", "synthetic-peer-b"))
+
+    report = reviewed_lint_report(source, coverage)
+
+    assert not any(item.rule_id == RULE_ID for item in report.findings)
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_reviewed_unanchored_partial_open_with_split_assigned_nets_stays_quiet() -> None:
+    source = three_peer_partial_open_netlist()
+    coverage = reviewed_coverage(source)
+
+    report = reviewed_lint_report(source, coverage)
+
+    assert not any(item.rule_id == RULE_ID for item in report.findings)
+    assert report.connector_peer_pin_coverage is not None
+    alias = report.connector_peer_pin_coverage.footprint_alias_coverage
+    assert alias.open_peer_pin_group_count == 2
+    assert alias.unanchored_open_peer_pin_group_count == 2
+    assert alias.open_outlier_finding_count == 0
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_current_explicit_intentional_open_suppresses_unanchored_review() -> None:
+    source = peer_netlist(assignments=(("PORT_A", "PORT_B"), ("DATA", None)))
+    coverage = reviewed_coverage(source, unconnected_pins=("J2.2",))
+
+    report = reviewed_lint_report(source, coverage)
+
+    assert not any(item.rule_id == RULE_ID for item in report.findings)
+    assert report.connector_peer_pin_coverage is not None
+    alias = report.connector_peer_pin_coverage.footprint_alias_coverage
+    assert alias.open_peer_pin_group_count == 1
+    assert alias.unanchored_open_peer_pin_group_count == 1
+    assert alias.open_outlier_finding_count == 0
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_reviewed_unanchored_open_is_stable_under_mapping_order() -> None:
+    source = peer_netlist(assignments=(("PORT_A", "PORT_B"), ("DATA", None)))
+    reordered = source.model_copy(
+        update={
+            "components": dict(reversed(tuple(source.components.items()))),
+            "nets": dict(reversed(tuple(source.nets.items()))),
+            "component_symbols": dict(reversed(tuple(source.component_symbols.items()))),
+            "component_pin_numbers": dict(reversed(tuple(source.component_pin_numbers.items()))),
+            "pin_functions": dict(reversed(tuple(source.pin_functions.items()))),
+            "pin_electrical_types": dict(reversed(tuple(source.pin_electrical_types.items()))),
+        }
+    )
+
+    original = reviewed_lint_report(source, reviewed_coverage(source))
+    shuffled = reviewed_lint_report(reordered, reviewed_coverage(reordered))
+    first = next(item for item in original.findings if item.rule_id == RULE_ID)
+    second = next(item for item in shuffled.findings if item.rule_id == RULE_ID)
+
+    assert (second.fingerprint, second.evidence) == (first.fingerprint, first.evidence)
 
 
 def test_common_open_and_unanchored_controls_do_not_prompt() -> None:

@@ -29,6 +29,7 @@ ALL_OPEN_MODULES = ("connector_footprint_peer_all_open.py",)
 ANCHOR_MODULES = ("connector_footprint_peer_anchors.py",)
 OPEN_OUTLIER_MODULES = (
     "connector_footprint_peer_open_outliers.py",
+    "connector_footprint_peer_open_candidates.py",
     "connector_footprint_open_named_candidates.py",
     "design_lint_connector_footprint_named_open_evidence.py",
 )
@@ -170,3 +171,22 @@ def test_all_open_footprint_candidate_owns_anchor_or_reviewed_scope_predicate() 
     assert "generic_footprint_peer_all_open_candidate" in imported
     assert line_count(owner) < IMPLEMENTATION_MAX_LINES
     assert line_count(scanner) < IMPLEMENTATION_MAX_LINES
+
+
+def test_partial_open_footprint_rule_has_a_focused_candidate_owner() -> None:
+    owner = HWREPO / "connector_footprint_peer_open_candidates.py"
+    service = HWREPO / "design_lint_connector_footprint_candidates.py"
+    owner_tree = ast.parse(owner.read_text(encoding="utf-8"), filename=owner.name)
+    service_tree = ast.parse(service.read_text(encoding="utf-8"), filename=service.name)
+    functions = {node.name for node in owner_tree.body if isinstance(node, ast.FunctionDef)}
+    imports = {
+        alias.name
+        for node in service_tree.body
+        if isinstance(node, ast.ImportFrom)
+        and node.module == "connector_footprint_peer_open_candidates"
+        for alias in node.names
+    }
+
+    assert "footprint_peer_pin_open_outlier_candidates" in functions
+    assert "footprint_peer_pin_open_outlier_candidates" in imports
+    assert line_count(owner) < IMPLEMENTATION_MAX_LINES

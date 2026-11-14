@@ -309,6 +309,9 @@ def connector_peer_pin_heuristic_coverage(
             finding_counts.footprint_peer_uncovered_scope_finding_count
         ),
         open_outlier_finding_count=(finding_counts.footprint_peer_pin_open_outlier_finding_count),
+        unanchored_open_peer_pin_finding_count=(
+            finding_counts.footprint_peer_pin_unanchored_open_outlier_finding_count
+        ),
         all_open_finding_count=finding_counts.footprint_peer_pin_all_open_finding_count,
         unanchored_all_open_finding_count=footprint_scan.unanchored_all_open_finding_count,
         named_signal_divergence=named_signal_divergence,

@@ -92,6 +92,7 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
     open_peer_pin_group_count: NonNegativeCount
     unanchored_open_peer_pin_group_count: NonNegativeCount
     open_outlier_finding_count: NonNegativeCount
+    unanchored_open_peer_pin_finding_count: NonNegativeCount = 0
     all_open_peer_pin_group_count: NonNegativeCount = 0
     unanchored_all_open_peer_pin_group_count: NonNegativeCount = 0
     unanchored_all_open_finding_count: NonNegativeCount = 0
@@ -255,8 +256,12 @@ class ConnectorFootprintPeerPinCoverage(StrictModel):
             raise ValueError("Footprint alias open peers must have an unassigned peer contact")
         if self.unanchored_open_peer_pin_group_count > self.open_peer_pin_group_count:
             raise ValueError("Unanchored open peers cannot exceed open peer pin groups")
+        if self.unanchored_open_peer_pin_finding_count > self.unanchored_open_peer_pin_group_count:
+            raise ValueError("Unanchored open findings cannot exceed unanchored peer groups")
         if (
-            self.open_outlier_finding_count + self.unanchored_open_peer_pin_group_count
+            self.open_outlier_finding_count
+            + self.unanchored_open_peer_pin_group_count
+            - self.unanchored_open_peer_pin_finding_count
             != self.open_peer_pin_group_count
         ):
             raise ValueError("Footprint alias open peers must be anchored or unanchored")
@@ -417,6 +422,7 @@ class ConnectorPeerPinHeuristicCoverage(StrictModel):
             > self.exact_symbol_pin_group_count
             + self.part_id_alias_coverage.compared_pin_group_count
             + self.footprint_alias_coverage.compared_pin_group_count
+            + self.footprint_alias_coverage.open_peer_pin_group_count
             + self.footprint_alias_coverage.all_open_peer_pin_group_count
             + self.footprint_alias_coverage.named_power_input_all_open_peer_pin_group_count
             + self.footprint_alias_coverage.named_power_output_all_open_peer_pin_group_count

@@ -27,6 +27,7 @@ def reviewed_coverage(
     *,
     inventory_reviewed: bool = True,
     pin_maps_complete: bool = True,
+    unconnected_pins: tuple[str, ...] = (),
 ) -> ConnectorCoverageReport:
     """Build complete source-matched two-pin maps with configurable peer scope."""
     references = tuple(sorted(observed.components, key=lambda value: (value.casefold(), value)))
@@ -56,6 +57,11 @@ def reviewed_coverage(
             basis="Synthetic exact pin mapping",
             interface_id="synthetic-generic-port",
             pin_map=({"1": "1", "2": "2"} if pin_maps_complete else {"1": "1"}),
+            unconnected_pin_reasons={
+                pin.rsplit(".", 1)[1]: "Synthetic pinout marks this contact intentionally open."
+                for pin in unconnected_pins
+                if pin.rsplit(".", 1)[0].casefold() == reference.casefold()
+            },
             peer_assignment_group=group,
             peer_assignment_basis=None if group is None else PEER_BASIS,
         )

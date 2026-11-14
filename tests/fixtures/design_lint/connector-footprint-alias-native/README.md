@@ -19,7 +19,7 @@ anchor.
 | `numeric-fault.kicad_sch`                  | `1` / `7`           | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_3` | `REVIEW` for `connector.footprint_peer_pin_assignment_divergence`                                       |
 | `numeric-control.kicad_sch`                | `1` / `7`           | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_2` | No footprint-alias divergence                                                                           |
 | `numeric-open-fault.kicad_sch`             | `1` / `7`           | `SYNTHETIC_NET_2` | unassigned        | `REVIEW` for `connector.footprint_peer_pin_open_outlier`                                                |
-| `unanchored-partial-open-fault.kicad_sch`  | `Pin_1` / `Pin_2`   | `SYNTHETIC_NET_2` | unassigned        | `REVIEW` for `connector.footprint_peer_unanchored_scope_coverage_missing` when coverage is missing      |
+| `unanchored-partial-open-fault.kicad_sch`  | `Pin_1` / `Pin_2`   | `SYNTHETIC_NET_2` | unassigned        | Scope-coverage `REVIEW` without maps; open-outlier `REVIEW` with a current shared peer group          |
 
 `unanchored-fault.kicad_sch` assigns both generic pins to different nets on
 J1 and J2, leaving no shared-net anchor. It is evaluated only when a current
@@ -30,10 +30,11 @@ That scope asks for review; it does not assert that either pair must be joined.
 `unanchored-partial-open-fault.kicad_sch` leaves pin 1 open on both aliases
 and assigns only J1 pin 2, leaving J2 pin 2 open. With no shared-net anchor
 and no complete connector coverage, LINT-274 emits one cohort-level REVIEW
-prompt with the assigned and open contacts in its evidence. The existing
-`open-fault.kicad_sch` is a valid anchor control: pin 1 is shared, so LINT-274
-stays quiet while the anchored open-contact rule remains applicable. Neither
-case declares whether the open contact is required.
+prompt with the assigned and open contacts in its evidence. With complete
+current pin maps and a reviewed shared peer group, the same fixture instead
+produces `connector.footprint_peer_pin_open_outlier` for J2 pin 2. The native
+fault/control lane repeats that case against `control.kicad_sch`. Neither
+outcome declares whether the open contact is required.
 
 `unanchored-split-open-fault.kicad_sch` extends this case to three distinct
 native connector symbols with matching value, footprint, complete pin

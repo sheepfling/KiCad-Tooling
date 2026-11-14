@@ -43,6 +43,9 @@ from .connector_footprint_peer_missing_metadata import (
 from .connector_footprint_peer_missing_metadata_open import (
     connector_footprint_peer_pin_missing_metadata_open_outliers,
 )
+from .connector_footprint_peer_open_candidates import (
+    footprint_peer_pin_open_outlier_candidates,
+)
 from .connector_footprint_peer_pin_types import (
     ConnectorFootprintPeerPinAllOpen,
     ConnectorFootprintPeerPinScan,
@@ -73,7 +76,6 @@ from .connector_footprint_signal_input import (
 from .connector_footprint_signal_output import (
     footprint_named_signal_output_open_outlier_candidates,
 )
-from .connector_identity import pin_function_is_generic
 from .design_lint_connector_footprint_candidate_evidence import (
     ConnectorFootprintPeerPinCandidate,
 )
@@ -160,7 +162,7 @@ def connector_footprint_peer_pin_candidates(
         *named_signal_all_open.candidates,
         *named_power_output_divergence.candidates,
         *named_passive_divergence.candidates,
-        *_footprint_peer_pin_open_candidates(scan),
+        *footprint_peer_pin_open_outlier_candidates(scan, observed, connector_coverage),
         *footprint_named_power_input_open_outlier_candidates(scan, connector_coverage),
         *footprint_named_signal_input_open_outlier_candidates(scan, connector_coverage),
         *footprint_named_power_output_open_outlier_candidates(scan, connector_coverage),
@@ -168,33 +170,6 @@ def connector_footprint_peer_pin_candidates(
         *footprint_named_signal_mode_dependent_open_outlier_candidates(scan, connector_coverage),
         *footprint_named_passive_open_outlier_candidates(scan, connector_coverage),
         *_footprint_peer_pin_all_open_candidates(scan),
-    )
-
-
-def _footprint_peer_pin_open_candidates(
-    scan: ConnectorFootprintPeerPinScan,
-) -> tuple[Candidate, ...]:
-    """Review generic pin contacts left open on a subset of footprint peers."""
-    return tuple(
-        ConnectorFootprintPeerPinCandidate.from_source_evidence(
-            item,
-            subject=f"{item.value} [{item.footprint}] pin {item.pin_number}",
-            message=(
-                "Fitted connector instances with distinct native symbols share the same value, "
-                "footprint, complete pin inventory, and matching pin-function and electrical-type "
-                "metadata. This generic contact is assigned on some peers and unassigned on others, "
-                "while a separate contact has one common assigned net. Review the approved pinout "
-                "for an intentional open or a missing connection; similarity does not prove that "
-                "this contact must connect."
-                + (
-                    " The comparison is scoped to a source-reviewed peer-assignment group."
-                    if item.peer_assignment_group is not None
-                    else ""
-                )
-            ),
-        )
-        for item in scan.open_outliers
-        if pin_function_is_generic(item.pin_function)
     )
 
 
