@@ -27165,6 +27165,44 @@ acceptance threads while new lint features proceed:
   `4921f9d9ae021ab1d92ac2ae619f188733b8e799`, passed in GitHub Actions run
   `43587189207`.
 
+#### LINT-471 — Preserve both DB9 return prompts when connectivity coverage blocks
+
+- **Status:** Implemented as an end-to-end verification regression for the
+  existing `connector.repeated_pin_function` and `net.numbered_returns` rules;
+  it adds no lint predicate.
+- **Gap:** LINT-461 proved that a generic split-return REVIEW survives an empty
+  independent connectivity contract, while the focused native DB9 lane proved
+  that the `0V PWM 1` through `0V PWM 4` fixture produces both return prompts.
+  The combined report path had not checked that the numbered-return clue also
+  remains visible when the contract blocks verification.
+- **Scenario:** A tooling-owned synthetic four-port DB9 split-return fault and
+  common-return control pass through `verify` with an empty pin/net contract.
+  Overall status must remain FAIL for the contract blocker. The fault must keep
+  both expected REVIEW rules and exact numbered-net pin evidence; the control
+  must keep both target rules quiet.
+- **Evidence boundary:** The test uses a source fixture and typed netlist
+  contract owned by this tooling repository. The separate digest-pinned Docker
+  lane confirms their native KiCad exports on 10.0.0, 10.0.5, and 10.0.8. This
+  does not reconstruct an external board, prove PCB copper continuity, or
+  establish that every DB9 return must be common.
+- **Selection:** Run
+  `tests/test_verify_design_lint.py -m 'design_lint and connector_lint and
+  return_path_lint and design_lint_rule(rule_id="net.numbered_returns")' -k
+  empty_contract_keeps_numbered_db9_return_reviews_visible` with
+  `KICAD_TEMPLATE_ROOT` set to the separate public template checkout. Run
+  `tests/test_native_db9_return_contracts.py` with
+  `KICAD_RUN_NATIVE_DB9_RETURN_CONTRACT_FIXTURES=1`, Docker, and
+  `design_lint and connector_lint and return_path_lint` for exact-version
+  synthetic exports.
+- **Local scoped acceptance:** The targeted package gate passed at
+  `build/ci/run-g_r6j3sy`: 25 tests passed; Ruff, both Alphus profiles, Rumdl,
+  mdrepo, Linux and Windows Pyright, wheel and sdist builds, installed-origin
+  and version checks, and external/adapted public-template inventory, surface,
+  verification, and playtest stages passed. The rule-marker selector passed
+  the verification fault and control (2 passed). The separate Docker DB9
+  acceptance module passed 5 tests, including repeated source-bound exports on
+  KiCad 10.0.0, 10.0.5, and 10.0.8.
+
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
 ## Completion and release gate

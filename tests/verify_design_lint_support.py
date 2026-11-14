@@ -16,6 +16,7 @@ from kicad_tooling.hwrepo.models import (
     CheckAllSummary,
     CheckEvidence,
     CommandEvidence,
+    NetlistContract,
     ValidationSummary,
 )
 from kicad_tooling.hwrepo.native_project_check_models import NativeProjectCheckRequest
@@ -26,26 +27,36 @@ from tests.verify_support import create_reference_project, native_summary, runne
 
 
 def synthetic_connector_native(
-    root: Path, output: Path, cli: str, projects: Sequence[str]
+    root: Path,
+    output: Path,
+    cli: str,
+    projects: Sequence[str],
+    *,
+    observed_netlist: NetlistContract | None = None,
 ) -> CheckAllSummary:
-    """Write exact synthetic split-return evidence for the generic connectors."""
+    """Write synthetic split-return evidence for the generic or supplied case."""
     _ = cli, projects
     project_output = output / "controller"
     project_output.mkdir(parents=True)
     netlist = project_output / "netlist.xml"
-    netlist.write_text(
-        '<export><components><comp ref="J1"><value>Synthetic port</value>'
-        '<libsource lib="Synthetic" part="Port"/></comp><comp ref="J2">'
-        '<value>Synthetic port</value><libsource lib="Synthetic" part="Port"/>'
-        '</comp></components><libparts><libpart lib="Synthetic" part="Port"><pins>'
-        '<pin num="1" name="PWR" type="passive"/>'
-        '<pin num="7" name="GND" type="passive"/></pins></libpart></libparts><nets>'
-        '<net name="GND1"><node ref="J1" pin="7"/></net>'
-        '<net name="GND2"><node ref="J2" pin="7"/></net>'
-        '<net name="+5V"><node ref="J1" pin="1"/></net>'
-        "</nets></export>",
-        encoding="utf-8",
-    )
+    if observed_netlist is None:
+        serialized_netlist = (
+            '<export><components><comp ref="J1"><value>Synthetic port</value>'
+            '<libsource lib="Synthetic" part="Port"/></comp><comp ref="J2">'
+            '<value>Synthetic port</value><libsource lib="Synthetic" part="Port"/>'
+            '</comp></components><libparts><libpart lib="Synthetic" part="Port"><pins>'
+            '<pin num="1" name="PWR" type="passive"/>'
+            '<pin num="7" name="GND" type="passive"/></pins></libpart></libparts><nets>'
+            '<net name="GND1"><node ref="J1" pin="7"/></net>'
+            '<net name="GND2"><node ref="J2" pin="7"/></net>'
+            '<net name="+5V"><node ref="J1" pin="1"/></net>'
+            "</nets></export>"
+        )
+    else:
+        from tests.electrical_parity_support import contract_netlist_xml
+
+        serialized_netlist = contract_netlist_xml(observed_netlist)
+    netlist.write_text(serialized_netlist, encoding="utf-8")
     evidence = CommandEvidence(
         argv=("synthetic-kicad-cli",),
         started_utc=datetime.now(UTC).isoformat(),
@@ -121,10 +132,19 @@ def synthetic_connector_native(
 
 
 def synthetic_connector_validation(
-    root: Path, request: NativeProjectValidationRequest
+    root: Path,
+    request: NativeProjectValidationRequest,
+    *,
+    observed_netlist: NetlistContract | None = None,
 ) -> ValidationSummary:
     """Provide the synthetic native summary through the validation adapter."""
-    synthetic_connector_native(root, request.output.parent, request.cli, ["controller"])
+    synthetic_connector_native(
+        root,
+        request.output.parent,
+        request.cli,
+        ["controller"],
+        observed_netlist=observed_netlist,
+    )
     return read_model(request.output / "summary.json", ValidationSummary)
 
 
@@ -147,13 +167,17 @@ def verify_with_synthetic_connector_evidence(root: Path):
         return verify(root, "controller", depth="native", runner="local")
 
 
-def verify_with_empty_contract_native_failure(root: Path):
+def verify_with_empty_contract_native_failure(
+    root: Path, *, observed_netlist: NetlistContract | None = None
+):
     """Keep split-return lint visible when the independent net contract is empty."""
 
     def native_with_contract_blocker(
         project_root: Path, request: NativeProjectValidationRequest
     ) -> ValidationSummary:
-        summary = synthetic_connector_validation(project_root, request)
+        summary = synthetic_connector_validation(
+            project_root, request, observed_netlist=observed_netlist
+        )
         failed = summary.model_copy(
             update={
                 "checks": {

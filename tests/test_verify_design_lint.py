@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from kicad_tooling.hwrepo.contracts import read_model, write_model
+from kicad_tooling.hwrepo.discovery import load_config
 from kicad_tooling.hwrepo.models import (
     ConnectorInterfaceReview,
     ConnectorInventoryReview,
@@ -18,6 +19,7 @@ from kicad_tooling.hwrepo.models import (
     ValidationSummary,
 )
 from kicad_tooling.verify import format_report
+from tests.design_lint_fixtures.connector_return_cases import pwm_return_case_contracts
 from tests.verify_design_lint_support import (
     check_ci_with_synthetic_connector_evidence,
     create_reference_project,
@@ -171,6 +173,65 @@ def test_empty_native_contract_blocker_still_surfaces_split_return_review(
     assert "REVIEW connector.repeated_pin_function: Synthetic:Port: ground/return" in format_report(
         result
     )
+    assert (Path(result.run_directory) / "design-lint.json").is_file()
+
+
+@pytest.mark.design_lint_rule(rule_id="connector.repeated_pin_function")
+@pytest.mark.design_lint_rule(rule_id="net.numbered_returns")
+@pytest.mark.return_path_lint
+@pytest.mark.parametrize(
+    ("case", "expected_rule_ids"),
+    (
+        pytest.param(
+            "four-db9-pwm-fault",
+            frozenset({"connector.repeated_pin_function", "net.numbered_returns"}),
+            id="split-return-fault",
+        ),
+        pytest.param("four-db9-pwm-control", frozenset(), id="common-return-control"),
+    ),
+)
+def test_empty_contract_keeps_numbered_db9_return_reviews_visible(
+    synthetic_project: Path,
+    case: str,
+    expected_rule_ids: frozenset[str],
+) -> None:
+    fixture = (
+        Path(__file__).parent
+        / "fixtures/design_lint/four-port-db9-returns"
+        / f"{'pwm-fault' if case.endswith('fault') else 'pwm-control'}.kicad_sch"
+    )
+    config = load_config(synthetic_project, "examples/projects/controller/project.json")
+    (synthetic_project / config.project).with_suffix(".kicad_sch").write_bytes(fixture.read_bytes())
+
+    result = verify_with_empty_contract_native_failure(
+        synthetic_project,
+        observed_netlist=pwm_return_case_contracts()[case],
+    )
+
+    assert result.status == "FAIL"
+    assert result.native is not None
+    assert result.native.status == "FAIL"
+    validation = read_model(
+        Path(result.run_directory) / "native/controller/summary.json", ValidationSummary
+    )
+    assert validation.checks["netlist"].error == "Independent connectivity contract is empty"
+    assert result.design_lint is not None
+    assert result.design_lint.status == "REVIEW"
+    findings = {item.rule_id: item for item in result.design_lint.findings}
+    assert expected_rule_ids <= findings.keys()
+    assert not (
+        {"connector.repeated_pin_function", "net.numbered_returns"} - expected_rule_ids
+    ).intersection(findings)
+
+    if case == "four-db9-pwm-fault":
+        numbered_return = findings["net.numbered_returns"]
+        assert numbered_return.evidence == {
+            f"0V PWM {reference}": (f"J{reference}.7", f"J{reference}.9")
+            for reference in range(1, 5)
+        }
+        report = format_report(result, detail="full")
+        assert "REVIEW connector.repeated_pin_function:" in report
+        assert "REVIEW net.numbered_returns:" in report
     assert (Path(result.run_directory) / "design-lint.json").is_file()
 
 
