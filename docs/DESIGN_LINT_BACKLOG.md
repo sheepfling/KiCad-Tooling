@@ -27513,7 +27513,6 @@ acceptance threads while new lint features proceed:
   Rumdl, mdrepo, Linux and Windows Pyright, wheel/sdist builds, installed-wheel
   origin/version checks, and separate plus adapted public-template rehearsals
   passed. Hosted tagged acceptance is pending.
-- **Hosted acceptance:** Pending.
 
 #### LINT-478 — Review connector peer pin-function disagreement
 
@@ -27548,14 +27547,18 @@ acceptance threads while new lint features proceed:
   `tests/test_connector_footprint_peer_pin_function_consistency_native.py`
   with `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` and `native_kicad` plus the rule
   ID.
-- **Local acceptance:** The rule-scoped `scripts/ci.py` gate passed all stages:
-  Ruff format/check, both Alphus profiles, Rumdl, mdrepo, 23 selected tests
-  with 9,976 unrelated tests deselected, Linux and Windows-targeted Pyright,
-  wheel/sdist builds, installed-wheel origin/version checks. The rule-selected
-  tests include repeated digest-pinned Docker exports on KiCad 10.0.0 and
-  10.0.5. Focused catalog/architecture checks also passed 57 tests; the two
-  native cases were separately executed in the Docker lane.
-- **Hosted acceptance:** Pending.
+- **Local acceptance:** The prerelease-equivalent `scripts/ci.py` gate passed
+  all stages: Ruff format/check, both Alphus profiles, Rumdl, mdrepo, 471
+  selected tests with 9,528 unrelated tests deselected, rule-scoped Linux and
+  Windows Pyright, wheel/sdist builds, and installed-wheel origin/version
+  checks. The selected suite includes repeated digest-pinned Docker exports on
+  KiCad 10.0.0 and 10.0.5. A separate focused catalog/architecture selection
+  passed 57 tests.
+- **Hosted acceptance:** `v0.5.3rc790` passed 470 selected tests and failed the
+  module-size architecture check because the supplemental connector fixture
+  map pushed `tests/design_lint_catalog_fixture_refs.py` over 500 lines. The
+  map now lives in the footprint-peer registry; the next scoped tag will rerun
+  this gate.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 

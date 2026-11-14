@@ -42,18 +42,6 @@ from tests.design_lint_swd_signal_same_net_parity_fixtures import (
 _PARITY_FIXTURES_BY_RULE = MappingProxyType(
     {
         **FOOTPRINT_PEER_PARITY_FIXTURES,
-        "connector.footprint_peer_pin_function_disagreement": MappingProxyType(
-            {
-                "fault_fixtures": _refs(
-                    "tests.test_design_lint_mcp_parity_connector_peer_pin_function",
-                    "test_connector_peer_function_review_matches_between_cli_and_mcp",
-                ),
-                "valid_control_fixtures": _refs(
-                    "tests.test_design_lint_mcp_parity_connector_peer_pin_function",
-                    "test_connector_peer_function_review_matches_between_cli_and_mcp",
-                ),
-            }
-        ),
         **OPEN_DRAIN_CONTROL_PARITY_FIXTURES,
         **SUPPLY_RANGE_MAP_COVERAGE_PARITY_FIXTURES,
         "power.enable_control_tied_to_return": MappingProxyType(
