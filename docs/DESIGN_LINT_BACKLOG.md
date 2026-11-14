@@ -27718,11 +27718,22 @@ acceptance threads while new lint features proceed:
   pre-existing peer-function suite passed 20 tests; its CLI/MCP parity and
   exact-version native fixtures passed 3 additional tests after the shared
   evidence extraction. The focused pytest marker, suite-size, and rule-selector
-  architecture selection passed 43 tests. The installed-wheel/public-template rehearsal did not
-  complete locally: pip
-  spent 10m28s retrying interrupted downloads and reported DNS resolution
-  failures for `files.pythonhosted.org`; the install and external-project
-  stages remain unverified locally. Hosted tagged acceptance is pending.
+  architecture selection passed 43 tests. Tag `v0.5.3rc795` triggered hosted
+  run [43653353763](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43653353763),
+  whose scoped unit stage reported three failures: the active-rule reachability
+  inventory omitted this rule's synthetic case, the connector native-case
+  registry omitted its exact test node, and `tests/hashseed_probe.py` exceeded
+  its 500-line ceiling. The local reproduction confirmed the reachability
+  failure. The follow-up adds that synthetic case, registers the exact native
+  fixture, and removes the duplicate hash-seed builder map in favor of the
+  existing family registry. The same hosted selector then passed locally with
+  472 tests, including both pinned Docker native KiCad versions; the full
+  345-report hash-seed inventory and focused architecture checks also passed.
+  Follow-up tag `v0.5.3rc796` carries these repairs; hosted acceptance is
+  pending. The installed-wheel/public-template rehearsal did not complete
+  locally: pip spent 10m28s retrying interrupted downloads and reported DNS
+  resolution failures for `files.pythonhosted.org`; the install and
+  external-project stages remain unverified locally.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 

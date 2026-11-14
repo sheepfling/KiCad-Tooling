@@ -9,6 +9,7 @@ import pytest
 
 import tests.component_peer_pin_support as _component_peer_pin_support
 import tests.component_peer_power_input_support as _component_peer_power_input_support
+import tests.connector_footprint_peer_pin_function_metadata_support as _peer_pin_function_metadata
 import tests.connector_footprint_peer_support as _connector_footprint_peer_support
 import tests.design_lint_fixtures as _tests_design_lint_fixtures
 import tests.design_lint_fixtures.catalog_reachability_connector_domains as _connector_domains_reachability
@@ -121,6 +122,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _power_input_paths.source_path_netlist(wrong_rail=True),
         _tests_design_lint_fixtures.peer_connector_pin_assignments(),
         _peer_pin_function_consistency._source(),
+        _peer_pin_function_metadata.metadata_peer_netlist(),
         connector_peer_pin_inventory_netlist(),
         *_connector_footprint_peer_support.peer_pin_reachability_netlists(),
         _connector_named_power_aliases.named_connector_power_alias_netlist(),

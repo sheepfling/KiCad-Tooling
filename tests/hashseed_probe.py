@@ -6,7 +6,6 @@ import importlib
 import json
 import os
 import sys
-from types import MappingProxyType
 
 from tests.hashseed_probe_cases import HASHSEED_REPORT_FAMILIES
 from tests.json_types import JsonObject
@@ -362,110 +361,12 @@ REPORT_ORDER = (
 )
 
 
-REPORT_BUILDERS = MappingProxyType(
-    {
-        "returns": "tests.hashseed_probe_cases.returns",
-        "numbered_interface_returns": "tests.hashseed_probe_cases.numbered_interface_returns",
-        "connectors": "tests.hashseed_probe_cases.connectors",
-        "jtag_connector_return": "tests.hashseed_probe_cases.jtag_connector_return",
-        "connector_return_protocols": "tests.hashseed_probe_cases.connector_return_protocols",
-        "connector_named_power_aliases": "tests.hashseed_probe_cases.connector_named_power_aliases",
-        "component_peers": "tests.hashseed_probe_cases.component_peers",
-        "components": "tests.hashseed_probe_cases.components",
-        "power_connectivity": "tests.hashseed_probe_cases.power_connectivity",
-        "numbered_power_rails": "tests.hashseed_probe_cases.numbered_power_rails",
-        "control_inputs": "tests.hashseed_probe_cases.control_inputs",
-        "pcb_power": "tests.hashseed_probe_cases.pcb_power",
-        "pcb_antenna": "tests.hashseed_probe_cases.pcb_antenna",
-        "pcb_drc": "tests.hashseed_probe_cases.pcb_drc",
-        "pcb_return_paths": "tests.hashseed_probe_cases.pcb_return_paths",
-        "pcb_measurements": "tests.hashseed_probe_cases.pcb_measurements",
-        "interfaces": "tests.hashseed_probe_cases.interfaces",
-        "i2c_signal_named_rail": "tests.hashseed_probe_cases.i2c_signal_named_rail",
-        "i3c_signal_named_rail": "tests.hashseed_probe_cases.i3c_signal_named_rail",
-        "i3c_same_net": "tests.hashseed_probe_cases.i3c_same_net",
-        "i2s_clock_data_same_net": "tests.hashseed_probe_cases.i2s_clock_data_same_net",
-        "i2s_clock_frame_same_net": "tests.hashseed_probe_cases.i2s_clock_frame_same_net",
-        "swd_signal_same_net": "tests.hashseed_probe_cases.swd_signal_same_net",
-        "i3c_unconnected_pin": "tests.hashseed_probe_cases.i3c_unconnected_pin",
-        "spi_unconnected_clock_pin": "tests.hashseed_probe_cases.spi_unconnected_clock_pin",
-        "usb_dp_dm_same_net": "tests.hashseed_probe_cases.usb_dp_dm_same_net",
-        "serial_signal_named_rail": "tests.hashseed_probe_cases.serial_signal_named_rail",
-        "spi_signal_named_rail": "tests.hashseed_probe_cases.spi_signal_named_rail",
-        "can_signal_named_rail": "tests.hashseed_probe_cases.can_signal_named_rail",
-        "can_line_named_rail": "tests.hashseed_probe_cases.can_line_named_rail",
-        "ethernet_signal_named_rail": ("tests.hashseed_probe_cases.ethernet_signal_named_rail"),
-        "ethernet_management_named_rail": (
-            "tests.hashseed_probe_cases.ethernet_management_named_rail"
-        ),
-        "usb_signal_named_rail": ("tests.hashseed_probe_cases.usb_signal_named_rail"),
-        "usb_c_cc_named_rail": "tests.hashseed_probe_cases.usb_c_cc_named_rail",
-        "usb_c_cc_same_net": "tests.hashseed_probe_cases.usb_c_cc_same_net",
-        "usb_c_cc_controller_same_net": ("tests.hashseed_probe_cases.usb_c_cc_controller_same_net"),
-        "usb_c_cc_endpoint_pairing": "tests.hashseed_probe_cases.usb_c_cc_endpoint_pairing",
-        "serial_endpoint_role_collision": (
-            "tests.hashseed_probe_cases.serial_endpoint_role_collision"
-        ),
-        "usb_c_sbu_named_rail": "tests.hashseed_probe_cases.usb_c_sbu_named_rail",
-        "usb_c_sbu_unconnected_pin": "tests.hashseed_probe_cases.usb_c_sbu_unconnected_pin",
-        "usb_c_sbu_same_net": "tests.hashseed_probe_cases.usb_c_sbu_same_net",
-        "rs485_signal_named_rail": "tests.hashseed_probe_cases.rs485_signal_named_rail",
-        "rs485_line_named_rail": "tests.hashseed_probe_cases.rs485_line_named_rail",
-        "rs485_ab_same_net": "tests.hashseed_probe_cases.rs485_ab_same_net",
-        "rs485_line_label_mismatch": "tests.hashseed_probe_cases.rs485_line_label_mismatch",
-        "analog": "tests.hashseed_probe_cases.analog",
-        "schematic_geometry": "tests.hashseed_probe_cases.schematic_geometry",
-        "schematic_uuid_integrity": "tests.hashseed_probe_cases.schematic_uuid_integrity",
-        "pcb_uuid_integrity": "tests.hashseed_probe_cases.pcb_uuid_integrity",
-        "pcb_component_inventory": "tests.hashseed_probe_cases.pcb_component_inventory",
-        "pcb_touch_pad_clearance": "tests.hashseed_probe_cases.pcb_touch_pad_clearance",
-        "pcb_mechanical_edge_clearance": (
-            "tests.hashseed_probe_cases.pcb_mechanical_edge_clearance"
-        ),
-        "connector_scope_singletons": ("tests.hashseed_probe_cases.connector_scope_singletons"),
-        "mapped_interface_other_unassigned": (
-            "tests.hashseed_probe_cases.mapped_interface_other_unassigned"
-        ),
-        "mapped_interface_other_named_rail": (
-            "tests.hashseed_probe_cases.mapped_interface_other_named_rail"
-        ),
-        "mapped_interface_supply_return_net": (
-            "tests.hashseed_probe_cases.mapped_interface_supply_return_net"
-        ),
-        "mapped_interface_signal_named_rail": (
-            "tests.hashseed_probe_cases.mapped_interface_signal_named_rail"
-        ),
-        "mapped_interface_shield_return_net": (
-            "tests.hashseed_probe_cases.mapped_interface_shield_return_net"
-        ),
-        "mapped_interface_shield_supply_rail": (
-            "tests.hashseed_probe_cases.mapped_interface_shield_supply_rail"
-        ),
-        "pcb_required_fitted_reference": (
-            "tests.hashseed_probe_cases.pcb_required_fitted_reference"
-        ),
-        "pcb_board_only_footprints": "tests.hashseed_probe_cases.pcb_board_only_footprints",
-        "pcb_dnp_mismatch": "tests.hashseed_probe_cases.pcb_dnp_mismatch",
-        "pcb_value_mismatch": "tests.hashseed_probe_cases.pcb_value_mismatch",
-        "pcb_pad_net_mismatch": "tests.hashseed_probe_cases.pcb_pad_net_mismatch",
-        "connector_peer_missing_metadata": (
-            "tests.hashseed_probe_cases.connector_peer_missing_metadata"
-        ),
-        "connector_peer_pin_inventory": ("tests.hashseed_probe_cases.connector_peer_pin_inventory"),
-        "connector_peer_pin_function_metadata": (
-            "tests.hashseed_probe_cases.connector_peer_pin_function_metadata"
-        ),
-        "connector_peer_pins": "tests.hashseed_probe_cases.connector_peer_pins",
-    }
-)
-
-
 def test_emit_complete_synthetic_design_lint_reports() -> None:
     requested = os.environ.get(HASHSEED_FAMILIES_ENV)
     families = HASHSEED_REPORT_FAMILIES if requested is None else tuple(requested.split(","))
     if not families or any(not family for family in families):
         raise ValueError(f"{HASHSEED_FAMILIES_ENV} must name at least one report family")
-    unknown = sorted(set(families) - set(REPORT_BUILDERS))
+    unknown = sorted(set(families) - set(HASHSEED_REPORT_FAMILIES))
     if unknown:
         raise ValueError(f"unknown hash-seed report families: {unknown}")
     if len(set(families)) != len(families):
@@ -474,7 +375,7 @@ def test_emit_complete_synthetic_design_lint_reports() -> None:
     grouped: JsonObject = {}
     family_keys: dict[str, tuple[str, ...]] = {}
     for family in families:
-        module = importlib.import_module(REPORT_BUILDERS[family])
+        module = importlib.import_module(f"tests.hashseed_probe_cases.{family}")
         family_reports = module.report_cases()
         keys = tuple(name for name in REPORT_ORDER if name in family_reports)
         if len(keys) != len(family_reports):

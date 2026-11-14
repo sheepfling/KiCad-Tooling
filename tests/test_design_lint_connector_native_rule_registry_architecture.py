@@ -249,6 +249,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
         "connector.footprint_peer_pin_metadata_open_outlier": {
             "tests.test_connector_footprint_peer_metadata_open_native_fixture_lane.test_native_metadata_open_fault_and_control_are_repeatable",
         },
+        "connector.footprint_peer_pin_function_metadata_incomplete": {
+            "tests.test_connector_footprint_peer_pin_function_metadata_native.test_native_generic_function_peer_metadata_review_and_control_repeat",
+        },
         "connector.unconnected_power_input": {
             "tests.test_connector_unconnected_power_input_native_fixture_lane.test_generic_connector_power_input_fault_and_control_are_focused_and_repeatable",
         },
