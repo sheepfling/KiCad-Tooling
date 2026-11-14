@@ -27202,6 +27202,12 @@ acceptance threads while new lint features proceed:
   the verification fault and control (2 passed). The separate Docker DB9
   acceptance module passed 5 tests, including repeated source-bound exports on
   KiCad 10.0.0, 10.0.5, and 10.0.8.
+- **Hosted acceptance:** Tag `v0.5.3rc779`, commit
+  `006c704a2f8947295dc36e3d0e084c9f9006c54d`, passed GitHub Actions run
+  `43590436447`. The scoped package gate passed 12 tests, including the native
+  DB9 fixtures on KiCad 10.0.0, 10.0.5, and 10.0.8; Linux and Windows Pyright,
+  wheel/sdist builds, installed-wheel checks, and external/adapted template
+  acceptance also passed.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
