@@ -27512,8 +27512,11 @@ acceptance threads while new lint features proceed:
   10.0.0 and 10.0.5. Ruff, Alphus module-role and shared-utility checks,
   Rumdl, mdrepo, Linux and Windows Pyright, wheel/sdist builds, installed-wheel
   origin/version checks, and separate plus adapted public-template rehearsals
-  passed. Hosted tagged acceptance is pending.
-- **Hosted acceptance:** Pending.
+  passed.
+- **Hosted acceptance:** Tagged prerelease acceptance passed in
+  [run 43624139937](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43624139937)
+  for `v0.5.3rc789`; the package and preview jobs were skipped under prerelease
+  policy.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
