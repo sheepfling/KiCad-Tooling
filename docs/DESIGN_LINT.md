@@ -929,7 +929,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 388 active rules.
+The catalog currently contains 389 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -4773,6 +4773,42 @@ KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
 ```
 
 Fixture source digests and limits are recorded in the
+[connector footprint-alias fixture README](../tests/fixtures/design_lint/connector-footprint-alias-native/README.md).
+
+## Review unanchored generic power-pin splits across connector aliases
+
+`connector.footprint_peer_generic_power_pin_unanchored_split` is a
+default-review heuristic for a generic native `Pin_N` or numeric-only contact
+whose KiCad electrical type is `power_in` or `power_out`. It compares fitted,
+footprint-similar connector aliases with complete matching pin inventories and
+metadata when each peer has one exact assignment, the nets differ, and no
+other pin provides a common-net anchor. The rule names the power pin even when
+the project has not authored a peer-assignment group.
+
+This finding adds pin-level review context to the existing scope/coverage
+prompt. Connector similarity and a native power type do not establish that
+the ports share an interface or that separate supplies should be joined.
+Current source-matched peer groups leave these assignments to the existing
+scoped generic-pin rule; separate groups stay outside the comparison. Project
+policy can set the rule to `block` or `off`, or ignore one exact finding.
+
+Run the synthetic fault, controls, configuration, and determinism cases with:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_connector_footprint_generic_power_pin_split.py \
+  -m 'design_lint and connector_lint and power_lint and design_lint_rule(rule_id="connector.footprint_peer_generic_power_pin_unanchored_split")'
+```
+
+The source-hashed synthetic schematic and connected control run twice under
+digest-pinned Docker KiCad 10.0.0 and 10.0.5:
+
+```sh
+KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_connector_footprint_generic_power_pin_split_native.py \
+  -m 'design_lint and connector_lint and power_lint and native_kicad and design_lint_rule(rule_id="connector.footprint_peer_generic_power_pin_unanchored_split")'
+```
+
+Fixture hashes, expected output, and the heuristic boundary are recorded in the
 [connector footprint-alias fixture README](../tests/fixtures/design_lint/connector-footprint-alias-native/README.md).
 
 ## Review connector return-contact distribution

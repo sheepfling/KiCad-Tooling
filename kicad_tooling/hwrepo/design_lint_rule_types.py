@@ -28,6 +28,7 @@ DesignLintRuleId = Literal[
     "connector.spi_triad_without_return_review",
     "connector.footprint_peer_pin_assignment_divergence",
     "connector.footprint_peer_pin_unanchored_assignment_divergence",
+    "connector.footprint_peer_generic_power_pin_unanchored_split",
     "connector.footprint_peer_unanchored_scope_unreviewed",
     "connector.footprint_peer_unanchored_scope_coverage_missing",
     "connector.footprint_peer_pin_metadata_assignment_divergence",

@@ -16,6 +16,7 @@ anchor.
 | `generic-power-all-open-fault.kicad_sch`     | `Pin_1` / `Pin_2`   | unassigned        | unassigned        | Default-off candidate for `connector.footprint_peer_generic_power_pin_all_open` (`Pin_2` is `power_in`) |
 | `generic-power-all-open-control.kicad_sch`   | `Pin_1` / `Pin_2`   | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_2` | No generic-power all-open prompt                                                                        |
 | `generic-power-partial-open-fault.kicad_sch` | `Pin_1` / `Pin_2`   | `SYNTHETIC_NET_2` | unassigned        | Default-off partial-open power-peer prompt only with current shared peer scope (`Pin_2` is `power_in`)  |
+| `generic-power-unanchored-split-fault.kicad_sch` | `Pin_1` / `Pin_2` | `POWER_A` | `POWER_B` | `REVIEW` for `connector.footprint_peer_generic_power_pin_unanchored_split` (`Pin_2` is `power_in`) |
 | `unanchored-all-open-fault.kicad_sch`        | `Pin_1` / `Pin_2`   | unassigned        | unassigned        | `REVIEW` only with a current source-matched shared peer group                                           |
 | `numeric-fault.kicad_sch`                    | `1` / `7`           | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_3` | `REVIEW` for `connector.footprint_peer_pin_assignment_divergence`                                       |
 | `numeric-control.kicad_sch`                  | `1` / `7`           | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_2` | No footprint-alias divergence                                                                           |
@@ -98,6 +99,15 @@ individual power-pin finding. It does not establish that the connectors are
 the same interface or that the open pin must connect. Repeated exports use
 digest-pinned Docker KiCad 10.0.0 and 10.0.5.
 
+`generic-power-unanchored-split-fault.kicad_sch` assigns generic native
+`power_in` pin 2 to different nets on two footprint-similar connector aliases,
+with no common-net anchor. LINT-475 localizes the power contact even when no
+reviewed peer-assignment group exists; the broader coverage/scope prompts still
+record that the comparison scope needs review. This is a review clue, not
+evidence that separate supplies are wrong or should be joined. The connected
+control uses the existing `generic-power-all-open-control.kicad_sch` fixture.
+Both sources are exported twice with digest-pinned KiCad 10.0.0 and 10.0.5.
+
 SHA-256 source digests:
 
 - `fault.kicad_sch`: `e45b8069603078c1a26198b962b96b20d8a7f9dff39b195b7bb6399e00b323c0`
@@ -122,3 +132,5 @@ SHA-256 source digests:
   `2edfe7572b8af9dcad081863b870dbb602a21abb13e0f07688cb683da35b9eb3`
 - `generic-power-partial-open-fault.kicad_sch`:
   `f0355d80d5ac66bf3030829f70e10ad4d3261eaf60d80c1ad83ee299cfc68c68`
+- `generic-power-unanchored-split-fault.kicad_sch`:
+  `99ee775ff9d7f0944b70c1a4ac0cfaaf94bd8115ede6f89afe1eba10c4528bae`

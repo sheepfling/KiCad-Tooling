@@ -4,6 +4,38 @@ from __future__ import annotations
 
 CONNECTOR_RULE_NODE_CASES = (
     (
+        "connector.footprint_peer_generic_power_pin_unanchored_split",
+        "tests/test_connector_footprint_generic_power_pin_split.py::test_unanchored_generic_power_pins_on_similar_connectors_are_reviewed",
+    ),
+    (
+        "connector.footprint_peer_generic_power_pin_unanchored_split",
+        "tests/test_connector_footprint_generic_power_pin_split.py::test_three_unanchored_power_peers_produce_one_localized_pin_prompt",
+    ),
+    (
+        "connector.footprint_peer_generic_power_pin_unanchored_split",
+        "tests/test_connector_footprint_generic_power_pin_split.py::test_common_or_non_power_peer_contacts_are_controls",
+    ),
+    (
+        "connector.footprint_peer_generic_power_pin_unanchored_split",
+        "tests/test_connector_footprint_generic_power_pin_split.py::test_mismatched_native_power_types_and_separate_peer_groups_stay_quiet",
+    ),
+    (
+        "connector.footprint_peer_generic_power_pin_unanchored_split",
+        "tests/test_connector_footprint_generic_power_pin_split.py::test_current_shared_peer_scope_leaves_split_to_scoped_assignment_rule",
+    ),
+    (
+        "connector.footprint_peer_generic_power_pin_unanchored_split",
+        "tests/test_connector_footprint_generic_power_pin_split.py::test_project_can_turn_off_the_power_split_review",
+    ),
+    (
+        "connector.footprint_peer_generic_power_pin_unanchored_split",
+        "tests/test_connector_footprint_generic_power_pin_split.py::test_finding_is_stable_under_native_mapping_reordering",
+    ),
+    (
+        "connector.footprint_peer_generic_power_pin_unanchored_split",
+        "tests/test_connector_footprint_generic_power_pin_split_native.py::test_native_generic_power_split_fault_and_common_control_repeat",
+    ),
+    (
         "connector.reviewed_peer_power_output_split",
         "tests/test_connector_reviewed_peer_power_output_split.py::test_different_named_supply_outputs_split_across_reviewed_peers_need_review",
     ),

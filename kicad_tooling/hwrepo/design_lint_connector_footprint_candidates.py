@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from .connector_comparison_scope_types import ConnectorComparisonScopes
 from .connector_coverage_models import ConnectorCoverageReport
+from .connector_footprint_generic_power_pin_split import (
+    unanchored_generic_power_pin_split_candidates,
+)
 from .connector_footprint_named_passive_divergence import (
     evaluate_footprint_named_passive_assignment_divergence,
 )
@@ -152,6 +155,7 @@ def connector_footprint_peer_pin_candidates(
         *missing_metadata_open_outliers,
         *metadata_open_outliers,
         *divergence_candidates,
+        *unanchored_generic_power_pin_split_candidates(scan),
         *reviewed_unanchored_connector_alias_divergences(scan, connector_coverage),
         *unreviewed_unanchored_connector_alias_scope(scan, observed, connector_coverage),
         *uncovered_unanchored_connector_alias_scope(scan, connector_coverage),

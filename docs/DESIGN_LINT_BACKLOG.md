@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 388 rules are implemented with synthetic regression coverage.
+The following 389 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 388 active rules.
+The catalog currently contains 389 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -480,6 +480,7 @@ skipped under prerelease policy.
 - `connector.footprint_peer_pin_all_open`
 - `connector.footprint_peer_generic_power_pin_all_open`
 - `connector.footprint_peer_generic_power_pin_open_outlier`
+- `connector.footprint_peer_generic_power_pin_unanchored_split`
 - `connector.generic_peer_pin_all_open`
 - `connector.generic_peer_pin_open_outlier`
 - `connector.peer_power_input_named_all_open`
@@ -4465,7 +4466,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 388 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 389 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -27383,6 +27384,54 @@ acceptance threads while new lint features proceed:
   checks against external and adapted public-template checkouts, and both
   template playtests. Hosted acceptance also passed in run 1251 for tag
   `v0.5.3rc785`; package and preview jobs were skipped under prerelease policy.
+
+#### LINT-475 — Localize unanchored generic connector power-pin splits
+
+- **Rule:** `connector.footprint_peer_generic_power_pin_unanchored_split`
+- **Status:** Implemented as a default-review connector heuristic; focused
+  local, exact-native, architecture, catalog, and Linux/Windows type acceptance
+  passed. The tagged hosted gate is pending.
+- **Gap:** The shared alias scan already retains generic-pin splits with no
+  common-net anchor, and the coverage/scope checks report that the comparison
+  lacks reviewed scope. The pin-specific divergence rule requires a current
+  source-matched peer group, so an unscoped `power_in` or `power_out` `Pin_N`
+  split is not named in the report.
+- **Predicate:** For fitted distinct-symbol connector aliases with no PART_ID,
+  require exact nonempty value and footprint matches, complete identical pin
+  inventories, and matching nonempty native function/type metadata. Review a
+  generic `Pin_N` or numeric-only contact only when every peer has one assigned
+  net, the same native type is `power_in` or `power_out`, assignments differ,
+  no pin in the comparison group has a common-net anchor, and no current
+  source-matched `peer_assignment_group` exists.
+- **Interpretation:** This is a localized review clue, not an assertion that
+  the pins share an electrical domain or should be joined. A common anchor
+  leaves the general divergence to `connector.footprint_peer_pin_assignment_divergence`;
+  an authored shared group leaves the split to
+  `connector.footprint_peer_pin_unanchored_assignment_divergence`. Separate
+  groups and incomplete or mismatched native pin evidence stay outside the
+  rule. Project policy can disable it or ignore an exact finding.
+- **Incremental value:** The synthetic unscoped fault already raises a broad
+  coverage/scope prompt. LINT-475 adds the native power role and exact pin
+  localization; it does not claim a new binary defect-detection class.
+- **Controls and policy:** Synthetic tests cover common anchors, common power
+  assignments, named functions, non-power contacts, mismatched native types,
+  reviewed/separate peer scopes, policy-off, and mapping-order stability.
+- **Native evidence:** A tooling-owned schematic exports split generic
+  `power_in` contacts and an all-common control using digest-pinned KiCad 10.0.0
+  and 10.0.5 images. The export repeats per version and checks the normalized
+  pin type and exact assignments. No board-specific or proprietary fixture is
+  used.
+- **Selection:** Run
+  `tests/test_connector_footprint_generic_power_pin_split.py` with
+  `design_lint and connector_lint and power_lint` plus the rule ID. The native
+  lane is `tests/test_connector_footprint_generic_power_pin_split_native.py`
+  with `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
+- **Acceptance:** The focused connector selection passed 74 tests, including
+  native KiCad 10.0.0 and 10.0.5 fault/control exports; the exact
+  catalog-derived rule gate passed 461 tests with 9,494 unrelated tests
+  deselected. Architecture/catalog selection passed 102 tests, Linux and
+  Windows-targeted Pyright reported zero issues, and Ruff/format/JSON/diff
+  checks passed. The annotated-tag hosted gate remains pending.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 

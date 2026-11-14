@@ -41,6 +41,7 @@ PIN_ANALYSIS_MODULES = (
     "connector_footprint_named_power_input_all_open.py",
     "connector_footprint_named_power_output_divergence.py",
     "connector_footprint_named_signal_divergence.py",
+    "connector_footprint_generic_power_pin_split.py",
     "connector_footprint_peer_pins.py",
     "connector_footprint_peer_pin_types.py",
     "connector_peer_pin_coverage.py",

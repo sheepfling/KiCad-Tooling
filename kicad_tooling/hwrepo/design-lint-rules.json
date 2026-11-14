@@ -2035,6 +2035,54 @@
       ]
     },
     {
+      "rule_id": "connector.footprint_peer_generic_power_pin_unanchored_split",
+      "title": "Generic power contacts split across unanchored connector aliases",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Among fitted connector aliases with distinct native symbols and no PART_ID, exact nonempty value and footprint matches, identical complete pin inventories, and matching nonempty native function and electrical-type metadata, review a generic Pin_N or numeric-only contact whose matching native type is power_in or power_out. Require every peer to have exactly one assigned net, at least two different assignments, no common-net anchor anywhere in the comparison group, and no current source-matched peer_assignment_group. Emit one pin-specific REVIEW prompt; native identity similarity and power type do not prove that the nets should be joined.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Matching value, footprint, inventory, native pin metadata, generic function, and power type are candidate evidence only; the prompt does not declare a common, bonded, or isolated requirement.",
+        "The predicate requires each compared peer contact to have one exact assigned net and requires those net names to differ. Open, multiply assigned, incomplete, mismatched-metadata, DNP, PART_ID-bearing, and named-function contacts stay outside this rule.",
+        "The comparison is emitted only when the native peer scan has no common-net anchor and no current reviewed peer-assignment group. A common anchor leaves generic assignment divergence to connector.footprint_peer_pin_assignment_divergence; a current peer group leaves unanchored assignments to connector.footprint_peer_pin_unanchored_assignment_divergence.",
+        "Connector discovery remains bounded by the shared footprint-peer scanner. The candidate does not prove PCB copper continuity, off-board wiring, or that otherwise similar ports share an interface. Project policy can disable or ignore an intentional separate-domain case."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_footprint_generic_power_pin_split.test_unanchored_generic_power_pins_on_similar_connectors_are_reviewed",
+        "tests.test_connector_footprint_generic_power_pin_split.test_three_unanchored_power_peers_produce_one_localized_pin_prompt",
+        "tests.test_connector_footprint_generic_power_pin_split_native.test_native_generic_power_split_fault_and_common_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_footprint_generic_power_pin_split.test_common_or_non_power_peer_contacts_are_controls",
+        "tests.test_connector_footprint_generic_power_pin_split.test_mismatched_native_power_types_and_separate_peer_groups_stay_quiet",
+        "tests.test_connector_footprint_generic_power_pin_split.test_current_shared_peer_scope_leaves_split_to_scoped_assignment_rule",
+        "tests.test_connector_footprint_generic_power_pin_split_native.test_native_generic_power_split_fault_and_common_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_footprint_generic_power_pin_split.test_project_can_turn_off_the_power_split_review",
+        "tests.test_connector_footprint_generic_power_pin_split.test_finding_is_stable_under_native_mapping_reordering",
+        "tests.test_connector_footprint_generic_power_pin_split.test_source_evidence_rejects_a_power_type_that_disagrees_with_native_pins"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
+        "kicad_tooling/hwrepo/connector_footprint_generic_power_pin_split.py#unanchored_generic_power_pin_split_candidates",
+        "kicad_tooling/hwrepo/connector_footprint_generic_power_pin_split.py#ConnectorFootprintGenericPowerPinSplitEvidence",
+        "kicad_tooling/hwrepo/connector_footprint_generic_power_pin_split.py#ConnectorFootprintGenericPowerPinSplitCandidate",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
+        "kicad_tooling/hwrepo/design_lint_rule_types.py#DesignLintRuleId"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_footprint_generic_power_pin_split.py#unanchored_generic_power_pin_split_candidates",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ]
+    },
+    {
       "rule_id": "connector.peer_power_input_named_all_open",
       "title": "Named connector power-input pin is open on every PART_ID alias peer",
       "status": "active",
