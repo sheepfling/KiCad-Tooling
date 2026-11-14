@@ -72,11 +72,52 @@ oscillator-module output and distinguishes a series resistor from a shunt
 resistor. It does not prove that the output requires damping, and it cannot
 honor a project-specific direct-drive decision. It also treats a DNP or
 arbitrarily valued resistor as a valid series component. No cohort runtime
-dependency or generic first-party rule is justified by this trial.
+dependency or generic mapless heuristic is justified by this trial.
 
-A source-bound map may still provide deterministic coverage when a project
-owner supplies the exact output pin, load pins, expected direct/series choice,
-part identity, resistor endpoints, and reviewed value range. Native KiCad
-evidence, reviewer effort, applicable part sources, and behavior on approved
-non-proprietary designs remain unmeasured. No proprietary design source or fixture was
-used.
+The current local baseline includes LINT-150,
+`oscillator.output_load_path_mismatch`, for projects that author the exact
+output pin, load pins, direct/series choice, part identities, resistor
+endpoints, and reviewed value range. That contract detects the modeled DNP and
+wrong-value mismatches without inferring that unmapped clock outputs need a
+series resistor. Reviewer effort, applicability on exact external parts, and
+behavior on approved non-proprietary designs remain unmeasured. No proprietary
+design source or fixture was used.
+
+## Docker and native KiCad follow-up (2026-11-14)
+
+The same seven tooling-owned fixtures were run twice, serially, in the
+`eda-toolkit:10.0.4` image built from the candidate commit above. The local
+image ID was
+`sha256:a7279067fc101029c4336bc49b8d4ce03da489cced09edeeab5f5afbb1e6b044`
+(`linux/amd64`), based on KiCad image digest
+`sha256:770e2fa006695077b5ba218742d5c3137896af91257b2ca971243fa56b01bb86`.
+Inside the image, `kicad-cli version` returned `10.0.4`. The candidate rule
+source and license hashes matched the pinned values above.
+
+The direct container invocation ran offline with a read-only root filesystem,
+the fixture directory mounted read-only, and only a temporary report directory
+writable. It called the image entrypoint as `sch review`; the host wrapper was
+not invoked. Reports remained under
+`/private/tmp/kicad-skills-clock-docker-20261114/reports`.
+
+Every run used KiCad's native CLI netlist export and ERC (`netlist_source` was
+`kicad-cli`; `erc_available` was true). All commands returned exit code 2
+because the synthetic symbol power pins raised one or two unrelated
+`erc.power_pin_not_driven` findings; the clock-rule results remained in the
+JSON reports. Each pair of repeated full JSON reports was byte-identical.
+
+| Fixture                             | Clock-rule findings | Native ERC power-pin errors | Report SHA-256                                                     |
+| ----------------------------------- | ------------------: | --------------------------: | ------------------------------------------------------------------ |
+| `direct-x-fault.kicad_sch`          |                   1 |                           2 | `89d6beccb353d83efb776cf124db5e44d89b2ab644425fdb2826540b5af6b22c` |
+| `direct-with-pull.kicad_sch`        |                   1 |                           2 | `1dfbeeaf742afaf35d4d15895f7e71da71a43322b4be7e9cd88cd013d9b13ab5` |
+| `series-x-control.kicad_sch`        |                   0 |                           2 | `323cc08c55f2c7f3a4933a3a6417900eb60db11939a5d3ed1ddab33bc9c88e40` |
+| `direct-library-control.kicad_sch`  |                   1 |                           2 | `47e39a1721f816111c6e11005a556d951e33f4002c5e601d7af5a09185e9042e` |
+| `series-dnp-miss.kicad_sch`         |                   0 |                           2 | `14d2ea4f95a25f1a51f3bee06b01c8e4f96f590045d9932d8b7d7ae121d26b94` |
+| `series-wrong-value-miss.kicad_sch` |                   0 |                           2 | `cb65030fd927459ab6980af9cbffe7ec882e3d5773703d093610d9c92c85aacf` |
+| `crystal-control.kicad_sch`         |                   0 |                           1 | `d237c1106e76c0ee255811db625e0cac7a34935ac5078352ac7e92e9bce4c7f1` |
+
+This closes the native KiCad 10.0.4 image comparison only. It does not exercise
+the host wrapper or KiCad 9.0.9, and it does not establish clock-design intent
+or field precision. The candidate still over-prompts on the fixture-approved
+direct-drive alternative and misses the DNP and 1 MOhm series cases; no new
+first-party rule or runtime dependency is justified.

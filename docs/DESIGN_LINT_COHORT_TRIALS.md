@@ -52,8 +52,10 @@ for dispositions and timing; leave unmeasured values unstated.
   map-coverage candidates, not confirmed defects. A repeated
   public-template LED trial now records a contradictory cohort LED error on
   valid GPIO-side resistor paths. The latest
-  `analog.clock_no_series_resistor` run covers seven tooling-owned schematic
-  controls through the candidate's `--no-cli` fallback. A pinned kicad-happy
+  `analog.clock_no_series_resistor` source-only run covered seven
+  tooling-owned schematic controls through the candidate's `--no-cli` fallback;
+  the later Docker follow-up below repeats those cases with native KiCad 10.0.4.
+  A pinned kicad-happy
   single-pin connectivity follow-up covers a synthetic open-contact fault and
   common-net control, a native explicit-no-connect case, and a valid off-board
   endpoint comparison against project-authored connector coverage. Additional
@@ -2351,12 +2353,51 @@ for dispositions and timing; leave unmeasured values unstated.
   independent native evaluations of every case. Per-source hashes, findings,
   ERC counts, and the aggregate output digest are in the expanded fixture
   README. Generated JSON stays under ignored `build/`.
-- **Disposition:** No general clock-series rule or runtime dependency is
-  adopted. Tooling has no existing clock-series map to compare, and the
-  candidate itself cannot distinguish a part-approved direct path or verify
-  fitted part identity, DNP state, or value. Exact part applicability, reviewer
-  effort, full installation cost, and behavior on approved external designs
-  remain open.
+- **Disposition at the time of this trial:** No general, mapless clock-series
+  rule or runtime dependency was adopted. The candidate could not distinguish a
+  part-approved direct path or verify fitted part identity, DNP state, or value.
+  A source-bound oscillator-output path map was a follow-up possibility; LINT-150
+  now implements that narrower project-authored contract. Exact part
+  applicability, reviewer effort, full installation cost, and behavior on
+  approved external designs remain open.
+
+### Docker follow-up: `analog.clock_no_series_resistor` (2026-11-14)
+
+- **Pinned runtime:** Used the existing `eda-toolkit:10.0.4` image built from
+  candidate commit `53d1af8bc550f60415b4b8e51a6d2d5924ada03f`. The image ID was
+  `sha256:a7279067fc101029c4336bc49b8d4ce03da489cced09edeeab5f5afbb1e6b044`
+  (`linux/amd64`); its KiCad base image is pinned to
+  `sha256:770e2fa006695077b5ba218742d5c3137896af91257b2ca971243fa56b01bb86`.
+  `kicad-cli version` returned `10.0.4`. The candidate rule and license hashes
+  still match the pinned values above.
+- **Invocation and data boundary:** Ran the image directly with `--platform
+  linux/amd64 --network none --read-only`, a temporary writable `/tmp`, the
+  fixture directory mounted read-only at `/fixtures`, and reports written only
+  under `/private/tmp/kicad-skills-clock-docker-20261114/reports`. Each of the
+  seven tooling-owned schematics ran twice, serially. The host wrapper was not
+  invoked. No candidate code, external board, proprietary source, or result
+  artifact was added to the checkout.
+- **Native result:** All reports used `kicad-cli` and set `erc_available` true.
+  Every report contained one or two `erc.power_pin_not_driven` errors from the
+  synthetic symbol power pins, so the CLI returned exit code 2; the targeted
+  clock result remained available in the JSON. The direct-load fault and
+  direct-with-pull case each emitted one clock warning. The allowed
+  direct-library control also emitted one. The fitted series control, DNP
+  series case, 1 MOhm series case, and passive crystal control emitted none.
+  The DNP and 1 MOhm results remain fixture-relative candidate misses, not
+  proof that any real clock output requires a particular component.
+- **Repeatability and disposition:** Each repeated JSON report was byte
+  identical. The report hashes and per-fixture native ERC error counts are in
+  the [fixture record](../tests/fixtures/design_lint/cohort-clock-series/README.md).
+  This closes the native KiCad 10.0.4 image comparison; it does not test the
+  host wrapper, KiCad 9.0.9, reviewer effort, exact-part applicability, or field
+  precision. The current first-party baseline is LINT-150,
+  `oscillator.output_load_path_mismatch`, which evaluates an independently
+  authored exact topology, part identity, DNP state, and resistor range. Its
+  focused synthetic and digest-pinned Docker lane was rerun separately on this
+  date: 19 selected tests passed, including native KiCad 10.0.0 and 10.0.5
+  fault/control cases. The cohort adds no detection beyond that opt-in map and
+  does not justify a generic mapless clock-series rule or runtime dependency.
 
 ### Recorded trial: kicad-happy `GP-001` narrow reference-plane void
 
