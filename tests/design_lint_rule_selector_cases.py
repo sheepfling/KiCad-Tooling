@@ -402,6 +402,10 @@ RULE_NODE_CASES = (
         ),
     ),
     (
+        "bus.usb_dp_dm_resistive_bridge",
+        "tests/test_usb_data_pair_resistive_bridge.py::test_direct_resistor_across_separate_usb_data_nets_is_reviewed",
+    ),
+    (
         "bus.usb_c_superspeed_lane_label_mismatch",
         "tests/test_usb_c_superspeed_lane_labels.py::test_cross_lane_labels_are_localized_against_native_connector_functions",
     ),

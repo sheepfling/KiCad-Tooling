@@ -44,6 +44,7 @@ from .swd_same_net import swdio_swclk_same_net_candidates
 from .usb_c_cc_endpoint_pairing import crossed_usb_c_cc_endpoint_candidates
 from .usb_c_sbu_same_net import usb_c_sbu_same_net_candidates
 from .usb_c_superspeed_lane_labels import usb_c_superspeed_lane_label_mismatch_candidates
+from .usb_data_pair_resistive_bridge import usb_data_pair_resistive_bridge_candidates
 from .usb_data_same_net import usb_data_same_net_candidates
 
 
@@ -116,6 +117,7 @@ def bus_candidates(inputs: BusCandidateInputs) -> tuple[Candidate, ...]:
         *usb_data_polarity_label_candidates(observed),
         *usb_c_superspeed_lane_label_mismatch_candidates(observed),
         *usb_data_same_net_candidates(observed),
+        *usb_data_pair_resistive_bridge_candidates(observed),
         *usb_c_same_net_candidates(observed, inputs.reviewed_connector_references),
         *crossed_usb_c_cc_endpoint_candidates(observed),
         *usb_c_sbu_same_net_candidates(observed),

@@ -929,7 +929,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 380 active rules.
+The catalog currently contains 381 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -1794,6 +1794,30 @@ lists the native input hashes and the ERC-clean fault/control details.
 KICAD_RUN_NATIVE_USB_DP_DM_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_usb_data_same_net_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_dp_dm_same_net")'
+```
+
+### USB 2.0 D+/D- resistive bridge review
+
+`bus.usb_dp_dm_resistive_bridge` reviews a fitted U/IC with one bounded USB
+2.0 D+ and D- role in the same optional port group when each pin has one
+distinct native net assignment and a fitted two-terminal resistor with known
+value directly joins those nets. Zero-ohm parts are included. DNP resistors,
+non-resistor passives, series resistors, multi-part paths, incomplete or
+ambiguous pin assignments, and duplicate or mismatched USB roles stay quiet.
+This is a heuristic only: differential termination and other shunts can be
+intentional, so the rule defaults to `review` and supports project overrides
+and exact ignores. It does not infer USB use or PCB/off-board connectivity.
+Its synthetic native fault and control schematics are recorded in the
+[fixture record](../tests/fixtures/design_lint/usb-dp-dm-resistive-bridge/README.md)
+and use digest-pinned KiCad 10.0.0 and 10.0.5.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_usb_data_pair_resistive_bridge.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_dp_dm_resistive_bridge")'
+
+KICAD_RUN_NATIVE_USB_DP_DM_RESISTIVE_BRIDGE_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_usb_data_pair_resistive_bridge_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_dp_dm_resistive_bridge")'
 ```
 
 ### CAN line pin/name polarity review

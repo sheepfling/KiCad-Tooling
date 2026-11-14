@@ -24,6 +24,9 @@ from tests.design_lint_fixtures.usb_c_sbu_same_net import (
     usb_c_sbu_same_net_netlist,
 )
 from tests.design_lint_fixtures.usb_c_superspeed_lanes import usb_c_superspeed_lane_netlist
+from tests.design_lint_fixtures.usb_data_pair_resistive_bridge import (
+    usb_data_pair_bridge_netlist,
+)
 from tests.rs485_peer_reference_support import rs485_peer_reference_fixture
 from tests.serial_participant_support import serial_netlist
 from tests.test_open_drain_heuristics import signal_netlist
@@ -71,6 +74,7 @@ def protocol_rule_ids() -> set[str]:
     emitted.update(item.rule_id for item in candidates(usb_c_sbu_same_net_netlist()))
     emitted.update(item.rule_id for item in candidates(usb_c_cc_controller_same_net_netlist()))
     emitted.update(item.rule_id for item in candidates(usb_c_cc_endpoint_pairing_netlist()))
+    emitted.update(item.rule_id for item in candidates(usb_data_pair_bridge_netlist()))
     emitted.update(item.rule_id for item in candidates(i3c_signal_named_rail_netlist()))
     i3c_source = i3c_same_net_netlist()
     emitted.update(item.rule_id for item in candidates(i3c_source))

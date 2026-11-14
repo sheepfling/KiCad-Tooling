@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 380 rules are implemented with synthetic regression coverage.
+The following 381 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 380 active rules.
+The catalog currently contains 381 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -654,6 +654,7 @@ skipped under prerelease policy.
 - `bus.usb_c_superspeed_lane_label_mismatch`
 - `bus.usb_peer_data_pair_crossed`
 - `bus.usb_dp_dm_same_net`
+- `bus.usb_dp_dm_resistive_bridge`
 - `bus.usb_signal_on_named_rail`
 - `bus.can_unconnected_direction_pin`
 - `bus.can_unconnected_line`
@@ -4443,7 +4444,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 380 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 381 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -26819,6 +26820,41 @@ acceptance threads while new lint features proceed:
   `tests/test_power_pin_net_role_native_fixture_lane.py` with
   `KICAD_RUN_NATIVE_POWER_PIN_NET_ROLE_FIXTURES=1`, `native_kicad`, and the same
   rule selector.
+
+#### LINT-463 — Review USB D+/D- nets joined by a fitted resistor
+
+- **Status:** Implemented as the configurable REVIEW heuristic
+  `bus.usb_dp_dm_resistive_bridge`.
+- **Gap:** The existing same-net rule catches direct schematic net merging, but
+  separately named D+ and D- nets can still be joined by a fitted resistor.
+  ERC may accept that topology, and native net assignment alone does not show
+  the resistor as a same-net short.
+- **Predicate:** Reuse the shared bounded USB 2.0 data-pair inventory. Require
+  one D+ and D- role in a matching optional port group, exactly one distinct
+  native net assignment per pin, and a fitted two-terminal resistor with a
+  known value and unique assignments directly between those nets. Zero-ohm
+  resistors are included.
+- **Boundary:** This is a prompt, not a claim that the resistor is wrong.
+  Differential termination and other designed shunts may be valid. Connectors,
+  SuperSpeed pairs, multi-part paths, series resistors, capacitors, DNP parts,
+  and incomplete or ambiguous evidence are outside the predicate. It does not
+  establish USB use, PCB copper, or physical continuity.
+- **Fixtures and quality gate:** Synthetic netlists cover an intentional
+  90-ohm shunt, zero-ohm bridge, unbridged pair, DNP resistor, series resistor,
+  capacitor, incomplete evidence, policy overrides, exact ignore, and stable
+  ordering. Source-hashed native fault/control schematics run with digest-pinned
+  KiCad 10.0.0 and 10.0.5 and require no ERC errors. No external or proprietary
+  project source is included.
+- **Focused selection:** Run
+
+  ```sh
+  .venv/bin/python -I -m pytest tests/test_usb_data_pair_resistive_bridge.py \
+    -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_dp_dm_resistive_bridge")'
+
+  KICAD_RUN_NATIVE_USB_DP_DM_RESISTIVE_BRIDGE_FIXTURES=1 \
+    .venv/bin/python -I -m pytest tests/test_usb_data_pair_resistive_bridge_native_fixture_lane.py \
+    -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_dp_dm_resistive_bridge")'
+  ```
 
 ## Completion and release gate
 

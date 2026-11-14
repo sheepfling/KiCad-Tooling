@@ -223,6 +223,7 @@ DesignLintRuleId = Literal[
     "bus.usb_c_vbus_capacitance_review",
     "bus.usb_unconnected_data_pin",
     "bus.usb_dp_dm_same_net",
+    "bus.usb_dp_dm_resistive_bridge",
     "bus.usb_data_path_mismatch",
     "bus.can_unconnected_direction_pin",
     "bus.can_unconnected_line",

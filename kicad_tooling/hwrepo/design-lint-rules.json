@@ -7186,11 +7186,55 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/usb_data_same_net.py#usb_data_same_net_candidates",
+        "kicad_tooling/hwrepo/usb_data_pair_endpoints.py#usb_data_pair_endpoints",
         "kicad_tooling/hwrepo/bus_signal_pairs.py#usb_data_function_identity",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
       ],
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/usb_data_same_net.py#usb_data_same_net_candidates"
+    },
+    {
+      "rule_id": "bus.usb_dp_dm_resistive_bridge",
+      "title": "USB 2.0 D+ and D- nets are bridged by a fitted resistor",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For each fitted U/IC with a native inventory containing exactly one bounded USB 2.0 D+ and D- role in a matching optional port group, require each pin to have one unambiguous assignment to a distinct native net; emit a REVIEW candidate when a fitted two-terminal resistor with known value directly bridges those two nets.",
+      "supported_kicad_versions": [
+        "Digest-pinned KiCad 10.0.0 and 10.0.5 native fixtures; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Only bounded USB 2.0 D+/D- aliases on fitted U/IC references are considered. Connectors, SuperSpeed pairs, duplicate or mismatched port roles, open or multiply assigned pins, DNP components, and incomplete or inconsistent pin inventories are skipped.",
+        "The passive-path recognizer covers one fitted two-terminal resistor directly between the two native nets; it does not traverse resistor chains, protection devices, connector paths, PCB routes, or off-board wiring.",
+        "A differential termination, bias network, or other resistor shunt may be intentional. Function names are recognition clues only, so the default is review and project policy may block, turn off, or exact-ignore a finding.",
+        "This schematic-net review does not prove USB use, required topology, component behavior, physical routing, or electrical approval."
+      ],
+      "fault_fixtures": [
+        "tests.test_usb_data_pair_resistive_bridge.test_direct_resistor_across_separate_usb_data_nets_is_reviewed",
+        "tests.test_usb_data_pair_resistive_bridge_native_fixture_lane.test_native_usb_data_pair_resistor_bridge_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_usb_data_pair_resistive_bridge.test_intentional_and_inapplicable_passive_paths_are_controls",
+        "tests.test_usb_data_pair_resistive_bridge.test_incomplete_or_ambiguous_resistor_evidence_stays_quiet",
+        "tests.test_usb_data_pair_resistive_bridge_native_fixture_lane.test_native_usb_data_pair_resistor_bridge_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_usb_data_pair_resistive_bridge.test_result_order_is_stable_under_net_and_component_reordering",
+        "tests.test_usb_data_pair_resistive_bridge.test_rule_policy_can_block_disable_or_exact_ignore_review"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_DP_DM_RESISTIVE_BRIDGE_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/usb_data_pair_resistive_bridge.py#usb_data_pair_resistive_bridge_candidates",
+        "kicad_tooling/hwrepo/usb_data_pair_endpoints.py#usb_data_pair_endpoints",
+        "kicad_tooling/hwrepo/resistor_paths.py#direct_resistors",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/usb_data_pair_resistive_bridge.py#usb_data_pair_resistive_bridge_candidates"
     },
     {
       "rule_id": "bus.usb_signal_on_named_rail",

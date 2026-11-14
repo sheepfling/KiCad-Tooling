@@ -280,6 +280,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="usb-dp-dm-same-net",
     ),
     pytest.param(
+        "bus.usb_dp_dm_resistive_bridge",
+        "KICAD_RUN_NATIVE_USB_DP_DM_RESISTIVE_BRIDGE_FIXTURES",
+        "tests.test_usb_data_pair_resistive_bridge_native_fixture_lane."
+        "test_native_usb_data_pair_resistor_bridge_fault_and_control_repeat",
+        id="usb-dp-dm-resistive-bridge",
+    ),
+    pytest.param(
         "bus.usb_c_cc_same_net",
         "KICAD_RUN_NATIVE_USB_C_CC_SAME_NET_FIXTURES",
         "tests.test_usb_c_cc_same_net_native_fixture_lane."
