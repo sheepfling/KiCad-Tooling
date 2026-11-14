@@ -20,7 +20,19 @@ IC_DECOUPLING_MAP_COVERAGE_RULE_NODE_CASES = (
     ),
     (
         RULE_ID,
-        "tests/test_ic_decoupling_map_pin_coverage.py::test_dnp_non_ic_and_unmapped_ic_scope_are_not_candidates",
+        "tests/test_ic_decoupling_map_pin_coverage.py::test_unmapped_fitted_ic_with_native_power_input_needs_component_review",
+    ),
+    (
+        RULE_ID,
+        "tests/test_ic_decoupling_map_pin_coverage.py::test_unmapped_return_function_is_not_a_component_coverage_candidate",
+    ),
+    (
+        RULE_ID,
+        "tests/test_ic_decoupling_map_pin_coverage.py::test_ambiguous_casefold_component_and_pin_metadata_are_not_discovered",
+    ),
+    (
+        RULE_ID,
+        "tests/test_ic_decoupling_map_pin_coverage.py::test_dnp_non_ic_and_unmapped_non_supply_components_stay_out_of_scope",
     ),
     (
         RULE_ID,

@@ -24,6 +24,7 @@ pytestmark = [
     reason="native IC rail-capacitor fixtures run in the digest-pinned package acceptance lane",
 )
 @pytest.mark.design_lint_rule(rule_id="power.ic_decoupling_below_project_minimum")
+@pytest.mark.design_lint_rule(rule_id="power.ic_decoupling_map_pin_coverage")
 @pytest.mark.parametrize(
     ("project", "version"),
     (("controller", "10.0.0"), ("raspberry-pi-status-led", "10.0.5")),
@@ -52,7 +53,7 @@ def test_missing_capacitor_and_controls_export_repeatably(
         "source-backed-dnp-ic": "2c2604a13e52edd20b2e41beab5504a5f8380a59d3f6f95a52907e21cb796bd6",
         "custom-capacitor-role-control": "338b39009694575fae172d6691ddd8d17804d74503ad73c374a53661373e789d",
         "custom-capacitor-role-wrong-return": "52edf68703b6fc4052fbb7197778108fc52c0a4ac4195bd533a1d1aaead8669a",
-        "decoupling-map-coverage": "7d32eb3d4ab7d073e2be12f6ad6683f38ffdbbe6f72b8906068edeb79ed81e8d",
+        "decoupling-map-coverage": "8686cf0c039148b3f4bc32b7f0cfe91925a26e3cc1715fed59d7ecf0b7af0478",
     }
     expected_findings: dict[str, tuple[str, set[str]]] = {
         "positive-rail-no-cap": ("REVIEW", {"+3V3: IC supply decoupling review"}),
@@ -186,3 +187,5 @@ def test_missing_capacitor_and_controls_export_repeatably(
     map_coverage = results["ic-rail-cap-fixture/decoupling-map-coverage"]
     assert map_coverage["ic_decoupling_map_pin_coverage_control"] == "quiet"
     assert map_coverage["ic_decoupling_map_pin_coverage_fault"] == "U1.1"
+    assert map_coverage["ic_decoupling_map_component_coverage_control"] == "quiet"
+    assert map_coverage["ic_decoupling_map_component_coverage_fault"] == "U3.1"

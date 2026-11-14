@@ -109,6 +109,32 @@ def ic_decoupling_map_coverage_netlist() -> NetlistContract:
     )
 
 
+def ic_decoupling_map_omitted_component_netlist() -> NetlistContract:
+    """Add a fitted synthetic IC whose supply pins have no map entry."""
+    observed = ic_decoupling_map_coverage_netlist()
+    components = dict(observed.components)
+    components["U2"] = ComponentContract(value="Synthetic peer IC", footprint="Synthetic:QFN")
+    pin_numbers = dict(observed.component_pin_numbers)
+    pin_numbers["U2"] = ("1", "2")
+    pin_types = dict(observed.pin_electrical_types)
+    pin_types.update({"U2.1": "power_in", "U2.2": "passive"})
+    pin_functions = dict(observed.pin_functions)
+    pin_functions.update({"U2.1": "VDD", "U2.2": "GND"})
+    nets = dict(observed.nets)
+    nets["+3V3"] = (*nets["+3V3"], "U2.1")
+    nets["GND"] = (*nets["GND"], "U2.2")
+    return observed.model_copy(
+        update={
+            "components": components,
+            "component_symbols": {**observed.component_symbols, "U2": "Synthetic:PeerLogic"},
+            "component_pin_numbers": pin_numbers,
+            "pin_electrical_types": pin_types,
+            "pin_functions": pin_functions,
+            "nets": nets,
+        }
+    )
+
+
 def ic_decoupling_map_coverage_map(
     covered_supply_pins: tuple[str, ...] = ("U1.1",),
 ) -> IcDecouplingMap:
@@ -166,4 +192,19 @@ def catalog_reachability_rule_ids() -> set[str]:
         ),
     )
     reached.update(item.rule_id for item in coverage_report.findings)
+    omitted_component_report = evaluate(
+        "synthetic-catalog-ic-decoupling-map-omitted-component",
+        coach(ic_decoupling_map_omitted_component_netlist()),
+        DesignLintPolicy(
+            ic_decoupling_map=ic_decoupling_map_coverage_map(),
+            rules=(
+                DesignLintRuleOverride(
+                    rule_id="power.ic_decoupling_map_pin_coverage",
+                    mode="review",
+                    reason="Catalog reachability synthetic omitted-component case",
+                ),
+            ),
+        ),
+    )
+    reached.update(item.rule_id for item in omitted_component_report.findings)
     return reached

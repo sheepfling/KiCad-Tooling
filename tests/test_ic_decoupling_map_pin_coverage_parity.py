@@ -15,7 +15,7 @@ from kicad_tooling.hwrepo.mcp_server import create_server
 from kicad_tooling.hwrepo.models import DesignLintReport
 from tests.design_lint_fixtures.ic_decoupling import (
     ic_decoupling_map_coverage_map,
-    ic_decoupling_map_coverage_netlist,
+    ic_decoupling_map_omitted_component_netlist,
 )
 from tests.electrical_parity_support import contract_netlist_xml
 from tests.mcp_parity_support import parity_design_lint_policy, semantic_design_lint_report
@@ -51,7 +51,10 @@ def test_ic_decoupling_map_pin_coverage_review_matches_between_cli_and_mcp(
         ic_decoupling_map=ic_decoupling_map_coverage_map(),
     )
     root, native = synthetic_design_lint_project(tmp_path, parity_design_lint_policy(policy))
-    install_synthetic_netlist(native, contract_netlist_xml(ic_decoupling_map_coverage_netlist()))
+    install_synthetic_netlist(
+        native,
+        contract_netlist_xml(ic_decoupling_map_omitted_component_netlist()),
+    )
     install_source_bound_drc_receipt(root, native)
     process = run_design_lint_cli(tmp_path, root, native)
     assert process.returncode in {0, 1}, process.stderr + process.stdout
@@ -78,6 +81,8 @@ def test_ic_decoupling_map_pin_coverage_review_matches_between_cli_and_mcp(
     )
     cli_findings = tuple(item for item in cli.findings if item.rule_id == RULE_ID)
     mcp_findings = tuple(item for item in mcp.findings if item.rule_id == RULE_ID)
-    assert len(cli_findings) == len(mcp_findings) == 1
-    assert cli_findings[0].evidence["component"] == ("U1",)
-    assert cli_findings[0].evidence["unmapped_power_input_pins"] == ("U1.3", "U1.4")
+    assert len(cli_findings) == len(mcp_findings) == 2
+    by_component = {item.evidence["component"][0]: item for item in cli_findings}
+    assert by_component["U1"].evidence["unmapped_power_input_pins"] == ("U1.3", "U1.4")
+    assert by_component["U2"].evidence["component_unmapped_from_map"] == ("true",)
+    assert by_component["U2"].evidence["native_power_input_pins"] == ("U2.1",)

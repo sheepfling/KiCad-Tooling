@@ -10150,12 +10150,14 @@ where those requirements apply.
 ### Review IC decoupling-map pin coverage
 
 `power.ic_decoupling_map_pin_coverage` is an optional completeness prompt for
-fitted `U`/`IC` components already named in `ic_decoupling_map`. It compares
-the map's exact component identity and mapped pin numbers with KiCad's native
-pin inventory and electrical types. Unmapped `power_in` pins, incomplete pin
-metadata, pin-inventory disagreement, or a stale component identity produce a
-review finding. Recognized return-function pins such as `GND`, `VSS`, and
-`0V` are excluded even if a symbol classifies one as `power_in`.
+fitted `U`/`IC` components when the project has authored an `ic_decoupling_map`.
+It compares mapped component identity and pin numbers with KiCad's native pin
+inventory and electrical types. It prompts both when a mapped IC omits a native
+`power_in` pin and when an unmapped fitted IC has native `power_in` pins.
+Incomplete pin metadata, pin-inventory disagreement, or a stale component
+identity also produces a review finding. Recognized return-function pins such
+as `GND`, `VSS`, and `0V` are excluded even if a symbol classifies one as
+`power_in`.
 
 Enable this review for a project by adding the following rule override beside
 its existing `ic_decoupling_map`:
@@ -10167,22 +10169,23 @@ its existing `ic_decoupling_map`:
       {
         "rule_id": "power.ic_decoupling_map_pin_coverage",
         "mode": "review",
-        "reason": "Review every mapped IC power-input pin against native pin metadata"
+        "reason": "Review IC power-input coverage against native pin metadata"
       }
     ]
   }
 }
 ```
 
-The rule is off by default and only scopes to references that the project has
-already entered in the map. It does not discover unmapped ICs or claim that a
-capacitor is required for every `power_in` pin; it asks the project reviewer to
-decide whether each pin needs a requirement or an exact documented exception.
-A quiet result depends on KiCad's exported symbol metadata and cannot prove
-that the symbol lists every physical package pin, that the authored basis is
-correct, or that PCB placement, copper, or return paths are adequate. Native
-coverage is exercised by the digest-pinned KiCad 10.0.0 and 10.0.5 fixture
-lane.
+The rule is off by default and requires an authored map to select this review
+scope. Whole-component discovery relies on the shared `U`/`IC` reference
+convention and exported `power_in` metadata; custom reference conventions and
+missing electrical-type metadata are not discovered. The prompt does not claim
+that a capacitor is required for every `power_in` pin; the project reviewer
+decides whether to add a source-backed requirement or an exact documented
+exception. A quiet result cannot prove that the symbol lists every physical
+package pin, that the authored basis is correct, or that PCB placement, copper,
+or return paths are adequate. Native fault/control coverage runs with
+digest-pinned KiCad 10.0.0 and 10.0.5.
 
 ## Require mapped power-sequence dependencies
 

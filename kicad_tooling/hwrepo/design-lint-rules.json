@@ -16826,23 +16826,24 @@
     },
     {
       "rule_id": "power.ic_decoupling_map_pin_coverage",
-      "title": "Mapped IC omits native power-input pins from decoupling requirements",
+      "title": "Fitted IC power-input coverage is missing from the decoupling map",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "off",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For each fitted U/IC reference present in the optional project-authored ic_decoupling_map, compare the mapped IC value, native symbol, footprint, complete pin-number inventory, and per-pin electrical types. Emit REVIEW when native power_in pins are omitted from the per-pin requirements, or when pin inventory/type evidence is incomplete or contradictory.",
+      "predicate": "When the optional project-authored ic_decoupling_map is present, inspect fitted U/IC references with exported native power_in pin metadata. Emit REVIEW when a fitted IC with one or more non-return power_in pins has no map entry, or when an IC named by the map omits such a pin from its per-pin requirements or has incomplete/contradictory identity, pin-inventory, or electrical-type evidence.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
-        "The rule covers only fitted U/IC references already present in ic_decoupling_map. It does not discover ICs omitted from the map or establish that every native symbol pin corresponds to a physical package pin.",
+        "Whole-component discovery uses the shared U/IC reference convention and exported power_in electrical types. Components with custom reference conventions or unavailable power pin metadata are not discovered; a native symbol pin inventory is not proof of a complete physical package-pin inventory.",
         "A power_in pin is a KiCad symbol classification, not a project decoupling requirement. The finding asks whether the authored map is complete; it does not require a capacitor, choose a value, or determine that a datasheet requirement applies.",
         "A current map identity and complete pin coverage do not verify the source basis, capacitor suitability, DC-bias derating, voltage rating, temperature behavior, placement, PCB copper, or return-path adequacy. The rule is optional and defaults off."
       ],
       "fault_fixtures": [
         "tests.test_ic_decoupling_map_pin_coverage.test_unmapped_native_power_input_pin_needs_review",
+        "tests.test_ic_decoupling_map_pin_coverage.test_unmapped_fitted_ic_with_native_power_input_needs_component_review",
         "tests.test_ic_decoupling_map_pin_coverage.test_incomplete_pin_metadata_needs_review",
         "tests.test_ic_decoupling_map_pin_coverage.test_stale_map_identity_needs_review",
         "tests.test_ic_decoupling_map_pin_coverage_parity.test_ic_decoupling_map_pin_coverage_review_matches_between_cli_and_mcp",
@@ -16850,7 +16851,9 @@
       ],
       "valid_control_fixtures": [
         "tests.test_ic_decoupling_map_pin_coverage.test_complete_current_pin_map_is_quiet",
-        "tests.test_ic_decoupling_map_pin_coverage.test_dnp_non_ic_and_unmapped_ic_scope_are_not_candidates",
+        "tests.test_ic_decoupling_map_pin_coverage.test_unmapped_return_function_is_not_a_component_coverage_candidate",
+        "tests.test_ic_decoupling_map_pin_coverage.test_ambiguous_casefold_component_and_pin_metadata_are_not_discovered",
+        "tests.test_ic_decoupling_map_pin_coverage.test_dnp_non_ic_and_unmapped_non_supply_components_stay_out_of_scope",
         "tests.test_ic_decoupling_map_pin_coverage_parity.test_ic_decoupling_map_pin_coverage_review_matches_between_cli_and_mcp",
         "tests.test_ic_rail_capacitor_native_fixture_lane.test_missing_capacitor_and_controls_export_repeatably",
         "tests.test_ic_decoupling_map_pin_coverage.test_rule_is_opt_in_and_supports_review_block_off_and_exact_ignore"

@@ -16,9 +16,27 @@ def ic_decoupling_map_pin_coverage_candidates(
     observed: NetlistContract,
     requirements: IcDecouplingMap | None,
 ) -> tuple[Candidate, ...]:
-    """Prompt when a mapped IC has unaccounted native power-input pins."""
+    """Prompt for native supply pins or fitted ICs missing from the decoupling map."""
     candidates: list[Candidate] = []
     for issue in ic_decoupling_map_coverage_issues(observed, requirements):
+        if issue.component_unmapped_from_map:
+            candidates.append(
+                PowerCandidate.from_source_evidence(
+                    issue,
+                    subject=(
+                        f"{issue.reference}: IC decoupling-map component coverage needs review"
+                    ),
+                    message=(
+                        f"The optional IC decoupling map has no entry for fitted {issue.reference}, "
+                        "whose native power-input pins are "
+                        f"{', '.join(issue.native_power_input_pins)}. Review whether this IC "
+                        "needs a source-backed per-pin requirement or an exact reasoned ignore. "
+                        "This prompt does not infer that a capacitor is required, choose a "
+                        "capacitance, or establish placement or return-path adequacy."
+                    ),
+                )
+            )
+            continue
         details: list[str] = []
         if issue.stale_map_identity:
             details.append("the mapped component identity is stale")

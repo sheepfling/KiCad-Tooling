@@ -17,6 +17,7 @@ from tests.design_lint_fixtures import coach
 from tests.design_lint_fixtures.ic_decoupling import (
     ic_decoupling_map_coverage_map,
     ic_decoupling_map_coverage_netlist,
+    ic_decoupling_map_omitted_component_netlist,
 )
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.component_lint, pytest.mark.power_lint]
@@ -112,7 +113,70 @@ def test_complete_current_pin_map_is_quiet() -> None:
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
-def test_dnp_non_ic_and_unmapped_ic_scope_are_not_candidates() -> None:
+def test_unmapped_fitted_ic_with_native_power_input_needs_component_review() -> None:
+    observed = ic_decoupling_map_omitted_component_netlist()
+    issues = ic_decoupling_map_coverage_issues(observed, ic_decoupling_map_coverage_map())
+    (issue,) = tuple(item for item in issues if item.reference == "U2")
+
+    assert issue.component_unmapped_from_map
+    assert issue.native_power_input_pins == ("U2.1",)
+    assert issue.unmapped_power_input_pins == ("U2.1",)
+    assert issue.mapped_power_pins == ()
+    report = evaluate(
+        "synthetic-ic-map-coverage-omitted-component", coach(observed), _review_policy()
+    )
+    (finding,) = tuple(
+        item
+        for item in report.findings
+        if item.rule_id == RULE_ID and item.evidence["component"] == ("U2",)
+    )
+    assert "has no entry for fitted U2" in finding.message
+    assert finding.evidence["component_unmapped_from_map"] == ("true",)
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_unmapped_return_function_is_not_a_component_coverage_candidate() -> None:
+    observed = ic_decoupling_map_omitted_component_netlist()
+    observed = observed.model_copy(
+        update={
+            "pin_functions": {**observed.pin_functions, "U2.1": "GND"},
+        }
+    )
+
+    issues = ic_decoupling_map_coverage_issues(observed, ic_decoupling_map_coverage_map())
+
+    assert tuple(issue.reference for issue in issues) == ("U1",)
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_ambiguous_casefold_component_and_pin_metadata_are_not_discovered() -> None:
+    observed = ic_decoupling_map_omitted_component_netlist()
+    observed = observed.model_copy(
+        update={
+            "components": {**observed.components, "u2": observed.components["U2"]},
+            "component_symbols": {
+                **observed.component_symbols,
+                "u2": observed.component_symbols["U2"],
+            },
+            "component_pin_numbers": {
+                **observed.component_pin_numbers,
+                "u2": observed.component_pin_numbers["U2"],
+            },
+            "pin_electrical_types": {
+                **observed.pin_electrical_types,
+                "u2.1": "power_in",
+            },
+            "pin_functions": {**observed.pin_functions, "u2.1": "VDD"},
+        }
+    )
+
+    issues = ic_decoupling_map_coverage_issues(observed, ic_decoupling_map_coverage_map())
+
+    assert tuple(issue.reference for issue in issues) == ("U1",)
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_dnp_non_ic_and_unmapped_non_supply_components_stay_out_of_scope() -> None:
     observed = ic_decoupling_map_coverage_netlist()
     requirements = ic_decoupling_map_coverage_map()
 
@@ -133,27 +197,32 @@ def test_dnp_non_ic_and_unmapped_ic_scope_are_not_candidates() -> None:
             )
         }
     )
-    assert not ic_decoupling_map_coverage_issues(observed, non_ic_map)
-
-    # This optional review is scoped to mapped ICs; an unrelated power pin does
-    # not trigger project-wide discovery.
-    with_unmapped_ic = observed.model_copy(
+    non_ic_observed = observed.model_copy(
         update={
-            "components": {**observed.components, "U2": observed.components["U1"]},
-            "component_symbols": {**observed.component_symbols, "U2": "Synthetic:Other"},
-            "component_pin_numbers": {
-                **observed.component_pin_numbers,
-                "U2": ("1", "2"),
-            },
-            "pin_electrical_types": {
-                **observed.pin_electrical_types,
-                "U2.1": "power_in",
-                "U2.2": "passive",
-            },
+            "components": {"J1": observed.components["U1"]},
+            "component_symbols": {"J1": "Synthetic:Connector"},
+            "component_pin_numbers": {"J1": ("1",)},
+            "pin_electrical_types": {"J1.1": "power_in"},
+            "pin_functions": {"J1.1": "VDD"},
         }
     )
-    issues = ic_decoupling_map_coverage_issues(with_unmapped_ic, requirements)
+    assert not ic_decoupling_map_coverage_issues(non_ic_observed, non_ic_map)
+
+    with_unmapped_ic_without_power_metadata = ic_decoupling_map_omitted_component_netlist().model_copy(
+        update={
+            "pin_electrical_types": {
+                key: value
+                for key, value in ic_decoupling_map_omitted_component_netlist().pin_electrical_types.items()
+                if not key.startswith("U2.")
+            }
+        }
+    )
+    issues = ic_decoupling_map_coverage_issues(
+        with_unmapped_ic_without_power_metadata, requirements
+    )
     assert tuple(issue.reference for issue in issues) == ("U1",)
+    assert not issues[0].component_unmapped_from_map
+    assert not ic_decoupling_map_coverage_issues(observed, None)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -187,7 +256,7 @@ def test_requirement_order_does_not_change_issue_identity_or_order() -> None:
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_pin_and_map_mapping_order_does_not_change_finding() -> None:
-    observed = ic_decoupling_map_coverage_netlist()
+    observed = ic_decoupling_map_omitted_component_netlist()
     reordered_observed = observed.model_copy(
         update={
             field: dict(reversed(tuple(getattr(observed, field).items())))

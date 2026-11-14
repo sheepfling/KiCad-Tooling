@@ -18,50 +18,61 @@ from .hwrepo.power_ic_decoupling_map_coverage import (
 
 @dataclass(frozen=True, slots=True)
 class IcDecouplingMapCoverageNativeProbe:
-    """Native-derived results for one complete and one omitted-pin map."""
+    """Native-derived results for pin and whole-component map coverage."""
 
     control_issues: tuple[IcDecouplingMapCoverageIssue, ...]
     fault_issues: tuple[IcDecouplingMapCoverageIssue, ...]
+    component_control_issues: tuple[IcDecouplingMapCoverageIssue, ...]
+    component_fault_issues: tuple[IcDecouplingMapCoverageIssue, ...]
 
 
 def evaluate_ic_decoupling_map_coverage_native_probe(
     observed: NetlistContract,
 ) -> IcDecouplingMapCoverageNativeProbe:
-    """Compare the native U1.1 input against complete and deliberately wrong maps."""
-    component = observed.components["U1"]
-    symbol = observed.component_symbols["U1"]
-    capacitors = (
-        IcDecouplingCapacitorRequirement(
-            reference="C1",
-            expected_symbol="Device:C",
-            expected_footprint="Synthetic:Capacitor",
-            power_pin="C1.1",
-            return_pin="C1.2",
-        ),
-    )
+    """Check mapped U1, plus an entirely omitted native U3 power input."""
 
-    def mapped(pin: str) -> IcDecouplingMap:
-        return IcDecouplingMap(
-            requirements=(
+    def mapped(pins: tuple[tuple[str, str], ...]) -> IcDecouplingMap:
+        requirements: list[IcDecouplingRequirement] = []
+        for reference, pin in pins:
+            component = observed.components[reference]
+            capacitor_reference = "C1" if reference == "U1" else "C2"
+            capacitor = IcDecouplingCapacitorRequirement(
+                reference=capacitor_reference,
+                expected_symbol="Device:C",
+                expected_footprint="Synthetic:Capacitor",
+                power_pin=f"{capacitor_reference}.1",
+                return_pin=f"{capacitor_reference}.2",
+            )
+            requirements.append(
                 IcDecouplingRequirement(
                     id=f"native-{pin.casefold().replace('.', '-')}-coverage",
                     basis="Tooling-owned native pin-coverage regression only",
-                    ic_reference="U1",
+                    ic_reference=reference,
                     expected_ic_value=component.value,
-                    expected_ic_symbol=symbol,
+                    expected_ic_symbol=observed.component_symbols[reference],
                     expected_ic_footprint=component.footprint,
                     power_pin=pin,
                     power_net="+3V3",
                     return_net="GND",
                     minimum_total_capacitance_pf=100_000.0,
-                    capacitors=capacitors,
-                ),
+                    capacitors=(capacitor,),
+                )
             )
-        )
+        return IcDecouplingMap(requirements=tuple(requirements))
 
     probe = IcDecouplingMapCoverageNativeProbe(
-        control_issues=ic_decoupling_map_coverage_issues(observed, mapped("U1.1")),
-        fault_issues=ic_decoupling_map_coverage_issues(observed, mapped("U1.2")),
+        control_issues=ic_decoupling_map_coverage_issues(
+            observed, mapped((("U1", "U1.1"), ("U3", "U3.1")))
+        ),
+        fault_issues=ic_decoupling_map_coverage_issues(
+            observed, mapped((("U1", "U1.2"), ("U3", "U3.1")))
+        ),
+        component_control_issues=ic_decoupling_map_coverage_issues(
+            observed, mapped((("U1", "U1.1"), ("U3", "U3.1")))
+        ),
+        component_fault_issues=ic_decoupling_map_coverage_issues(
+            observed, mapped((("U1", "U1.1"),))
+        ),
     )
     if probe.control_issues:
         raise ValueError("Native complete IC decoupling map did not remain quiet")
@@ -72,6 +83,17 @@ def evaluate_ic_decoupling_map_coverage_native_probe(
         "U1.2",
     ):
         raise ValueError("Native IC decoupling-map coverage evidence differs from expected pins")
+    if probe.component_control_issues:
+        raise ValueError("Native complete IC decoupling component map did not remain quiet")
+    if len(probe.component_fault_issues) != 1:
+        raise ValueError("Native omitted IC decoupling-map component did not produce one review")
+    component_fault = probe.component_fault_issues[0]
+    if (
+        component_fault.reference != "U3"
+        or component_fault.native_power_input_pins != ("U3.1",)
+        or not component_fault.component_unmapped_from_map
+    ):
+        raise ValueError("Native omitted-component coverage evidence differs from expected U3")
     return probe
 
 
@@ -84,6 +106,8 @@ def ic_decoupling_map_coverage_event_fields(
         return {
             "ic_decoupling_map_pin_coverage_control": "not_run",
             "ic_decoupling_map_pin_coverage_fault": "not_run",
+            "ic_decoupling_map_component_coverage_control": "not_run",
+            "ic_decoupling_map_component_coverage_fault": "not_run",
         }
     if probe is None:
         raise ValueError("Native IC decoupling-map coverage probe is unavailable")
@@ -91,5 +115,11 @@ def ic_decoupling_map_coverage_event_fields(
         "ic_decoupling_map_pin_coverage_control": "quiet",
         "ic_decoupling_map_pin_coverage_fault": ";".join(
             probe.fault_issues[0].unmapped_power_input_pins
+        ),
+        "ic_decoupling_map_component_coverage_control": (
+            "quiet" if not probe.component_control_issues else "unexpected_review"
+        ),
+        "ic_decoupling_map_component_coverage_fault": ";".join(
+            probe.component_fault_issues[0].native_power_input_pins
         ),
     }

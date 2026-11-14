@@ -27237,19 +27237,24 @@ acceptance threads while new lint features proceed:
   `power_in` pins that the project has not entered in that map. This can leave
   a per-pin map looking complete when the native symbol exposes more supply
   inputs.
-- **Scenario:** For fitted `U`/`IC` references already named in the map, compare
+- **Scenario:** At this gate, for fitted `U`/`IC` references already named in
+  the map, compare
   exact mapped identity, complete native pin-number inventory, and per-pin
   electrical types. Prompt for unmapped `power_in` pins, unavailable metadata,
   inventory disagreement, or stale identity. A complete map is quiet; DNP
-  devices, non-IC references, and unmapped ICs stay outside this review. Known
+  devices, non-IC references, and ICs omitted from the map stayed outside this
+  initial pin-level review; LINT-473 extends the current coverage prompt to
+  omitted ICs. Known
   return-function pins such as `GND`, `VSS`, and `0V` are excluded from the
   missing-supply set.
 - **Interpretation:** This is a heuristic coverage prompt, not an electrical
   rule. A KiCad `power_in` classification does not prove that decoupling is
   required. Reviewers decide whether to add an independently approved
-  requirement or record an exact exception. The check does not discover ICs
-  omitted from the map, confirm physical package-pin completeness, establish
-  the source basis, or assess placement, copper, or return-path adequacy.
+  requirement or record an exact exception. The original pin-level check did
+  not discover ICs omitted from the map; see LINT-473 for that coverage
+  extension. Neither check confirms physical package-pin completeness,
+  establishes the source basis, or assesses placement, copper, or return-path
+  adequacy.
 - **Evidence boundary:** Unit and CLI/MCP parity fixtures use synthetic
   `NetlistContract` data. The exact-native fixture is a tooling-owned schematic
   with a synthetic component identity, exported and normalized twice with
@@ -27266,6 +27271,54 @@ acceptance threads while new lint features proceed:
   installed-wheel checks against external and adapted template projects. Ruff,
   repository-wide Rumdl, and mdrepo passed. Hosted gate run 43607163647 on
   `v0.5.3rc783` passed the same scoped checks.
+
+#### LINT-473 — Review fitted ICs omitted from the decoupling map
+
+- **Status:** Extends the default-off `power.ic_decoupling_map_pin_coverage`
+  review. It does not add a capacitor requirement or change the default policy.
+- **Gap:** LINT-472 catches missing supply-pin entries for mapped ICs, while
+  `power.component_supply_range_map_coverage` discovers omitted ICs only when a
+  separate operating-range map is selected. A project using the decoupling map
+  alone could omit a whole fitted IC without a coverage prompt.
+- **Predicate:** When `ic_decoupling_map` is present, inspect fitted `U`/`IC`
+  references with native `power_in` pin metadata. If one has no component entry
+  in the map, prompt once with its exact reference and non-return supply-pin
+  list. Mapped components continue through LINT-472's exact identity,
+  inventory, and per-pin checks. DNP parts, non-IC references, return-function
+  pins, absent maps, and devices without exported `power_in` metadata do not
+  trigger this new component-level prompt.
+- **Interpretation:** This is coverage discovery only. A native `power_in` type
+  does not prove that decoupling applies, that every supply pin needs a mapped
+  capacitor, or that the exported symbol covers the physical package. The
+  project owner decides whether to add a source-backed requirement or an exact
+  finding ignore. The rule remains off by default and its scope still requires
+  an authored map.
+- **Controls:** Synthetic controls cover a current map, DNP, non-IC, no-map,
+  missing power-type metadata, and power-input pins whose function is a
+  recognized return. Mapping-order stability and CLI/MCP parity include the
+  newly discovered component. Existing exact policy override and ignore paths
+  remain in use.
+- **Native evidence:** The tooling-owned schematic includes mapped `U1` and
+  fitted but unmapped `U3`, both with synthetic `power_in` pins on the same
+  named rail. The digest-pinned Docker lane requires a complete two-device map
+  to be quiet and an omitted-`U3` map to report `U3.1`, while retaining the
+  separate U1 pin-inventory fault/control. This fixture is synthetic and is not
+  an external or proprietary design.
+- **Selection:** Run
+  `tests/test_ic_decoupling_map_pin_coverage.py`,
+  `tests/test_ic_decoupling_map_pin_coverage_parity.py`, the matching catalog
+  reachability and architecture checks, and
+  `tests/test_ic_rail_capacitor_native_fixture_lane.py` with Docker and
+  `KICAD_RUN_NATIVE_IC_RAIL_CAPACITOR_FIXTURES=1`, selected by
+  `design_lint and power_lint` and rule ID
+  `power.ic_decoupling_map_pin_coverage`.
+- **Local scoped acceptance:** `scripts/ci.py` passed at
+  `build/ci/run-qevi763y`: 458 selected tests and 9,470 deselected, including
+  repeated digest-pinned Docker exports on KiCad 10.0.0 and 10.0.5. Ruff,
+  Alphus, Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist builds,
+  installed-origin/version checks, and external/adapted template inventory,
+  surface, verification, and playtest stages passed.
+- **Hosted acceptance:** Pending tagged GitHub Actions verification.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 

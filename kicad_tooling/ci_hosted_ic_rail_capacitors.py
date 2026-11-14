@@ -335,6 +335,8 @@ def ic_rail_capacitor_fixture_lane(root: Path, *, project: str, image: str, log:
                 expected_source_net = (
                     {"U1.1", "U2.1"} if case == "source-backed-no-cap" else {"C1.1", "U1.1", "U2.1"}
                 )
+                if case == "decoupling-map-coverage":
+                    expected_source_net.add("U3.1")
                 if set(observed.nets.get("+3V3", ())) != expected_source_net:
                     raise ValueError(f"Native {case} does not match its authored +3V3 pin topology")
                 if observed.pin_electrical_types.get("U2.1") != "power_out":

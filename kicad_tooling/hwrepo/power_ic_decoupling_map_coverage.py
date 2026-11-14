@@ -6,6 +6,7 @@ import hashlib
 import json
 from dataclasses import dataclass
 
+from .casefold_mapping_lookup import casefolded_unique_index
 from .component_references import is_integrated_circuit_reference
 from .connector_identity import is_return_function
 from .ic_decoupling_models import IcDecouplingMap
@@ -26,17 +27,20 @@ class IcDecouplingMapCoverageIssue:
     pin_inventory_disagreement_pins: tuple[str, ...]
     stale_map_identity: bool
     map_sha256: str
+    component_unmapped_from_map: bool = False
 
 
 def ic_decoupling_map_coverage_issues(
     observed: NetlistContract,
     requirements: IcDecouplingMap | None,
 ) -> tuple[IcDecouplingMapCoverageIssue, ...]:
-    """Find power-input pins omitted from a current, mapped IC's decoupling map.
+    """Find fitted IC power inputs omitted from an authored decoupling map.
 
-    The optional map scopes this review to references it names. A quiet result
-    does not establish that the project has a complete IC inventory or that a
-    decoupling requirement applies.
+    A current map entry receives per-pin and identity checks. Fitted U/IC
+    references with exported power-input metadata but no entry receive a
+    component-level coverage prompt. A quiet result does not establish that a
+    decoupling requirement applies or that the project has a complete physical
+    IC inventory.
     """
     if requirements is None:
         return ()
@@ -53,26 +57,60 @@ def ic_decoupling_map_coverage_issues(
         )
         display_references[key] = item.ic_reference
 
-    components = {
-        reference.casefold(): (reference, component)
-        for reference, component in observed.components.items()
-    }
-    symbols = {
-        reference.casefold(): symbol for reference, symbol in observed.component_symbols.items()
-    }
-    inventories = {
-        reference.casefold(): tuple(numbers)
-        for reference, numbers in observed.component_pin_numbers.items()
-    }
-    pin_types = {
-        pin.casefold(): (pin, pin_type.casefold())
-        for pin, pin_type in observed.pin_electrical_types.items()
-    }
-    pin_functions = {pin.casefold(): function for pin, function in observed.pin_functions.items()}
+    components = casefolded_unique_index(
+        {reference: (reference, component) for reference, component in observed.components.items()}
+    )
+    symbols = casefolded_unique_index(observed.component_symbols)
+    inventories = casefolded_unique_index(
+        {reference: tuple(numbers) for reference, numbers in observed.component_pin_numbers.items()}
+    )
+    pin_types = casefolded_unique_index(
+        {pin: (pin, pin_type.casefold()) for pin, pin_type in observed.pin_electrical_types.items()}
+    )
+    pin_functions = casefolded_unique_index(observed.pin_functions)
     dnp = {reference.casefold() for reference in observed.dnp_components}
+    power_inputs_by_reference: dict[str, tuple[str, ...]] = {}
+    for key, (actual_reference, _) in components.items():
+        if not is_integrated_circuit_reference(actual_reference) or key in dnp:
+            continue
+        pins = tuple(
+            sorted(
+                (
+                    display_pin
+                    for pin_key, (display_pin, pin_type) in pin_types.items()
+                    if pin_key.rsplit(".", 1)[0].casefold() == key
+                    and pin_type == "power_in"
+                    and not is_return_function(pin_functions.get(pin_key, ""))
+                ),
+                key=lambda pin: (pin.casefold(), pin),
+            )
+        )
+        if pins:
+            power_inputs_by_reference[key] = pins
 
     issues: list[IcDecouplingMapCoverageIssue] = []
-    for key in sorted(mapped_pins):
+    for key in sorted(set(mapped_pins) | set(power_inputs_by_reference)):
+        if key not in mapped_pins:
+            component_entry = components.get(key)
+            if component_entry is None:
+                continue
+            actual_reference, _ = component_entry
+            issues.append(
+                IcDecouplingMapCoverageIssue(
+                    reference=actual_reference,
+                    symbol=symbols.get(key, ""),
+                    native_power_input_pins=power_inputs_by_reference[key],
+                    mapped_power_pins=(),
+                    unmapped_power_input_pins=power_inputs_by_reference[key],
+                    pin_type_unavailable_pins=(),
+                    pin_inventory_unavailable=False,
+                    pin_inventory_disagreement_pins=(),
+                    stale_map_identity=False,
+                    map_sha256=map_sha256,
+                    component_unmapped_from_map=True,
+                )
+            )
+            continue
         if not is_integrated_circuit_reference(display_references[key]):
             continue
         component_entry = components.get(key)
@@ -164,6 +202,7 @@ def ic_decoupling_map_coverage_issues(
                     pin_inventory_disagreement_pins=disagreement,
                     stale_map_identity=stale_map_identity,
                     map_sha256=map_sha256,
+                    component_unmapped_from_map=False,
                 )
             )
 

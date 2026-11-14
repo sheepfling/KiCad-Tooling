@@ -17,7 +17,7 @@ They do not represent a product board and contain no proprietary source.
 | `source-backed-dnp-ic.kicad_sch`               | Mapped `U1.1` and fitted `C1` match the 100 nF requirement, but `U1` is DNP.                                                    | LINT-136 reports the requirement as stale; the cap total is not evaluated.     |
 | `custom-capacitor-role-control.kicad_sch`      | Exact opaque `Vendor:CAP123` identity is on `+3V3` and `GND`; `PART_ID`, footprint, and passive pins `1`/`2` are explicit.      | LINT-091 exact project-role control.                                           |
 | `custom-capacitor-role-wrong-return.kicad_sch` | Same exact opaque identity, with `C1.2` on unrecognized `CAP_REF`.                                                              | LINT-091 mapped-but-incomplete topology fault.                                 |
-| `decoupling-map-coverage.kicad_sch`            | Tooling-owned source-backed one-pin IC fixture with a nonempty synthetic footprint for native map-coverage probes.              | LINT-472 exact-native pin-inventory fault/control.                             |
+| `decoupling-map-coverage.kicad_sch`            | Tooling-owned source-backed fixture with mapped U1 and unmapped fitted U3, each with a synthetic native power-input pin.        | LINT-472/473 exact-native pin and whole-component coverage fault/controls.     |
 
 | Fixture                                        | SHA-256                                                            |
 | ---------------------------------------------- | ------------------------------------------------------------------ |
@@ -32,7 +32,7 @@ They do not represent a product board and contain no proprietary source.
 | `source-backed-dnp-ic.kicad_sch`               | `2c2604a13e52edd20b2e41beab5504a5f8380a59d3f6f95a52907e21cb796bd6` |
 | `custom-capacitor-role-control.kicad_sch`      | `338b39009694575fae172d6691ddd8d17804d74503ad73c374a53661373e789d` |
 | `custom-capacitor-role-wrong-return.kicad_sch` | `52edf68703b6fc4052fbb7197778108fc52c0a4ac4195bd533a1d1aaead8669a` |
-| `decoupling-map-coverage.kicad_sch`            | `7d32eb3d4ab7d073e2be12f6ad6683f38ffdbbe6f72b8906068edeb79ed81e8d` |
+| `decoupling-map-coverage.kicad_sch`            | `8686cf0c039148b3f4bc32b7f0cfe91925a26e3cc1715fed59d7ecf0b7af0478` |
 
 The trial used the MIT-licensed kicad-happy checkout at commit
 `a6bba1add1e18b89e3aa0824b9769ed1d9d79174`. It ran the schematic analyzer
