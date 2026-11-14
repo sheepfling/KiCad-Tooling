@@ -27161,6 +27161,9 @@ acceptance threads while new lint features proceed:
   and utility checks, Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist
   builds, installed-origin/version checks, and the external/adapted template
   inventory, surface, verification, and playtest stages passed.
+- **Hosted acceptance:** Tag `v0.5.3rc778`, commit
+  `4921f9d9ae021ab1d92ac2ae619f188733b8e799`, passed in GitHub Actions run
+  `43587189207`.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
