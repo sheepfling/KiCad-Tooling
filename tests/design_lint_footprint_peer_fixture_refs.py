@@ -44,6 +44,22 @@ FOOTPRINT_PEER_PARITY_FIXTURES = MappingProxyType(
                 ),
             }
         ),
+        "connector.footprint_peer_generic_power_pin_all_open": MappingProxyType(
+            {
+                "fault_fixtures": (
+                    "tests.test_connector_footprint_peer_generic_power_all_open.test_generic_power_contact_open_on_all_alias_peers_is_opt_in_review",
+                    "tests.test_design_lint_mcp_parity_connector_generic_power_all_open.test_generic_power_contact_cli_mcp_fault_and_control_parity",
+                ),
+                "valid_control_fixtures": (
+                    "tests.test_connector_footprint_peer_generic_power_all_open.test_assigned_or_meaningfully_named_power_contacts_are_controls",
+                    "tests.test_connector_footprint_peer_generic_power_all_open.test_inconsistent_pin_metadata_and_separately_scoped_peers_stay_quiet",
+                    "tests.test_design_lint_mcp_parity_connector_generic_power_all_open.test_generic_power_contact_cli_mcp_fault_and_control_parity",
+                ),
+                "metamorphic_fixtures": (
+                    "tests.test_connector_footprint_peer_generic_power_all_open.test_peer_power_review_fingerprint_is_stable_under_mapping_order",
+                ),
+            }
+        ),
         "connector.footprint_named_signal_all_open": MappingProxyType(
             {
                 "fault_fixtures": (

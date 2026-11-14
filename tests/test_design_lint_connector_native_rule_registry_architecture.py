@@ -76,6 +76,9 @@ def test_connector_rules_catalogue_the_exact_native_fault_control_cases() -> Non
             "tests.test_ci_hosted_connector_returns.test_footprint_alias_all_open_peer_is_validated_on_pinned_native_versions",
             "tests.test_connector_footprint_peer_unanchored_all_open_native.test_native_export_reviews_unanchored_aliases_only_in_current_shared_scope",
         },
+        "connector.footprint_peer_generic_power_pin_all_open": {
+            "tests.test_connector_footprint_peer_unanchored_all_open_native.test_native_generic_power_pin_all_open_fault_and_control_are_repeatable",
+        },
         "connector.footprint_peer_pin_assignment_divergence": {
             "tests.test_ci_hosted_connector_returns.test_footprint_alias_peer_assignments_are_validated_on_pinned_native_versions",
         },

@@ -904,7 +904,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 378 active rules.
+The catalog currently contains 379 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -4556,6 +4556,40 @@ KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_connector_peer_reviewed_scope_all_open_native.py \
   -m 'design_lint and connector_lint and native_kicad and design_lint_rule(rule_id="connector.generic_peer_pin_all_open")'
 ```
+
+## Review generic power contacts open across connector peers
+
+`connector.footprint_peer_generic_power_pin_all_open` is a separate default-off
+prompt for a generic `Pin_N` or numeric-only contact with native electrical
+type `power_in` or `power_out` when that same pin is open on every eligible
+footprint-similar connector peer. It requires complete matching native pin
+metadata and either another shared-net anchor or a current, source-matched
+peer-assignment group. It does not infer that the contacts are power rails,
+that they should be connected, or that they should share a net.
+
+The individual connector checks already prompt on unassigned generic native
+power pins. This peer rule adds the group pattern to the review evidence; it is
+a review-context improvement rather than a new detection claim. Keep it off
+unless that pattern is useful for the project review. Project policy can choose
+`review`, `block`, or `off`, and can ignore one exact fingerprint. A reviewed
+pinout remains the authority for whether each contact should be used. The
+schematic report does not establish PCB copper continuity or off-board wiring.
+
+The fault and connected-control schematics are tooling-owned fixtures. Docker
+exports them twice under KiCad 10.0.0 and 10.0.5:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_connector_footprint_peer_generic_power_all_open.py \
+  tests/test_design_lint_mcp_parity_connector_generic_power_all_open.py \
+  -m 'design_lint and connector_lint and design_lint_rule(rule_id="connector.footprint_peer_generic_power_pin_all_open")'
+
+KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_connector_footprint_peer_unanchored_all_open_native.py \
+  -m 'design_lint and connector_lint and native_kicad and design_lint_rule(rule_id="connector.footprint_peer_generic_power_pin_all_open")'
+```
+
+Fixture source digests and interpretation are recorded in the
+[connector footprint-alias fixture README](../tests/fixtures/design_lint/connector-footprint-alias-native/README.md).
 
 ## Review connector return-contact distribution
 

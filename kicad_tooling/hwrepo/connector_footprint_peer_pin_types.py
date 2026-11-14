@@ -128,6 +128,25 @@ class ConnectorFootprintPeerPinAllOpen:
 
 
 @dataclass(frozen=True, slots=True)
+class ConnectorFootprintPeerPowerPinAllOpen:
+    """A generic native power contact left open on every footprint-alias peer."""
+
+    footprint: str
+    value: str
+    pin_number: str
+    pin_function: str
+    pin_electrical_type: str
+    assignments: Mapping[str, tuple[str, ...]]
+    symbols: tuple[str, ...]
+    common_anchor_pin_numbers: tuple[str, ...]
+    peer_assignment_group: str | None = None
+    peer_assignment_basis: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "assignments", _freeze_assignments(self.assignments))
+
+
+@dataclass(frozen=True, slots=True)
 class ConnectorFootprintPeerPinNamedAllOpen:
     """A named contact with a supported role left open on every alias peer."""
 
@@ -179,6 +198,6 @@ class ConnectorFootprintPeerPinScan:
     unanchored_divergences: tuple[ConnectorFootprintPeerPinDivergence, ...]
     named_divergences: tuple[ConnectorFootprintPeerPinNamedDivergence, ...]
     open_outliers: tuple[ConnectorFootprintPeerPinOpenOutlier, ...]
-    all_open: tuple[ConnectorFootprintPeerPinAllOpen, ...]
+    all_open: tuple[ConnectorFootprintPeerPinAllOpen | ConnectorFootprintPeerPowerPinAllOpen, ...]
     named_all_open: tuple[ConnectorFootprintPeerPinNamedAllOpen, ...]
     unanchored_open_outliers: tuple[ConnectorFootprintPeerPinOpenOutlier, ...] = ()

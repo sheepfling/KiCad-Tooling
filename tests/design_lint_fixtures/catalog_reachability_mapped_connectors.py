@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import tests.test_connector_footprint_peer_generic_power_all_open as _generic_power_all_open
 import tests.test_connector_mapped_interface_other_named_rail as _mapped_other_rail
 import tests.test_connector_mapped_interface_other_unassigned as _mapped_other_contact
 import tests.test_connector_mapped_interface_power_contact_unassigned as _mapped_power_contact
@@ -54,6 +55,9 @@ def mapped_connector_rule_ids() -> set[str]:
         mapped_signals,
         coverage=peer_signal_coverage(mapped_signals),
     )
+    generic_power_all_open_report = _generic_power_all_open._report(
+        _generic_power_all_open._source()
+    )
     return {
         item.rule_id
         for report in (
@@ -66,6 +70,7 @@ def mapped_connector_rule_ids() -> set[str]:
             mapped_return_report,
             mapped_supply_report,
             mapped_signal_report,
+            generic_power_all_open_report,
         )
         for item in report.findings
     }

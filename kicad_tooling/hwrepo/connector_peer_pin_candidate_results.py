@@ -111,7 +111,8 @@ class ConnectorPeerPinFindingCounts:
             ),
             footprint_peer_pin_all_open_finding_count=counts[
                 "connector.footprint_peer_pin_all_open"
-            ],
+            ]
+            + counts["connector.footprint_peer_generic_power_pin_all_open"],
         )
 
 

@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 378 rules are implemented with synthetic regression coverage.
+The following 379 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 378 active rules.
+The catalog currently contains 379 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -478,6 +478,7 @@ skipped under prerelease policy.
 - `connector.footprint_named_power_output_all_open`
 - `connector.footprint_named_signal_all_open`
 - `connector.footprint_peer_pin_all_open`
+- `connector.footprint_peer_generic_power_pin_all_open`
 - `connector.generic_peer_pin_all_open`
 - `connector.generic_peer_pin_open_outlier`
 - `connector.peer_power_input_named_all_open`
@@ -4441,7 +4442,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 378 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 379 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -26711,6 +26712,53 @@ acceptance threads while new lint features proceed:
   design_lint_rule(rule_id="pcb.drc_exact_reference_pad_scope_unmatched")`.
   Run `tests/test_pcb_drc_exact_reference_pad_scope_native.py` with Docker,
   `KICAD_RUN_NATIVE_PCB_FIXTURES=1`, `native_kicad`, and the same selector.
+
+#### LINT-460 — Review generic power contacts open across connector peers
+
+- **Status:** Implemented as a default-off connector review prompt. The
+  tag-derived package gate passed 440 tests with 9,317 deselected, including
+  digest-pinned Docker exports on KiCad 10.0.0 and 10.0.5. Ruff, both Alphus
+  profiles, Markdown, mdrepo, Linux/Windows Pyright, wheel/sdist builds, and
+  the isolated-wheel rehearsal passed. The separate public template and its
+  relocated-layout rehearsal passed inventory, surface, verification, and
+  playtest. Hosted CI is pending the tag.
+- **Priority:** P2 review context for repeated connector interfaces. A family
+  of otherwise exact footprint peers can leave the same generic native power
+  contact open, while the individual connector checks report each contact on
+  its own.
+- **Predicate:** Add
+  `connector.footprint_peer_generic_power_pin_all_open` for a generic `Pin_N`
+  or numeric-only contact with native `power_in` or `power_out` type when the
+  contact is unassigned on every eligible footprint peer. Require distinct
+  native symbols without `PART_ID`, matching nonempty value and footprint,
+  complete identical pin inventories and matching nonempty per-pin native
+  metadata. Also require another shared-net anchor or a current source-matched
+  peer-assignment group.
+- **Incremental value:** Existing per-connector unassigned-power checks
+  already identify each open native power pin. The new rule adds a compact
+  peer-group pattern to the review evidence; it is a review-context gain, not
+  independent electrical defect detection. Its default remains `off`.
+- **Boundary:** Native electrical type, symbol/value/footprint similarity,
+  and peer scope do not identify the interface role, assert that the contact
+  must be connected, or require the peers to share a net. Named contacts,
+  passive or signal contacts, assigned contacts, mismatched metadata, stale
+  maps, separate peer groups, DNP parts, and `PART_ID` parts are excluded.
+  This schematic prompt does not inspect PCB copper or off-board wiring.
+- **Fixtures:** Tooling-owned native fault/control schematics cover a generic
+  `power_in` contact left open across two peers and the connected control.
+  Synthetic cases cover `power_in` and `power_out`, assignment and named-pin
+  controls, mismatched type metadata, separate peer groups, policy and exact
+  ignores, deterministic ordering, and CLI/MCP parity. Docker exports were
+  repeated against KiCad 10.0.0 and 10.0.5. Fixture hashes and interpretation
+  are documented in the connector footprint-alias fixture README.
+- **Selection:** Run
+  `tests/test_connector_footprint_peer_generic_power_all_open.py` and
+  `tests/test_design_lint_mcp_parity_connector_generic_power_all_open.py` with
+  `design_lint and connector_lint and
+  design_lint_rule(rule_id="connector.footprint_peer_generic_power_pin_all_open")`.
+  Run `tests/test_connector_footprint_peer_unanchored_all_open_native.py` with
+  Docker, `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`, `native_kicad`, and the same
+  rule selector.
 
 ## Completion and release gate
 

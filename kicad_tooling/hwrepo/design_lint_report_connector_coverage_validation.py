@@ -124,7 +124,12 @@ def validate_connector_peer_pin_coverage(
                 "Connector footprint-alias open-peer coverage count must match findings"
             )
         footprint_all_open_findings = sum(
-            finding.rule_id == "connector.footprint_peer_pin_all_open" for finding in findings
+            finding.rule_id
+            in {
+                "connector.footprint_peer_pin_all_open",
+                "connector.footprint_peer_generic_power_pin_all_open",
+            }
+            for finding in findings
         )
         if footprint_all_open_findings != item.footprint_alias_coverage.all_open_finding_count:
             raise ValueError(

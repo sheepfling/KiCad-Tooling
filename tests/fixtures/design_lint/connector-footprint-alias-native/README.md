@@ -7,17 +7,19 @@ pin inventory, and native pin metadata. The default cases use generic passive
 Except for the explicitly unanchored case, pin 1 is the common assignment
 anchor.
 
-| Fixture                                   | Pin function labels | J1 pin 2          | J2 pin 2          | Expected result                                                                                    |
-| ----------------------------------------- | ------------------- | ----------------- | ----------------- | -------------------------------------------------------------------------------------------------- |
-| `fault.kicad_sch`                         | `Pin_1` / `Pin_2`   | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_3` | `REVIEW` for `connector.footprint_peer_pin_assignment_divergence`                                  |
-| `control.kicad_sch`                       | `Pin_1` / `Pin_2`   | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_2` | No footprint-alias divergence                                                                      |
-| `open-fault.kicad_sch`                    | `Pin_1` / `Pin_2`   | `SYNTHETIC_NET_2` | unassigned        | `REVIEW` for `connector.footprint_peer_pin_open_outlier`                                           |
-| `all-open-fault.kicad_sch`                | `Pin_1` / `Pin_2`   | unassigned        | unassigned        | `REVIEW` for `connector.footprint_peer_pin_all_open`                                               |
-| `unanchored-all-open-fault.kicad_sch`     | `Pin_1` / `Pin_2`   | unassigned        | unassigned        | `REVIEW` only with a current source-matched shared peer group                                      |
-| `numeric-fault.kicad_sch`                 | `1` / `7`           | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_3` | `REVIEW` for `connector.footprint_peer_pin_assignment_divergence`                                  |
-| `numeric-control.kicad_sch`               | `1` / `7`           | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_2` | No footprint-alias divergence                                                                      |
-| `numeric-open-fault.kicad_sch`            | `1` / `7`           | `SYNTHETIC_NET_2` | unassigned        | `REVIEW` for `connector.footprint_peer_pin_open_outlier`                                           |
-| `unanchored-partial-open-fault.kicad_sch` | `Pin_1` / `Pin_2`   | `SYNTHETIC_NET_2` | unassigned        | `REVIEW` for `connector.footprint_peer_unanchored_scope_coverage_missing` when coverage is missing |
+| Fixture                                    | Pin function labels | J1 pin 2          | J2 pin 2          | Expected result                                                                                         |
+| ------------------------------------------ | ------------------- | ----------------- | ----------------- | ------------------------------------------------------------------------------------------------------- |
+| `fault.kicad_sch`                          | `Pin_1` / `Pin_2`   | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_3` | `REVIEW` for `connector.footprint_peer_pin_assignment_divergence`                                       |
+| `control.kicad_sch`                        | `Pin_1` / `Pin_2`   | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_2` | No footprint-alias divergence                                                                           |
+| `open-fault.kicad_sch`                     | `Pin_1` / `Pin_2`   | `SYNTHETIC_NET_2` | unassigned        | `REVIEW` for `connector.footprint_peer_pin_open_outlier`                                                |
+| `all-open-fault.kicad_sch`                 | `Pin_1` / `Pin_2`   | unassigned        | unassigned        | `REVIEW` for `connector.footprint_peer_pin_all_open`                                                    |
+| `generic-power-all-open-fault.kicad_sch`   | `Pin_1` / `Pin_2`   | unassigned        | unassigned        | Default-off candidate for `connector.footprint_peer_generic_power_pin_all_open` (`Pin_2` is `power_in`) |
+| `generic-power-all-open-control.kicad_sch` | `Pin_1` / `Pin_2`   | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_2` | No generic-power all-open prompt                                                                        |
+| `unanchored-all-open-fault.kicad_sch`      | `Pin_1` / `Pin_2`   | unassigned        | unassigned        | `REVIEW` only with a current source-matched shared peer group                                           |
+| `numeric-fault.kicad_sch`                  | `1` / `7`           | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_3` | `REVIEW` for `connector.footprint_peer_pin_assignment_divergence`                                       |
+| `numeric-control.kicad_sch`                | `1` / `7`           | `SYNTHETIC_NET_2` | `SYNTHETIC_NET_2` | No footprint-alias divergence                                                                           |
+| `numeric-open-fault.kicad_sch`             | `1` / `7`           | `SYNTHETIC_NET_2` | unassigned        | `REVIEW` for `connector.footprint_peer_pin_open_outlier`                                                |
+| `unanchored-partial-open-fault.kicad_sch`  | `Pin_1` / `Pin_2`   | `SYNTHETIC_NET_2` | unassigned        | `REVIEW` for `connector.footprint_peer_unanchored_scope_coverage_missing` when coverage is missing      |
 
 `unanchored-fault.kicad_sch` assigns both generic pins to different nets on
 J1 and J2, leaving no shared-net anchor. It is evaluated only when a current
@@ -76,6 +78,15 @@ nets. A project may disable or ignore it with an authored reason, and a
 source-matched peer-assignment group can scope the comparison. These fixtures
 contain no product project sources or expectations.
 
+The generic-power pair isolates a higher-level peer pattern for generic
+`Pin_N` contacts whose native electrical type is `power_in` or `power_out`.
+Existing per-connector unassigned-power-pin checks already report these open
+contacts. The peer rule adds the fact that every eligible footprint peer has
+the same pin open; it is a review-context improvement, not independent defect
+detection. It defaults off and does not say the contacts should share a net.
+Both exact-version Docker fixtures use the same synthetic fault/control pair
+on KiCad 10.0.0 and 10.0.5.
+
 SHA-256 source digests:
 
 - `fault.kicad_sch`: `e45b8069603078c1a26198b962b96b20d8a7f9dff39b195b7bb6399e00b323c0`
@@ -94,3 +105,7 @@ SHA-256 source digests:
   `ce3cdb9c0e3437df94f97903be3fc21f47836782bcc39a522882d7cf9c4be6a1`
 - `unanchored-all-open-fault.kicad_sch`:
   `6fef8dab77b5ebab8459a8bf4456152a87c29fd60cd02b229e92b35119c5363f`
+- `generic-power-all-open-fault.kicad_sch`:
+  `0c0fc1dcec01e1d06d9b301642237f01ed42ea63d0fb20c99e9d51af1e04fca4`
+- `generic-power-all-open-control.kicad_sch`:
+  `2edfe7572b8af9dcad081863b870dbb602a21abb13e0f07688cb683da35b9eb3`

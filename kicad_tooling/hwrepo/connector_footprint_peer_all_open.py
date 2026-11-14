@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from .connector_footprint_peer_pin_types import ConnectorFootprintPeerPinAllOpen
+from .connector_footprint_peer_pin_types import (
+    ConnectorFootprintPeerPinAllOpen,
+    ConnectorFootprintPeerPowerPinAllOpen,
+)
 from .connector_identity import pin_function_is_generic
 
 GENERIC_ALL_OPEN_PIN_TYPES = frozenset(
@@ -18,6 +21,7 @@ GENERIC_ALL_OPEN_PIN_TYPES = frozenset(
         "open_emitter",
     }
 )
+GENERIC_POWER_PIN_TYPES = frozenset({"power_in", "power_out"})
 
 
 def generic_footprint_peer_all_open_candidate(
@@ -52,6 +56,43 @@ def generic_footprint_peer_all_open_candidate(
         value=value,
         pin_number=pin_number,
         pin_function=pin_function,
+        assignments=dict(sorted(assignments.items())),
+        symbols=symbols,
+        common_anchor_pin_numbers=common_anchor_pin_numbers,
+        peer_assignment_group=peer_assignment_group,
+        peer_assignment_basis=peer_assignment_basis,
+    )
+
+
+def generic_footprint_peer_power_all_open_candidate(
+    *,
+    footprint: str,
+    value: str,
+    pin_number: str,
+    pin_function: str,
+    pin_electrical_type: str,
+    assignments: Mapping[str, tuple[str, ...]],
+    symbols: tuple[str, ...],
+    common_anchor_pin_numbers: tuple[str, ...],
+    peer_assignment_group: str | None,
+    peer_assignment_basis: tuple[str, ...],
+) -> ConnectorFootprintPeerPowerPinAllOpen | None:
+    """Review generic power contacts left open across otherwise exact connector peers."""
+    electrical_type = pin_electrical_type.strip().casefold()
+    if (
+        not pin_function_is_generic(pin_function)
+        or electrical_type not in GENERIC_POWER_PIN_TYPES
+        or any(assignments.values())
+        or len(assignments) < 2
+        or (not common_anchor_pin_numbers and peer_assignment_group is None)
+    ):
+        return None
+    return ConnectorFootprintPeerPowerPinAllOpen(
+        footprint=footprint,
+        value=value,
+        pin_number=pin_number,
+        pin_function=pin_function,
+        pin_electrical_type=electrical_type,
         assignments=dict(sorted(assignments.items())),
         symbols=symbols,
         common_anchor_pin_numbers=common_anchor_pin_numbers,

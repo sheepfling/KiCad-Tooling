@@ -43,7 +43,11 @@ from .connector_footprint_peer_missing_metadata import (
 from .connector_footprint_peer_missing_metadata_open import (
     connector_footprint_peer_pin_missing_metadata_open_outliers,
 )
-from .connector_footprint_peer_pin_types import ConnectorFootprintPeerPinScan
+from .connector_footprint_peer_pin_types import (
+    ConnectorFootprintPeerPinAllOpen,
+    ConnectorFootprintPeerPinScan,
+    ConnectorFootprintPeerPowerPinAllOpen,
+)
 from .connector_footprint_peer_pins import (
     scan_connector_footprint_peer_pin_assignments,
 )
@@ -202,24 +206,49 @@ def _footprint_peer_pin_all_open_candidates(
         ConnectorFootprintPeerPinCandidate.from_source_evidence(
             item,
             subject=f"{item.value} [{item.footprint}] pin {item.pin_number}",
-            message=(
-                "Fitted connector instances with distinct native symbols share the same value, "
-                "footprint, complete pin inventory, and matching pin-function and electrical-type "
-                "metadata. This generic contact is unassigned on every compared peer. "
-                + (
-                    "A separate contact has one common assigned net. "
-                    if item.common_anchor_pin_numbers
-                    else "No common-net anchor exists; a current source-matched peer group scopes the comparison. "
-                )
-                + "Review the approved pinout for an intentionally unused contact or a missing "
-                "connection; similarity and comparison scope do not establish that the contact "
-                "must connect."
-                + (
-                    " The comparison is scoped to a source-reviewed peer-assignment group."
-                    if item.peer_assignment_group is not None
-                    else ""
-                )
-            ),
+            message=_footprint_peer_all_open_message(item),
         )
         for item in scan.all_open
+    )
+
+
+def _footprint_peer_all_open_message(
+    item: ConnectorFootprintPeerPinAllOpen | ConnectorFootprintPeerPowerPinAllOpen,
+) -> str:
+    """Explain the distinct review cues without treating similarity as connection intent."""
+    if isinstance(item, ConnectorFootprintPeerPowerPinAllOpen):
+        return (
+            "Fitted connector instances with distinct native symbols share the same value, "
+            "footprint, complete pin inventory, and matching pin-function and electrical-type "
+            "metadata. Their generic native power contact is unassigned on every compared peer. "
+            "Review the approved pinout and intended port use; an intentionally open contact is "
+            "possible, and similarity does not prove that the contact must connect."
+            + (
+                " A separate contact has one common assigned net."
+                if item.common_anchor_pin_numbers
+                else " A current source-matched peer group scopes the comparison."
+            )
+            + (
+                " The comparison is scoped to a source-reviewed peer-assignment group."
+                if item.peer_assignment_group is not None
+                else ""
+            )
+        )
+    return (
+        "Fitted connector instances with distinct native symbols share the same value, "
+        "footprint, complete pin inventory, and matching pin-function and electrical-type "
+        "metadata. This generic contact is unassigned on every compared peer. "
+        + (
+            "A separate contact has one common assigned net. "
+            if item.common_anchor_pin_numbers
+            else "No common-net anchor exists; a current source-matched peer group scopes the comparison. "
+        )
+        + "Review the approved pinout for an intentionally unused contact or a missing "
+        "connection; similarity and comparison scope do not establish that the contact "
+        "must connect."
+        + (
+            " The comparison is scoped to a source-reviewed peer-assignment group."
+            if item.peer_assignment_group is not None
+            else ""
+        )
     )

@@ -5,7 +5,9 @@ from __future__ import annotations
 from .connector_comparison_scope_types import ConnectorComparisonScopes
 from .connector_footprint_peer_all_open import (
     GENERIC_ALL_OPEN_PIN_TYPES,
+    GENERIC_POWER_PIN_TYPES,
     generic_footprint_peer_all_open_candidate,
+    generic_footprint_peer_power_all_open_candidate,
 )
 from .connector_footprint_peer_groups import (
     complete_connector_footprint_peer_pin_inventory,
@@ -21,6 +23,7 @@ from .connector_footprint_peer_pin_types import (
     ConnectorFootprintPeerPinOpenOutlier,
     ConnectorFootprintPeerPinScan,
     ConnectorFootprintPeerPinScanSource,
+    ConnectorFootprintPeerPowerPinAllOpen,
 )
 from .connector_identity import (
     is_named_supply_function,
@@ -89,7 +92,7 @@ def scan_connector_footprint_peer_pin_assignments(
     unanchored_open_outliers: list[ConnectorFootprintPeerPinOpenOutlier] = []
     named_divergences: list[ConnectorFootprintPeerPinNamedDivergence] = []
     open_outliers: list[ConnectorFootprintPeerPinOpenOutlier] = []
-    all_open: list[ConnectorFootprintPeerPinAllOpen] = []
+    all_open: list[ConnectorFootprintPeerPinAllOpen | ConnectorFootprintPeerPowerPinAllOpen] = []
     named_all_open: list[ConnectorFootprintPeerPinNamedAllOpen] = []
 
     for group in candidate_groups:
@@ -192,7 +195,8 @@ def scan_connector_footprint_peer_pin_assignments(
                         .casefold()
                     )
                     if not assigned_signatures and (
-                        pin_type in GENERIC_ALL_OPEN_PIN_TYPES and pin_function_is_generic(function)
+                        pin_type in GENERIC_ALL_OPEN_PIN_TYPES | GENERIC_POWER_PIN_TYPES
+                        and pin_function_is_generic(function)
                     ):
                         all_open_peer_pin_group_count += 1
                         generic_all_open_assignments.append((pin_number, assignments))
@@ -357,6 +361,19 @@ def scan_connector_footprint_peer_pin_assignments(
                     peer_assignment_group=peer_group,
                     peer_assignment_basis=basis,
                 )
+                if candidate is None:
+                    candidate = generic_footprint_peer_power_all_open_candidate(
+                        footprint=footprint_display,
+                        value=value_display,
+                        pin_number=pin_number,
+                        pin_function=functions[pin_key],
+                        pin_electrical_type=electrical_types[pin_key],
+                        assignments=assignments,
+                        symbols=peer_symbols,
+                        common_anchor_pin_numbers=tuple(sorted(anchors)),
+                        peer_assignment_group=peer_group,
+                        peer_assignment_basis=basis,
+                    )
                 if candidate is not None:
                     all_open.append(candidate)
                     if not anchors:

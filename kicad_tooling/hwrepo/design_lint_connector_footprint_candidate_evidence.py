@@ -9,6 +9,7 @@ from .connector_footprint_peer_pin_types import (
     ConnectorFootprintPeerPinAllOpen,
     ConnectorFootprintPeerPinDivergence,
     ConnectorFootprintPeerPinOpenOutlier,
+    ConnectorFootprintPeerPowerPinAllOpen,
 )
 from .connector_identity import pin_function_is_generic
 from .design_lint_types import Candidate, CandidateEvidenceProjection
@@ -17,6 +18,7 @@ ConnectorFootprintPeerPinCandidateEvidence: TypeAlias = (
     ConnectorFootprintPeerPinDivergence
     | ConnectorFootprintPeerPinOpenOutlier
     | ConnectorFootprintPeerPinAllOpen
+    | ConnectorFootprintPeerPowerPinAllOpen
 )
 
 
@@ -66,6 +68,24 @@ def project_connector_footprint_peer_pin_evidence(
             }
         )
         rule_id = "connector.footprint_peer_pin_open_outlier"
+    elif isinstance(source, ConnectorFootprintPeerPowerPinAllOpen):
+        if (
+            not pin_function_is_generic(source.pin_function)
+            or source.pin_electrical_type not in {"power_in", "power_out"}
+            or len(source.assignments) < 2
+            or any(source.assignments.values())
+            or (not source.common_anchor_pin_numbers and source.peer_assignment_group is None)
+        ):
+            raise ValueError("Generic power-pin all-open evidence requires a scoped peer group")
+        evidence.update(
+            {
+                "pin_electrical_type": (source.pin_electrical_type,),
+                "open_pins": tuple(source.assignments),
+                "symbols": source.symbols,
+                "common_anchor_pin_numbers": source.common_anchor_pin_numbers,
+            }
+        )
+        rule_id = "connector.footprint_peer_generic_power_pin_all_open"
     else:
         if not pin_function_is_generic(source.pin_function):
             raise ValueError("Generic footprint-peer all-open evidence requires a generic pin")

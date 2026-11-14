@@ -1919,6 +1919,56 @@
       ]
     },
     {
+      "rule_id": "connector.footprint_peer_generic_power_pin_all_open",
+      "title": "Generic power contact is open on every footprint-similar connector peer",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "Among fitted connector instances with distinct native symbols and no PART_ID, require exact nonempty value and footprint matches, complete identical pin inventories, and matching nonempty per-pin native function and electrical-type metadata. A generic Pin_N or numeric-only pin-function contact with native power_in or power_out type is unassigned on every compared peer. Require either a different pin with one common-net assignment in the same scope or a current source-matched peer_assignment_group. Emit a default-off REVIEW prompt to verify the approved pinout and intended port use; neither identity clues nor power electrical type prove that the contact must connect or share a net.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Matching symbol metadata, value, footprint, inventory, native power type, and a common anchor are review clues only; they do not establish connector role, power intent, or a required connection.",
+        "The rule is disabled by default because a connector power contact may be intentionally unused. Project owners should review an approved pinout before enabling it.",
+        "Only generic pin functions with native power_in or power_out type are considered. Meaningfully named pins, passive contacts, signal contacts, free pins, and unspecified pins stay with their specific checks or remain outside this rule.",
+        "The rule requires complete identical pin inventories and matching nonempty per-pin functions and electrical types, plus a common assigned anchor or current source-matched peer group. Missing or inconsistent evidence, ambiguous assignments, stale maps, and separate peer groups do not produce a prompt.",
+        "DNP and PART_ID-bearing components are excluded. The finding does not establish PCB copper continuity, off-board wiring, or that separate power contacts should share a rail."
+      ],
+      "fault_fixtures": [
+        "tests.test_connector_footprint_peer_generic_power_all_open.test_generic_power_contact_open_on_all_alias_peers_is_opt_in_review",
+        "tests.test_design_lint_mcp_parity_connector_generic_power_all_open.test_generic_power_contact_cli_mcp_fault_and_control_parity",
+        "tests.test_connector_footprint_peer_unanchored_all_open_native.test_native_generic_power_pin_all_open_fault_and_control_are_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_connector_footprint_peer_generic_power_all_open.test_assigned_or_meaningfully_named_power_contacts_are_controls",
+        "tests.test_connector_footprint_peer_generic_power_all_open.test_inconsistent_pin_metadata_and_separately_scoped_peers_stay_quiet",
+        "tests.test_design_lint_mcp_parity_connector_generic_power_all_open.test_generic_power_contact_cli_mcp_fault_and_control_parity",
+        "tests.test_connector_footprint_peer_unanchored_all_open_native.test_native_generic_power_pin_all_open_fault_and_control_are_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_connector_footprint_peer_generic_power_all_open.test_peer_power_review_fingerprint_is_stable_under_mapping_order"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
+        "kicad_tooling/hwrepo/connector_footprint_peer_all_open.py#generic_footprint_peer_power_all_open_candidate",
+        "kicad_tooling/hwrepo/connector_footprint_peer_pin_types.py#ConnectorFootprintPeerPowerPinAllOpen",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_candidate_evidence.py#project_connector_footprint_peer_pin_evidence",
+        "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
+        "kicad_tooling/hwrepo/connector_peer_pin_candidate_results.py#ConnectorPeerPinFindingCounts.from_candidates",
+        "kicad_tooling/hwrepo/design_lint_report_connector_coverage_validation.py#validate_connector_peer_pin_coverage",
+        "kicad_tooling/hwrepo/design_lint_rule_types.py#DesignLintRuleId",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "connectors",
+      "implementation_owner": "kicad_tooling/hwrepo/connector_footprint_peer_all_open.py#generic_footprint_peer_power_all_open_candidate",
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CONNECTOR_FIXTURES"
+      ]
+    },
+    {
       "rule_id": "connector.peer_power_input_named_all_open",
       "title": "Named connector power-input pin is open on every PART_ID alias peer",
       "status": "active",

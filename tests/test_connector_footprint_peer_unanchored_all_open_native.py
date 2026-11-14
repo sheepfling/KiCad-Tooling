@@ -29,6 +29,19 @@ _FIXTURE = (
     / "fixtures/design_lint/connector-footprint-alias-native/unanchored-all-open-fault.kicad_sch"
 )
 _SOURCE_SHA256 = "6fef8dab77b5ebab8459a8bf4456152a87c29fd60cd02b229e92b35119c5363f"
+_GENERIC_POWER_RULE_ID = "connector.footprint_peer_generic_power_pin_all_open"
+_GENERIC_POWER_FIXTURES = {
+    "fault": (
+        Path(__file__).parent
+        / "fixtures/design_lint/connector-footprint-alias-native/generic-power-all-open-fault.kicad_sch",
+        "0c0fc1dcec01e1d06d9b301642237f01ed42ea63d0fb20c99e9d51af1e04fca4",
+    ),
+    "control": (
+        Path(__file__).parent
+        / "fixtures/design_lint/connector-footprint-alias-native/generic-power-all-open-control.kicad_sch",
+        "2edfe7572b8af9dcad081863b870dbb602a21abb13e0f07688cb683da35b9eb3",
+    ),
+}
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -133,3 +146,81 @@ def test_native_export_reviews_unanchored_aliases_only_in_current_shared_scope(
         if item.rule_id == _RULE_ID
     )
     assert_native_fixture_mounts(tmp_path, "receipts/repeat.command.json")
+
+
+@pytest.mark.design_lint_rule(rule_id=_GENERIC_POWER_RULE_ID)
+@pytest.mark.parametrize("kicad_version", tuple(PINNED_NATIVE_KICAD_IMAGES))
+def test_native_generic_power_pin_all_open_fault_and_control_are_repeatable(
+    tmp_path: Path,
+    kicad_version: str,
+) -> None:
+    work = tmp_path / "native-work"
+    fixture_dir = work / "fixtures"
+    output_dir = work / "outputs"
+    receipt_dir = tmp_path / "receipts"
+    for directory in (fixture_dir, output_dir, receipt_dir):
+        directory.mkdir(parents=True, exist_ok=True)
+    image = PINNED_NATIVE_KICAD_IMAGES[kicad_version]
+    version = execute_kicad_cli(
+        image,
+        ("kicad-cli", "version"),
+        work,
+        home_directory=f"generic-power-open-{kicad_version}",
+        fixture_directory=fixture_dir,
+        output_directory=output_dir,
+    )
+    assert version.returncode == 0
+    assert version.stdout.strip() == kicad_version
+
+    observed_by_case = {}
+    for case, (fixture, source_sha256) in _GENERIC_POWER_FIXTURES.items():
+        assert hashlib.sha256(fixture.read_bytes()).hexdigest() == source_sha256
+        source = fixture_dir / f"{case}.kicad_sch"
+        shutil.copyfile(fixture, source)
+        runs = []
+        for run in ("first", "repeat"):
+            output = output_dir / f"{case}.{run}.netlist.xml"
+            command = execute_kicad_cli(
+                image,
+                (
+                    "kicad-cli",
+                    "sch",
+                    "export",
+                    "netlist",
+                    "--format",
+                    "kicadxml",
+                    "--output",
+                    str(output),
+                    str(source),
+                ),
+                work,
+                home_directory=f"generic-power-open-{kicad_version}-{case}-{run}",
+                fixture_directory=fixture_dir,
+                output_directory=output_dir,
+            )
+            assert command.returncode == 0, command.model_dump_json(indent=2)
+            runs.append((read_netlist(output), digest(output)))
+            write_model(receipt_dir / f"{case}-{run}.command.json", command)
+        assert runs[0][0] == runs[1][0]
+        observed_by_case[case] = runs[0][0]
+
+    fault = observed_by_case["fault"]
+    control = observed_by_case["control"]
+    assert fault.pin_electrical_types["J1.2"] == "power_in"
+    assert fault.pin_electrical_types["J2.2"] == "power_in"
+    assert fault.nets["SYNTHETIC_NET_1"] == ("J1.1", "J2.1")
+    fault_findings = tuple(
+        item
+        for item in connector_footprint_peer_pin_candidates(fault)
+        if item.rule_id == _GENERIC_POWER_RULE_ID
+    )
+    assert len(fault_findings) == 1
+    assert fault_findings[0].evidence["pin_electrical_type"] == ("power_in",)
+    assert fault_findings[0].evidence["common_anchor_pin_numbers"] == ("1",)
+    assert not tuple(
+        item
+        for item in connector_footprint_peer_pin_candidates(control)
+        if item.rule_id == _GENERIC_POWER_RULE_ID
+    )
+    assert_native_fixture_mounts(tmp_path, "receipts/fault-repeat.command.json")
+    assert_native_fixture_mounts(tmp_path, "receipts/control-repeat.command.json")
