@@ -62,6 +62,9 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_connector_footprint_peer_pin_function_consistency_native.py": frozenset(
             {"connector_lint", "interface_lint", "native_kicad", "slow"}
         ),
+        "test_connector_footprint_peer_pin_function_metadata_native.py": frozenset(
+            {"connector_lint", "interface_lint", "native_kicad", "slow"}
+        ),
         "test_connector_footprint_peer_pin_inventory_consistency_native.py": frozenset(
             {"connector_lint", "interface_lint", "native_kicad", "slow"}
         ),

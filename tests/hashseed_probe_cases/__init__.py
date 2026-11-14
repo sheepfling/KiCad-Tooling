@@ -33,6 +33,7 @@ HASHSEED_REPORT_FAMILIES = (
     "pcb_pad_net_mismatch",
     "connector_peer_missing_metadata",
     "connector_peer_pin_inventory",
+    "connector_peer_pin_function_metadata",
     "connector_peer_pins",
     "pcb_measurements",
     "interfaces",

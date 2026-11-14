@@ -56,6 +56,34 @@ CONNECTOR_RULE_NODE_CASES = (
         "tests/test_connector_footprint_peer_pin_function_consistency_native.py::test_native_connector_pin_function_disagreement_and_matching_control_repeat",
     ),
     (
+        "connector.footprint_peer_pin_function_metadata_incomplete",
+        "tests/test_connector_footprint_peer_pin_function_metadata.py::test_generic_function_peer_is_localized_with_exact_assignment_and_anchor",
+    ),
+    (
+        "connector.footprint_peer_pin_function_metadata_incomplete",
+        "tests/test_connector_footprint_peer_pin_function_metadata.py::test_generic_function_peer_is_detected_on_either_connector",
+    ),
+    (
+        "connector.footprint_peer_pin_function_metadata_incomplete",
+        "tests/test_connector_footprint_peer_pin_function_metadata.py::test_incomplete_or_ambiguous_peer_evidence_stays_quiet",
+    ),
+    (
+        "connector.footprint_peer_pin_function_metadata_incomplete",
+        "tests/test_connector_footprint_peer_pin_function_metadata.py::test_report_is_order_stable_and_common_named_function_clears_review",
+    ),
+    (
+        "connector.footprint_peer_pin_function_metadata_incomplete",
+        "tests/test_design_lint_mcp_parity_connector_peer_pin_function_metadata.py::test_connector_peer_function_metadata_matches_between_cli_and_mcp",
+    ),
+    (
+        "connector.footprint_peer_pin_function_metadata_incomplete",
+        "tests/test_design_lint_determinism_connector_peer_pin_function_metadata.py::test_fault_and_control_reports_are_stable_across_hash_seed_processes",
+    ),
+    (
+        "connector.footprint_peer_pin_function_metadata_incomplete",
+        "tests/test_connector_footprint_peer_pin_function_metadata_native.py::test_native_generic_function_peer_metadata_review_and_control_repeat",
+    ),
+    (
         "connector.footprint_peer_pin_electrical_type_disagreement",
         "tests/test_connector_footprint_peer_pin_type_consistency.py::test_same_assigned_pin_with_native_type_disagreement_is_localized",
     ),

@@ -3,37 +3,22 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TypeAlias
 
 from .connector_footprint_peer_groups import (
     ConnectorFootprintPeerGroup,
-    complete_connector_footprint_peer_pin_inventory,
     connector_footprint_peer_candidate_groups,
 )
-from .connector_identity import native_pin_metadata_is_missing, pin_function_is_generic
+from .connector_footprint_peer_pin_function_support import (
+    ConnectorFootprintPeerPinFunctionObservation,
+    connector_footprint_peer_pin_function_rows,
+    peer_pin_rows_share_one_common_assignment,
+)
+from .connector_identity import pin_function_is_generic
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .netlist_contract_models import NetlistContract
-from .netlist_pin_assignments import netlist_pin_net_index
 
 RULE_ID: DesignLintRuleId = "connector.footprint_peer_pin_function_disagreement"
-
-
-@dataclass(frozen=True, slots=True)
-class ConnectorFootprintPeerPinFunctionObservation:
-    """One peer's native pin function, electrical type, assignment, and symbol."""
-
-    reference: str
-    pin: str
-    function: str
-    electrical_type: str
-    nets: tuple[str, ...]
-    symbol: str
-
-
-PeerPinFunctionRows: TypeAlias = tuple[
-    tuple[str, tuple[ConnectorFootprintPeerPinFunctionObservation, ...]], ...
-]
 
 
 @dataclass(frozen=True, slots=True)
@@ -167,56 +152,6 @@ def connector_footprint_peer_pin_function_disagreements(
     )
 
 
-def _peer_pin_rows(
-    observed: NetlistContract,
-    group: ConnectorFootprintPeerGroup,
-) -> PeerPinFunctionRows | None:
-    """Collect a complete, deterministically ordered native pin view."""
-    inventory = complete_connector_footprint_peer_pin_inventory(observed, group.references)
-    if inventory is None:
-        return None
-    functions = {pin.casefold(): value for pin, value in observed.pin_functions.items()}
-    electrical_types = {
-        pin.casefold(): value for pin, value in observed.pin_electrical_types.items()
-    }
-    symbols = {
-        reference.casefold(): value for reference, value in observed.component_symbols.items()
-    }
-    pin_nets = netlist_pin_net_index(observed)
-    rows: list[tuple[str, tuple[ConnectorFootprintPeerPinFunctionObservation, ...]]] = []
-    for pin_number in inventory.pin_numbers:
-        peer_rows: list[ConnectorFootprintPeerPinFunctionObservation] = []
-        for reference in group.references:
-            pin = f"{reference}.{inventory.displayed_numbers_by_reference[reference.casefold()][pin_number.casefold()]}"
-            function = functions.get(pin.casefold())
-            electrical_type = electrical_types.get(pin.casefold())
-            symbol = symbols.get(reference.casefold())
-            if (
-                native_pin_metadata_is_missing(function)
-                or native_pin_metadata_is_missing(electrical_type)
-                or symbol is None
-            ):
-                return None
-            assert function is not None and electrical_type is not None
-            peer_rows.append(
-                ConnectorFootprintPeerPinFunctionObservation(
-                    reference=reference,
-                    pin=pin,
-                    function=str(function),
-                    electrical_type=str(electrical_type),
-                    nets=tuple(
-                        sorted(
-                            pin_nets.get(pin.casefold(), ()),
-                            key=lambda net: (net.casefold(), net),
-                        )
-                    ),
-                    symbol=symbol,
-                )
-            )
-        rows.append((pin_number, tuple(peer_rows)))
-    return tuple(rows)
-
-
 def _eligible_function_mismatch(
     observed: NetlistContract,
     group: ConnectorFootprintPeerGroup,
@@ -224,7 +159,7 @@ def _eligible_function_mismatch(
     """Return the one anchored meaningful function mismatch, if fully supported."""
     if group.part_id is None or not group.part_id.strip():
         return None
-    pin_rows = _peer_pin_rows(observed, group)
+    pin_rows = connector_footprint_peer_pin_function_rows(observed, group)
     if pin_rows is None:
         return None
     function_mismatches = tuple(
@@ -241,7 +176,7 @@ def _eligible_function_mismatch(
         len({item.electrical_type.strip().casefold() for item in rows}) != 1 for _, rows in pin_rows
     ):
         return None
-    if not _has_one_common_assignment(target_rows):
+    if not peer_pin_rows_share_one_common_assignment(target_rows):
         return None
 
     anchors = tuple(
@@ -251,23 +186,12 @@ def _eligible_function_mismatch(
                 for number, rows in pin_rows
                 if number.casefold() != pin_number.casefold()
                 and len({item.function.strip().casefold() for item in rows}) == 1
-                and _has_one_common_assignment(rows)
+                and peer_pin_rows_share_one_common_assignment(rows)
             ),
             key=lambda number: (number.casefold(), number),
         )
     )
     return (pin_number, target_rows, anchors) if anchors else None
-
-
-def _has_one_common_assignment(
-    rows: tuple[ConnectorFootprintPeerPinFunctionObservation, ...],
-) -> bool:
-    """Require one identical nonempty native net assignment for every peer."""
-    return (
-        bool(rows)
-        and all(len(item.nets) == 1 and item.nets[0].strip() for item in rows)
-        and len({item.nets[0] for item in rows}) == 1
-    )
 
 
 def _candidate_message(

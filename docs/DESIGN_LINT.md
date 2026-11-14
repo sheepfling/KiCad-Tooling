@@ -678,6 +678,43 @@ KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
   -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.footprint_peer_pin_function_disagreement")'
 ```
 
+## Review generic connector peer pin-function metadata
+
+`connector.footprint_peer_pin_function_metadata_incomplete` adds a separate
+REVIEW cue when fitted connector symbols with the same nonempty `PART_ID`,
+value, footprint, and complete pin inventory assign different function text
+to exactly one shared pin, and one peer labels that pin generically while
+another gives it a meaningful function. Electrical types must match across
+the full inventory. The target pin must share one exact net assignment and a
+different meaningful-function pin must provide a common-net anchor. This can
+surface incomplete symbol metadata even where the function-difference rule
+stays quiet because one peer uses a generic name.
+
+The signal is heuristic: `PART_ID` and matching assignments do not prove
+approved part identity or pinout intent. It does not choose the correct
+function, require the pin to connect, or establish PCB copper continuity.
+Incomplete identity or metadata, identical native symbols, DNP peers, multiple
+mismatches, split/open assignments, electrical-type disagreement, and missing
+anchors stay quiet.
+Project policy may promote, disable, or exactly ignore the finding. Synthetic
+and exact-version native fixtures are recorded in the
+[fixture README](../tests/fixtures/design_lint/connector-peer-pin-function-metadata-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_connector_footprint_peer_pin_function_metadata.py \
+  tests/test_design_lint_mcp_parity_connector_peer_pin_function_metadata.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.footprint_peer_pin_function_metadata_incomplete")'
+
+.venv/bin/python -I -m pytest \
+  tests/test_design_lint_determinism_connector_peer_pin_function_metadata.py \
+  -m 'design_lint and slow and connector_lint and interface_lint and design_lint_rule(rule_id="connector.footprint_peer_pin_function_metadata_incomplete")'
+
+KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_connector_footprint_peer_pin_function_metadata_native.py \
+  -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.footprint_peer_pin_function_metadata_incomplete")'
+```
+
 ## Review connector peer pin-inventory differences
 
 `connector.footprint_peer_pin_inventory_disagreement` adds a REVIEW prompt
@@ -1041,7 +1078,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 392 active rules.
+The catalog currently contains 393 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports

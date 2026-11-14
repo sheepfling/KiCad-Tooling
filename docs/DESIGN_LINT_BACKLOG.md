@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 392 rules are implemented with synthetic regression coverage.
+The following 393 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 392 active rules.
+The catalog currently contains 393 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -454,6 +454,7 @@ skipped under prerelease policy.
 - `connector.footprint_peer_pin_unanchored_assignment_divergence`
 - `connector.footprint_peer_pin_electrical_type_disagreement`
 - `connector.footprint_peer_pin_function_disagreement`
+- `connector.footprint_peer_pin_function_metadata_incomplete`
 - `connector.footprint_peer_pin_inventory_disagreement`
 - `connector.footprint_peer_unanchored_scope_coverage_missing`
 - `connector.footprint_peer_unanchored_scope_unreviewed`
@@ -4469,7 +4470,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 392 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 393 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -4649,7 +4650,7 @@ Current catalog audit: 392 covered, 0 not applicable, 0 unreviewed.
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
 - **Status:** Implemented v96. The cross-process probe supports themed report
-  selectors and retains the complete 343-report inventory gate. Fault/control
+  selectors and retains the complete 345-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -4842,7 +4843,7 @@ Current catalog audit: 392 covered, 0 not applicable, 0 unreviewed.
   The v96 extension adds separately numbered negative supply fault/control
   reports to the same three-process comparison. The split `-5V_1` / `-5V_2`
   case retains `net.numbered_power_rails`; the common-net control is quiet, and
-  the current report inventory contains 343 entries.
+  the current report inventory contains 345 entries.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
@@ -27667,6 +27668,61 @@ acceptance threads while new lint features proceed:
   Annotated tag `v0.5.3rc794` resolved to this rule and passed the hosted scoped
   lint gate and installed-wheel check in
   [run 43647820391](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43647820391).
+
+#### LINT-481 — Review generic connector peer pin-function metadata
+
+- **Priority:** P2 heuristic coverage. The existing peer function rule
+  deliberately stays quiet when one exact-part connector symbol uses a
+  generic function such as `Pin_2` while another gives the shared pin a
+  meaningful function such as `UART_TX`.
+- **Status:** Adds the configurable default-REVIEW rule
+  `connector.footprint_peer_pin_function_metadata_incomplete`. It requires
+  matching nonempty `PART_ID`, value, footprint, complete identical native
+  pin inventories, complete function/electrical-type metadata, matching
+  electrical types across pins, exactly one generic-versus-meaningful
+  function mismatch, one exact common target assignment, and a separate
+  meaningful-function/common-net anchor.
+- **Interpretation:** This is a similarity-based metadata review, not an
+  electrical requirement. Authored `PART_ID`, value, footprint, and net
+  assignments do not establish approved part identity or pinout correctness.
+  The rule does not choose the correct function, require connectivity, or
+  prove PCB copper continuity. Missing or ambiguous identity, DNP peers,
+  incomplete metadata, identical native symbols, multiple mismatches,
+  split/open assignments, type disagreement, and missing anchors stay quiet.
+  Project policy can promote, disable, or exactly ignore a finding.
+- **Evidence:** Tooling-owned synthetic fault/control cases exercise both
+  generic-peer positions, common named functions, no anchor, multiple
+  mismatches, missing/different `PART_ID`, DNP, incomplete inventory or pin
+  metadata, type disagreement, split assignments, source-row tampering,
+  policy, input-order stability, CLI/MCP parity, and cross-process hash-seed
+  stability. A native fault/control pair repeats on digest-pinned KiCad
+  10.0.0 and 10.0.5 Docker images. The fault changes one synthetic symbol
+  pin name to `Pin_2`; no cohort or other proprietary project source is
+  included.
+- **Selection:** Run
+  `tests/test_connector_footprint_peer_pin_function_metadata.py` and
+  `tests/test_design_lint_mcp_parity_connector_peer_pin_function_metadata.py`
+  with `design_lint and connector_lint and interface_lint` and the exact new
+  rule selector. Run
+  `tests/test_design_lint_determinism_connector_peer_pin_function_metadata.py`
+  with `slow` and the same selector. Native cases require Docker,
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`, `native_kicad`, and the same
+  selector.
+- **Acceptance:** The focused local `scripts/ci.py` gate passed its 22 selected
+  tests with 10,036 unrelated tests deselected, including CLI/MCP parity,
+  three-process hash-seed stability, and repeated digest-pinned KiCad 10.0.0
+  and 10.0.5 Docker exports. Ruff format/check, module-role and shared-utility
+  gates, Rumdl, mdrepo, Linux/Windows Pyright, and wheel/sdist/sdist-wheel
+  builds passed. The 345-report hash-seed inventory passed, and the focused
+  catalog/backlog/fixture-reachability selection passed 23 tests. The
+  pre-existing peer-function suite passed 20 tests; its CLI/MCP parity and
+  exact-version native fixtures passed 3 additional tests after the shared
+  evidence extraction. The focused pytest marker, suite-size, and rule-selector
+  architecture selection passed 43 tests. The installed-wheel/public-template rehearsal did not
+  complete locally: pip
+  spent 10m28s retrying interrupted downloads and reported DNS resolution
+  failures for `files.pythonhosted.org`; the install and external-project
+  stages remain unverified locally. Hosted tagged acceptance is pending.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
