@@ -41,7 +41,7 @@ def verify_generic_connector_power_input(ctx: ConnectorReturnFixtureContext) -> 
 
 
 def verify_connector_power_inputs(ctx: ConnectorReturnFixtureContext) -> None:
-    """Verify connector power input and numbered channel rail fixtures."""
+    """Verify connector power inputs and positive/negative numbered rail fixtures."""
     verify_generic_connector_power_input(ctx)
     verify_generic_component_power_input_cases(ctx)
     channel_fault = ctx.reports["channel-power-fault", "first"]
@@ -68,3 +68,23 @@ def verify_connector_power_inputs(ctx: ConnectorReturnFixtureContext) -> None:
         "J2.3",
     ):
         raise ValueError("Channel-prefixed common-net control lost its native connector pins")
+
+    negative_fault = ctx.reports["negative-numbered-power-fault", "first"]
+    negative_findings = [
+        item for item in negative_fault.findings if item.rule_id == "net.numbered_power_rails"
+    ]
+    if (
+        negative_fault.status != "REVIEW"
+        or len(negative_findings) != 1
+        or negative_findings[0].subject != "-5V"
+        or dict(negative_findings[0].evidence) != {"-5.0V-2": ("J2.3",), "-5V_1": ("J1.3",)}
+    ):
+        raise ValueError("Numbered negative supply fault lost its exact native lint evidence")
+    negative_control = ctx.reports["negative-numbered-power-control", "first"]
+    if (
+        negative_control.status != "PASS"
+        or negative_control.findings
+        or ctx.observed_contracts["negative-numbered-power-control", "first"].nets.get("-5V_1")
+        != ("J1.3", "J2.3")
+    ):
+        raise ValueError("Common negative-supply control no longer passes")

@@ -283,9 +283,9 @@ def scan_power_candidates(
                 group,
                 subject=group.stem,
                 message=(
-                    "Separately numbered positive supply nets may be intended as one rail. "
-                    "Review whether they are common, intentionally isolated, or represent "
-                    "independent supplies; similar names do not establish a required connection."
+                    "Separately numbered supply nets may be intended as one rail. Review whether "
+                    "they are common, intentionally isolated, or represent independent supplies; "
+                    "similar names do not establish a required connection."
                 ),
             )
         )

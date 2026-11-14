@@ -1155,12 +1155,15 @@ have been connected.
   shows `GND*` matching both `GND` and `GNDA`; that naming similarity does not
   establish that the nets should be joined.
 - `net.numbered_power_rails` flags separately numbered nets with a bounded
-  recognized positive-supply stem. It recognizes explicit suffix forms such as
-  `+5V_1` and `5V-2`, plus bounded `P`, `CH`, and `RAIL` prefix forms such as
-  `P1_5V`, `CH2_VDD`, and `RAIL3_VIN`. Suffix numbers require a separator;
-  names such as `+5V1` are left alone. Similar names only prompt review: the
-  rails may be intentionally isolated or have independent sources, and the
-  finding never requires a tie or classifies a net as a power rail.
+  recognized supply stem. It recognizes explicit positive suffix forms such as
+  `+5V_1` and `5V-2`, bounded `P`, `CH`, and `RAIL` prefix forms such as
+  `P1_5V`, `CH2_VDD`, and `RAIL3_VIN`, and explicit negative numeric-voltage
+  forms such as `-5V_1` / `-5.0V-2` and `CH2_-5V` / `CH3_-5.0V`. Negative
+  channel-prefixed forms require a non-hyphen separator before the minus sign;
+  compact suffixes and symbolic rails such as `VEE1` remain outside the rule.
+  Similar names only prompt review: rails may be intentionally isolated or
+  have independent sources, and the finding never requires a tie or
+  establishes electrical potential or PCB continuity.
 - `net.return_labels_without_pin_roles` flags multiple populated, unnumbered
   return-like net labels when none of their attached exported pin functions
   identifies a return. Nets already included in a numbered-return group are

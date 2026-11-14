@@ -1,4 +1,4 @@
-"""Conservative review hints for separately numbered positive supply nets."""
+"""Conservative review hints for separately numbered power supply nets."""
 
 from __future__ import annotations
 
@@ -13,6 +13,10 @@ from .power_rail_models import NumberedPowerRailGroup
 _NUMBERED_RAIL = re.compile(r"^(?P<stem>.+?)[\s_./-]+(?P<index>\d+)$")
 _CHANNEL_NUMBERED_RAIL = re.compile(
     r"^(?P<namespace>P|CH|RAIL)[\s_./-]*(?P<index>\d+)[\s_./-]+(?P<stem>.+)$",
+    re.IGNORECASE,
+)
+_CHANNEL_NEGATIVE_NUMBERED_RAIL = re.compile(
+    r"^(?P<namespace>P|CH|RAIL)[\s_./-]*(?P<index>\d+)[\s_./]+(?P<stem>-.*)$",
     re.IGNORECASE,
 )
 _RAIL_STEMS: Mapping[str, str] = MappingProxyType(
@@ -62,23 +66,36 @@ _EXPLICIT_VOLTAGE_RAIL_VALUES: Mapping[str, Decimal] = MappingProxyType(
 )
 
 
-def _numbered_positive_rail(name: str) -> tuple[str, int] | None:
+def _numbered_power_rail(name: str) -> tuple[str, int] | None:
     match = _NUMBERED_RAIL.fullmatch(name)
     if match is not None:
         stem = match.group("stem").strip()
-        if stem.startswith("-"):
-            return None
-        canonical_stem = _RAIL_STEMS.get(stem.removeprefix("+").casefold())
+        negative_stem = negative_voltage_rail_key(stem)
+        canonical_stem = (
+            f"-{negative_stem}"
+            if negative_stem is not None
+            else _RAIL_STEMS.get(stem.removeprefix("+").casefold())
+        )
         if canonical_stem is not None:
             return canonical_stem, int(match.group("index"))
+
+    match = _CHANNEL_NEGATIVE_NUMBERED_RAIL.fullmatch(name)
+    if match is not None:
+        negative_stem = negative_voltage_rail_key(match.group("stem").strip())
+        if negative_stem is not None:
+            namespace = match.group("namespace").upper()
+            return f"{namespace} -{negative_stem}", int(match.group("index"))
 
     match = _CHANNEL_NUMBERED_RAIL.fullmatch(name)
     if match is None:
         return None
     stem = match.group("stem").strip()
-    if stem.startswith("-"):
-        return None
-    canonical_stem = _RAIL_STEMS.get(stem.removeprefix("+").casefold())
+    negative_stem = negative_voltage_rail_key(stem)
+    canonical_stem = (
+        f"-{negative_stem}"
+        if negative_stem is not None
+        else _RAIL_STEMS.get(stem.removeprefix("+").casefold())
+    )
     if canonical_stem is None:
         return None
     namespace = match.group("namespace").upper()
@@ -125,7 +142,7 @@ def numbered_power_rail_groups(
     """Find separately numbered supply-like nets without inferring a required tie."""
     grouped: dict[str, list[tuple[str, int]]] = {}
     for name in sorted(observed.nets):
-        indexed = _numbered_positive_rail(name)
+        indexed = _numbered_power_rail(name)
         if indexed is None:
             continue
         stem, index = indexed

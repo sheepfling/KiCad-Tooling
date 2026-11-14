@@ -67,6 +67,46 @@ def test_numbered_positive_supply_rail_names_need_review() -> None:
     assert disabled.findings[0].disposition == "RULE_OFF"
 
 
+def test_numbered_negative_voltage_rail_names_need_review() -> None:
+    observed_rails = NetlistContract(
+        components={},
+        nets={"-5V_1": ("J1.3",), "-5.0V-2": ("J2.3",)},
+        component_symbols={"J1": "Synthetic:PowerPort", "J2": "Synthetic:PowerPort"},
+        pin_functions={"J1.3": "VEE", "J2.3": "VEE"},
+    )
+    report = evaluate(
+        "synthetic-numbered-negative-power", coach(observed_rails), DesignLintPolicy()
+    )
+
+    findings = [item for item in report.findings if item.rule_id == "net.numbered_power_rails"]
+    assert report.status == "REVIEW"
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.subject == "-5V"
+    assert finding.evidence == {"-5.0V-2": ("J2.3",), "-5V_1": ("J1.3",)}
+    assert "do not establish a required connection" in finding.message
+
+
+def test_channel_prefixed_negative_voltage_rail_names_need_review() -> None:
+    observed_rails = NetlistContract(
+        components={},
+        nets={"CH2_-5V": ("J1.3",), "CH3_-5.0V": ("J2.3",)},
+    )
+    report = evaluate(
+        "synthetic-channel-negative-power",
+        coach(observed_rails),
+        DesignLintPolicy(),
+    )
+
+    findings = {finding.subject: finding for finding in report.findings}
+    assert set(findings) == {"CH -5V"}
+    assert findings["CH -5V"].evidence == {
+        "CH2_-5V": ("J1.3",),
+        "CH3_-5.0V": ("J2.3",),
+    }
+    assert findings["CH -5V"].rule_id == "net.numbered_power_rails"
+
+
 def test_channel_prefixed_positive_supply_rail_names_need_review() -> None:
     observed_rails = NetlistContract(
         components={},
@@ -159,6 +199,22 @@ def test_channel_prefixed_power_name_controls_do_not_infer_or_merge_rails(
             ),
             id="ambiguous-rail-numbering",
         ),
+        pytest.param(
+            NetlistContract(components={}, nets={"-5V_1": ("J1.1",), "+5V_2": ("J2.1",)}),
+            id="mixed-rail-polarity",
+        ),
+        pytest.param(
+            NetlistContract(components={}, nets={"-5V_1": ("J1.1",), "-12V_2": ("J2.1",)}),
+            id="different-negative-rail-values",
+        ),
+        pytest.param(
+            NetlistContract(components={}, nets={"-5V1": ("J1.1",), "-5V2": ("J2.1",)}),
+            id="ambiguous-negative-rail-numbering",
+        ),
+        pytest.param(
+            NetlistContract(components={}, nets={"VEE1": ("J1.1",), "VEE2": ("J2.1",)}),
+            id="symbolic-negative-rail-names",
+        ),
     ],
 )
 def test_numbered_power_rail_controls_do_not_merge_distinct_or_ambiguous_rails(
@@ -194,5 +250,35 @@ def test_numbered_power_rail_order_is_stable_and_commoning_clears_the_hint() -> 
         "synthetic-three-port-power-common",
         coach(three_port_power_pin_drift(common=True)),
         DesignLintPolicy(),
+    )
+    assert "net.numbered_power_rails" not in {item.rule_id for item in common_report.findings}
+
+
+def test_numbered_negative_rail_order_is_stable_and_same_net_clears_the_hint() -> None:
+    source = NetlistContract(
+        components={},
+        nets={"-5V_1": ("J1.1",), "-5V_2": ("J2.1",)},
+    )
+    reordered = source.model_copy(update={"nets": dict(reversed(tuple(source.nets.items())))})
+    original_report = evaluate(
+        "synthetic-numbered-negative-power", coach(source), DesignLintPolicy()
+    )
+    reordered_report = evaluate(
+        "synthetic-numbered-negative-power", coach(reordered), DesignLintPolicy()
+    )
+    original = next(
+        item for item in original_report.findings if item.rule_id == "net.numbered_power_rails"
+    )
+    reordered_finding = next(
+        item for item in reordered_report.findings if item.rule_id == "net.numbered_power_rails"
+    )
+    assert (reordered_finding.fingerprint, reordered_finding.evidence) == (
+        original.fingerprint,
+        original.evidence,
+    )
+
+    common = source.model_copy(update={"nets": {"-5V_1": ("J1.1", "J2.1")}})
+    common_report = evaluate(
+        "synthetic-numbered-negative-power-common", coach(common), DesignLintPolicy()
     )
     assert "net.numbered_power_rails" not in {item.rule_id for item in common_report.findings}

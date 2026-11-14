@@ -29,6 +29,10 @@ def connector_return_fixture_sources(fixture_root: Path) -> dict[str, Path]:
         / "cohort-mapped-connector-supplies/common-supply-control.kicad_sch",
         "channel-power-fault": fixture_root / "cohort-channel-power-names/fault.kicad_sch",
         "channel-power-control": fixture_root / "cohort-channel-power-names/control.kicad_sch",
+        "negative-numbered-power-fault": fixture_root
+        / "negative-numbered-power-rails/fault.kicad_sch",
+        "negative-numbered-power-control": fixture_root
+        / "negative-numbered-power-rails/control.kicad_sch",
         "four-db9-fault": fixture_root / "four-port-db9-returns/fault.kicad_sch",
         "four-db9-control": fixture_root / "four-port-db9-returns/control.kicad_sch",
         "four-db9-pwm-fault": fixture_root / "four-port-db9-returns/pwm-fault.kicad_sch",
@@ -323,6 +327,8 @@ CONNECTOR_RETURN_FIXTURE_SOURCE_HASHES = MappingProxyType(
         "mapped-supply-control": "c45d390f138ebb9e440a1c6b0fea822f858ce9e31bfa229b28aaddc248adca3b",
         "channel-power-fault": "d6a52dd120801e0bf5776e82421ceb64670b26a9ace28afafd89b608a61aabb3",
         "channel-power-control": "37c7c28963b530a679cd3dc2087a4fa3b5d97dda52250332556406c66b9e1fc7",
+        "negative-numbered-power-fault": "efd12982e8dfb4ee93cbb6888dae821ba0a26a9a3bfa3411a3f8c1b5c93bf16e",
+        "negative-numbered-power-control": "73b371ae8c83e505c7e58ae946a4cf2b448e20c4d022b1c4927ec734c481d103",
         "four-db9-fault": "1baabede29ea7a33cf85ec85f35c3affb2937e31db981e8f5d68f3b769d43791",
         "four-db9-control": "ed2096c8aedbf263290c19c3a067cdf959fac92512aa3ab02fabbd7e10db4171",
         "four-db9-pwm-fault": "c4a842c1685d5fbf21985aa22bd0b6436e163025f4381a8ac2544621c264e546",

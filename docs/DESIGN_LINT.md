@@ -527,6 +527,30 @@ for the fault/control source hashes and exact-version native fixture.
   -m 'design_lint and component_lint and power_lint and design_lint_rule(rule_id="component.same_voltage_power_inputs_split")'
 ```
 
+## Review separately numbered power supply nets
+
+`net.numbered_power_rails` asks for review when explicit net names share a
+recognized supply stem but have different numeric indexes. The bounded
+vocabulary includes positive labels such as `+5V_1` and `CH2_VDD`, plus
+explicitly negative numeric-voltage labels such as `-5V_1` / `-5.0V-2` and
+`CH2_-5V` / `CH3_-5.0V`. Compact suffixes, symbolic names such as `VEE1`,
+mixed polarities, and different voltage magnitudes remain outside the check.
+
+This is a configurable `review` clue. Separate numbered rails may be
+intentionally isolated or driven by independent sources; matching names do not
+require a tie and do not establish actual voltage or PCB continuity. Project
+policy can keep review, block, turn the rule off, or ignore an exact finding.
+The synthetic fault/control and exact-version Docker cases are recorded in the
+[fixture README](../tests/fixtures/design_lint/negative-numbered-power-rails/README.md).
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_design_lint_numbered_power_rails.py \
+  tests/test_design_lint_determinism_numbered_power_rails.py \
+  tests/test_numbered_negative_power_rail_native_fixture_lane.py \
+  -m 'design_lint and power_lint and design_lint_rule(rule_id="net.numbered_power_rails")'
+```
+
 ## Review an enable input assigned to a return-like label
 
 `power.enable_control_tied_to_return` emits REVIEW for a fitted native input

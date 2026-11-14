@@ -10330,35 +10330,42 @@
     },
     {
       "rule_id": "net.numbered_power_rails",
-      "title": "Positive supply nets have a numbered common stem",
+      "title": "Power supply nets have a numbered common stem",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "At least two distinct populated or unpopulated net names use either an explicitly delimited numeric suffix or a bounded P/CH/RAIL numeric prefix and the same recognized positive supply stem, such as +5V_1 and 5V-2 or CH2_VDD and CH3_VDD.",
+      "predicate": "At least two distinct populated or unpopulated net names use either an explicitly delimited numeric suffix or a bounded P/CH/RAIL numeric prefix and the same recognized supply stem. Positive stems include +5V_1 and 5V-2 or CH2_VDD and CH3_VDD; negative numeric-voltage stems include -5V_1 and -5.0V-2 or CH2_-5V and CH3_-5.0V.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Name similarity only prompts review; sibling supply nets may be intentionally isolated or represent independent sources, and this rule never asserts that they should be joined.",
-        "Only a bounded list of positive-supply stems is recognized. Numeric suffixes require an explicit separator; numeric prefixes are limited to P, CH, and RAIL namespaces followed by an allowlisted supply stem. Unrecognized aliases and compact forms remain outside this rule.",
+        "Only bounded positive-supply stems and explicitly minus-prefixed numeric-voltage stems already in the voltage vocabulary are recognized. Numeric suffixes require an explicit separator; numeric prefixes are limited to P, CH, and RAIL namespaces followed by an allowlisted supply stem. Negative channel-prefixed forms require a non-hyphen separator before the minus sign to avoid treating an ambiguous channel/rail separator as polarity. Unrecognized aliases and compact forms remain outside this rule.",
         "The rule does not inspect source capability, voltage compatibility, fitted power-path devices, PCB copper, off-board wiring, or physical continuity."
       ],
       "fault_fixtures": [
         "tests.test_design_lint_numbered_power_rails.test_numbered_positive_supply_rail_names_need_review",
+        "tests.test_design_lint_numbered_power_rails.test_numbered_negative_voltage_rail_names_need_review",
         "tests.test_design_lint_numbered_power_rails.test_channel_prefixed_positive_supply_rail_names_need_review",
+        "tests.test_design_lint_numbered_power_rails.test_channel_prefixed_negative_voltage_rail_names_need_review",
         "tests.test_design_lint_connector_power_pins.test_three_generic_power_pins_report_different_and_missing_sibling_assignments",
-        "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases"
+        "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases",
+        "tests.test_numbered_negative_power_rail_native_fixture_lane.test_native_numbered_negative_power_rail_fault_and_control_are_source_bound_and_repeatable"
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_numbered_power_rails.test_numbered_power_rail_controls_do_not_merge_distinct_or_ambiguous_rails",
         "tests.test_design_lint_numbered_power_rails.test_channel_prefixed_power_name_controls_do_not_infer_or_merge_rails",
+        "tests.test_design_lint_numbered_power_rails.test_numbered_negative_rail_order_is_stable_and_same_net_clears_the_hint",
         "tests.test_design_lint_connector_power_pins.test_three_generic_power_pins_report_different_and_missing_sibling_assignments",
-        "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases"
+        "tests.test_ci_hosted_connector_returns.test_power_pin_and_reviewed_role_cases",
+        "tests.test_numbered_negative_power_rail_native_fixture_lane.test_native_numbered_negative_power_rail_fault_and_control_are_source_bound_and_repeatable"
       ],
       "metamorphic_fixtures": [
-        "tests.test_design_lint_numbered_power_rails.test_numbered_power_rail_order_is_stable_and_commoning_clears_the_hint"
+        "tests.test_design_lint_numbered_power_rails.test_numbered_power_rail_order_is_stable_and_commoning_clears_the_hint",
+        "tests.test_design_lint_numbered_power_rails.test_numbered_negative_rail_order_is_stable_and_same_net_clears_the_hint",
+        "tests.test_design_lint_determinism_numbered_power_rails.test_numbered_negative_power_rail_fault_and_control_are_hashseed_stable"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/power_rails.py#numbered_power_rail_groups",

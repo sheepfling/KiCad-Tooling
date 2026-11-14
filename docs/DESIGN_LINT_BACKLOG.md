@@ -4648,8 +4648,8 @@ Current catalog audit: 392 covered, 0 not applicable, 0 unreviewed.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v95. The cross-process probe supports themed report
-  selectors and retains the complete 341-report inventory gate. Fault/control
+- **Status:** Implemented v96. The cross-process probe supports themed report
+  selectors and retains the complete 343-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -4839,6 +4839,10 @@ Current catalog audit: 392 covered, 0 not applicable, 0 unreviewed.
   and matching-inventory control. Three independently hash-seeded processes
   preserve the REVIEW finding and quiet control; the full report inventory now
   contains 341 reports.
+  The v96 extension adds separately numbered negative supply fault/control
+  reports to the same three-process comparison. The split `-5V_1` / `-5V_2`
+  case retains `net.numbered_power_rails`; the common-net control is quiet, and
+  the current report inventory contains 343 entries.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
@@ -27487,6 +27491,8 @@ acceptance threads while new lint features proceed:
 
 #### LINT-477 — Include exact PART_ID peers in connector pin-type review
 
+- **Status:** Implemented as an extension to the active connector peer
+  electrical-type heuristic; no new rule ID or default policy was added.
 - **Rule:** Extends `connector.footprint_peer_pin_electrical_type_disagreement`;
   no new rule ID or default policy is added.
 - **Gap:** LINT-476 limited its alias comparison to connectors without
@@ -27522,6 +27528,8 @@ acceptance threads while new lint features proceed:
 
 #### LINT-478 — Review connector peer pin-function disagreement
 
+- **Status:** Implemented as the active default-REVIEW rule
+  `connector.footprint_peer_pin_function_disagreement`.
 - **Rule:** `connector.footprint_peer_pin_function_disagreement`, default
   `review`.
 - **Gap:** Existing peer checks covered assignment and electrical-type
@@ -27568,6 +27576,8 @@ acceptance threads while new lint features proceed:
 
 #### LINT-479 — Review connector peer pin-inventory disagreement
 
+- **Status:** Implemented as the active default-REVIEW rule
+  `connector.footprint_peer_pin_inventory_disagreement`.
 - **Rule:** `connector.footprint_peer_pin_inventory_disagreement`, default
   `review`.
 - **Gap:** The exact-part peer metadata checks require identical complete pin
@@ -27620,6 +27630,41 @@ acceptance threads while new lint features proceed:
   `v0.5.3rc793` passed run `43642908253` in 5m24s, including the scoped native
   KiCad 10.0.0/10.0.5 fixtures and installed-wheel rehearsal against the
   separate public project template.
+
+#### LINT-480 — Review separately numbered negative supply rails
+
+- **Priority:** P2 heuristic coverage. `net.numbered_power_rails` recognized
+  separately numbered positive supply names but deliberately skipped explicit
+  negative numeric-voltage labels such as `-5V_1` and `-5V_2`.
+- **Status:** Extends the existing default-REVIEW `net.numbered_power_rails`
+  predicate; no rule ID or project contract schema is added. It recognizes
+  negative stems only when the minus sign and a supported numeric rail alias
+  are explicit. Numbered suffixes need a separator. Bounded P/CH/RAIL prefixes
+  accept a negative stem only with a non-hyphen separator before the minus, so
+  an ambiguous channel separator is not treated as a voltage sign.
+- **Interpretation:** Separate negative supplies can be intentional. This
+  remains a configurable naming review prompt and does not require commoning,
+  identify the actual voltage, inspect a fitted power path, or prove PCB
+  continuity. Symbolic names such as `VEE1` / `VEE2`, compact `-5V1` / `-5V2`,
+  mixed polarity, and different magnitudes remain quiet.
+- **Evidence:** Tooling-owned synthetic cases cover `-5V_1` / `-5.0V-2`,
+  `CH2_-5V` / `CH3_-5.0V`, polarity and magnitude boundaries, unsupported
+  symbolic/compact names, mapping order, and a common-net control. A native
+  fault/control pair repeats on digest-pinned KiCad 10.0.0 and 10.0.5 Docker
+  images. No cohort or proprietary source is included.
+- **Selection:** Run `tests/test_design_lint_numbered_power_rails.py`,
+  `tests/test_design_lint_determinism_numbered_power_rails.py`, and
+  `tests/test_numbered_negative_power_rail_native_fixture_lane.py` with
+  `design_lint and power_lint` and the
+  `net.numbered_power_rails` rule selector. Native cases also require Docker,
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`, and `native_kicad`.
+- **Acceptance:** Local rule-scoped `scripts/ci.py` passed: 21 tests, 10,013
+  deselected, including the fault/control exports on digest-pinned KiCad 10.0.0
+  and 10.0.5 Docker images, the shared connector-return fixture inventory,
+  and the 343-report hash-seed comparison. Ruff, architecture-boundary checks,
+  Markdown gates, Pyright (including Windows types), wheel/sdist builds, and
+  installed-wheel verification against the external project template passed.
+  GitHub Actions acceptance is pending publication.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 

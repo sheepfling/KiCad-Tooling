@@ -39,6 +39,15 @@ def assert_connector_power_and_role_cases(results, version):
     assert channel_control["lint_status"] == "PASS"
     assert channel_control["findings"] == "none"
     assert "J1.3=VDD" in channel_fault["pin_functions"]
+    negative_fault = results["connector-return-fixture/negative-numbered-power-fault"]
+    negative_control = results["connector-return-fixture/negative-numbered-power-control"]
+    assert negative_fault["status"] == "PASS"
+    assert negative_fault["lint_status"] == "REVIEW"
+    assert "net.numbered_power_rails" in negative_fault["findings"].split(",")
+    assert "-5V" in negative_fault["subjects"].split(";")
+    assert negative_control["status"] == "PASS"
+    assert negative_control["lint_status"] == "PASS"
+    assert negative_control["findings"] == "none"
     peer_power_fault = results["connector-return-fixture/peer-power-fault"]
     peer_power_control = results["connector-return-fixture/peer-power-control"]
     assert peer_power_fault["status"] == "PASS"
@@ -98,6 +107,8 @@ def assert_connector_power_and_role_cases(results, version):
         (
             "channel-power-fault",
             "channel-power-control",
+            "negative-numbered-power-fault",
+            "negative-numbered-power-control",
             "mapped-supply-fault",
             "mapped-supply-control",
             "reviewed-role-fault",

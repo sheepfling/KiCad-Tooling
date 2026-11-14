@@ -11,7 +11,7 @@ from .model_primitives import NetName, NonEmptyText, Reference, StrictModel
 
 
 class NumberedPowerRailGroup(StrictModel):
-    """Unreviewed, similarly named numbered positive supply nets."""
+    """Unreviewed, similarly named numbered power supply nets."""
 
     stem: NonEmptyText
     nets: Mapping[NetName, tuple[Reference, ...]]
