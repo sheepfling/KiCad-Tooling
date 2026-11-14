@@ -27607,7 +27607,10 @@ acceptance threads while new lint features proceed:
   public-template rehearsals passed. After synchronizing this backlog entry,
   the focused catalog/documentation/fixture-reachability selection passed 19
   tests; Rumdl and mdrepo passed on the updated docs.
-- **Hosted acceptance:** Pending the tagged GitHub Actions run.
+- **Hosted acceptance:** `v0.5.3rc792` passed the scoped GitHub Actions gate
+  (run `43640218152`), including the digest-pinned native KiCad 10.0.0 and
+  10.0.5 Docker fixtures and the installed-wheel rehearsal against the separate
+  public project template.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
