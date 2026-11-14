@@ -13,7 +13,9 @@ from kicad_tooling.hwrepo.connector_peer_pin_candidate_results import (
 from kicad_tooling.hwrepo.connector_pins import connector_peer_pin_heuristic_coverage
 from kicad_tooling.hwrepo.design_lint import evaluate as evaluate_design_lint
 from kicad_tooling.hwrepo.design_lint import text_report
-from kicad_tooling.hwrepo.design_lint_connector_candidates import scan_connector_candidates
+from kicad_tooling.hwrepo.design_lint_connector_candidate_dispatch import (
+    scan_connector_candidates,
+)
 from kicad_tooling.hwrepo.models import (
     ContractCoachReport,
     DesignLintPolicy,

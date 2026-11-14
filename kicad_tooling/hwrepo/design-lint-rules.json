@@ -159,7 +159,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/design_lint_connectors_supply_domains.py#mapped_supply_domains_shared_net_candidates",
         "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_pin_evidence",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/design_lint_connectors_supply_domains.py#mapped_supply_domains_shared_net_candidates"
@@ -209,7 +209,7 @@
         "kicad_tooling/hwrepo/connector_domain_assignment_groups.py#mapped_connector_domain_assignments_by_net",
         "kicad_tooling/hwrepo/design_lint_connector_domain_shared_net_candidate_evidence.py#project_mapped_connector_domains_shared_net_evidence",
         "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_pin_evidence",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/design_lint_connectors_return_domains_shared_net.py#mapped_return_domains_shared_net_candidates"
@@ -254,7 +254,7 @@
         "kicad_tooling/hwrepo/connector_scope_coverage_candidates.py#connector_scope_singleton_candidates",
         "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_pin_evidence",
         "kicad_tooling/hwrepo/connector_identity.py#similar_connector_pin_groups",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_scope_coverage_candidates.py#connector_scope_singleton_candidates",
@@ -303,7 +303,7 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_stateful_contacts.py#stateful_connector_contact_findings",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ]
     },
@@ -470,7 +470,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_footprint_peer_pins.py#scan_connector_footprint_peer_pin_assignments",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "connectors",
@@ -646,7 +646,7 @@
         "kicad_tooling/hwrepo/netlist_pin_assignments.py#netlist_pin_net_index",
         "kicad_tooling/hwrepo/connector_footprint_peer_assignments.py#connector_footprint_peer_pin_assignments",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "connectors",
@@ -1356,7 +1356,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_reviewed_peer_power_input_split.py#reviewed_peer_power_input_split_candidates",
         "kicad_tooling/hwrepo/connector_reviewed_peer_power_contacts.py#reviewed_peer_power_contact_pairs",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "connectors",
@@ -1405,7 +1405,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_reviewed_peer_power_output_split.py#reviewed_peer_power_output_split_candidates",
         "kicad_tooling/hwrepo/connector_reviewed_peer_power_contacts.py#reviewed_peer_power_contact_pairs",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "required_native_fixtures": [
@@ -1453,7 +1453,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_reviewed_peer_power_input_split.py#reviewed_peer_passive_power_input_open_candidates",
         "kicad_tooling/hwrepo/connector_reviewed_peer_power_contacts.py#reviewed_peer_power_contact_pairs",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "connectors",
@@ -1501,7 +1501,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_reviewed_peer_power_output_open.py#reviewed_peer_power_output_open_candidates",
         "kicad_tooling/hwrepo/connector_reviewed_peer_power_contacts.py#reviewed_peer_power_contact_pairs",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "required_native_fixtures": [
@@ -4507,7 +4507,7 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_reviewed_peer_signal_split.py#reviewed_peer_signal_assignment_splits",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_reviewed_peer_signal_split.py#reviewed_peer_signal_assignment_splits"
@@ -4555,7 +4555,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_reviewed_peer_signal_evidence.py#reviewed_peer_signal_contacts",
         "kicad_tooling/hwrepo/connector_reviewed_peer_signal_domains.py#reviewed_peer_signal_domains_sharing_net",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_reviewed_peer_signal_domains.py#reviewed_peer_signal_domains_sharing_net"
@@ -4602,7 +4602,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_reviewed_peer_signal_evidence.py#reviewed_peer_signal_contacts",
         "kicad_tooling/hwrepo/connector_reviewed_peer_distinct_signals.py#reviewed_peer_distinct_signals_sharing_net",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_reviewed_peer_distinct_signals.py#reviewed_peer_distinct_signals_sharing_net"
@@ -4809,7 +4809,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_mapped_supply_return_sharing.py#mapped_supply_return_sharing_net_candidates",
         "kicad_tooling/hwrepo/connector_mapped_role_pair_evidence.py#mapped_connector_role_pair_groups",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_supply_return_sharing.py#mapped_supply_return_sharing_net_candidates"
@@ -4851,7 +4851,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_mapped_supply_shield_sharing.py#mapped_supply_shield_sharing_net_candidates",
         "kicad_tooling/hwrepo/connector_mapped_role_pair_evidence.py#mapped_connector_role_pair_groups",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_supply_shield_sharing.py#mapped_supply_shield_sharing_net_candidates"
@@ -4892,7 +4892,7 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_mapped_supply_signal_sharing.py#mapped_supply_signal_sharing_net_candidates",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_supply_signal_sharing.py#mapped_supply_signal_sharing_net_candidates"
@@ -4933,7 +4933,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/design_lint_connectors_supply_domains.py#mapped_same_domain_supply_split_net_candidates",
         "kicad_tooling/hwrepo/design_lint_supply_domain_split_candidate_evidence.py#project_mapped_supply_domain_split_evidence",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/design_lint_connectors_supply_domains.py#mapped_same_domain_supply_split_net_candidates"
@@ -4974,7 +4974,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/design_lint_connectors_return_domains.py#mapped_same_domain_return_split_net_candidates",
         "kicad_tooling/hwrepo/design_lint_return_domain_split_candidate_evidence.py#project_mapped_return_domain_split_evidence",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/design_lint_connectors_return_domains.py#mapped_same_domain_return_split_net_candidates"
@@ -5018,7 +5018,7 @@
         "kicad_tooling/hwrepo/design_lint_connector_named_peer_return_split_candidate_evidence.py#source_matched_legacy_return_peer_group_pins",
         "kicad_tooling/hwrepo/connector_identity.py#similar_connector_pin_groups",
         "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_return_comparison_groups",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/design_lint_connectors_named_peer_return_splits.py#mapped_named_peer_return_split_net_candidates"
@@ -5062,7 +5062,7 @@
         "kicad_tooling/hwrepo/design_lint_connector_named_peer_supply_split_candidate_evidence.py#source_matched_legacy_supply_peer_group_pins",
         "kicad_tooling/hwrepo/connector_identity.py#similar_connector_pin_groups",
         "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_supply_comparison_groups",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/design_lint_connectors_named_peer_supply_splits.py#mapped_named_peer_supply_split_net_candidates"
@@ -5106,7 +5106,7 @@
         "kicad_tooling/hwrepo/design_lint_connector_named_peer_signal_split_candidate_evidence.py#source_matched_legacy_named_peer_signal_pins",
         "kicad_tooling/hwrepo/connector_identity.py#similar_connector_pin_groups",
         "kicad_tooling/hwrepo/connector_coverage.py#source_matched_connector_peer_assignment_groups",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/design_lint_connectors_named_peer_signal_splits.py#mapped_named_peer_signal_split_net_candidates"
@@ -5148,7 +5148,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_mapped_return_shield_sharing.py#mapped_return_shield_sharing_net_candidates",
         "kicad_tooling/hwrepo/connector_mapped_role_pair_evidence.py#mapped_connector_role_pair_groups",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates"
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates"
       ],
       "theme": "connectors",
       "implementation_owner": "kicad_tooling/hwrepo/connector_mapped_return_shield_sharing.py#mapped_return_shield_sharing_net_candidates"
@@ -5330,7 +5330,7 @@
       "implementation_refs": [
         "kicad_tooling/hwrepo/connector_return_pins.py#unconnected_generic_power_output_connector_pins",
         "kicad_tooling/hwrepo/design_lint_connector_pin_candidates.py#connector_pin_candidates",
-        "kicad_tooling/hwrepo/design_lint_connector_candidates.py#connector_candidates",
+        "kicad_tooling/hwrepo/design_lint_connector_candidate_dispatch.py#connector_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
         "kicad_tooling/hwrepo/design_lint_evaluation_candidates.py#scan_evaluation_candidates"
       ],

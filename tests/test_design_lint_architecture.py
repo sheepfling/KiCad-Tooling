@@ -121,15 +121,27 @@ def test_design_lint_public_module_stays_a_small_facade() -> None:
 @pytest.mark.connector_lint
 def test_connector_candidate_facade_delegates_by_review_theme() -> None:
     facade = HWREPO / "design_lint_connector_candidates.py"
+    dispatch = HWREPO / "design_lint_connector_candidate_dispatch.py"
     owners = (
         HWREPO / "design_lint_connector_pin_candidates.py",
         HWREPO / "design_lint_return_domain_candidates.py",
     )
 
     assert _line_count(facade) < FACADE_MAX_LINES
+    assert dispatch.is_file()
     assert all(owner.is_file() for owner in owners)
 
-    tree = ast.parse(facade.read_text(encoding="utf-8"), filename=facade.name)
+    facade_tree = ast.parse(facade.read_text(encoding="utf-8"), filename=facade.name)
+    facade_imports = {
+        alias.name
+        for node in ast.walk(facade_tree)
+        if isinstance(node, ast.ImportFrom)
+        and node.module == "design_lint_connector_candidate_dispatch"
+        for alias in node.names
+    }
+    assert facade_imports == {"connector_candidates", "scan_connector_candidates"}
+
+    tree = ast.parse(dispatch.read_text(encoding="utf-8"), filename=dispatch.name)
     calls = {
         node.func.id
         for node in ast.walk(tree)
@@ -145,6 +157,14 @@ def test_connector_candidate_facade_delegates_by_review_theme() -> None:
 
     assert {"connector_pin_candidates", "return_domain_candidates"} <= calls
     assert not candidate_constructions, "Connector dispatch should not construct lint findings."
+
+    aggregation = HWREPO / "design_lint_candidate_aggregation.py"
+    aggregation_tree = ast.parse(aggregation.read_text(encoding="utf-8"))
+    assert any(
+        isinstance(node, ast.ImportFrom)
+        and node.module == "design_lint_connector_candidate_dispatch"
+        for node in ast.walk(aggregation_tree)
+    ), "Internal services should import from the dispatch owner, not its compatibility facade."
 
 
 def test_design_lint_evaluator_stays_a_staged_coordinator() -> None:

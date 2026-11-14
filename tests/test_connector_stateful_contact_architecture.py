@@ -58,7 +58,7 @@ def test_native_pin_assignment_index_has_two_theme_consumers() -> None:
     )
     assert _imports_module(HWREPO / "connector_contact_ratings.py", helper_module)
     assert _imports_module(
-        HWREPO / "design_lint_connector_candidates.py", "connector_stateful_contacts"
+        HWREPO / "design_lint_connector_candidate_dispatch.py", "connector_stateful_contacts"
     )
 
 

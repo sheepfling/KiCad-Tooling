@@ -1,0 +1,219 @@
+# Request and snapshot record types for the assembled native KiCad probe.
+from typing import Literal, NotRequired, TypedDict
+
+
+class ViaGeometry(TypedDict):
+    net: str | None
+    x_nm: int
+    y_nm: int
+    start_layer: str
+    end_layer: str
+    diameter_nm: int
+    drill_nm: int
+    kind: Literal["through", "blind", "buried", "micro"]
+
+
+class ViaObservation(ViaGeometry):
+    id: str
+
+
+class FilledZoneIslandObservation(TypedDict):
+    island_index: int
+    outline_nm: list[list[int]]
+    holes_nm: list[list[list[int]]]
+
+
+class RuleAreaPolygonObservation(TypedDict):
+    outline_nm: list[list[int]]
+    holes_nm: list[list[list[int]]]
+
+
+class RuleAreaObservation(TypedDict):
+    uuid: str
+    name: str
+    layers: list[str]
+    net: str | None
+    polygons: list[RuleAreaPolygonObservation]
+    forbids_tracks: bool
+    forbids_vias: bool
+    forbids_pads: bool
+    forbids_zone_fills: bool
+    forbids_footprints: bool
+
+
+class FootprintPlacementObservation(TypedDict):
+    reference: str
+    footprint: str
+    dnp: bool
+    value: str
+    position_nm: list[int]
+    orientation_microdegrees: int
+    side: Literal["F.Cu", "B.Cu"]
+
+
+class AccessProbeRequest(TypedDict):
+    endpoint: str
+    net: str
+    side: Literal["front", "back"]
+    include_edge_cuts: bool
+    include_drill_holes: bool
+
+
+class RawAccessRequestEnvelope(TypedDict, total=False):
+    schema_version: object
+    requests: object
+
+
+class RawAccessProbeRequest(TypedDict, total=False):
+    endpoint: object
+    net: object
+    side: object
+    include_edge_cuts: object
+    include_drill_holes: object
+
+
+class DrillHoleObservation(TypedDict):
+    id: str
+    kind: Literal["pad", "via"]
+    pad: NotRequired[str]
+    pad_uuid: NotRequired[str]
+    via_id: NotRequired[str]
+    footprint_reference: NotRequired[str]
+    footprint: NotRequired[str]
+    position_nm: list[int]
+    drill_size_nm: list[int]
+    shape: Literal["circle", "oval", "other"]
+    surfaces: list[Literal["front", "back"]]
+
+
+class TouchPadClearanceRequest(TypedDict):
+    id: str
+    pad: str
+    expected_pad_net: str
+    reference_net: str
+    layer: str
+    minimum_clearance_nm: int
+
+
+class RawTouchClearanceRequestEnvelope(TypedDict, total=False):
+    schema_version: object
+    requests: object
+
+
+class RawTouchClearanceRequest(TypedDict, total=False):
+    id: object
+    pad: object
+    expected_pad_net: object
+    reference_net: object
+    layer: object
+    minimum_clearance_nm: object
+
+
+class TouchPadClearanceObservation(TypedDict):
+    requirement_id: str
+    pad: str
+    expected_pad_net: str
+    observed_pad_net: str | None
+    reference_net: str
+    layer: str
+    matching_zone_count: int
+    closest_zone_uuid: str | None
+    distance_nm: int | None
+    status: Literal[
+        "MEASURED",
+        "PAD_MISSING",
+        "PAD_AMBIGUOUS",
+        "PAD_LAYER_ABSENT",
+        "UNSUPPORTED_LAYER",
+        "NO_REFERENCE_ZONE",
+        "NO_FILLED_REFERENCE_COPPER",
+    ]
+
+
+class ZoneObservation(TypedDict):
+    uuid: str
+    layer: str
+    name: str
+    net: str | None
+    filled_island_count: int
+    filled_islands: list[FilledZoneIslandObservation]
+    unanchored_pad_island_indexes: list[int]
+
+
+class ConnectedZoneIdentity(TypedDict):
+    uuid: str
+    layer: str
+
+
+class ConnectedIslandIdentity(ConnectedZoneIdentity):
+    island_index: int
+
+
+class OuterCopperCenterObservation(TypedDict):
+    x_nm: int
+    y_nm: int
+    layer: Literal["F.Cu", "B.Cu"]
+
+
+class PadObservation(TypedDict):
+    pad: str
+    net: str | None
+    footprint: str
+    dnp: bool
+    positions_nm: list[list[int]]
+    outer_copper_centers: list[OuterCopperCenterObservation]
+    connected_pads: list[str]
+    connected_vias: list[str]
+    connected_zones: list[ConnectedZoneIdentity]
+    connected_islands: list[ConnectedIslandIdentity]
+
+
+class ViaSnapshotObservation(ViaObservation):
+    multiplicity: int
+
+
+class NetTieObservation(TypedDict):
+    reference: str
+    footprint: str
+    dnp: bool
+    pad_groups: list[list[str]]
+
+
+class TrackObservation(TypedDict):
+    uuid: str
+    net: str | None
+    layer: str
+    width_nm: int
+    start_nm: list[int]
+    end_nm: list[int]
+    geometry_kind: Literal["segment", "arc"]
+    arc_mid_nm: list[int] | None
+    arc_length_nm: int | None
+    start_pads: list[str]
+    end_pads: list[str]
+    start_vias: list[str]
+    end_vias: list[str]
+    start_tracks: list[str]
+    end_tracks: list[str]
+
+
+class NativeProbeSnapshot(TypedDict):
+    schema_version: Literal["23"]
+    board_sha256: str
+    kicad_version: str
+    zones_refilled: bool
+    pads: list[PadObservation]
+    vias: list[ViaSnapshotObservation]
+    net_ties: list[NetTieObservation]
+    zones: list[ZoneObservation]
+    rule_areas: list[RuleAreaObservation]
+    footprints: list[FootprintPlacementObservation]
+    access_probe_observations: list[AccessProbeObservation]
+    access_probe_requests_sha256: str | None
+    touch_pad_clearance_observations: list[TouchPadClearanceObservation]
+    touch_pad_clearance_requests_sha256: str | None
+    tracks: list[TrackObservation]
+    copper_layers: list[str]
+    board_thickness_nm: int
+    edge_cuts: NotRequired[list[EdgeCutObservation]]
+    drill_holes: NotRequired[list[DrillHoleObservation]]

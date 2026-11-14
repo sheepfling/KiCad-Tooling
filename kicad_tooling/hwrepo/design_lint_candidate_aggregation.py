@@ -27,7 +27,7 @@ from .design_lint_component_candidates import (
     scan_component_candidates,
 )
 from .design_lint_component_peer_candidates import scan_component_peer_candidates
-from .design_lint_connector_candidates import scan_connector_candidates
+from .design_lint_connector_candidate_dispatch import scan_connector_candidates
 from .design_lint_control_candidates import scan_control_candidates
 from .design_lint_control_inputs import ControlCandidateInputs
 from .design_lint_mapped_coverage_candidates import (

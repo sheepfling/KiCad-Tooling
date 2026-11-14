@@ -48,7 +48,7 @@ def test_spi_return_modules_stay_below_review_limit() -> None:
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_connector_coordinator_delegates_to_the_return_owner() -> None:
-    module = HWREPO / "design_lint_connector_candidates.py"
+    module = HWREPO / "design_lint_connector_candidate_dispatch.py"
     tree = ast.parse(module.read_text(encoding="utf-8"), filename=module.name)
     function = next(
         node

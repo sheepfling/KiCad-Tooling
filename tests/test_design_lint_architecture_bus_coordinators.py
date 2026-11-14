@@ -406,7 +406,7 @@ def test_legacy_and_prepared_candidate_paths_share_required_scanner_inputs() -> 
     }
 
     connector_result_owner = HWREPO / "connector_peer_pin_candidate_results.py"
-    connector_coordinator = HWREPO / "design_lint_connector_candidates.py"
+    connector_coordinator = HWREPO / "design_lint_connector_candidate_dispatch.py"
     evaluation_source = evaluation.read_text(encoding="utf-8")
     assert line_count(connector_result_owner) < IMPLEMENTATION_MAX_LINES
     connector_tree = ast.parse(connector_result_owner.read_text(encoding="utf-8"))
