@@ -83,12 +83,18 @@ def test_native_switching_regulator_pin_inventory_and_map_coverage(
         assert observed.pin_functions["U1.3"] == "LX1"
         assert observed.pin_electrical_types["U1.2"] == "passive"
         assert observed.pin_electrical_types["U1.3"] == "passive"
-        assert {item.rule_id for item in switching_regulator_loop_map_candidates(
-            observed, ProjectKind.PCB, None, "b" * 64
-        )} == {RULE_ID}
-        assert switching_regulator_loop_map_candidates(
-            observed,
-            ProjectKind.PCB,
-            loop_map(("U1.2", "U1.3")),
-            "b" * 64,
-        ) == ()
+        assert {
+            item.rule_id
+            for item in switching_regulator_loop_map_candidates(
+                observed, ProjectKind.PCB, None, "b" * 64
+            )
+        } == {RULE_ID}
+        assert (
+            switching_regulator_loop_map_candidates(
+                observed,
+                ProjectKind.PCB,
+                loop_map(("U1.2", "U1.3")),
+                "b" * 64,
+            )
+            == ()
+        )

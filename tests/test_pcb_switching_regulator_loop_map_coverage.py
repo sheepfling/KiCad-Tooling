@@ -70,7 +70,7 @@ def _report(policy: DesignLintPolicy, candidates: tuple[Candidate, ...]):
 
 
 def test_unmapped_fitted_switching_regulator_prompts_with_exact_pad_evidence() -> None:
-    candidate, = _candidates()
+    (candidate,) = _candidates()
 
     assert candidate.rule_id == RULE_ID
     assert candidate.evidence["component_symbol"] == ("Regulator_Switching:SyntheticBuck",)
@@ -84,7 +84,7 @@ def test_unmapped_fitted_switching_regulator_prompts_with_exact_pad_evidence() -
 
 
 def test_partial_and_complete_maps_report_only_unmapped_switch_pads() -> None:
-    partial, = _candidates(authored_map=loop_map(("U1.2",)))
+    (partial,) = _candidates(authored_map=loop_map(("U1.2",)))
     assert partial.evidence["mapped_switch_node_pins"] == ("U1.2",)
     assert partial.evidence["unmapped_switch_node_pins"] == ("U1.3",)
     assert _candidates(authored_map=loop_map(("U1.2", "U1.3"))) == ()
@@ -127,9 +127,7 @@ def test_non_pcb_project_kinds_stay_quiet(project_kind: ProjectKind | None) -> N
 def test_candidate_order_and_fingerprint_ignore_native_mapping_order() -> None:
     original = _candidates()[0]
     netlist = regulator_netlist()
-    reordered = netlist.model_copy(
-        update={"nets": dict(reversed(tuple(netlist.nets.items())))}
-    )
+    reordered = netlist.model_copy(update={"nets": dict(reversed(tuple(netlist.nets.items())))})
     repeated = _candidates(observed=reordered)[0]
 
     assert original == repeated
@@ -183,9 +181,9 @@ def test_rule_policy_defaults_off_and_supports_review_block_off_and_exact_ignore
         (candidate,),
     )
 
-    disabled_finding, = (item for item in disabled.findings if item.rule_id == RULE_ID)
+    (disabled_finding,) = (item for item in disabled.findings if item.rule_id == RULE_ID)
     assert disabled_finding.disposition == "RULE_OFF"
     assert next(item for item in reviewed.findings if item.rule_id == RULE_ID).mode == "review"
     assert next(item for item in blocked.findings if item.rule_id == RULE_ID).mode == "block"
-    ignored, = (item for item in exact_ignore.findings if item.rule_id == RULE_ID)
+    (ignored,) = (item for item in exact_ignore.findings if item.rule_id == RULE_ID)
     assert ignored.disposition == "IGNORED"

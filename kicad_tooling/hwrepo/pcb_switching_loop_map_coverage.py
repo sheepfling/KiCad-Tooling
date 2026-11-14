@@ -31,10 +31,9 @@ def _complete_pin_inventory(
     if not isinstance(numbers, tuple) or not numbers:
         return None
     normalized_numbers = tuple(str(number).strip() for number in numbers)
-    if (
-        any(not number for number in normalized_numbers)
-        or len({number.casefold() for number in normalized_numbers}) != len(normalized_numbers)
-    ):
+    if any(not number for number in normalized_numbers) or len(
+        {number.casefold() for number in normalized_numbers}
+    ) != len(normalized_numbers):
         return None
 
     pins: list[tuple[str, str, str]] = []
@@ -134,8 +133,7 @@ def switching_regulator_loop_map_candidates(
                     "switch_node_functions": tuple(item[1] for item in switch_pins),
                     "switch_node_electrical_types": tuple(item[2] for item in switch_pins),
                     "switch_node_nets": tuple(
-                        f"{pin} -> {next(iter(nets))}"
-                        for pin, _, _, nets in switch_pins
+                        f"{pin} -> {next(iter(nets))}" for pin, _, _, nets in switch_pins
                     ),
                     "mapped_switch_node_pins": tuple(
                         item[0] for item in switch_pins if item[0].casefold() in mapped_pads

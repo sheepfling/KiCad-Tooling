@@ -61,8 +61,7 @@ def regulator_netlist(
 def loop_map(mapped_pins: tuple[str, ...]) -> PcbSwitchingLoopMap:
     """Build a minimal schema-valid loop map containing selected switch pads."""
     pads = [
-        PcbSwitchingLoopPad(pad=pin, footprint="Synthetic:QFN", net="SWITCH")
-        for pin in mapped_pins
+        PcbSwitchingLoopPad(pad=pin, footprint="Synthetic:QFN", net="SWITCH") for pin in mapped_pins
     ]
     pads.extend(
         (
