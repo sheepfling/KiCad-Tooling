@@ -26624,8 +26624,12 @@ acceptance threads while new lint features proceed:
 
 #### LINT-458 — Review exact custom DRC reference selectors absent from the PCB
 
-- **Status:** Implemented as a default-REVIEW rule. Local focused acceptance,
-  including digest-pinned Docker fixtures, must pass before tagging.
+- **Status:** Implemented as a default-REVIEW rule. The tagged local scoped
+  acceptance passed with 470 tests, including digest-pinned Docker checks on
+  KiCad 10.0.0 and 10.0.5, Linux and Windows Pyright, wheel/sdist builds, and
+  installed-package rehearsals against separate and adapted public-template
+  checkouts. The tagged hosted lint gate passed in GitHub Actions run
+  `43530873312`; package and preview jobs were skipped under prerelease policy.
 - **Priority:** P2 saved-constraint coverage. A footprint rename or removal
   can leave a syntactically valid custom DRC condition scoped to no object.
 - **Rule:** Adds `pcb.drc_exact_reference_scope_unmatched` for exact ASCII
