@@ -5,6 +5,7 @@ from __future__ import annotations
 import tests.test_connector_footprint_generic_power_pin_split as _generic_power_split
 import tests.test_connector_footprint_peer_generic_power_all_open as _generic_power_all_open
 import tests.test_connector_footprint_peer_generic_power_partial_open as _generic_power_partial_open
+import tests.test_connector_footprint_peer_pin_type_consistency as _peer_pin_type
 import tests.test_connector_mapped_interface_other_named_rail as _mapped_other_rail
 import tests.test_connector_mapped_interface_other_unassigned as _mapped_other_contact
 import tests.test_connector_mapped_interface_power_contact_unassigned as _mapped_power_contact
@@ -65,6 +66,7 @@ def mapped_connector_rule_ids() -> set[str]:
         generic_power_partial_open_source
     )
     generic_power_split_report = _generic_power_split.lint_report(_generic_power_split._source())
+    peer_pin_type_report = _peer_pin_type.lint_report(_peer_pin_type._source())
     return {
         item.rule_id
         for report in (
@@ -80,6 +82,7 @@ def mapped_connector_rule_ids() -> set[str]:
             generic_power_all_open_report,
             generic_power_partial_open_report,
             generic_power_split_report,
+            peer_pin_type_report,
         )
         for item in report.findings
     }

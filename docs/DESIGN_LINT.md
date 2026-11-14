@@ -599,6 +599,31 @@ actual voltage or PCB continuity. Project policy can keep `review`, set
   -m 'design_lint and connector_lint and power_lint and design_lint_rule(rule_id="connector.reviewed_peer_power_input_split")'
 ```
 
+## Review electrical-type differences on connector aliases
+
+`connector.footprint_peer_pin_electrical_type_disagreement` asks for review
+when fitted connector aliases have values and footprints that match after
+trimming and case-folding,
+complete matching pin inventories and functions, and only one pin differs in
+native electrical type. That target pin must be assigned to the same exact
+net across peers, and another pin must provide a common function, type, and
+net anchor. This can surface a symbol inconsistency that assignment-divergence
+checks do not report when the target assignments are common.
+
+This is a review clue, not a claim that the symbols are interchangeable or
+that one native type is correct. Incomplete metadata, changed functions,
+multiple type differences, split or open target assignments, and missing
+anchors stay quiet. The check does not inspect PCB pad mapping or copper.
+Project policy may promote, disable, or exactly ignore the finding. Synthetic
+and exact-version native fixtures are recorded in the
+[fixture README](../tests/fixtures/design_lint/connector-peer-pin-type-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_connector_footprint_peer_pin_type_consistency.py \
+  tests/test_connector_footprint_peer_pin_type_consistency_parity.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.footprint_peer_pin_electrical_type_disagreement")'
+```
+
 ## Review split power outputs on unlike connector peers
 
 `connector.reviewed_peer_power_output_split` asks for review when unlike,
@@ -929,7 +954,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 389 active rules.
+The catalog currently contains 390 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports

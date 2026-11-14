@@ -4,6 +4,38 @@ from __future__ import annotations
 
 CONNECTOR_RULE_NODE_CASES = (
     (
+        "connector.footprint_peer_pin_electrical_type_disagreement",
+        "tests/test_connector_footprint_peer_pin_type_consistency.py::test_same_assigned_pin_with_native_type_disagreement_is_localized",
+    ),
+    (
+        "connector.footprint_peer_pin_electrical_type_disagreement",
+        "tests/test_connector_footprint_peer_pin_type_consistency.py::test_incomplete_or_nonmatching_peer_evidence_stays_quiet",
+    ),
+    (
+        "connector.footprint_peer_pin_electrical_type_disagreement",
+        "tests/test_connector_footprint_peer_pin_type_consistency.py::test_project_can_block_disable_or_ignore_the_exact_finding",
+    ),
+    (
+        "connector.footprint_peer_pin_electrical_type_disagreement",
+        "tests/test_connector_footprint_peer_pin_type_consistency.py::test_finding_is_stable_under_native_mapping_reordering",
+    ),
+    (
+        "connector.footprint_peer_pin_electrical_type_disagreement",
+        "tests/test_connector_footprint_peer_pin_type_consistency.py::test_candidate_evidence_cannot_be_forged_away_from_source",
+    ),
+    (
+        "connector.footprint_peer_pin_electrical_type_disagreement",
+        "tests/test_connector_footprint_peer_pin_type_consistency.py::test_declared_custom_connector_references_remain_source_validated",
+    ),
+    (
+        "connector.footprint_peer_pin_electrical_type_disagreement",
+        "tests/test_connector_footprint_peer_pin_type_consistency_parity.py::test_connector_peer_type_review_matches_between_cli_and_mcp",
+    ),
+    (
+        "connector.footprint_peer_pin_electrical_type_disagreement",
+        "tests/test_connector_footprint_peer_pin_type_consistency_native.py::test_native_connector_pin_type_disagreement_and_matching_control_repeat",
+    ),
+    (
         "connector.footprint_peer_generic_power_pin_unanchored_split",
         "tests/test_connector_footprint_generic_power_pin_split.py::test_unanchored_generic_power_pins_on_similar_connectors_are_reviewed",
     ),

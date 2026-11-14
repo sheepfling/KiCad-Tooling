@@ -50,6 +50,9 @@ from .connector_footprint_peer_open_candidates import (
     footprint_peer_generic_power_open_outlier_candidates,
     footprint_peer_pin_open_outlier_candidates,
 )
+from .connector_footprint_peer_pin_type_consistency import (
+    connector_footprint_peer_pin_electrical_type_disagreements,
+)
 from .connector_footprint_peer_pin_types import (
     ConnectorFootprintPeerPinAllOpen,
     ConnectorFootprintPeerPinScan,
@@ -150,6 +153,10 @@ def connector_footprint_peer_pin_candidates(
     )
     named_passive_divergence = evaluate_footprint_named_passive_assignment_divergence(scan)
     return (
+        *connector_footprint_peer_pin_electrical_type_disagreements(
+            observed,
+            declared_references,
+        ),
         *metadata_divergences,
         *missing_metadata_divergences,
         *missing_metadata_open_outliers,

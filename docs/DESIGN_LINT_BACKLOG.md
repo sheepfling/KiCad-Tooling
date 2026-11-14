@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 389 rules are implemented with synthetic regression coverage.
+The following 390 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 389 active rules.
+The catalog currently contains 390 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -455,6 +455,7 @@ skipped under prerelease policy.
 - `connector.footprint_peer_unanchored_scope_coverage_missing`
 - `connector.footprint_peer_unanchored_scope_unreviewed`
 - `connector.footprint_peer_pin_metadata_assignment_divergence`
+- `connector.footprint_peer_pin_electrical_type_disagreement`
 - `connector.footprint_peer_pin_metadata_open_outlier`
 - `connector.footprint_peer_pin_missing_metadata_assignment_divergence`
 - `connector.footprint_peer_pin_missing_metadata_open_outlier`
@@ -4466,7 +4467,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 389 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 390 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -27434,6 +27435,47 @@ acceptance threads while new lint features proceed:
   checks passed. Hosted prerelease acceptance passed in
   [run 43617396766](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43617396766)
   for tag `v0.5.3rc787`; its wheel rehearsal used the separate public template.
+
+#### LINT-476 — Review connector peer electrical-type disagreement on a shared assignment
+
+- **Rule:** `connector.footprint_peer_pin_electrical_type_disagreement`
+- **Status:** Scoped local acceptance passed; hosted tagged acceptance is pending.
+- **Gap:** Connector peer metadata checks already surface electrical-type
+  differences when paired with split assignments. They stay quiet when the
+  peer pin assignments are common, even if the native symbol pin types differ.
+- **Predicate:** For fitted distinct-symbol aliases with no PART_ID, require
+  nonempty values and footprints that match after trimming and case-folding,
+  complete identical pin
+  inventories, and complete native pin metadata. All peer functions must
+  match. Exactly one pin may differ in electrical type; that pin must have
+  one exact common assignment across peers, and at least one other pin must
+  be a matching function/type/common-net anchor.
+- **Interpretation:** A common assignment and matching metadata are review
+  context, not proof that the symbols are interchangeable or that one type is
+  correct. The finding does not prescribe which type to change and does not
+  inspect pad mapping, PCB copper, or off-board wiring. Project policy can
+  choose `review`, `block`, `off`, or an exact-fingerprint ignore.
+- **Controls and policy:** Synthetic regressions cover matching types,
+  different functions, absent anchor, open/split target assignments,
+  incomplete inventory/metadata, other-pin type mismatch, PART_ID, DNP,
+  policy modes, mapping order, and source-evidence tampering. A CLI/MCP parity
+  case checks a fault and matching control.
+- **Native evidence:** Tooling-authored fault and control schematics export
+  under digest-pinned KiCad 10.0.0 and 10.0.5 Docker images. Repeated exports
+  check native function/type metadata and common net assignment. No cohort or
+  proprietary board files are used.
+- **Selection:** Run
+  `tests/test_connector_footprint_peer_pin_type_consistency.py` and
+  `tests/test_connector_footprint_peer_pin_type_consistency_parity.py` with
+  `design_lint and connector_lint and interface_lint` plus the rule ID. Run
+  `tests/test_connector_footprint_peer_pin_type_consistency_native.py` with
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` and `native_kicad` plus the rule ID.
+- **Local acceptance:** The scoped package runner passed 465 tests with 9,509
+  unrelated tests deselected, including digest-pinned Docker exports on KiCad
+  10.0.0 and 10.0.5. Ruff, Rumdl, mdrepo, Linux and Windows Pyright,
+  wheel/sdist builds, installed-wheel origin/version checks, and separate plus
+  adapted public-template rehearsals passed. Hosted tagged acceptance is
+  pending.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
