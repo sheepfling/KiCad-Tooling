@@ -27390,7 +27390,7 @@ acceptance threads while new lint features proceed:
 - **Rule:** `connector.footprint_peer_generic_power_pin_unanchored_split`
 - **Status:** Implemented as a default-review connector heuristic; focused
   local, exact-native, architecture, catalog, and Linux/Windows type acceptance
-  passed. The tagged hosted gate is pending.
+  passed. Hosted tagged acceptance passed for `v0.5.3rc787`.
 - **Gap:** The shared alias scan already retains generic-pin splits with no
   common-net anchor, and the coverage/scope checks report that the comparison
   lacks reviewed scope. The pin-specific divergence rule requires a current
