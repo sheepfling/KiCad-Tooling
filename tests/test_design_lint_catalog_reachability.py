@@ -65,6 +65,9 @@ from tests.design_lint_fixtures.catalog_reachability_mapped_contact_sharing impo
     mapped_contact_sharing_rule_ids,
 )
 from tests.design_lint_fixtures.catalog_reachability_pcb import pcb_rule_ids
+from tests.design_lint_fixtures.catalog_reachability_pcb_power_width import (
+    power_pin_width_map_rule_ids,
+)
 from tests.design_lint_fixtures.catalog_reachability_protocols import protocol_rule_ids
 from tests.design_lint_fixtures.component_catalog_reachability import (
     reachable_component_rule_ids,
@@ -278,6 +281,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
             regulator_netlist(), ProjectKind.PCB, None, "a" * 64
         )
     )
+    emitted.update(power_pin_width_map_rule_ids())
     emitted.update(mapped_connector_rule_ids())
     scoped_returns, scoped_coverage = _tests_test_scope_singleton.two_usb_one_serial_return_case(
         common_return=True,

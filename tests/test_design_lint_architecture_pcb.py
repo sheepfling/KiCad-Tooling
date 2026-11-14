@@ -49,6 +49,7 @@ PCB_RETURN_PATH_MODULES = (
     "pcb_return_path_capture.py",
 )
 PCB_SHARED_PAD_MODULES = ("pcb_pad_review.py", "pcb_pad_union_find.py")
+PCB_POWER_TRACK_WIDTH_MODULES = ("pcb_power_pin_track_width_coverage.py",)
 PCB_ROUTE_SKEW_MODULES = (
     "design_lint_pcb_geometry_fast_paths.py",
     "pcb_native_route_models.py",
@@ -102,6 +103,18 @@ def test_switching_regulator_pin_recognition_stays_in_a_small_shared_owner() -> 
 
     assert all(path.is_file() for path in modules)
     assert all(_line_count(path) < IMPLEMENTATION_MAX_LINES for path in modules)
+
+
+def test_power_pin_track_width_coverage_stays_in_a_small_theme_owner() -> None:
+    modules = [HWREPO / name for name in PCB_POWER_TRACK_WIDTH_MODULES]
+
+    assert all(path.is_file() for path in modules)
+    assert all(_line_count(path) < IMPLEMENTATION_MAX_LINES for path in modules)
+    catalog = (HWREPO / "design-lint-rules.json").read_text(encoding="utf-8")
+    assert (
+        "kicad_tooling/hwrepo/pcb_power_pin_track_width_coverage.py#"
+        "power_pin_net_track_width_map_candidates"
+    ) in catalog
 
 
 def test_pcb_drc_coverage_stays_split_by_responsibility() -> None:

@@ -55,3 +55,21 @@ def test_switching_regulator_coverage_rule_selects_exact_native_inventory_case()
     assert native_fixture in rule.required_native_fixtures
     assert native_test in rule.fault_fixtures
     assert native_test in rule.valid_control_fixtures
+
+
+@pytest.mark.rule_gate_integrity
+def test_power_pin_width_map_rule_selects_its_exact_native_netlist_case() -> None:
+    rule = next(
+        entry
+        for entry in rule_catalog().rules
+        if entry.rule_id == "pcb.power_pin_net_track_width_map_coverage"
+    )
+    native_fixture = "KICAD_RUN_NATIVE_POWER_PIN_WIDTH_MAP_FIXTURES"
+    native_test = (
+        "tests.test_pcb_power_pin_track_width_map_coverage_native."
+        "test_native_power_pin_nets_prompt_without_map_and_clear_when_mapped"
+    )
+
+    assert native_fixture in rule.required_native_fixtures
+    assert native_test in rule.fault_fixtures
+    assert native_test in rule.valid_control_fixtures

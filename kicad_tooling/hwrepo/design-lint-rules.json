@@ -12888,6 +12888,51 @@
       ]
     },
     {
+      "rule_id": "pcb.power_pin_net_track_width_map_coverage",
+      "title": "Native power-pin nets are absent from authored track-width review scope",
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_power_pin_track_width_coverage.py#power_pin_net_track_width_map_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Source-bound KiCad schematic netlist pin assignments, native component footprint and pin inventory, exact native power_in/power_out pin electrical types, and the project-authored pcb_track_width_map",
+      "predicate": "For PCB and PCB-only projects with a bound native netlist, group exact named nets containing at least one uniquely assigned pin whose unique component metadata confirms a fitted nonempty footprint, pin-inventory membership, and native power_in or power_out electrical type. Emit one REVIEW prompt for each such net absent from pcb_track_width_map. An exact map entry covers that net, and a single board-wide \"*\" entry covers all nets. A missing map leaves all eligible nets uncovered.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 native schematic netlist exports; the selected project version and image digest remain checked"
+      ],
+      "limitations": [
+        "The rule is default-off because native power pin types are candidate-generation evidence, not proof that a net carries significant current or needs a project width screen.",
+        "Only uniquely named nets and pins with unique component, pin-inventory, and electrical-type metadata are considered. DNP components, footprint-less symbols, unassigned pins, multiply assigned pins, and ambiguous case-folded metadata stay quiet.",
+        "This is map-coverage discovery only. It does not inspect PCB tracks, zones, vias, copper layers, current, temperature, stackup, ampacity, required width, or physical connectivity. The authored width map remains a project decision and is not a generic capacity rating."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_power_pin_track_width_map_coverage.test_unmapped_fitted_power_pin_nets_prompt_with_exact_native_evidence",
+        "tests.test_design_lint_mcp_parity_pcb_power_pin_track_width_map.test_unmapped_power_pin_nets_and_mapped_control_match_cli_and_mcp",
+        "tests.test_pcb_power_pin_track_width_map_coverage_native.test_native_power_pin_nets_prompt_without_map_and_clear_when_mapped"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_power_pin_track_width_map_coverage.test_exact_map_covers_only_listed_power_nets_and_wildcard_covers_all",
+        "tests.test_pcb_power_pin_track_width_map_coverage.test_ineligible_or_ambiguous_native_assignments_stay_quiet",
+        "tests.test_design_lint_mcp_parity_pcb_power_pin_track_width_map.test_unmapped_power_pin_nets_and_mapped_control_match_cli_and_mcp",
+        "tests.test_pcb_power_pin_track_width_map_coverage_native.test_native_power_pin_nets_prompt_without_map_and_clear_when_mapped"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_power_pin_track_width_map_coverage.test_candidate_order_and_fingerprint_ignore_native_net_mapping_order"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_POWER_PIN_WIDTH_MAP_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_power_pin_track_width_coverage.py#power_pin_net_track_width_map_candidates",
+        "kicad_tooling/hwrepo/netlist_pin_assignments.py#netlist_pin_net_index",
+        "kicad_tooling/hwrepo/design_lint_pcb_coverage_common.py#map_sha256",
+        "tests/design_lint_fixtures/pcb_power_pin_track_width.py#native_power_netlist",
+        "tests/fixtures/design_lint/switching-regulator-loop-map-native/unmapped.kicad_sch",
+        "tests/fixtures/design_lint/switching-regulator-loop-map-native/netlist.xml"
+      ]
+    },
+    {
       "rule_id": "pcb.differential_pair_unmapped_native_rule",
       "title": "Exact differential-pair DRC selectors are absent from the enabled pair map",
       "theme": "pcb",

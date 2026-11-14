@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 384 rules are implemented with synthetic regression coverage.
+The following 385 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 384 active rules.
+The catalog currently contains 385 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -716,6 +716,7 @@ skipped under prerelease policy.
 - `pcb.protection_entry_path`
 - `pcb.minimum_track_width`
 - `pcb.track_width_unmapped_native_rule`
+- `pcb.power_pin_net_track_width_map_coverage`
 - `pcb.reference_plane_coverage`
 - `pcb.reference_plane_unanchored_island`
 - `pcb.alternate_reference_plane_run`
@@ -4452,7 +4453,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 384 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 385 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -27106,7 +27107,60 @@ acceptance threads while new lint features proceed:
   and utility checks, Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist
   builds, installed-origin/version checks, and external/adapted template
   inventory, surface, verification, and playtest stages passed.
-- **Hosted acceptance:** Pending the annotated lint-gate tag.
+- **Hosted acceptance:** The annotated prerelease gate passed on tag
+  `v0.5.3rc777`, commit `d414e3fc1aa3ed6f1e37e47a9318ffa013c80a76`, in
+  GitHub Actions run `43584440245`.
+
+#### LINT-470 — Review power-pin nets missing track-width map coverage
+
+- **Status:** Implemented as the default-off REVIEW heuristic
+  `pcb.power_pin_net_track_width_map_coverage`.
+- **Priority:** P2 coverage discovery. `pcb.minimum_track_width` measures
+  project-mapped nets, and `pcb.track_width_unmapped_native_rule` finds exact
+  native rules missing from an enabled map. Neither discovers a source net
+  solely because its fitted native pins use power electrical types.
+- **Cohort basis:** The documented `pcb-inspector` power-width analysis is a
+  candidate for mapped copper review. This rule adopts only a bounded
+  discovery cue; it imports no cohort implementation or threshold.
+- **Predicate:** On PCB and PCB-only projects with a bound native schematic
+  netlist, group exact nets containing a uniquely assigned pin with unique
+  component and pin-inventory metadata, a nonempty footprint, and an exact
+  `power_in` or `power_out` native electrical type. Prompt once per eligible
+  net missing from `pcb_track_width_map`. An exact requirement covers that
+  net; a single `*` requirement covers every net.
+- **Configuration:** Default `off`; projects can opt into `review`, `block`,
+  or `off` using standard rule overrides and exact-fingerprint ignores.
+- **Incremental value:** This exposes omitted project-authored width-map
+  candidates from native power pin roles. It does not measure a physical
+  trace or claim defect detection, ampacity, or a universally required width.
+- **Controls and policy:** Exact and wildcard maps, case-insensitive exact
+  matching, DNP, footprint-less, missing inventory, non-power pin type,
+  ambiguous case-folded pin/net metadata, non-PCB project kinds, policy
+  overrides, exact ignores, and mapping-order stability are covered.
+- **Evidence:** A synthetic native-netlist fixture places U1.1 and U1.4 on
+  `INPUT` and `RETURN`; tooling-owned fault/control cases compare absent,
+  partial, exact, and wildcard maps. Native export repeats on digest-pinned
+  KiCad 10.0.0 and 10.0.5. CLI/MCP results match for the two-net fault and
+  complete-map control. No board, cohort, or proprietary source was imported.
+- **Boundary:** The prompt uses only unique fitted-pin electrical types
+  `power_in` and `power_out`. It does not infer current, load, source,
+  off-board connection, track or zone topology, copper temperature, stackup,
+  ampacity, or a suitable width. The project owner must author any map value
+  from an independently reviewed requirement.
+- **Selection:** Run
+  `tests/test_pcb_power_pin_track_width_map_coverage.py`,
+  `tests/test_design_lint_mcp_parity_pcb_power_pin_track_width_map.py`, and
+  the PCB architecture and rule-reachability checks with
+  `design_lint and pcb_lint and power_lint` plus the rule selector. Run
+  `tests/test_pcb_power_pin_track_width_map_coverage_native.py` with Docker,
+  `KICAD_RUN_NATIVE_POWER_PIN_WIDTH_MAP_FIXTURES=1`, `native_kicad`, and the
+  same selector.
+- **Local scoped acceptance:** `scripts/ci.py` passed at
+  `build/ci/run-fpprs9fr`: 455 passed and 9,441 deselected, including
+  digest-pinned native cases on KiCad 10.0.0 and 10.0.5. Ruff, Alphus module
+  and utility checks, Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist
+  builds, installed-origin/version checks, and the external/adapted template
+  inventory, surface, verification, and playtest stages passed.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 

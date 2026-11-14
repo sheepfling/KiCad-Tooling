@@ -62,6 +62,7 @@ from .pcb_footprint_path_integrity import (
     pcb_footprint_path_trailing_separator_candidates,
 )
 from .pcb_object_uuid_integrity import duplicate_pcb_object_uuid_candidates
+from .pcb_power_pin_track_width_coverage import power_pin_net_track_width_map_candidates
 from .pcb_signal_path_unmapped_rule_scan import scan_unmapped_signal_path_native_rules
 from .pcb_switching_loop_map_coverage import switching_regulator_loop_map_candidates
 from .pcb_track_angle import track_angle_rule_coverage_candidates
@@ -213,6 +214,12 @@ def inspect_design_lint_request(
             ),
         )
         pcb_source_candidates = (
+            *power_pin_net_track_width_map_candidates(
+                coach.observed,
+                coach.project_kind,
+                policy.pcb_track_width_map,
+                coach.netlist_sha256,
+            ),
             *switching_regulator_loop_map_candidates(
                 coach.observed,
                 coach.project_kind,

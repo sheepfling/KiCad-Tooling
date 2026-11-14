@@ -286,6 +286,7 @@ DesignLintRuleId = Literal[
     "pcb.protection_entry_path",
     "pcb.minimum_track_width",
     "pcb.track_width_unmapped_native_rule",
+    "pcb.power_pin_net_track_width_map_coverage",
     "pcb.reference_plane_coverage",
     "pcb.reference_plane_unanchored_island",
     "pcb.alternate_reference_plane_run",

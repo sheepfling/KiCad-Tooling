@@ -929,7 +929,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 384 active rules.
+The catalog currently contains 385 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -5443,6 +5443,59 @@ Run its focused synthetic, CLI/MCP, selector, and architecture regressions:
   tests/test_design_lint_mcp_parity_pcb_track_width_unmapped.py \
   tests/test_design_lint_architecture_pcb_track_width_unmapped.py \
   -m 'design_lint and pcb_lint and design_lint_rule(rule_id="pcb.track_width_unmapped_native_rule")'
+```
+
+### Find power-pin nets missing track-width map coverage
+
+`pcb.power_pin_net_track_width_map_coverage` is a default-off review prompt for
+PCB and PCB-only projects. It uses the source-bound native schematic netlist
+to find exact nets with uniquely assigned, fitted footprint pins whose native
+electrical type is `power_in` or `power_out`. It prompts when such a net is
+absent from `pcb_track_width_map`; an exact entry covers that net and a
+single `"*"` entry covers all nets. A missing map leaves each eligible net
+uncovered.
+
+This is a map-coverage heuristic inspired by the cohort's documented power
+rail width screens. It does not claim that every native power-type net needs
+a width requirement. Native pin type and footprint presence are only review
+cues; off-board loads, anticipated current, stackup, copper temperature,
+zones, vias, routed connectivity, ampacity, and a suitable width remain
+outside the predicate. Keep it off unless the project opts into reviewing
+the observed candidate power nets, and author widths only from an
+independently reviewed project requirement.
+
+```json
+{
+  "rule_id": "pcb.power_pin_net_track_width_map_coverage",
+  "mode": "review",
+  "reason": "Review native power-pin nets for width-map coverage"
+}
+```
+
+The synthetic source-bound netlist control covers the exact `INPUT` and
+`RETURN` pin nets, partial and complete map scopes, whole-board scope, DNP,
+footprint, inventory, assignment, ambiguous metadata, project-kind, policy,
+ignore, and stable-order boundaries. A repeated native schematic netlist
+export checks the observed `power_in` types on digest-pinned KiCad 10.0.0 and
+10.0.5. Neither fixture claims a routed copper deficiency.
+
+Run the focused slice with:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_pcb_power_pin_track_width_map_coverage.py \
+  tests/test_design_lint_mcp_parity_pcb_power_pin_track_width_map.py \
+  tests/test_design_lint_architecture_pcb.py \
+  -m 'design_lint and pcb_lint and power_lint and (design_lint_rule(rule_id="pcb.power_pin_net_track_width_map_coverage") or architecture)'
+```
+
+Run its exact-native lane with:
+
+```sh
+KICAD_RUN_NATIVE_POWER_PIN_WIDTH_MAP_FIXTURES=1 \
+  .venv/bin/python -I -m pytest \
+  tests/test_pcb_power_pin_track_width_map_coverage_native.py \
+  -m 'design_lint and pcb_lint and power_lint and native_kicad and design_lint_rule(rule_id="pcb.power_pin_net_track_width_map_coverage")'
 ```
 
 ## Review mapped capacitive touch-pad clearance

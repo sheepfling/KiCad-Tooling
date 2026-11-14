@@ -7,6 +7,12 @@ for `SW` and `LX1`. The native regression exports it with digest-pinned KiCad
 10.0.0 and 10.0.5, parses the export, checks a review candidate when no map
 covers those pads, and checks quiet behavior when both are mapped.
 
+The same native export also provides a bounded source for the separate
+`pcb.power_pin_net_track_width_map_coverage` review: U1.1 (`power_in`) is on
+`INPUT` and U1.4 (`power_in`) is on `RETURN`. Its power-width-map fault and
+mapped controls ask only whether those observed nets have authored map scope;
+they do not make a statement about copper routing or required widths.
+
 This file is an isolated synthetic schematic fixture. It contains no user,
 cohort, or proprietary board source and makes no assertion about a physical
 switching regulator, loop geometry, return path, or electrical limit.
