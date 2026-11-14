@@ -26766,7 +26766,9 @@ acceptance threads while new lint features proceed:
 - **Status:** Implemented as an end-to-end verification regression test for
   `connector.repeated_pin_function`; this adds no lint predicate. It confirms
   that a failed native connectivity comparison does not suppress a separate
-  connector REVIEW when native netlist export succeeded.
+  connector REVIEW when native netlist export succeeded. The focused tagged
+  gate and installed-wheel rehearsal passed in hosted acceptance run
+  `43544058927`; package and preview jobs were skipped by the tag scope.
 - **Priority:** P1 diagnostic quality. An empty independent connectivity
   contract remains a verification blocker, but the report should retain
   actionable heuristic evidence supported by the exported netlist.
