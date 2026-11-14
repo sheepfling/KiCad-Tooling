@@ -26670,8 +26670,9 @@ acceptance threads while new lint features proceed:
 - **Status:** Implemented as a default-REVIEW rule. Digest-pinned Docker fixtures
   passed on KiCad 10.0.0 and 10.0.5. The scoped acceptance passed 443 tests,
   both Pyright target configurations, wheel and sdist builds, installed-wheel
-  checks, and separate plus relocated template-project rehearsals. Hosted
-  acceptance is pending.
+  checks, and separate plus relocated template-project rehearsals. The tagged
+  hosted lint gate passed in GitHub Actions run `43534446336`; package and
+  preview jobs were skipped under prerelease policy.
 - **Priority:** P2 saved-constraint coverage. A pad rename or removal can leave
   a syntactically valid custom DRC rule scoped to a reference and pad number
   that no longer exists together.
