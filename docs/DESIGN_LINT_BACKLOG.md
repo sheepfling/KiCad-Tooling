@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 381 rules are implemented with synthetic regression coverage.
+The following 382 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 381 active rules.
+The catalog currently contains 382 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -479,6 +479,7 @@ skipped under prerelease policy.
 - `connector.footprint_named_signal_all_open`
 - `connector.footprint_peer_pin_all_open`
 - `connector.footprint_peer_generic_power_pin_all_open`
+- `connector.footprint_peer_generic_power_pin_open_outlier`
 - `connector.generic_peer_pin_all_open`
 - `connector.generic_peer_pin_open_outlier`
 - `connector.peer_power_input_named_all_open`
@@ -4449,7 +4450,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 381 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 382 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -26962,6 +26963,51 @@ acceptance threads while new lint features proceed:
 - **Boundary:** This is a source-bound schematic review, not proof of pin role,
   required commonality, PCB copper continuity, or off-board wiring. The
   tooling-owned fixtures contain no proprietary project data.
+
+#### LINT-467 — Review partial-open generic power contacts across connector peers
+
+- **Status:** Implemented as the default-off REVIEW heuristic
+  `connector.footprint_peer_generic_power_pin_open_outlier`.
+- **Priority:** P2 review context. The existing individual unconnected-power
+  rules report the open pin, while the footprint-peer outlier rule is scoped
+  to generic passive and signal contacts. Generic `power_in`/`power_out`
+  partial opens therefore lacked the concise peer-pattern context available
+  for those other electrical types.
+- **Predicate:** For fitted aliases with distinct native symbols and no
+  `PART_ID`, require exact nonempty value and footprint matches, complete
+  identical pin inventories, and matching native pin metadata. Consider only a
+  generic `Pin_N` or numeric-only pin function with native `power_in` or
+  `power_out` type, at least one assigned peer and one open peer, and one exact
+  net across every assigned peer. Require either another common-net anchor or
+  a current source-matched shared `peer_assignment_group`. For anchorless
+  prompts, a current explicit intentional-open reason for every open contact
+  suppresses the finding.
+- **Incremental value:** The individual power-pin rule already detects an open
+  power input/output. This lint adds cohort-level context only and does not
+  claim unique defect detection. Its default remains `off` because an unused
+  or differently populated connector contact can be intentional.
+- **Controls and policy:** Common assigned contacts, split assigned nets,
+  mismatched/incomplete metadata, missing or stale scope, separate peer groups,
+  and explicitly documented anchorless opens stay quiet. The usual
+  `review`/`block`/`off` and exact-fingerprint ignore controls apply.
+- **Evidence:** Synthetic tests cover `power_in` and `power_out`, the baseline
+  individual-pin finding, common and anchorless assignments, peer scope,
+  intentional-open suppression, policy, ignores, and fingerprint stability.
+  CLI/MCP parity checks the partial-open fault and connected control. A
+  source-hashed schematic fault and reused connected control export twice with
+  digest-pinned Docker KiCad 10.0.0 and 10.0.5. No project or cohort board
+  source is included.
+- **Boundary:** Value, footprint, pin metadata, and peer scope are similarity
+  evidence only. The prompt does not infer connector function, a required
+  power connection, commonality, board copper continuity, or off-board
+  behavior.
+- **Selection:** Run
+  `tests/test_connector_footprint_peer_generic_power_partial_open.py` and
+  `tests/test_design_lint_mcp_parity_connector_generic_power_partial_open.py`
+  with `design_lint and connector_lint and power_lint` plus the rule selector.
+  Run `tests/test_connector_footprint_peer_generic_power_partial_open_native.py`
+  with Docker, `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`, `native_kicad`, and the
+  same selector.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 

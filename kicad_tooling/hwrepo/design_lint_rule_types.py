@@ -55,6 +55,7 @@ DesignLintRuleId = Literal[
     "connector.footprint_named_power_output_assignment_divergence",
     "connector.footprint_peer_pin_all_open",
     "connector.footprint_peer_generic_power_pin_all_open",
+    "connector.footprint_peer_generic_power_pin_open_outlier",
     "connector.peer_power_input_open_assignment",
     "connector.peer_power_input_named_all_open",
     "connector.peer_power_input_named_assignment_divergence",

@@ -44,6 +44,7 @@ from .connector_footprint_peer_missing_metadata_open import (
     connector_footprint_peer_pin_missing_metadata_open_outliers,
 )
 from .connector_footprint_peer_open_candidates import (
+    footprint_peer_generic_power_open_outlier_candidates,
     footprint_peer_pin_open_outlier_candidates,
 )
 from .connector_footprint_peer_pin_types import (
@@ -163,6 +164,11 @@ def connector_footprint_peer_pin_candidates(
         *named_power_output_divergence.candidates,
         *named_passive_divergence.candidates,
         *footprint_peer_pin_open_outlier_candidates(scan, observed, connector_coverage),
+        *footprint_peer_generic_power_open_outlier_candidates(
+            scan,
+            observed,
+            connector_coverage,
+        ),
         *footprint_named_power_input_open_outlier_candidates(scan, connector_coverage),
         *footprint_named_signal_input_open_outlier_candidates(scan, connector_coverage),
         *footprint_named_power_output_open_outlier_candidates(scan, connector_coverage),

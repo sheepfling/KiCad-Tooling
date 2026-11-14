@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from .connector_coverage_models import ConnectorCoverageReport
 from .connector_footprint_peer_pin_types import (
+    SIGNAL_ELECTRICAL_TYPES,
     ConnectorFootprintPeerPinDivergence,
     ConnectorFootprintPeerPinOpenOutlier,
     ConnectorFootprintPeerPinScan,
@@ -70,6 +71,8 @@ def unreviewed_unanchored_connector_alias_scope(
             partial_open.peer_assignment_group is not None
             or partial_open.common_anchor_pin_numbers
             or not pin_function_is_generic(partial_open.pin_function)
+            or partial_open.pin_electrical_type.strip().casefold()
+            not in {"passive", *SIGNAL_ELECTRICAL_TYPES}
             or len(assignments) < 2
             or any(len(nets) > 1 for nets in assignments.values())
             or not any(not nets for nets in assignments.values())

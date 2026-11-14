@@ -297,32 +297,31 @@ for dispositions and timing; leave unmeasured values unstated.
 ### Recorded public screen: 74th relay-switched USB hub (2026-11-14)
 
 - **Source and boundary:** Read-only screen of the public
-  [`74th/relay-switch-usbhub` repository at pinned commit
-  `bdd9bd4fb5dfec64a4863fba1a2c4bb715d21534`](https://github.com/74th/relay-switch-usbhub/tree/bdd9bd4fb5dfec64a4863fba1a2c4bb715d21534).
-  Its [README](https://github.com/74th/relay-switch-usbhub/blob/bdd9bd4fb5dfec64a4863fba1a2c4bb715d21534/README.md)
-  describes four USB-device ports, a power port, four switchable USB hosts,
-  and relay-based host switching. The pinned
+  [`74th/relay-switch-usbhub` repository at pinned commit `bdd9bd4fb5dfec64a4863fba1a2c4bb715d21534`](https://github.com/74th/relay-switch-usbhub/tree/bdd9bd4fb5dfec64a4863fba1a2c4bb715d21534).
+  Its
+  [README](https://github.com/74th/relay-switch-usbhub/blob/bdd9bd4fb5dfec64a4863fba1a2c4bb715d21534/README.md)
+  describes four USB-device ports, a power port, four switchable USB hosts, and relay-based host
+  switching. The pinned
   [LICENSE](https://github.com/74th/relay-switch-usbhub/blob/bdd9bd4fb5dfec64a4863fba1a2c4bb715d21534/LICENSE)
-  declares MIT. No schematic, board, or export was copied into Tooling. Source
-  SHA-256 values: `main-pcb/usb_relay_hub.kicad_sch`
+  declares MIT. No schematic, board, or export was copied into Tooling. Source SHA-256 values:
+  `main-pcb/usb_relay_hub.kicad_sch`
   `e7642a1840331eb0100c352d228ff3bdae6dca4a795067cb942b3aec45879da4`,
   `main-pcb/usb_relay_hub.kicad_pcb`
   `2a2e9cb9ecbf21013dcd558d64f606302afa980102b3fa2c0590a48ef32f75d6`,
   `main-pcb/usb_relay_hub.kicad_pro`
-  `d61614077a3382256b36e8d55aa8c223d8117c960fde539a55813ecabff5a8ac`,
-  `README.md` `fc7cb918f7cc229330151e964b9ae642e58ffe32dceb36e049c05b5e9b83297a`,
-  and `LICENSE` `c1f892d5f721ecb867851df461729ec19eb69d4bb7636e19a90cacc794d28ae2`.
-- **Native input and repeatability:** Exported the main schematic twice in
-  Docker image
+  `d61614077a3382256b36e8d55aa8c223d8117c960fde539a55813ecabff5a8ac`, `README.md`
+  `fc7cb918f7cc229330151e964b9ae642e58ffe32dceb36e049c05b5e9b83297a`, and `LICENSE`
+  `c1f892d5f721ecb867851df461729ec19eb69d4bb7636e19a90cacc794d28ae2`.
+- **Native input and repeatability:** Exported the main schematic twice in Docker image
   `ghcr.io/kicad/kicad:10.0.5@sha256:fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c`
-  (`kicad-cli version` 10.0.5; image platform `linux/amd64`; image ID equals
-  the pinned digest). Raw XML hashes differ because the export timestamp is
-  the only diff: first `315f19fdbfbda90f4b85fc4f1c71fe9f06b4c4df8f4056057e1849a4c6430bac`,
-  repeat `355c932d956486e2ba356e9becad51960808c76a2201951f301a9e16acf04086`.
-  Both parse to equal typed contracts with canonical SHA-256
-  `655cf0f19f8eba3b0545b99ee53abf12b7065ec44903ab99adc7c3b5606cea12`
-  (72 components, 68 nets). Only native schematic export and typed
-  default-policy replay were run; the PCB file was hashed but not analyzed.
+  (`kicad-cli version` 10.0.5; image platform `linux/amd64`; image ID equals the pinned digest). Raw
+  XML hashes differ because the export timestamp is the only diff: first
+  `315f19fdbfbda90f4b85fc4f1c71fe9f06b4c4df8f4056057e1849a4c6430bac`, repeat
+  `355c932d956486e2ba356e9becad51960808c76a2201951f301a9e16acf04086`. Both parse to equal typed
+  contracts with canonical SHA-256
+  `655cf0f19f8eba3b0545b99ee53abf12b7065ec44903ab99adc7c3b5606cea12` (72 components, 68 nets). Only
+  native schematic export and typed default-policy replay were run; the PCB file was hashed but not
+  analyzed.
 - **Repeated connector assignments:** Native connectivity assigns the GND
   function on all nine connectors J1–J9 to the same schematic `GND` net. The
   default `DesignLintPolicy()` reports no split-GND connector finding. It does
@@ -2689,10 +2688,10 @@ Source: [kicad-happy release notes][happy-fiducial-release-notes].
   proprietary project, cohort board, or upstream source was stored.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 381 active rules. Each entry has a deterministic predicate, evidence
+contains 382 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
-Of the 381 active rules, 321 default to `review`, 59 to `off`, and
+Of the 382 active rules, 321 default to `review`, 60 to `off`, and
 `pcb.required_fitted_reference` to `block`. Off-by-default checks include
 schematic geometry, generic peer assignment, selected component topology
 reviews such as the BJT base-bias and base/collector same-net prompts, and

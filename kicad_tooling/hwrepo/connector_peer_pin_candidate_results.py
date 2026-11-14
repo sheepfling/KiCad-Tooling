@@ -18,6 +18,7 @@ _FOOTPRINT_OPEN_OUTLIER_RULE_IDS: frozenset[DesignLintRuleId] = frozenset(
         "connector.footprint_named_signal_output_open_outlier",
         "connector.footprint_named_signal_mode_dependent_open_outlier",
         "connector.footprint_named_passive_open_outlier",
+        "connector.footprint_peer_generic_power_pin_open_outlier",
     }
 )
 
@@ -111,7 +112,11 @@ class ConnectorPeerPinFindingCounts:
                 item.rule_id in _FOOTPRINT_OPEN_OUTLIER_RULE_IDS for item in items
             ),
             footprint_peer_pin_unanchored_open_outlier_finding_count=sum(
-                item.rule_id == "connector.footprint_peer_pin_open_outlier"
+                item.rule_id
+                in {
+                    "connector.footprint_peer_pin_open_outlier",
+                    "connector.footprint_peer_generic_power_pin_open_outlier",
+                }
                 and not item.evidence.get("common_anchor_pin_numbers")
                 and bool(item.evidence.get("peer_assignment_group"))
                 for item in items

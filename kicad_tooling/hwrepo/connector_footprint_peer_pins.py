@@ -331,7 +331,7 @@ def scan_connector_footprint_peer_pin_assignments(
                 ):
                     pin_key = f"{scope_references[0]}.{pin_number}".casefold()
                     pin_type = electrical_types[pin_key].strip().casefold()
-                    if pin_type not in GENERIC_ALL_OPEN_PIN_TYPES:
+                    if pin_type not in GENERIC_ALL_OPEN_PIN_TYPES | GENERIC_POWER_PIN_TYPES:
                         continue
                     unanchored_open_outliers.append(
                         connector_footprint_peer_open_outlier(

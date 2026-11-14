@@ -110,6 +110,7 @@ def validate_connector_peer_pin_coverage(
             finding.rule_id
             in {
                 "connector.footprint_peer_pin_open_outlier",
+                "connector.footprint_peer_generic_power_pin_open_outlier",
                 "connector.footprint_named_power_input_open_outlier",
                 "connector.footprint_named_signal_input_open_outlier",
                 "connector.footprint_named_power_output_open_outlier",

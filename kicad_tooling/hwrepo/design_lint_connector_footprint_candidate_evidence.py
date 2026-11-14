@@ -54,22 +54,52 @@ def project_connector_footprint_peer_pin_evidence(
             raise ValueError("Generic footprint-peer open evidence requires a generic pin function")
         expected_open_pins = tuple(pin for pin, nets in source.assignments.items() if not nets)
         if (
-            (not source.common_anchor_pin_numbers and source.peer_assignment_group is None)
-            or not expected_open_pins
+            not expected_open_pins
             or not any(source.assignments.values())
             or source.open_pins != expected_open_pins
         ):
-            raise ValueError(
-                "Footprint-peer open evidence requires an anchor or reviewed scope and matching assignments"
+            raise ValueError("Footprint-peer open evidence requires matching open assignments")
+        electrical_type = source.pin_electrical_type.strip().casefold()
+        if electrical_type in {"power_in", "power_out"}:
+            assigned_nets = {nets[0] for nets in source.assignments.values() if len(nets) == 1}
+            if (
+                any(len(nets) > 1 for nets in source.assignments.values())
+                or len(assigned_nets) != 1
+                or (not source.common_anchor_pin_numbers and source.peer_assignment_group is None)
+            ):
+                raise ValueError(
+                    "Generic power-peer open evidence requires one assigned net and a scoped peer group"
+                )
+            evidence.update(
+                {
+                    "pin_electrical_type": (electrical_type,),
+                    "open_pins": source.open_pins,
+                    "symbols": source.symbols,
+                    "common_anchor_pin_numbers": source.common_anchor_pin_numbers,
+                }
             )
-        evidence.update(
-            {
-                "open_pins": source.open_pins,
-                "symbols": source.symbols,
-                "common_anchor_pin_numbers": source.common_anchor_pin_numbers,
-            }
-        )
-        rule_id = "connector.footprint_peer_pin_open_outlier"
+            rule_id = "connector.footprint_peer_generic_power_pin_open_outlier"
+        else:
+            if electrical_type not in {
+                "passive",
+                "input",
+                "output",
+                "bidirectional",
+                "tri_state",
+                "open_collector",
+                "open_emitter",
+            } or (not source.common_anchor_pin_numbers and source.peer_assignment_group is None):
+                raise ValueError(
+                    "Footprint-peer open evidence requires an eligible pin and scoped peer group"
+                )
+            evidence.update(
+                {
+                    "open_pins": source.open_pins,
+                    "symbols": source.symbols,
+                    "common_anchor_pin_numbers": source.common_anchor_pin_numbers,
+                }
+            )
+            rule_id = "connector.footprint_peer_pin_open_outlier"
     elif isinstance(source, ConnectorFootprintPeerPowerPinAllOpen):
         if (
             not pin_function_is_generic(source.pin_function)
