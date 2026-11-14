@@ -21,6 +21,7 @@ PEER_MODULES = (
     "connector_footprint_peer_metadata.py",
     "connector_footprint_peer_metadata_open.py",
     "connector_footprint_peer_pin_function_consistency.py",
+    "connector_footprint_peer_pin_inventory_consistency.py",
     "connector_footprint_peer_missing_metadata.py",
     "connector_footprint_peer_missing_metadata_open.py",
 )
@@ -63,10 +64,7 @@ def test_connector_footprint_peer_modules_stay_below_review_limit() -> None:
 
 
 def test_connector_alias_scans_share_candidate_and_inventory_owners() -> None:
-    expected_helpers = {
-        "connector_footprint_peer_candidate_groups",
-        "complete_connector_footprint_peer_pin_inventory",
-    }
+    expected_helpers = {"connector_footprint_peer_candidate_groups"}
     for filename in PEER_MODULES[1:]:
         source = HWREPO / filename
         tree = ast.parse(source.read_text(encoding="utf-8"), filename=filename)
@@ -76,7 +74,12 @@ def test_connector_alias_scans_share_candidate_and_inventory_owners() -> None:
             if isinstance(node, ast.ImportFrom) and node.module == "connector_footprint_peer_groups"
             for alias in node.names
         }
-        assert expected_helpers <= imports, (
+        inventory_helper = (
+            "complete_connector_footprint_peer_pin_inventories"
+            if filename == "connector_footprint_peer_pin_inventory_consistency.py"
+            else "complete_connector_footprint_peer_pin_inventory"
+        )
+        assert expected_helpers | {inventory_helper} <= imports, (
             f"{filename} duplicated alias grouping or inventory logic"
         )
 

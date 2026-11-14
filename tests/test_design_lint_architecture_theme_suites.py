@@ -98,6 +98,9 @@ CONNECTOR_PEER_PIN_CONSISTENCY_THEME_SUITES = (
     "test_connector_footprint_peer_pin_function_consistency.py",
     "test_connector_footprint_peer_pin_function_consistency_native.py",
     "test_design_lint_mcp_parity_connector_peer_pin_function.py",
+    "test_connector_footprint_peer_pin_inventory_consistency.py",
+    "test_connector_footprint_peer_pin_inventory_consistency_native.py",
+    "test_design_lint_mcp_parity_connector_peer_inventory.py",
 )
 HOSTED_ORCHESTRATION_THEME_SUITES = ("test_ci_hosted_native_orchestration.py",)
 OPEN_DRAIN_THEME_SUITES = ("test_open_drain_bias_fixture_lane.py",)

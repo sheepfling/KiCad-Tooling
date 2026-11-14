@@ -42,6 +42,20 @@ class ConnectorFootprintPeerPinInventory:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class ConnectorFootprintPeerPinInventories:
+    """Complete per-reference native pin inventories, including differences."""
+
+    displayed_numbers_by_reference: Mapping[str, Mapping[str, str]]
+
+    def __post_init__(self) -> None:
+        by_reference = {
+            reference: MappingProxyType(dict(numbers))
+            for reference, numbers in self.displayed_numbers_by_reference.items()
+        }
+        object.__setattr__(self, "displayed_numbers_by_reference", MappingProxyType(by_reference))
+
+
 def connector_footprint_peer_candidate_groups(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
@@ -136,6 +150,34 @@ def complete_connector_footprint_peer_pin_inventory(
     references: tuple[str, ...],
 ) -> ConnectorFootprintPeerPinInventory | None:
     """Return matching complete pin inventories and their native display numbers."""
+    inventories = complete_connector_footprint_peer_pin_inventories(observed, references)
+    if inventories is None:
+        return None
+    folded_inventories = {
+        reference: tuple(numbers)
+        for reference, numbers in inventories.displayed_numbers_by_reference.items()
+    }
+    inventory_sets = {frozenset(numbers) for numbers in folded_inventories.values()}
+    if len(inventory_sets) != 1:
+        return None
+    valid_numbers = next(iter(inventory_sets))
+    first_reference = references[0].casefold()
+    display_numbers = inventories.displayed_numbers_by_reference[first_reference]
+    pin_numbers = tuple(
+        display_numbers[number]
+        for number in sorted(valid_numbers, key=lambda item: (item.casefold(), item))
+    )
+    return ConnectorFootprintPeerPinInventory(
+        pin_numbers=pin_numbers,
+        displayed_numbers_by_reference=inventories.displayed_numbers_by_reference,
+    )
+
+
+def complete_connector_footprint_peer_pin_inventories(
+    observed: NetlistContract,
+    references: tuple[str, ...],
+) -> ConnectorFootprintPeerPinInventories | None:
+    """Return complete native pin inventories without requiring peer equality."""
     wanted = {reference.casefold() for reference in references}
     inventories: dict[str, tuple[str, ...]] = {}
     for reference, numbers in observed.component_pin_numbers.items():
@@ -158,28 +200,16 @@ def complete_connector_footprint_peer_pin_inventory(
         reference: tuple(number.casefold() for number in inventories[reference])
         for reference in displayed_numbers
     }
-    inventory_sets = {frozenset(numbers) for numbers in folded_inventories.values()}
-    if (
-        not inventory_sets
-        or any(not numbers for numbers in folded_inventories.values())
-        or any(len(set(numbers)) != len(numbers) for numbers in folded_inventories.values())
-        or len(inventory_sets) != 1
-    ):
+    if not folded_inventories or any(not numbers for numbers in folded_inventories.values()):
         return None
-
-    valid_numbers = next(iter(inventory_sets))
+    if any(len(set(numbers)) != len(numbers) for numbers in folded_inventories.values()):
+        return None
     observed_numbers = observed_connector_pin_numbers(observed)
     if any(
-        not observed_numbers.get(reference.casefold(), set()).issubset(valid_numbers)
+        not observed_numbers.get(reference.casefold(), set()).issubset(
+            set(folded_inventories[reference.casefold()])
+        )
         for reference in references
     ):
         return None
-
-    pin_numbers = tuple(
-        displayed_numbers[references[0].casefold()][number]
-        for number in sorted(valid_numbers, key=lambda item: (item.casefold(), item))
-    )
-    return ConnectorFootprintPeerPinInventory(
-        pin_numbers=pin_numbers,
-        displayed_numbers_by_reference=displayed_numbers,
-    )
+    return ConnectorFootprintPeerPinInventories(displayed_numbers)

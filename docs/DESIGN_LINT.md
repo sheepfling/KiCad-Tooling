@@ -654,6 +654,36 @@ KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
   -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.footprint_peer_pin_function_disagreement")'
 ```
 
+## Review connector peer pin-inventory differences
+
+`connector.footprint_peer_pin_inventory_disagreement` adds a REVIEW prompt
+when fitted connector peers with the same exact nonempty `PART_ID`, value, and
+footprint have one named native pin in exactly one peer's complete symbol
+inventory. Every common pin must have matching native function and electrical
+type metadata, and at least one common pin must share one exact net assignment
+across all peers. The extra pin must also have one exact assigned net. This can
+surface inconsistent symbol definitions that pin-assignment checks cannot
+compare because one symbol has no corresponding pin. It does not decide
+whether the symbol pin is missing or intentionally omitted, require its net to
+be common with peers, or establish physical part identity. Different or
+missing `PART_ID`, multiple differing pins, generic extra-pin functions,
+unassigned or ambiguous extra pins, incomplete metadata, and missing common-net
+anchors stay quiet.
+Project policy may promote, disable, or exactly ignore the finding. The check
+does not inspect PCB copper. Synthetic controls and repeated KiCad 10.0.0/10.0.5
+Docker exports are recorded in the
+[fixture README](../tests/fixtures/design_lint/connector-peer-pin-function-native/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_connector_footprint_peer_pin_inventory_consistency.py \
+  tests/test_design_lint_mcp_parity_connector_peer_inventory.py \
+  -m 'design_lint and connector_lint and interface_lint and design_lint_rule(rule_id="connector.footprint_peer_pin_inventory_disagreement")'
+
+KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_connector_footprint_peer_pin_inventory_consistency_native.py \
+  -m 'design_lint and connector_lint and interface_lint and native_kicad and design_lint_rule(rule_id="connector.footprint_peer_pin_inventory_disagreement")'
+```
+
 ## Review split power outputs on unlike connector peers
 
 `connector.reviewed_peer_power_output_split` asks for review when unlike,
@@ -984,7 +1014,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 391 active rules.
+The catalog currently contains 392 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports

@@ -4,6 +4,26 @@ from __future__ import annotations
 
 CONNECTOR_RULE_NODE_CASES = (
     (
+        "connector.footprint_peer_pin_inventory_disagreement",
+        "tests/test_connector_footprint_peer_pin_inventory_consistency.py::test_one_named_pin_inventory_difference_is_localized",
+    ),
+    (
+        "connector.footprint_peer_pin_inventory_disagreement",
+        "tests/test_connector_footprint_peer_pin_inventory_consistency.py::test_incomplete_or_nonmatching_inventory_evidence_stays_quiet",
+    ),
+    (
+        "connector.footprint_peer_pin_inventory_disagreement",
+        "tests/test_connector_footprint_peer_pin_inventory_consistency.py::test_finding_is_stable_under_source_mapping_reordering",
+    ),
+    (
+        "connector.footprint_peer_pin_inventory_disagreement",
+        "tests/test_design_lint_mcp_parity_connector_peer_inventory.py::test_connector_peer_inventory_review_matches_between_cli_and_mcp",
+    ),
+    (
+        "connector.footprint_peer_pin_inventory_disagreement",
+        "tests/test_connector_footprint_peer_pin_inventory_consistency_native.py::test_native_connector_peer_pin_inventory_difference_and_control_repeat",
+    ),
+    (
         "connector.footprint_peer_pin_function_disagreement",
         "tests/test_connector_footprint_peer_pin_function_consistency.py::test_one_meaningful_function_mismatch_on_a_common_part_pin_is_localized",
     ),

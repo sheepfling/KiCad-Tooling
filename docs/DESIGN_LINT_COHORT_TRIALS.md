@@ -1310,6 +1310,30 @@ for dispositions and timing; leave unmeasured values unstated.
   maintenance burden remain unmeasured; the findings do not justify treating a
   singleton net as an electrical defect.
 
+### First-party follow-up: exact-part connector pin inventories
+
+- **Cohort boundary:** The pinned kicad-happy single-pin trials above showed
+  that a generic singleton prompt can duplicate ERC or flag a documented
+  off-board endpoint. That broad prompt was not adopted. Those trials did not
+  measure peer symbol pin-inventory differences.
+- **Local gap:** Existing exact-part connector peer comparisons require
+  identical complete pin inventories. A named, assigned pin present in one
+  peer's native symbol and absent from every other peer therefore cannot enter
+  the function, type, or assignment comparisons.
+- **First-party response:** LINT-479 adds
+  `connector.footprint_peer_pin_inventory_disagreement`. It requires one exact
+  nonempty `PART_ID`, matching value and footprint, exactly one named assigned
+  extra pin on one peer, matching complete metadata on common pins, and a
+  shared-net anchor. The rule is REVIEW by default and does not infer that the
+  symbols are equivalent, the extra contact should connect, or its net should
+  be common with peers.
+- **Evidence and disposition:** Tooling-owned synthetic cases and repeated
+  digest-pinned KiCad 10.0.0/10.0.5 exports cover one assigned `VBUS` pin in
+  only one symbol plus a matching-inventory control. This first-party gap
+  check imports no candidate code, public board, or proprietary project
+  fixture. Applicability outside the synthetic case, reviewer value, and field
+  precision remain unmeasured.
+
 ### Recorded trial: kicad-happy VM-001 voltage-domain heuristic
 
 - **Candidate and provenance:** `aklofas/kicad-happy`, commit
@@ -2724,10 +2748,10 @@ Source: [kicad-happy release notes][happy-fiducial-release-notes].
   proprietary project, cohort board, or upstream source was stored.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 391 active rules. Each entry has a deterministic predicate, evidence
+contains 392 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
-Of the 391 active rules, 326 default to `review`, 64 to `off`, and
+Of the 392 active rules, 327 default to `review`, 64 to `off`, and
 `pcb.required_fitted_reference` to `block`. Off-by-default checks include
 schematic geometry, generic peer assignment, selected component topology
 reviews such as the BJT base-bias and base/collector same-net prompts, and

@@ -32,6 +32,7 @@ import tests.design_lint_fixtures.repeated_signal_pin_functions as _repeated_sig
 import tests.external_protection_support as _external_protection_support
 import tests.test_can_excess_termination as _tests_test_can_excess_termination
 import tests.test_connector_footprint_peer_pin_function_consistency as _peer_pin_function_consistency
+import tests.test_connector_footprint_peer_pin_inventory_consistency as _peer_pin_inventory_consistency
 import tests.test_connector_peer_comparison_scope_singleton as _tests_test_scope_singleton
 import tests.test_connector_return_distribution as _tests_test_connector_return_distribution
 import tests.test_crystal_networks as _tests_test_crystal_networks
@@ -118,6 +119,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _power_input_paths.source_path_netlist(wrong_rail=True),
         _tests_design_lint_fixtures.peer_connector_pin_assignments(),
         _peer_pin_function_consistency._source(),
+        _peer_pin_inventory_consistency._source(),
         *_connector_footprint_peer_support.peer_pin_reachability_netlists(),
         _connector_named_power_aliases.named_connector_power_alias_netlist(),
         _connector_named_power_aliases.named_connector_power_alias_netlist(

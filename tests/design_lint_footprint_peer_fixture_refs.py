@@ -4,6 +4,16 @@ from types import MappingProxyType
 
 FOOTPRINT_PEER_PARITY_FIXTURES = MappingProxyType(
     {
+        "connector.footprint_peer_pin_inventory_disagreement": MappingProxyType(
+            {
+                "fault_fixtures": (
+                    "tests.test_design_lint_mcp_parity_connector_peer_inventory.test_connector_peer_inventory_review_matches_between_cli_and_mcp",
+                ),
+                "valid_control_fixtures": (
+                    "tests.test_design_lint_mcp_parity_connector_peer_inventory.test_connector_peer_inventory_review_matches_between_cli_and_mcp",
+                ),
+            }
+        ),
         "connector.footprint_peer_pin_function_disagreement": MappingProxyType(
             {
                 "fault_fixtures": (

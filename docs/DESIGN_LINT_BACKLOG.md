@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 390 rules are implemented with synthetic regression coverage.
+The following 392 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 391 active rules.
+The catalog currently contains 392 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -452,10 +452,12 @@ skipped under prerelease policy.
 - `connector.peer_pin_assignment_divergence`
 - `connector.footprint_peer_pin_assignment_divergence`
 - `connector.footprint_peer_pin_unanchored_assignment_divergence`
+- `connector.footprint_peer_pin_electrical_type_disagreement`
+- `connector.footprint_peer_pin_function_disagreement`
+- `connector.footprint_peer_pin_inventory_disagreement`
 - `connector.footprint_peer_unanchored_scope_coverage_missing`
 - `connector.footprint_peer_unanchored_scope_unreviewed`
 - `connector.footprint_peer_pin_metadata_assignment_divergence`
-- `connector.footprint_peer_pin_electrical_type_disagreement`
 - `connector.footprint_peer_pin_metadata_open_outlier`
 - `connector.footprint_peer_pin_missing_metadata_assignment_divergence`
 - `connector.footprint_peer_pin_missing_metadata_open_outlier`
@@ -4467,7 +4469,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 390 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 392 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -27557,8 +27559,55 @@ acceptance threads while new lint features proceed:
 - **Hosted acceptance:** `v0.5.3rc790` passed 470 selected tests and failed the
   module-size architecture check because the supplemental connector fixture
   map pushed `tests/design_lint_catalog_fixture_refs.py` over 500 lines. The
-  map now lives in the footprint-peer registry; the next scoped tag will rerun
-  this gate.
+  map moved to the footprint-peer registry; tagged acceptance passed on
+  `v0.5.3rc791` (GitHub Actions run `43617396766`).
+
+#### LINT-479 — Review connector peer pin-inventory disagreement
+
+- **Rule:** `connector.footprint_peer_pin_inventory_disagreement`, default
+  `review`.
+- **Gap:** The exact-part peer metadata checks require identical complete pin
+  inventories before comparing functions, electrical types, or assignments.
+  A symbol variant that omits a named pin from an otherwise matching exact
+  part is therefore outside those checks.
+- **Predicate:** Require fitted peers with distinct native symbols and the
+  same nonempty trimmed/case-folded `PART_ID`, value, and footprint. Every
+  peer must have one complete native pin inventory. Exactly one peer may have
+  one additional pin while all other peers share the same smaller inventory.
+  Require complete matching native function and electrical-type metadata on
+  every common pin, complete meaningful metadata and one exact assignment on
+  the extra pin, and at least one common pin with one exact common net
+  assignment across the peers.
+- **Interpretation:** This REVIEW prompt identifies symbol pin-inventory
+  disagreement; it does not decide which symbol is wrong, prove exact physical
+  part identity from project `PART_ID` metadata, require the extra pin to be
+  connected, or establish PCB continuity. Missing/different IDs, multiple
+  added pins, generic function names, incomplete metadata, unassigned or
+  ambiguous extra pins, and no common-net anchor stay quiet. Project policy can
+  promote, disable, or exactly ignore the candidate.
+- **Fixtures:** Tooling-owned synthetic cases cover the pin addition on either
+  peer, matching inventory, multiple differences, generic or incomplete pin
+  metadata, inconsistent common-pin metadata, mismatched/missing `PART_ID`,
+  DNP, no shared anchor, policy, determinism, and CLI/MCP parity. A native
+  schematic fault adds one named pin to one of two exact-part peer symbols; a
+  matching-inventory control exports on digest-pinned KiCad 10.0.0 and 10.0.5
+  Docker images. No cohort board or proprietary project source is stored.
+- **Selection:** Run
+  `tests/test_connector_footprint_peer_pin_inventory_consistency.py` and
+  `tests/test_design_lint_mcp_parity_connector_peer_inventory.py` with
+  `design_lint and connector_lint and interface_lint` plus the rule ID. Run
+  `tests/test_connector_footprint_peer_pin_inventory_consistency_native.py`
+  with Docker, `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`, `native_kicad`, and the
+  same selector.
+- **Local acceptance:** The scoped package runner passed 470 tests with 9,553
+  unrelated tests deselected, including repeated digest-pinned Docker exports
+  on KiCad 10.0.0 and 10.0.5. Ruff format/check, Alphus module-role and
+  shared-utility checks, Rumdl, mdrepo, Linux and Windows Pyright, wheel/sdist
+  builds, installed-wheel origin/version checks, and separate plus adapted
+  public-template rehearsals passed. After synchronizing this backlog entry,
+  the focused catalog/documentation/fixture-reachability selection passed 19
+  tests; Rumdl and mdrepo passed on the updated docs.
+- **Hosted acceptance:** Pending the tagged GitHub Actions run.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
