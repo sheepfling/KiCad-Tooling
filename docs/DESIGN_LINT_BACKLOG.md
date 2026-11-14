@@ -27264,9 +27264,8 @@ acceptance threads while new lint features proceed:
   455 selected tests (9,470 deselected), exact-version Docker fixtures on
   KiCad 10.0.0 and 10.0.5, Linux and Windows Pyright, wheel/sdist builds, and
   installed-wheel checks against external and adapted template projects. Ruff,
-  repository-wide Rumdl, and mdrepo passed. The first hosted attempt found two
-  MD060 alignment issues in this fixture README; they are fixed and hosted
-  acceptance will rerun on the follow-up tag.
+  repository-wide Rumdl, and mdrepo passed. Hosted gate run 43607163647 on
+  `v0.5.3rc783` passed the same scoped checks.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
