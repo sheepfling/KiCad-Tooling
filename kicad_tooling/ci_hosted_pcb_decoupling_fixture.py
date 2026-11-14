@@ -89,8 +89,8 @@ def decoupling_placement_fixture_lane(
             pads = {item.pad.casefold(): item for item in snapshot.pads}
             vias = {item.id: item for item in snapshot.vias}
             c1_return = pads["c1.2"]
-            if len(c1_return.connected_vias) != 1:
-                raise ValueError("Native decoupling fixture must connect C1 return to one via")
+            if len(c1_return.connected_vias) != 2:
+                raise ValueError("Native decoupling fixture must connect C1 return to two vias")
             connected_return_via = vias[c1_return.connected_vias[0]]
             via_distance_squared = min(
                 (x - connected_return_via.x_nm) ** 2 + (y - connected_return_via.y_nm) ** 2
@@ -125,7 +125,7 @@ def decoupling_placement_fixture_lane(
                 != (1_000_000, 15_000_000)
                 or entries[0].max_return_via_distance_um != 1000
                 or entries[0].candidates[0].return_via_distance_nm != 1_000_000
-                or entries[0].candidates[0].connected_return_via_count != 1
+                or entries[0].candidates[0].connected_return_via_count != 2
             ):
                 raise ValueError(f"Native placement fault/control result changed: {entries}")
             all_entries = pcb_decoupling_entries(
@@ -142,10 +142,87 @@ def decoupling_placement_fixture_lane(
             elif retained_snapshot != snapshot:
                 raise ValueError("Repeated native pad centers changed for identical board inputs")
 
+        if retained_snapshot is None:
+            raise ValueError("Repeated native decoupling capture produced no snapshot")
+        surface_map = PcbDecouplingMap(
+            basis="Synthetic native outer-copper layer-distance regression",
+            requirements=(
+                PcbDecouplingRequirement(
+                    id="backside-capacitor",
+                    basis="Synthetic test-only 1500 um layer-aware center-distance limit",
+                    ic_reference="U1",
+                    ic_footprint="Synthetic:IC_QFN",
+                    supply_pad="U1.1",
+                    return_pad="U1.2",
+                    supply_net="VDD",
+                    return_net="GND",
+                    capacitors=(
+                        PcbDecouplingCapacitor(
+                            reference="C4",
+                            footprint="Synthetic:Cap_0603",
+                            supply_pad="C4.1",
+                            return_pad="C4.2",
+                        ),
+                    ),
+                    selection="any",
+                    max_distance_3d_um=1500,
+                ),
+            ),
+        )
+        surface_fault_entry = pcb_decoupling_entries(surface_map, retained_snapshot)[0]
+        surface_fault_candidate = surface_fault_entry.candidates[0]
+        if (
+            surface_fault_entry.status != "INCOMPLETE"
+            or surface_fault_candidate.distance_nm != 0
+            or surface_fault_candidate.distance_3d_nm != 1_600_000
+            or (
+                surface_fault_candidate.distance_3d_ic_layer,
+                surface_fault_candidate.distance_3d_capacitor_layer,
+            )
+            != ("F.Cu", "B.Cu")
+            or retained_snapshot.board_thickness_nm != 1_600_000
+        ):
+            raise ValueError(
+                "Native opposite-side same-XY capacitor did not exceed the 1500 um "
+                f"layer-aware screen: {surface_fault_entry}"
+            )
+
         fixture_text = source.read_text(encoding="utf-8")
-        if fixture_text.count("(at 12 11)") != 1:
-            raise ValueError("Native return-via fixture no longer has its unique test coordinate")
-        board.write_text(fixture_text.replace("(at 12 11)", "(at 13 11)", 1), encoding="utf-8")
+        backside = '(footprint "Synthetic:Cap_0603" (layer "B.Cu") (at 10 10 0)'
+        frontside = '(footprint "Synthetic:Cap_0603" (layer "F.Cu") (at 10 10 0)'
+        if fixture_text.count(backside) != 1:
+            raise ValueError("Native backside capacitor fixture identity changed")
+        control_text = fixture_text.replace(backside, frontside, 1)
+        if control_text.count('(layers "B.Cu" "B.Paste" "B.Mask")') != 2:
+            raise ValueError("Native backside capacitor pad layer count changed")
+        control_text = control_text.replace(
+            '(pad "2" smd rect (at 0 -1)', '(pad "2" smd rect (at 0 1)', 1
+        ).replace('(layers "B.Cu" "B.Paste" "B.Mask")', '(layers "F.Cu" "F.Paste" "F.Mask")')
+        board.write_text(control_text, encoding="utf-8")
+        surface_control_hash = digest(board)
+        surface_control_snapshot = capture_verified_pcb_snapshot(
+            context,
+            fixture_config,
+            context.scratch / "surface-control-receipt",
+            expected_board_sha256=surface_control_hash,
+            purpose="PCB decoupling same-side layer control",
+            require_outer_copper=True,
+        )
+        surface_control_entry = pcb_decoupling_entries(surface_map, surface_control_snapshot)[0]
+        if (
+            surface_control_entry.status != "COMPLETE"
+            or surface_control_entry.candidates[0].distance_3d_nm != 0
+        ):
+            raise ValueError(
+                f"Native same-side capacitor control did not pass: {surface_control_entry}"
+            )
+
+        if fixture_text.count("(at 12 11)") != 1 or fixture_text.count("(at 10 11)") != 1:
+            raise ValueError("Native return-via fixture no longer has its unique test coordinates")
+        fault_text = fixture_text.replace("(at 12 11)", "(at 13 11)", 1).replace(
+            "(at 10 11)", "(at 9 11)", 1
+        )
+        board.write_text(fault_text, encoding="utf-8")
         fault_hash = digest(board)
         retained_fault_snapshot = None
         for repeat in ("first", "repeat"):
@@ -180,7 +257,13 @@ def decoupling_placement_fixture_lane(
             near_distance_nm=1_000_000,
             distant_distance_nm=15_000_000,
             connected_return_via_distance_nm=1_000_000,
+            connected_return_via_count=2,
             distant_return_via_fault_distance_nm=2_000_000,
+            board_thickness_nm=retained_snapshot.board_thickness_nm,
+            opposite_side_same_xy_distance_nm=surface_fault_candidate.distance_3d_nm,
+            opposite_side_limit_um=1500,
+            same_side_control_distance_nm=surface_control_entry.candidates[0].distance_3d_nm,
+            same_side_control_status=surface_control_entry.status,
             return_via_fault_sha256=fault_hash,
             rotated_pad="40.000,19.000 or 40.000,21.000 mm",
             repeatable="true",

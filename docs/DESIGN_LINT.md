@@ -7537,6 +7537,7 @@ reviewed design requirement.
           "return_net": "GND",
           "selection": "any",
           "max_distance_um": 1000,
+          "max_distance_3d_um": 1500,
           "max_return_via_distance_um": 1000,
           "capacitors": [
             {
@@ -7568,6 +7569,17 @@ mapped candidate to meet it. An eligible candidate must match both expected
 nets and footprints, be fitted, and share the native copper connectivity of
 the mapped IC supply and return pins. If no distance limit is authored, the
 report keeps measured distances and emits a `REVIEW` finding.
+
+`max_distance_3d_um` is an optional layer-aware review screen. Native PCB
+snapshot schema 23 records exact pad centers on `F.Cu` and `B.Cu`, plus the
+KiCad board thickness. The screen combines the XY center distance with board
+thickness as the vertical offset between opposite outer-copper sides. A missing
+surface or thickness measurement leaves the configured candidate incomplete.
+This is a board-side placement estimate; it does not measure routed path length,
+exact copper-layer spacing, return-loop geometry, inductance, or electrical
+performance. Set it only from a project-reviewed limit. Snapshots predating
+schema 23 remain valid for the planar check, but cannot satisfy this optional
+layer-aware requirement.
 
 When `max_return_via_distance_um` is configured, the same capacitor must also
 have a via in its native-connected return-pad component within that limit. The

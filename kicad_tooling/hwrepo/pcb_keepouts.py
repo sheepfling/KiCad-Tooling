@@ -53,6 +53,7 @@ def pcb_keepout_entries(
             "20",
             "21",
             "22",
+            "23",
         }:
             issues.append("Native PCB snapshot schema 11 or newer rule-area evidence is required")
         elif not matches:

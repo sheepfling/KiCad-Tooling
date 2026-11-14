@@ -42,6 +42,7 @@ def compare_required_fitted_references(
         "20",
         "21",
         "22",
+        "23",
     }:
         raise ValueError("Required fitted PCB references need snapshot schema 12, 13, or 14")
 

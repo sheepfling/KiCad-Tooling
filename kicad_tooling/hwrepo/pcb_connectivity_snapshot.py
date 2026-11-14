@@ -9,7 +9,7 @@ from typing import Literal
 
 from pydantic import model_validator
 
-from .model_primitives import Digest, NonEmptyText, StrictModel
+from .model_primitives import Digest, NonEmptyText, PositiveCount, StrictModel
 from .pcb_connectivity_edge_validation import validate_board_edge_evidence
 from .pcb_connectivity_edges import PcbEdgeCutObservation
 from .pcb_connectivity_hole_validation import validate_drill_hole_evidence
@@ -25,6 +25,7 @@ from .pcb_connectivity_observations import (
     PcbZoneObservation,
 )
 from .pcb_connectivity_probe_validation import validate_access_probe_relationships
+from .pcb_connectivity_surface_validation import validate_outer_copper_surface_evidence
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceObservation
 
 
@@ -76,6 +77,7 @@ class PcbConnectivitySnapshot(StrictModel):
         "20",
         "21",
         "22",
+        "23",
     ] = "3"
     board_sha256: Digest
     kicad_version: NonEmptyText
@@ -94,12 +96,20 @@ class PcbConnectivitySnapshot(StrictModel):
     footprints: tuple[PcbFootprintPlacementObservation, ...] = ()
     edge_cuts: tuple[PcbEdgeCutObservation, ...] = ()
     drill_holes: tuple[PcbDrillHoleObservation, ...] = ()
+    board_thickness_nm: PositiveCount | None = None
     touch_pad_clearance_observations: tuple[PcbTouchPadClearanceObservation, ...] = ()
     touch_pad_clearance_requests_sha256: Digest | None = None
 
     @model_validator(mode="after")
     def validate_snapshot_contract(self) -> PcbConnectivitySnapshot:
         schema_version = int(self.schema_version)
+        validate_outer_copper_surface_evidence(
+            pads=self.pads,
+            footprints=self.footprints,
+            copper_layers=self.copper_layers,
+            board_thickness_nm=self.board_thickness_nm,
+            schema_version=schema_version,
+        )
         _validate_initial_identity_uniqueness(self)
         _validate_touch_pad_request_contract(self, schema_version)
         _validate_v3_inventory_contract(self, schema_version)

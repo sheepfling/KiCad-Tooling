@@ -46,5 +46,11 @@ def test_native_decoupling_controls_on_supported_kicad(
     assert result["near_distance_nm"] == 1_000_000
     assert result["distant_distance_nm"] == 15_000_000
     assert result["connected_return_via_distance_nm"] == 1_000_000
+    assert result["connected_return_via_count"] == 2
     assert result["distant_return_via_fault_distance_nm"] == 2_000_000
+    assert result["board_thickness_nm"] == 1_600_000
+    assert result["opposite_side_same_xy_distance_nm"] == 1_600_000
+    assert result["opposite_side_limit_um"] == 1500
+    assert result["same_side_control_distance_nm"] == 0
+    assert result["same_side_control_status"] == "COMPLETE"
     assert result["repeatable"] == "true"

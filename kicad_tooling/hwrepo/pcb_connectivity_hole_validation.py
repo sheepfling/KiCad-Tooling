@@ -26,7 +26,7 @@ def validate_drill_hole_evidence(
     inventory_present: bool,
 ) -> None:
     """Require source identities for every measured outer-surface drill opening."""
-    if schema_version < 22:
+    if schema_version < 22 or (schema_version == 23 and not inventory_present):
         if holes or any(
             getattr(item, field) is not None for item in observations for field in _HOLE_FIELDS
         ):

@@ -12691,34 +12691,41 @@
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
-      "evidence_adapter": "Project-authored IC and capacitor pad mapping compared with source-bound KiCad 10 pcbnew geometry/connectivity snapshot schema 10",
-      "predicate": "For each explicitly mapped IC supply/return pin pair, compare fitted exact-footprint capacitor pin pairs on the declared supply and return nets, verify native copper connectivity to the IC pins, and measure Euclidean center-to-center distance from IC supply pad to capacitor supply pad. When configured, also measure from the capacitor return-pad center to the nearest via listed in that pad's native copper-connectivity component. Apply only authored maximum distances and the any/all candidate policy.",
+      "evidence_adapter": "Project-authored IC and capacitor pad mapping compared with source-bound KiCad 10 pcbnew geometry/connectivity snapshot schema 23",
+      "predicate": "For each explicitly mapped IC supply/return pin pair, compare fitted exact-footprint capacitor pin pairs on the declared supply and return nets, verify native copper connectivity to the IC pins, and measure Euclidean center-to-center distance from IC supply pad to capacitor supply pad. When configured, also measure from the capacitor return-pad center to the nearest via listed in that pad's native copper-connectivity component. An optional project-authored max_distance_3d_um uses native outer-copper layer membership and board thickness to screen opposite-side pad placement. Apply only authored maximum distances and the any/all candidate policy.",
       "supported_kicad_versions": [
         "KiCad 10 native pcbnew API; each configured project's exact version and digest-pinned image are checked"
       ],
       "limitations": [
         "Only exact project-mapped IC and capacitor pins are checked. The rule does not infer decoupling components or power-pin roles from values, references, net names, or footprints.",
         "The Euclidean supply-pad and optional return-via center distances do not model the complete supply/return loop, plane reference, trace inductance, capacitor value or bias derating, resonance, or transient performance.",
-        "A passing configured threshold is only a project-selected placement screen. It is not a universal limit and does not prove electrical adequacy or manufacturing quality."
+        "A passing configured threshold is only a project-selected placement screen. It is not a universal limit and does not prove electrical adequacy or manufacturing quality.",
+        "The optional layer-aware distance uses board thickness as the front-to-back vertical offset; it is a geometric estimate, not exact copper-layer spacing, routed-path length, loop inductance, or electrical approval."
       ],
       "fault_fixtures": [
         "tests.test_pcb_decoupling.test_distant_capacitor_exceeds_authored_center_distance_limit",
+        "tests.test_pcb_decoupling_surface_distance.test_same_xy_on_opposite_outer_layers_uses_board_thickness",
+        "tests.test_pcb_decoupling_surface_distance.test_missing_native_surface_evidence_is_incomplete_when_requested",
         "tests.test_pcb_decoupling_return_vias.test_distant_or_absent_connected_return_via_does_not_satisfy_map",
         "tests.test_pcb_decoupling.test_wrong_net_disconnected_wrong_footprint_and_dnp_candidates_do_not_satisfy_requirement"
       ],
       "valid_control_fixtures": [
         "tests.test_pcb_decoupling.test_near_rotated_and_shared_bank_candidates_satisfy_exact_mapping",
+        "tests.test_pcb_decoupling_surface_distance.test_surface_layer_controls",
         "tests.test_pcb_decoupling_return_vias.test_native_connected_return_via_at_inclusive_authored_boundary_passes",
         "tests.test_pcb_decoupling.test_no_threshold_emits_reviewable_measurement_and_honors_override_and_ignore"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_pcb_decoupling.test_pad_inventory_order_preserves_distance_finding_and_boundary_repair_clears_it",
+        "tests.test_pcb_decoupling_surface_distance.test_authored_surface_limit_participates_in_map_fingerprint",
+        "tests.test_pcb_decoupling_surface_distance.test_unconfigured_surface_measurement_does_not_expand_finding_evidence",
         "tests.test_pcb_decoupling_return_vias.test_return_via_order_is_stable_and_moving_it_past_limit_clears_candidate",
         "tests.test_design_lint_determinism_pcb_power.test_pcb_and_power_map_reports_remain_deterministic"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/pcb_decoupling.py#pcb_decoupling_entries",
+        "kicad_tooling/hwrepo/pcb_decoupling_surface_distance.py#nearest_outer_copper_center_distance_squared",
         "kicad_tooling/hwrepo/native_pcb_probe_scan.py.in#main",
         "kicad_tooling/hwrepo/design_lint_pcb_geometry_scan.py#scan_pcb_geometry",
         "kicad_tooling/ci_hosted_pcb_decoupling_fixture.py#decoupling_placement_fixture_lane"

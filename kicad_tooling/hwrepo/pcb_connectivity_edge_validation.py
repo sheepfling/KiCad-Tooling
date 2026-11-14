@@ -16,7 +16,7 @@ def validate_board_edge_evidence(
     edge_inventory_present: bool,
 ) -> None:
     """Require every edge measurement to identify a retained Edge.Cuts item."""
-    if schema_version < 21:
+    if schema_version < 21 or (schema_version == 23 and not edge_inventory_present):
         if edge_cuts or any(
             getattr(item, field) is not None for item in observations for field in _EDGE_FIELDS
         ):

@@ -63,6 +63,7 @@ def compare_schematic_pcb_population(
         "20",
         "21",
         "22",
+        "23",
     }:
         raise ValueError(
             "PCB population comparison requires native footprint snapshot schema 12, 13, or 14"

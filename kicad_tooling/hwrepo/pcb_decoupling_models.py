@@ -52,6 +52,9 @@ class PcbDecouplingRequirement(StrictModel):
     selection: Literal["any", "all"] = "any"
     max_distance_um: PositiveCount | None = None
     max_return_via_distance_um: PositiveCount | None = None
+    max_distance_3d_um: PositiveCount | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
     @model_validator(mode="after")
     def exact_supply_mapping(self) -> PcbDecouplingRequirement:
@@ -100,6 +103,10 @@ class PcbDecouplingCandidateObservation(StrictModel):
     return_connected: bool
     distance_nm: NonNegativeCount | None
     distance_squared_nm2: NonNegativeCount | None
+    distance_3d_nm: NonNegativeCount | None = None
+    distance_3d_squared_nm2: NonNegativeCount | None = None
+    distance_3d_ic_layer: Literal["F.Cu", "B.Cu"] | None = None
+    distance_3d_capacitor_layer: Literal["F.Cu", "B.Cu"] | None = None
     connected_return_via_count: NonNegativeCount = 0
     nearest_return_via_id: Digest | None = None
     return_via_distance_nm: NonNegativeCount | None = None
@@ -111,6 +118,16 @@ class PcbDecouplingCandidateObservation(StrictModel):
     def complete_distance(self) -> PcbDecouplingCandidateObservation:
         if (self.distance_nm is None) != (self.distance_squared_nm2 is None):
             raise ValueError("Decoupling candidate distance fields must be present together")
+        distance_3d_fields = (
+            self.distance_3d_nm,
+            self.distance_3d_squared_nm2,
+            self.distance_3d_ic_layer,
+            self.distance_3d_capacitor_layer,
+        )
+        if any(item is None for item in distance_3d_fields) != all(
+            item is None for item in distance_3d_fields
+        ):
+            raise ValueError("Layer-aware decoupling distance evidence must be complete")
         if (self.return_via_distance_nm is None) != (self.return_via_distance_squared_nm2 is None):
             raise ValueError("Decoupling return-via distance fields must be present together")
         if (self.nearest_return_via_id is None) != (self.return_via_distance_nm is None):
@@ -139,6 +156,8 @@ class PcbDecouplingCoverageEntry(StrictModel):
     ic_return_net: NetName
     max_distance_um: PositiveCount | None
     max_return_via_distance_um: PositiveCount | None = None
+    max_distance_3d_um: PositiveCount | None = None
+    board_thickness_nm: PositiveCount | None = None
     selection: Literal["any", "all"]
     candidates: tuple[PcbDecouplingCandidateObservation, ...]
     selected_capacitors: tuple[Identifier, ...] = ()

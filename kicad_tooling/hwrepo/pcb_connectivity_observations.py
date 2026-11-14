@@ -213,6 +213,14 @@ class PcbTrackObservation(StrictModel):
         return self
 
 
+class PcbPadOuterCopperCenterObservation(StrictModel):
+    """Physical pad center observed on one of KiCad's outer copper layers."""
+
+    x_nm: int
+    y_nm: int
+    layer: Literal["F.Cu", "B.Cu"]
+
+
 class PcbPadConnectivityObservation(StrictModel):
     """Native pad identity, copper-component members, and directly touched zone islands."""
 
@@ -225,6 +233,7 @@ class PcbPadConnectivityObservation(StrictModel):
     connected_islands: tuple[PcbZoneIslandIdentity, ...]
     connected_vias: tuple[Digest, ...] = ()
     positions_nm: tuple[tuple[int, int], ...] = ()
+    outer_copper_centers: tuple[PcbPadOuterCopperCenterObservation, ...] = ()
 
     @model_validator(mode="after")
     def complete_pad_reference(self) -> PcbPadConnectivityObservation:
@@ -240,6 +249,9 @@ class PcbPadConnectivityObservation(StrictModel):
             raise ValueError("Native PCB connected via identities must be unique")
         if len(set(self.positions_nm)) != len(self.positions_nm):
             raise ValueError("Native PCB physical pad centers must be unique")
+        outer_centers = {(item.x_nm, item.y_nm, item.layer) for item in self.outer_copper_centers}
+        if len(outer_centers) != len(self.outer_copper_centers):
+            raise ValueError("Native PCB outer-copper pad centers must be unique")
         zone_keys = {(item.uuid.casefold(), item.layer.casefold()) for item in self.connected_zones}
         if len(zone_keys) != len(self.connected_zones):
             raise ValueError("Native PCB connected zone identities must be unique")

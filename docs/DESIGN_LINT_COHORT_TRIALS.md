@@ -848,11 +848,14 @@ for dispositions and timing; leave unmeasured values unstated.
   decoupling and describes capacitor-to-via distance as a connection-inductance
   review signal. It lists PCB evidence as required, but does not establish a
   project-independent distance limit.
-- **Incremental disposition:** Extend LINT-020 with an optional project-owned
-  capacitor-return-pad to native-connected-via distance limit. Synthetic cases
-  distinguish connected and unconnected nearby vias, and pinned KiCad 10.0.0/
-  10.0.5 fixture lanes validate a boundary control and moved-via fault. The
-  local rule reports geometry only and does not claim an inductance estimate.
+- **Incremental disposition:** LINT-020 first added an optional project-owned
+  capacitor-return-pad to native-connected-via distance. Its follow-up
+  LINT-464 adds an optional project-owned, board-side-aware pad-center distance
+  using native outer-copper membership and board thickness. Synthetic cases
+  distinguish connected and unconnected vias, same-side and opposite-side pads,
+  and missing evidence. Pinned KiCad 10.0.0/10.0.5 fixtures validate exact
+  synthetic boundaries, a same-XY opposite-side fault, and a same-side control.
+  The local rule reports geometry only and does not claim an inductance estimate.
 - **Boundary:** This is a concept review, not a runtime comparison against the
   cohort analyzer. No candidate code, report, board, threshold, or project
   fixture was copied. No cohort dependency was added.

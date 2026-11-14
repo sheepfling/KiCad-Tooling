@@ -10,8 +10,12 @@ from kicad_tooling.hwrepo.models import (
     PcbDecouplingCapacitor,
     PcbDecouplingMap,
     PcbDecouplingRequirement,
+    PcbFootprintPlacementObservation,
     PcbPadConnectivityObservation,
     PcbViaObservation,
+)
+from kicad_tooling.hwrepo.pcb_connectivity_observations import (
+    PcbPadOuterCopperCenterObservation,
 )
 from kicad_tooling.hwrepo.pcb_decoupling import pcb_decoupling_entries
 from kicad_tooling.hwrepo.pcb_decoupling_models import PcbDecouplingCoverageReport
@@ -26,6 +30,7 @@ def requirement(
     capacitors: tuple[PcbDecouplingCapacitor, ...] | None = None,
     maximum_um: int | None = 100,
     maximum_return_via_um: int | None = None,
+    maximum_3d_um: int | None = None,
     selection: str = "any",
     supply_pad: str = "U1.1",
     return_pad: str = "U1.2",
@@ -52,6 +57,7 @@ def requirement(
         selection=selection,  # type: ignore[arg-type]
         max_distance_um=maximum_um,
         max_return_via_distance_um=maximum_return_via_um,
+        max_distance_3d_um=maximum_3d_um,
     )
 
 
@@ -72,6 +78,8 @@ def snapshot(
     extra_ic_supply: bool = False,
     return_vias_nm: Mapping[str, tuple[tuple[int, int], ...]] | None = None,
     unconnected_vias_nm: tuple[tuple[int, int], ...] = (),
+    board_thickness_nm: int | None = None,
+    surface_layers_by_pad: Mapping[str, tuple[str, ...]] | None = None,
 ) -> PcbConnectivitySnapshot:
     distances_nm = distances_nm or {"C1": 80_000}
     footprints = footprints or {}
@@ -79,6 +87,9 @@ def snapshot(
     return_refs = ["U1.2"]
     cap_refs = [f"{reference}.{pin}" for reference in distances_nm for pin in ("1", "2")]
     return_vias_nm = return_vias_nm or {}
+    surface_layers_by_pad = {
+        reference.casefold(): layers for reference, layers in (surface_layers_by_pad or {}).items()
+    }
     via_ids_by_cap: dict[str, tuple[str, ...]] = {}
     vias: list[PcbViaObservation] = []
     for reference, locations in return_vias_nm.items():
@@ -166,6 +177,14 @@ def snapshot(
             position = (0, 40_000)
         else:
             position = (0, 60_000)
+        pad_fields = {}
+        if board_thickness_nm is not None:
+            layers = surface_layers_by_pad.get(reference.casefold(), ("F.Cu",))
+            pad_fields["outer_copper_centers"] = tuple(
+                PcbPadOuterCopperCenterObservation(x_nm=x, y_nm=y, layer=layer)
+                for x, y in (position,)
+                for layer in layers
+            )
         pads.append(
             PcbPadConnectivityObservation(
                 pad=reference,
@@ -181,10 +200,34 @@ def snapshot(
                     else ()
                 ),
                 positions_nm=(position,),
+                **pad_fields,
             )
         )
+    footprint_rows: list[PcbFootprintPlacementObservation] = []
+    if board_thickness_nm is not None:
+        pads_by_component: dict[str, list[PcbPadConnectivityObservation]] = {}
+        for pad in pads:
+            pads_by_component.setdefault(pad.pad.rsplit(".", 1)[0], []).append(pad)
+        for reference, component_pads in sorted(
+            pads_by_component.items(), key=lambda item: item[0].casefold()
+        ):
+            observed_layers = {
+                center.layer for pad in component_pads for center in pad.outer_copper_centers
+            }
+            side = "B.Cu" if observed_layers == {"B.Cu"} else "F.Cu"
+            footprint_rows.append(
+                PcbFootprintPlacementObservation(
+                    reference=reference,
+                    footprint=component_pads[0].footprint,
+                    dnp=component_pads[0].dnp,
+                    value="Synthetic",
+                    position_nm=component_pads[0].positions_nm[0],
+                    orientation_microdegrees=0,
+                    side=side,
+                )
+            )
     return PcbConnectivitySnapshot(
-        schema_version="5",
+        schema_version="23" if board_thickness_nm is not None else "5",
         board_sha256="a" * 64,
         kicad_version="10.0.5",
         image="ghcr.io/example/kicad:10.0.5@sha256:" + "b" * 64,
@@ -196,6 +239,16 @@ def snapshot(
         vias=tuple(vias),
         access_probe_observations=(),
         access_probe_requests_sha256=None,
+        **({"board_thickness_nm": board_thickness_nm} if board_thickness_nm is not None else {}),
+        **({"copper_layers": ("F.Cu", "B.Cu")} if board_thickness_nm is not None else {}),
+        **({"tracks": ()} if board_thickness_nm is not None else {}),
+        **({"rule_areas": ()} if board_thickness_nm is not None else {}),
+        **({"footprints": tuple(footprint_rows)} if board_thickness_nm is not None else {}),
+        **(
+            {"touch_pad_clearance_observations": (), "touch_pad_clearance_requests_sha256": None}
+            if board_thickness_nm is not None
+            else {}
+        ),
     )
 
 

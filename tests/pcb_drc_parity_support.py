@@ -14,17 +14,23 @@ from kicad_tooling.hwrepo.native_project_validation_models import (
 )
 
 
-def install_source_bound_drc_receipt(root: Path, summary_path: Path) -> None:
+def install_source_bound_drc_receipt(
+    root: Path,
+    summary_path: Path,
+    *,
+    board_path: Path | None = None,
+    kicad_version: str = "10.0.5",
+) -> None:
     """Bind synthetic all-severity DRC output and command to a native summary."""
     summary = read_model(summary_path, ValidationSummary)
-    board = root / "projects/controller/kicad/controller.kicad_pcb"
+    board = board_path or root / "projects/controller/kicad/controller.kicad_pcb"
     drc_path = summary_path.parent / "drc.json"
     command_path = summary_path.parent / "drc.command.json"
     drc_path.write_text(
         json.dumps(
             {
                 "$schema": "https://schemas.kicad.org/drc.v1.json",
-                "kicad_version": "10.0.5",
+                "kicad_version": kicad_version,
                 "source": str(board),
                 "coordinate_units": "mm",
                 "included_severities": ["error", "warning", "exclusion"],

@@ -221,6 +221,18 @@ def test_shared_pcb_pad_services_stay_small_and_are_reused() -> None:
     )
 
 
+def test_decoupling_surface_distance_has_a_small_theme_owner() -> None:
+    owner = HWREPO / "pcb_decoupling_surface_distance.py"
+    catalog = (HWREPO / "design-lint-rules.json").read_text(encoding="utf-8")
+
+    assert owner.is_file()
+    assert _line_count(owner) < IMPLEMENTATION_MAX_LINES
+    assert (
+        "kicad_tooling/hwrepo/pcb_decoupling_surface_distance.py#"
+        "nearest_outer_copper_center_distance_squared"
+    ) in catalog
+
+
 def test_differential_pair_route_skew_owners_stay_reviewable_and_theme_owned() -> None:
     modules = [HWREPO / name for name in PCB_ROUTE_SKEW_MODULES]
     assert all(path.is_file() for path in modules)

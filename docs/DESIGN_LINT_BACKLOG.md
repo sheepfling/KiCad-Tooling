@@ -16146,9 +16146,10 @@ control are documented in the
 
 #### LINT-020 — Decoupling-capacitor proximity and connection evidence
 
-- **Status:** Implemented v2 as the opt-in `pcb.decoupling_proximity` rule with
-  project-authored pad and optional return-via distance limits, plus a
-  source-bound native PCB snapshot.
+- **Status:** Implemented as the opt-in `pcb.decoupling_proximity` rule with
+  project-authored planar and optional layer-aware distance limits, an
+  optional return-via distance limit, and source-bound native PCB snapshot
+  schema 23.
 - **Inspiration:** [pcb-inspector](https://github.com/takzen/pcb-inspector) and
   [kicad-happy](https://github.com/aklofas/kicad-happy) feature areas. The
   kicad-happy EMC guide lists `DC-003` for a decoupling capacitor that is too
@@ -16163,24 +16164,36 @@ control are documented in the
   `selection: all` requires each candidate. An optional
   `max_return_via_distance_um` measures each capacitor return pad to the nearest
   via explicitly listed in that pad's native copper-connectivity component;
-  the configured candidate policy must meet both limits on the same capacitor.
-  With no supply-pad threshold, retain the measured distances as a review
-  finding. No via requirement is inferred when the optional limit is absent.
+  the configured candidate policy must meet all configured limits on the same
+  capacitor. Optional `max_distance_3d_um` combines exact native outer-copper
+  pad-center XY coordinates with board thickness as the front-to-back vertical
+  offset. It keeps the planar measurement and candidate policy unchanged when
+  the field is absent. Missing surface evidence leaves a configured candidate
+  incomplete. With no placement threshold, retain measurements for review. No
+  via requirement is inferred when its optional limit is absent.
 - **Boundary:** These Euclidean distances do not establish a low-inductance
   loop, via-to-plane quality, correct value, or adequate decoupling. The via
   measure excludes nearby vias outside the pad's native copper component.
+  The layer-aware distance uses board thickness as an opposite-side vertical
+  offset and is a geometric estimate; it is not exact copper-layer spacing,
+  routed path length, or loop geometry.
   Native DRC and schematic connectivity remain separate. A direct plane
   connection may be valid without a via; projects should configure this limit
   only when reviewed layout guidance requires it.
-- **Fixtures:** Synthetic close and distant capacitors, multiple IC supply pins
+- **Fixtures:** Synthetic close and distant capacitors, opposite-side pads at
+  the same XY coordinate, same-side and through-layer controls, missing-surface
+  evidence, multiple IC supply pins
   sharing one bank, exact threshold boundary, wrong-net and disconnected
   candidates, DNP and wrong-footprint controls, nearby unconnected vias, exact
   connected-via distance boundaries, and a rotated pad measured by native KiCad
-  10.0.0 and 10.0.5 probes. Repeated native snapshots are identical; moving
-  the connected via across the project limit produces a source-bound fault.
+  10.0.0 and 10.0.5 probes. Repeated native snapshots are identical; the native
+  opposite-side same-XY case exceeds a test-only 1500 um screen, while moving
+  the capacitor to the same side passes. Moving the connected return vias
+  across the project limit produces a source-bound fault.
 - **Evidence locator:** The lint report names the board hash, native snapshot
   path and hash, probe hash, exact KiCad version/image, mapped pads, selected
-  capacitors, connected via identity/count, and both measured distances.
+  capacitors, board thickness, outer-copper side pair, connected via
+  identity/count, and configured distance measurements.
   Receipts live under ignored `build/`.
 - **Fixtures:** The native synthetic board includes a GND via connected to the
   mapped capacitor return pad. Its control is exactly 1000 um from the pad; a
@@ -26855,6 +26868,40 @@ acceptance threads while new lint features proceed:
     .venv/bin/python -I -m pytest tests/test_usb_data_pair_resistive_bridge_native_fixture_lane.py \
     -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.usb_dp_dm_resistive_bridge")'
   ```
+
+#### LINT-464 — Screen mapped decoupling placement across board sides
+
+- **Status:** Implemented as the optional `max_distance_3d_um` extension to
+  LINT-020. Projects opt in only with a reviewed requirement; the default
+  remains the existing planar review.
+- **Cohort concept:** [pcb-inspector's decoupling-proximity heuristic][pcb-inspector manual]
+  considers board thickness for opposite-side capacitor placements. No cohort
+  code, default threshold, or board fixture is included.
+- **Gap and predicate:** A planar XY center-distance check can report zero when
+  the mapped IC and capacitor supply pads project to the same coordinates on
+  opposite outer copper layers. Snapshot schema 23 records each pad center's
+  native `F.Cu`/`B.Cu` membership and board thickness. When `max_distance_3d_um`
+  is authored, compare integer squared distance as `dx² + dy² + dz²`, using
+  `dz = 0` for a shared outer layer and native board thickness for opposite
+  sides. Use the existing any/all candidate policy and retain REVIEW/block/off
+  and exact-ignore behavior. Missing or unsupported surface evidence is
+  incomplete, never a pass.
+- **Evidence and compatibility:** Reports retain measured distance, layer pair,
+  board thickness, map and snapshot hashes, exact KiCad image, and probe hash.
+  An unset option is omitted from normalized map serialization so existing
+  authored-map fingerprints remain stable; an authored value participates in
+  the fingerprint.
+- **Fault/control coverage:** Synthetic exact-boundary, same-side,
+  through-layer, opposite-side same-XY, missing-evidence, and map-fingerprint
+  cases pass. Digest-pinned Docker KiCad 10.0.0 and 10.0.5 native fixtures
+  confirm a 1.6 mm same-XY backside candidate exceeds the test-only 1.5 mm
+  threshold and a same-side control measures zero.
+- **Boundary:** This is a layer-aware geometric estimate using board thickness
+  as the vertical offset. It is not exact copper-layer center spacing, copper
+  route length, return-loop geometry, inductance, decoupling adequacy, or
+  electrical approval. No proprietary project sources or examples were used.
+
+[pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
 ## Completion and release gate
 

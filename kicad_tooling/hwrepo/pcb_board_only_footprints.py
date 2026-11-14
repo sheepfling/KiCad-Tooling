@@ -24,6 +24,7 @@ def board_only_pcb_footprints(
         "20",
         "21",
         "22",
+        "23",
     }:
         raise ValueError("Board-only PCB footprint review requires snapshot schema 12, 13, or 14")
 

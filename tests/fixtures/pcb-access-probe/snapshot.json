@@ -1091,6 +1091,7 @@
   ],
   "access_probe_requests_sha256": "fb8fb7cee2427b274d7d75db014c78c5021b406d37a74b894251668698a341ae",
   "board_sha256": "a46fff73e5ed8868abbc0791d51c3e549a166fb2cbea8f42885ecce84c4180ab",
+  "board_thickness_nm": 1600000,
   "copper_layers": [
     "F.Cu",
     "B.Cu"
@@ -1856,6 +1857,7 @@
       "value": "DnpCourtyardControl"
     }
   ],
+  "image": "fixture.invalid/kicad@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "kicad_version": "10.0.0",
   "net_ties": [],
   "pads": [
@@ -1870,6 +1872,18 @@
       "dnp": false,
       "footprint": "Synthetic:SlottedPlatedHole",
       "net": "TARGET_OBLONG_HOLE_BOUNDARY",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 440000000,
+          "y_nm": 5000000
+        },
+        {
+          "layer": "B.Cu",
+          "x_nm": 440000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "H3.1",
       "positions_nm": [
         [
@@ -1889,6 +1903,18 @@
       "dnp": false,
       "footprint": "Synthetic:SlottedPlatedHole",
       "net": "TARGET_OBLONG_HOLE_FAULT",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 460000000,
+          "y_nm": 5000000
+        },
+        {
+          "layer": "B.Cu",
+          "x_nm": 460000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "H4.1",
       "positions_nm": [
         [
@@ -1908,6 +1934,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_ACCESS",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 5000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J1.1",
       "positions_nm": [
         [
@@ -1926,6 +1959,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessNeighbor",
       "net": "FOREIGN_FRONT_ONLY",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 35500000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J10.1",
       "positions_nm": [
         [
@@ -1944,6 +1984,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_APERTURE_SMALL",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 50000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J11.1",
       "positions_nm": [
         [
@@ -1962,6 +2009,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_APERTURE_BOUNDARY",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 60000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J12.1",
       "positions_nm": [
         [
@@ -1980,6 +2034,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_APERTURE_RECT",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 70000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J13.1",
       "positions_nm": [
         [
@@ -1998,6 +2059,18 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_APERTURE_DRILLED",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 80000000,
+          "y_nm": 5000000
+        },
+        {
+          "layer": "B.Cu",
+          "x_nm": 80000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J14.1",
       "positions_nm": [
         [
@@ -2016,6 +2089,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_APERTURE_OVAL_SMALL",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 90000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J15.1",
       "positions_nm": [
         [
@@ -2034,6 +2114,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_APERTURE_OVAL_BOUNDARY",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 100000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J16.1",
       "positions_nm": [
         [
@@ -2052,6 +2139,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_APERTURE_ROUNDRECT_SMALL",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 110000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J17.1",
       "positions_nm": [
         [
@@ -2070,6 +2164,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_APERTURE_ROUNDRECT_BOUNDARY",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 120000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J18.1",
       "positions_nm": [
         [
@@ -2088,6 +2189,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_COURTYARD_SMALL",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 130000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J19.1",
       "positions_nm": [
         [
@@ -2107,6 +2215,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessNeighbor",
       "net": "TARGET_ACCESS",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 5150000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J2.1",
       "positions_nm": [
         [
@@ -2125,6 +2240,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_VIA_FAULT",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 140000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J20.1",
       "positions_nm": [
         [
@@ -2143,6 +2265,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_VIA_BOUNDARY",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 150000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J21.1",
       "positions_nm": [
         [
@@ -2161,6 +2290,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_TENTED_VIA",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 160000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J22.1",
       "positions_nm": [
         [
@@ -2179,6 +2315,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_BACK_VIA",
+      "outer_copper_centers": [
+        {
+          "layer": "B.Cu",
+          "x_nm": 170000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J23.1",
       "positions_nm": [
         [
@@ -2197,6 +2340,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_TRACK_FAULT",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 180000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J24.1",
       "positions_nm": [
         [
@@ -2215,6 +2365,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_TRACK_BOUNDARY",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 190000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J25.1",
       "positions_nm": [
         [
@@ -2233,6 +2390,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_TRACK_SAME_NET",
+      "outer_copper_centers": [
+        {
+          "layer": "B.Cu",
+          "x_nm": 260000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J26.1",
       "positions_nm": [
         [
@@ -2251,6 +2415,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_TRACK_ARC",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 210000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J27.1",
       "positions_nm": [
         [
@@ -2269,6 +2440,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_ZONE_FAULT",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 300000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J28.1",
       "positions_nm": [
         [
@@ -2287,6 +2465,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_ZONE_BOUNDARY",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 310000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J29.1",
       "positions_nm": [
         [
@@ -2305,6 +2490,13 @@
       "dnp": true,
       "footprint": "Synthetic:AccessNeighbor",
       "net": "FOREIGN_DNP",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 5050000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J3.1",
       "positions_nm": [
         [
@@ -2323,6 +2515,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_ZONE_SAME_NET",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 320000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J30.1",
       "positions_nm": [
         [
@@ -2341,6 +2540,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_ZONE_HOLE",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 330000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J31.1",
       "positions_nm": [
         [
@@ -2359,6 +2565,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_ZONE_BACK_FAULT",
+      "outer_copper_centers": [
+        {
+          "layer": "B.Cu",
+          "x_nm": 370000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J32.1",
       "positions_nm": [
         [
@@ -2377,6 +2590,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_ZONE_BACK_BOUNDARY",
+      "outer_copper_centers": [
+        {
+          "layer": "B.Cu",
+          "x_nm": 380000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J33.1",
       "positions_nm": [
         [
@@ -2395,6 +2615,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_EDGE_BOUNDARY",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 499600000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J34.1",
       "positions_nm": [
         [
@@ -2413,6 +2640,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_EDGE_FAULT",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 480600000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J35.1",
       "positions_nm": [
         [
@@ -2431,6 +2665,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_HOLE_BOUNDARY",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 400000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J36.1",
       "positions_nm": [
         [
@@ -2449,6 +2690,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_HOLE_FAULT",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 410000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J37.1",
       "positions_nm": [
         [
@@ -2468,6 +2716,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_OBLONG_HOLE_BOUNDARY",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 441000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J38.1",
       "positions_nm": [
         [
@@ -2487,6 +2742,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_OBLONG_HOLE_FAULT",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 459000001,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J39.1",
       "positions_nm": [
         [
@@ -2505,6 +2767,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessNeighbor",
       "net": "FOREIGN_FRONT",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 5500000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J4.1",
       "positions_nm": [
         [
@@ -2523,6 +2792,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessNeighbor",
       "net": "FOREIGN_BACK",
+      "outer_copper_centers": [
+        {
+          "layer": "B.Cu",
+          "x_nm": 5900000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J5.1",
       "positions_nm": [
         [
@@ -2541,6 +2817,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_NO_NET_NEIGHBOR",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 20000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J7.1",
       "positions_nm": [
         [
@@ -2559,6 +2842,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessNeighbor",
       "net": null,
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 20500000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J8.1",
       "positions_nm": [
         [
@@ -2577,6 +2867,13 @@
       "dnp": false,
       "footprint": "Synthetic:AccessTarget",
       "net": "TARGET_FRONT_ONLY",
+      "outer_copper_centers": [
+        {
+          "layer": "F.Cu",
+          "x_nm": 35000000,
+          "y_nm": 5000000
+        }
+      ],
       "pad": "J9.1",
       "positions_nm": [
         [
@@ -2586,8 +2883,9 @@
       ]
     }
   ],
+  "probe_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
   "rule_areas": [],
-  "schema_version": "22",
+  "schema_version": "23",
   "touch_pad_clearance_observations": [],
   "touch_pad_clearance_requests_sha256": null,
   "tracks": [
@@ -3538,7 +3836,5 @@
       "uuid": "00000000-0000-0000-0000-000000000057"
     }
   ],
-  "zones_refilled": true,
-  "image": "fixture.invalid/kicad@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-  "probe_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  "zones_refilled": true
 }

@@ -15,6 +15,7 @@ from .pcb_decoupling_models import (
     PcbDecouplingCoverageEntry,
     PcbDecouplingMap,
 )
+from .pcb_decoupling_surface_distance import nearest_outer_copper_center_distance_squared
 from .pcb_pad_review import pcb_pad_endpoint_issues
 from .pcb_pad_union_find import PcbPadUnionFind
 
@@ -97,6 +98,11 @@ def pcb_decoupling_entries(
             if requirement.max_return_via_distance_um is None
             else requirement.max_return_via_distance_um * 1000
         )
+        surface_distance_threshold_nm = (
+            None
+            if requirement.max_distance_3d_um is None
+            else requirement.max_distance_3d_um * 1000
+        )
         for candidate in requirement.capacitors:
             cap_supply = pads.get(candidate.supply_pad.casefold())
             cap_return = pads.get(candidate.return_pad.casefold())
@@ -136,6 +142,30 @@ def pcb_decoupling_entries(
             measured = _nearest_centers(ic_supply, cap_supply)
             distance_squared = measured
             distance_nm = None if distance_squared is None else isqrt(distance_squared)
+            surface_measurement = nearest_outer_copper_center_distance_squared(
+                ic_supply, cap_supply, snapshot.board_thickness_nm
+            )
+            distance_3d_squared = None if surface_measurement is None else surface_measurement[0]
+            distance_3d_nm = None if distance_3d_squared is None else isqrt(distance_3d_squared)
+            distance_3d_ic_layer = None if surface_measurement is None else surface_measurement[1]
+            distance_3d_capacitor_layer = (
+                None if surface_measurement is None else surface_measurement[2]
+            )
+            if surface_distance_threshold_nm is not None:
+                if surface_measurement is None:
+                    issues.append(
+                        "Layer-aware pad-center distance is unavailable; it requires native "
+                        "outer-copper centers and board thickness from PCB snapshot schema v23+"
+                    )
+                elif distance_3d_squared is not None and distance_3d_squared > (
+                    surface_distance_threshold_nm**2
+                ):
+                    assert distance_3d_nm is not None
+                    issues.append(
+                        f"Layer-aware pad-center distance is {distance_3d_nm // 1000}."
+                        f"{distance_3d_nm % 1000:03d} um; the project limit is "
+                        f"{requirement.max_distance_3d_um} um"
+                    )
             connected_via_count, nearest_via_id, return_via_distance_squared = (
                 _nearest_connected_via(cap_return, vias)
             )
@@ -212,6 +242,10 @@ def pcb_decoupling_entries(
                     return_connected=return_connected,
                     distance_nm=distance_nm,
                     distance_squared_nm2=distance_squared,
+                    distance_3d_nm=distance_3d_nm,
+                    distance_3d_squared_nm2=distance_3d_squared,
+                    distance_3d_ic_layer=distance_3d_ic_layer,
+                    distance_3d_capacitor_layer=distance_3d_capacitor_layer,
                     connected_return_via_count=connected_via_count,
                     nearest_return_via_id=nearest_via_id,
                     return_via_distance_nm=return_via_distance_nm,
@@ -231,8 +265,15 @@ def pcb_decoupling_entries(
                 candidate.return_via_distance_squared_nm2 is not None
                 and candidate.return_via_distance_squared_nm2 <= return_via_threshold_nm**2
             )
+            within_surface_distance = surface_distance_threshold_nm is None or (
+                candidate.distance_3d_squared_nm2 is not None
+                and candidate.distance_3d_squared_nm2 <= surface_distance_threshold_nm**2
+            )
             acceptable[candidate.reference.casefold()] = (
-                candidate.eligible and within_supply_distance and within_return_via_distance
+                candidate.eligible
+                and within_supply_distance
+                and within_return_via_distance
+                and within_surface_distance
             )
         eligible_within_limit = [
             (distance_squared, reference)
@@ -281,9 +322,33 @@ def pcb_decoupling_entries(
                     "No acceptable capacitor selection has a native-connected return via "
                     f"within {requirement.max_return_via_distance_um} um"
                 )
+            elif surface_distance_threshold_nm is not None and not any(
+                candidate.eligible
+                and (
+                    threshold_nm is None
+                    or (
+                        candidate.distance_squared_nm2 is not None
+                        and candidate.distance_squared_nm2 <= threshold_nm**2
+                    )
+                )
+                and (
+                    return_via_threshold_nm is None
+                    or (
+                        candidate.return_via_distance_squared_nm2 is not None
+                        and candidate.return_via_distance_squared_nm2 <= return_via_threshold_nm**2
+                    )
+                )
+                and candidate.distance_3d_squared_nm2 is not None
+                and candidate.distance_3d_squared_nm2 <= surface_distance_threshold_nm**2
+                for candidate in observations
+            ):
+                issues.append(
+                    "No acceptable capacitor selection meets the layer-aware "
+                    f"{requirement.max_distance_3d_um} um center-distance limit"
+                )
             else:
                 issues.append("The required capacitor selection is incomplete")
-        if threshold_nm is None:
+        if threshold_nm is None and surface_distance_threshold_nm is None:
             issues.append(
                 "No project IC-to-cap distance threshold is configured; measured placement needs review"
             )
@@ -298,6 +363,8 @@ def pcb_decoupling_entries(
                 ic_return_net=requirement.return_net,
                 max_distance_um=requirement.max_distance_um,
                 max_return_via_distance_um=requirement.max_return_via_distance_um,
+                max_distance_3d_um=requirement.max_distance_3d_um,
+                board_thickness_nm=snapshot.board_thickness_nm,
                 selection=requirement.selection,
                 candidates=tuple(observations),
                 selected_capacitors=tuple(selected),

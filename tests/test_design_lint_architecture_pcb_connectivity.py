@@ -12,6 +12,7 @@ from kicad_tooling.hwrepo import (
     pcb_connectivity_edges,
     pcb_connectivity_observations,
     pcb_connectivity_snapshot,
+    pcb_connectivity_surface_validation,
 )
 from tests.lint_architecture_support import HWREPO, IMPLEMENTATION_MAX_LINES, REPO_ROOT, line_count
 
@@ -53,22 +54,34 @@ def test_connectivity_models_have_bounded_theme_owners_and_compatibility_exports
     probe_validation_owner = HWREPO / "pcb_connectivity_probe_validation.py"
     edge_owner = HWREPO / "pcb_connectivity_edges.py"
     edge_validation_owner = HWREPO / "pcb_connectivity_edge_validation.py"
+    surface_validation_owner = HWREPO / "pcb_connectivity_surface_validation.py"
 
     assert line_count(observation_owner) < IMPLEMENTATION_MAX_LINES
     assert line_count(snapshot_owner) < IMPLEMENTATION_MAX_LINES
     assert line_count(probe_validation_owner) < IMPLEMENTATION_MAX_LINES
     assert line_count(edge_owner) < IMPLEMENTATION_MAX_LINES
     assert line_count(edge_validation_owner) < IMPLEMENTATION_MAX_LINES
+    assert line_count(surface_validation_owner) < IMPLEMENTATION_MAX_LINES
     assert set(OBSERVATION_MODEL_NAMES) <= _top_level_definitions(observation_owner)
+    assert {"PcbPadOuterCopperCenterObservation"} <= _top_level_definitions(observation_owner)
     assert {"PcbConnectivitySnapshot"} <= _top_level_definitions(snapshot_owner)
     assert {"validate_access_probe_relationships"} <= _top_level_definitions(probe_validation_owner)
     assert {"PcbEdgeCutObservation"} <= _top_level_definitions(edge_owner)
     assert {"validate_board_edge_evidence"} <= _top_level_definitions(edge_validation_owner)
+    assert {"validate_outer_copper_surface_evidence"} <= _top_level_definitions(
+        surface_validation_owner
+    )
     assert pcb_connectivity_edges.PcbEdgeCutObservation.__module__.endswith(
         "pcb_connectivity_edges"
     )
     assert pcb_connectivity_edge_validation.validate_board_edge_evidence.__module__.endswith(
         "pcb_connectivity_edge_validation"
+    )
+    assert pcb_connectivity_surface_validation.validate_outer_copper_surface_evidence.__module__.endswith(
+        "pcb_connectivity_surface_validation"
+    )
+    assert pcb_connectivity_observations.PcbPadOuterCopperCenterObservation.__module__.endswith(
+        "pcb_connectivity_observations"
     )
     for name in OBSERVATION_MODEL_NAMES:
         assert getattr(shared_models, name) is getattr(pcb_connectivity_observations, name)

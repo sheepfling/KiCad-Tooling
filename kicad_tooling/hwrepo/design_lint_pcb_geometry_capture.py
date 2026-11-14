@@ -54,7 +54,7 @@ def capture_pcb_geometry_source(
         )
     if (
         snapshot.schema_version
-        not in {"10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"}
+        not in {"10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"}
         or snapshot.board_sha256 != board_hash
         or snapshot.kicad_version != config.kicad_version
         or snapshot.image != pinned_image(config.image)

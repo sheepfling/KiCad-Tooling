@@ -98,6 +98,7 @@ def evaluate_pcb_fiducials(
         "20",
         "21",
         "22",
+        "23",
     }:
         return PcbFiducialCoverageReport(
             status="BLOCKED",

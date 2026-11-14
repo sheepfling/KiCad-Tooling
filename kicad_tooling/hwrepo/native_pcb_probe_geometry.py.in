@@ -1,5 +1,15 @@
 # Geometry observations: canonicalize filled zones, rule areas, and placements.
 
+def outer_copper_pad_centers(pad: NativePad) -> list[OuterCopperCenterObservation]:
+    """Capture exact pad centers and layer membership on both outer copper surfaces."""
+    position = pad.GetPosition()
+    layers = pad.GetLayerSet()
+    return [
+        {"x_nm": int(position.x), "y_nm": int(position.y), "layer": name}
+        for name, layer in (("F.Cu", native_pcbnew.F_Cu), ("B.Cu", native_pcbnew.B_Cu))
+        if layers.Contains(layer)
+    ]
+
 def canonical_ring_nm(chain: NativeLineChain) -> list[list[int]]:
     points: list[tuple[int, int]] = []
     for index in range(chain.PointCount()):

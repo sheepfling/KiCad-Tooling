@@ -53,6 +53,7 @@ from tests.mcp_parity_support import (
     pcb_native_snapshot_shim,
     run_mcp_parity,
 )
+from tests.pcb_drc_parity_support import install_source_bound_drc_receipt
 
 
 class _DesignLintMcpParityPcbLayoutCases(McpParityHarness):
@@ -65,6 +66,13 @@ class _DesignLintMcpParityPcbLayoutCases(McpParityHarness):
         board_path = self.island / "kicad/controller.kicad_pcb"
         shutil.copyfile(fixture, board_path)
         native = self.native_evidence()
+        config = load_config(self.root, self.island / "project.json")
+        install_source_bound_drc_receipt(
+            self.root,
+            native,
+            board_path=board_path,
+            kicad_version=config.kicad_version,
+        )
         requirement = PcbDecouplingRequirement(
             id="synthetic-core-rail",
             basis="Synthetic pin map and placement threshold",
@@ -223,8 +231,6 @@ class _DesignLintMcpParityPcbLayoutCases(McpParityHarness):
         docker.chmod(0o755)
         environment = os.environ.copy()
         environment["PATH"] = os.pathsep.join((str(shim), environment["PATH"]))
-        config = load_config(self.root, self.island / "project.json")
-
         async with Client(create_server(self.root), mode="legacy") as client:
             with patch.dict(os.environ, {"PATH": environment["PATH"]}):
                 cli = await self.cli(

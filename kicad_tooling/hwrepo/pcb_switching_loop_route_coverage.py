@@ -100,6 +100,7 @@ def _route_edge_coverage(
         "20",
         "21",
         "22",
+        "23",
     }:
         zone = zones.get((zone_uuid, plane_layer.casefold()))
         island = (

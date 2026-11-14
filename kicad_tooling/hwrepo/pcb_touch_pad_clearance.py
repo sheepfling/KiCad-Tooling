@@ -49,6 +49,7 @@ def touch_pad_clearance_entries(
             "20",
             "21",
             "22",
+            "23",
         } or ("touch_pad_clearance_observations" not in snapshot.model_fields_set):
             issues.append("exact native touch-pad clearance observations are unavailable")
         elif snapshot.touch_pad_clearance_requests_sha256 != expected_request_sha256:

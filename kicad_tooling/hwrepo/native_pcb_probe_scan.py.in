@@ -195,6 +195,7 @@ def main(
                 "footprint": footprint_id,
                 "dnp": dnp,
                 "positions_nm": [[int(pad.GetPosition().x), int(pad.GetPosition().y)]],
+                "outer_copper_centers": outer_copper_pad_centers(pad),
                 "connected_pads": sorted(connected, key=str.casefold),
                 "connected_vias": sorted(connected_vias),
                 "connected_zones": [
@@ -229,6 +230,17 @@ def main(
                             for position in existing["positions_nm"] + row["positions_nm"]
                         }
                     )
+                ]
+                surface_centers = sorted(
+                    {
+                        (item["x_nm"], item["y_nm"], item["layer"])
+                        for item in existing["outer_copper_centers"] + row["outer_copper_centers"]
+                    },
+                    key=lambda item: (item[2], item[0], item[1]),
+                )
+                existing["outer_copper_centers"] = [
+                    {"x_nm": x_nm, "y_nm": y_nm, "layer": layer}
+                    for x_nm, y_nm, layer in surface_centers
                 ]
                 existing["connected_vias"] = sorted(
                     set(existing["connected_vias"]) | set(row["connected_vias"])
@@ -429,7 +441,7 @@ def main(
     )
 
     output: NativeProbeSnapshot = {
-        "schema_version": ("22" if include_drill_holes else "21" if include_edge_cuts else "20"),
+        "schema_version": "23",
         "board_sha256": sha256(board_path),
         "kicad_version": native_pcbnew.GetBuildVersion(),
         "zones_refilled": zones_refilled,
@@ -450,6 +462,7 @@ def main(
         "copper_layers": [
             board.GetLayerName(layer) for layer in board.GetEnabledLayers().CuStack()
         ],
+        "board_thickness_nm": int(board.GetDesignSettings().GetBoardThickness()),
         **({"edge_cuts": edge_cut_rows} if include_edge_cuts else {}),
         **({"drill_holes": drill_hole_rows} if include_drill_holes else {}),
     }

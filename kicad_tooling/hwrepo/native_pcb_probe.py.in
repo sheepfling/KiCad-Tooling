@@ -63,6 +63,8 @@ class NativePolygonSet(Protocol):
 
 
 class NativeBoard(Protocol):
+    def GetDesignSettings(self) -> NativeBoardDesignSettings: ...
+
     def GetEnabledLayers(self) -> NativeLayerStack: ...
 
     def GetLayerName(self, layer: int) -> str: ...
@@ -78,6 +80,10 @@ class NativeBoard(Protocol):
     def BuildConnectivity(self) -> bool: ...
 
     def GetConnectivity(self) -> NativeConnectivity: ...
+
+
+class NativeBoardDesignSettings(Protocol):
+    def GetBoardThickness(self) -> int: ...
 
 
 class NativePad(Protocol):
@@ -424,12 +430,19 @@ class ConnectedIslandIdentity(ConnectedZoneIdentity):
     island_index: int
 
 
+class OuterCopperCenterObservation(TypedDict):
+    x_nm: int
+    y_nm: int
+    layer: Literal["F.Cu", "B.Cu"]
+
+
 class PadObservation(TypedDict):
     pad: str
     net: str | None
     footprint: str
     dnp: bool
     positions_nm: list[list[int]]
+    outer_copper_centers: list[OuterCopperCenterObservation]
     connected_pads: list[str]
     connected_vias: list[str]
     connected_zones: list[ConnectedZoneIdentity]
@@ -466,7 +479,7 @@ class TrackObservation(TypedDict):
 
 
 class NativeProbeSnapshot(TypedDict):
-    schema_version: Literal["20", "21", "22"]
+    schema_version: Literal["23"]
     board_sha256: str
     kicad_version: str
     zones_refilled: bool
@@ -482,6 +495,7 @@ class NativeProbeSnapshot(TypedDict):
     touch_pad_clearance_requests_sha256: str | None
     tracks: list[TrackObservation]
     copper_layers: list[str]
+    board_thickness_nm: int
     edge_cuts: NotRequired[list[EdgeCutObservation]]
     drill_holes: NotRequired[list[DrillHoleObservation]]
 
