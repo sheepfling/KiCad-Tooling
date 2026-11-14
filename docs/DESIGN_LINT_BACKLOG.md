@@ -838,7 +838,16 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc771):** LINT-460 reviews
+- **Latest published lint-gate checkpoint (v0.5.3rc784):** LINT-473 reviews
+  fitted ICs with native non-return `power_in` pins that are omitted from an
+  authored decoupling map. Hosted acceptance passed in GitHub Actions run
+  `43610088226`: 458 tests passed and 9,470 were deselected. The exact-version
+  Docker fault/control fixtures ran on KiCad 10.0.0 and 10.0.5. Ruff, Alphus,
+  Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist builds,
+  installed-origin/version checks, external/adapted template checks, and the
+  external playtest passed. Package and preview jobs were skipped under
+  prerelease policy.
+- **Previous published lint-gate checkpoint (v0.5.3rc771):** LINT-460 reviews
   connector alias pin assignments without a reviewed comparison scope. Hosted
   acceptance passed in workflow run 43563826701:
   460 tests passed and 9,355 were deselected. Linux/Windows Pyright, the
@@ -27318,7 +27327,12 @@ acceptance threads while new lint features proceed:
   Alphus, Rumdl, mdrepo, Linux and Windows Pyright, wheel and sdist builds,
   installed-origin/version checks, and external/adapted template inventory,
   surface, verification, and playtest stages passed.
-- **Hosted acceptance:** Pending tagged GitHub Actions verification.
+- **Hosted acceptance:** Annotated tag `v0.5.3rc784` passed GitHub Actions run
+  `43610088226`: 458 tests passed and 9,470 were deselected. Exact-version
+  Docker fixtures on KiCad 10.0.0 and 10.0.5, Linux and Windows Pyright,
+  wheel/sdist builds, installed-wheel checks, external/adapted project checks,
+  and playtest passed. Package and preview jobs were skipped under prerelease
+  policy.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
