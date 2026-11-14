@@ -724,23 +724,25 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Among fitted connector instances with distinct native symbols and no PART_ID, group values and footprints that match after trimming and case-folding, with identical complete pin inventories and complete native pin metadata. Require every pin function to match across peers and permit different electrical types on exactly one target pin. For that pin, require the same nonempty native function and one exact common assigned net per peer. Also require at least one other pin with matching function and electrical type plus one exact common assignment across peers. Emit one REVIEW candidate for the target electrical-type disagreement. Identity and net agreement are review clues; they do not establish which native type is correct.",
+      "predicate": "Among fitted connector instances with distinct native symbols, group values and footprints that match after trimming and case-folding, with identical complete pin inventories and complete native pin metadata. Peers must either all lack PART_ID or share one nonempty trimmed, case-folded PART_ID. Require every pin function to match across peers and permit different electrical types on exactly one target pin. For that pin, require the same nonempty native function and one exact common assigned net per peer. Also require at least one other pin with matching function and electrical type plus one exact common assignment across peers. Emit one REVIEW candidate for the target electrical-type disagreement. Identity and net agreement are review clues; they do not establish which native type is correct.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Values and footprints match after trimming and case-folding. Equal value, footprint, pin inventory, matching functions, and shared net assignments are similarity clues; they do not prove that the connector aliases are interchangeable or that one electrical type is correct.",
         "The predicate is limited to one electrical-type mismatch in an otherwise matching peer pinout and requires another metadata-matched common-net anchor. Groups with multiple type differences, function differences, incomplete metadata, incomplete inventory, open or ambiguous target pins, and target net splits stay outside this rule.",
-        "DNP and PART_ID-bearing components are excluded. Connector discovery is bounded by the shared footprint-peer candidate grouping.",
+        "DNP components are excluded. PART_ID-bearing peers are compared only when one exact nonempty trimmed, case-folded PART_ID matches along with value and footprint; a missing ID is grouped only with other peers whose ID is missing. PART_ID is project metadata and does not prove electrical equivalence. Connector discovery is bounded by the shared footprint-peer candidate grouping.",
         "This source-bound schematic review does not establish PCB pad mapping, copper continuity, off-board wiring, or physical connector construction. Project policy can block, disable, or ignore an exact finding."
       ],
       "fault_fixtures": [
         "tests.test_connector_footprint_peer_pin_type_consistency.test_same_assigned_pin_with_native_type_disagreement_is_localized",
+        "tests.test_connector_footprint_peer_pin_type_consistency.test_matching_part_id_aliases_with_type_disagreement_are_reviewed",
         "tests.test_connector_footprint_peer_pin_type_consistency_parity.test_connector_peer_type_review_matches_between_cli_and_mcp",
         "tests.test_connector_footprint_peer_pin_type_consistency_native.test_native_connector_pin_type_disagreement_and_matching_control_repeat"
       ],
       "valid_control_fixtures": [
         "tests.test_connector_footprint_peer_pin_type_consistency.test_incomplete_or_nonmatching_peer_evidence_stays_quiet",
+        "tests.test_connector_footprint_peer_pin_type_consistency.test_different_or_missing_part_ids_do_not_create_a_peer_group",
         "tests.test_connector_footprint_peer_pin_type_consistency_parity.test_connector_peer_type_review_matches_between_cli_and_mcp",
         "tests.test_connector_footprint_peer_pin_type_consistency_native.test_native_connector_pin_type_disagreement_and_matching_control_repeat"
       ],

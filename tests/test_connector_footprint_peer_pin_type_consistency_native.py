@@ -29,6 +29,14 @@ _FIXTURES = {
         _FIXTURE_ROOT / "pin-type-matched-control.kicad_sch",
         "2a1b514077177c80405667e7b1acd64f22ea82c17877b199ec7d61065295cb60",
     ),
+    "part-id-fault": (
+        _FIXTURE_ROOT / "pin-type-part-id-disagreement-fault.kicad_sch",
+        "444953130b9ad73962825816eedefc56f42c3b3d3044f0ff7532585488807271",
+    ),
+    "part-id-control": (
+        _FIXTURE_ROOT / "pin-type-part-id-matched-control.kicad_sch",
+        "469d71c04da1ad5b5ac4eb9996b2e6d152820436059e2b72e7f4c2872ad15a5e",
+    ),
 }
 
 pytestmark = [
@@ -113,4 +121,12 @@ def test_native_connector_pin_type_disagreement_and_matching_control_repeat(
     )
     assert finding.evidence["assignments"] == ("J1.2=SYNTHETIC_NET_2", "J2.2=SYNTHETIC_NET_2")
     assert connector_footprint_peer_pin_electrical_type_disagreements(control) == ()
+    part_id_fault = observations["part-id-fault"]
+    part_id_control = observations["part-id-control"]
+    assert part_id_fault.components["J1"].part_id == "SYNTHETIC-PEER-001"
+    assert part_id_fault.components["J2"].part_id == "SYNTHETIC-PEER-001"
+    (part_id_finding,) = connector_footprint_peer_pin_electrical_type_disagreements(part_id_fault)
+    assert part_id_finding.evidence["peer_identity_basis"] == ("part_id",)
+    assert part_id_finding.evidence["part_id"] == ("SYNTHETIC-PEER-001",)
+    assert connector_footprint_peer_pin_electrical_type_disagreements(part_id_control) == ()
     assert_native_fixture_mounts(tmp_path, "receipts/control-repeat.command.json")

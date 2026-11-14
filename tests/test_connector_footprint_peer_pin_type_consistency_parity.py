@@ -71,8 +71,21 @@ def test_connector_peer_type_review_matches_between_cli_and_mcp(tmp_path: Path) 
             1,
         ),
         (
+            "part-id-fault",
+            _peer_pin_type._source(part_id="SYNTHETIC-PART"),
+            1,
+        ),
+        (
             "matching-control",
             _peer_pin_type._source(types=("passive", "passive")),
+            0,
+        ),
+        (
+            "part-id-control",
+            _peer_pin_type._source(
+                part_id="SYNTHETIC-PART",
+                types=("passive", "passive"),
+            ),
             0,
         ),
     )

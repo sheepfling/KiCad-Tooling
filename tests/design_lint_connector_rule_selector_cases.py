@@ -9,6 +9,14 @@ CONNECTOR_RULE_NODE_CASES = (
     ),
     (
         "connector.footprint_peer_pin_electrical_type_disagreement",
+        "tests/test_connector_footprint_peer_pin_type_consistency.py::test_matching_part_id_aliases_with_type_disagreement_are_reviewed",
+    ),
+    (
+        "connector.footprint_peer_pin_electrical_type_disagreement",
+        "tests/test_connector_footprint_peer_pin_type_consistency.py::test_different_or_missing_part_ids_do_not_create_a_peer_group",
+    ),
+    (
+        "connector.footprint_peer_pin_electrical_type_disagreement",
         "tests/test_connector_footprint_peer_pin_type_consistency.py::test_incomplete_or_nonmatching_peer_evidence_stays_quiet",
     ),
     (

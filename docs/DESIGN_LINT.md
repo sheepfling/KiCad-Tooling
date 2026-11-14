@@ -603,17 +603,20 @@ actual voltage or PCB continuity. Project policy can keep `review`, set
 
 `connector.footprint_peer_pin_electrical_type_disagreement` asks for review
 when fitted connector aliases have values and footprints that match after
-trimming and case-folding,
-complete matching pin inventories and functions, and only one pin differs in
-native electrical type. That target pin must be assigned to the same exact
-net across peers, and another pin must provide a common function, type, and
-net anchor. This can surface a symbol inconsistency that assignment-divergence
-checks do not report when the target assignments are common.
+trimming and case-folding, complete matching pin inventories and functions,
+and either no `PART_ID` on any peer or the same nonempty `PART_ID` on every
+peer. Only one pin may differ in native electrical type. That target pin must
+be assigned to the same exact net across peers, and another pin must provide
+a common function, type, and net anchor. This can surface a symbol
+inconsistency that assignment-divergence checks do not report when the target
+assignments are common.
 
 This is a review clue, not a claim that the symbols are interchangeable or
 that one native type is correct. Incomplete metadata, changed functions,
 multiple type differences, split or open target assignments, and missing
-anchors stay quiet. The check does not inspect PCB pad mapping or copper.
+anchors stay quiet. Different PART_ID values, or a mix of missing and
+populated PART_ID values, do not form a peer group. The check does not inspect
+PCB pad mapping or copper.
 Project policy may promote, disable, or exactly ignore the finding. Synthetic
 and exact-version native fixtures are recorded in the
 [fixture README](../tests/fixtures/design_lint/connector-peer-pin-type-native/README.md).

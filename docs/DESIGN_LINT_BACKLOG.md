@@ -27473,10 +27473,47 @@ acceptance threads while new lint features proceed:
 - **Local acceptance:** The scoped package runner passed 465 tests with 9,509
   unrelated tests deselected, including digest-pinned Docker exports on KiCad
   10.0.0 and 10.0.5. Ruff, Rumdl, mdrepo, Linux and Windows Pyright,
-  wheel/sdist builds, installed-wheel origin/version checks, and separate plus
+  wheel/sdist builds, installed-wheel origin/version checks, and separate and
+  adapted public-template rehearsals passed.
 - **Hosted acceptance:** Tagged prerelease run `43621744472` passed the scoped
   lint gate and installed-wheel rehearsal against the separate public
   template. Package and preview jobs were skipped under prerelease policy.
+
+#### LINT-477 — Include exact PART_ID peers in connector pin-type review
+
+- **Rule:** Extends `connector.footprint_peer_pin_electrical_type_disagreement`;
+  no new rule ID or default policy is added.
+- **Gap:** LINT-476 limited its alias comparison to connectors without
+  `PART_ID`, although peer metadata checks already use one matching exact
+  `PART_ID` to group symbol variants. A same-part symbol type mismatch on a
+  common assigned net therefore stayed outside the electrical-type review.
+- **Predicate:** Retain the LINT-476 requirements for matching value and
+  footprint, complete identical pin inventories, complete native metadata,
+  matching functions, one electrical-type mismatch, one exact common target
+  assignment, and another matching common-net anchor. Compare either peers
+  whose `PART_ID` is absent or peers with one matching nonempty trimmed,
+  case-folded `PART_ID`. Do not mix missing, populated, or distinct IDs.
+- **Interpretation:** `PART_ID` is project metadata and strengthens the
+  similarity clue; it does not prove electrical equivalence or select the
+  correct pin type. The finding remains REVIEW by default and project policy
+  can promote, disable, or ignore the exact fingerprint.
+- **Controls and evidence:** Synthetic coverage includes matching IDs with
+  case and whitespace variation, different IDs, missing IDs, matching-type
+  controls, policy behavior, deterministic ordering, and source-bound
+  evidence. CLI/MCP parity covers both the fault and matching control.
+  Tooling-owned native fault/control schematics carry a shared `PART_ID` and
+  export on digest-pinned KiCad 10.0.0 and 10.0.5 Docker images. No cohort or
+  proprietary design data is used.
+- **Selection:** Use the LINT-476 focused `pytest` selector and enable
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1` for the native test; the same rule ID
+  selects the added PART_ID fault/control case.
+- **Local acceptance:** The scoped package runner passed 466 tests with 9,509
+  unrelated tests deselected, including digest-pinned Docker exports on KiCad
+  10.0.0 and 10.0.5. Ruff, Alphus module-role and shared-utility checks,
+  Rumdl, mdrepo, Linux and Windows Pyright, wheel/sdist builds, installed-wheel
+  origin/version checks, and separate plus adapted public-template rehearsals
+  passed. Hosted tagged acceptance is pending.
+- **Hosted acceptance:** Pending.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 

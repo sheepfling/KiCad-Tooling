@@ -84,6 +84,22 @@ def test_same_assigned_pin_with_native_type_disagreement_is_localized() -> None:
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_matching_part_id_aliases_with_type_disagreement_are_reviewed() -> None:
+    observed = _source(part_id="SYNTHETIC-PART")
+    components = dict(observed.components)
+    components["J2"] = components["J2"].model_copy(update={"part_id": " synthetic-part "})
+
+    (finding,) = _findings(lint_report(observed.model_copy(update={"components": components})))
+
+    assert finding.evidence["peer_identity_basis"] == ("part_id",)
+    assert finding.evidence["part_id"] == ("SYNTHETIC-PART",)
+    assert finding.evidence["peer_pin_electrical_types"] == (
+        "J1.2=passive",
+        "J2.2=power_in",
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
 @pytest.mark.parametrize(
     "source",
     (
@@ -113,12 +129,29 @@ def test_same_assigned_pin_with_native_type_disagreement_is_localized() -> None:
             _source(anchor_types=("input", "passive")),
             id="other-type-disagreement-prevents-comparison",
         ),
-        pytest.param(_source(part_id="SYNTHETIC-PART"), id="part-id-peer-family-excluded"),
         pytest.param(_source(dnp=("J2",)), id="dnp-peer-excluded"),
     ),
 )
 def test_incomplete_or_nonmatching_peer_evidence_stays_quiet(source) -> None:
     assert not _findings(lint_report(source))
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_different_or_missing_part_ids_do_not_create_a_peer_group() -> None:
+    observed = _source(part_id="SYNTHETIC-PART")
+    different_components = dict(observed.components)
+    different_components["J2"] = different_components["J2"].model_copy(
+        update={"part_id": "OTHER-PART"}
+    )
+    missing_components = dict(observed.components)
+    missing_components["J2"] = missing_components["J2"].model_copy(update={"part_id": None})
+
+    assert not _findings(
+        lint_report(observed.model_copy(update={"components": different_components}))
+    )
+    assert not _findings(
+        lint_report(observed.model_copy(update={"components": missing_components}))
+    )
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -170,21 +203,23 @@ def test_project_can_block_disable_or_ignore_the_exact_finding() -> None:
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_finding_is_stable_under_native_mapping_reordering() -> None:
-    source = _source()
-    shuffled = source.model_copy(
-        update={
-            "components": dict(reversed(tuple(source.components.items()))),
-            "nets": dict(reversed(tuple(source.nets.items()))),
-            "component_symbols": dict(reversed(tuple(source.component_symbols.items()))),
-            "component_pin_numbers": dict(reversed(tuple(source.component_pin_numbers.items()))),
-            "pin_functions": dict(reversed(tuple(source.pin_functions.items()))),
-            "pin_electrical_types": dict(reversed(tuple(source.pin_electrical_types.items()))),
-        }
-    )
-    initial = _findings(lint_report(source))[0]
-    repeated = _findings(lint_report(shuffled))[0]
+    for source in (_source(), _source(part_id="SYNTHETIC-PART")):
+        shuffled = source.model_copy(
+            update={
+                "components": dict(reversed(tuple(source.components.items()))),
+                "nets": dict(reversed(tuple(source.nets.items()))),
+                "component_symbols": dict(reversed(tuple(source.component_symbols.items()))),
+                "component_pin_numbers": dict(
+                    reversed(tuple(source.component_pin_numbers.items()))
+                ),
+                "pin_functions": dict(reversed(tuple(source.pin_functions.items()))),
+                "pin_electrical_types": dict(reversed(tuple(source.pin_electrical_types.items()))),
+            }
+        )
+        initial = _findings(lint_report(source))[0]
+        repeated = _findings(lint_report(shuffled))[0]
 
-    assert (initial.fingerprint, initial.evidence) == (repeated.fingerprint, repeated.evidence)
+        assert (initial.fingerprint, initial.evidence) == (repeated.fingerprint, repeated.evidence)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

@@ -65,6 +65,14 @@ class ConnectorFootprintPeerPinTypeEvidence:
                 "assignments": tuple(f"{item.pin}={item.net}" for item in self.observations),
                 "symbols": tuple(f"{item.reference}={item.symbol}" for item in self.observations),
                 "common_anchor_pin_numbers": self.common_anchor_pin_numbers,
+                **(
+                    {
+                        "peer_identity_basis": ("part_id",),
+                        "part_id": (self.group.part_id,),
+                    }
+                    if self.group.part_id is not None
+                    else {}
+                ),
             },
         )
 
@@ -126,7 +134,11 @@ def connector_footprint_peer_pin_electrical_type_disagreements(
     pin_nets = netlist_pin_net_index(observed)
     candidates: list[Candidate] = []
 
-    for group in connector_footprint_peer_candidate_groups(observed, declared_references):
+    for group in connector_footprint_peer_candidate_groups(
+        observed,
+        declared_references,
+        include_part_id_peers=True,
+    ):
         inventory = complete_connector_footprint_peer_pin_inventory(observed, group.references)
         if inventory is None:
             continue
@@ -257,6 +269,7 @@ def _validate_type_evidence(evidence: ConnectorFootprintPeerPinTypeEvidence) -> 
     current_groups = connector_footprint_peer_candidate_groups(
         evidence.observed,
         evidence.declared_references,
+        include_part_id_peers=True,
     )
     if evidence.group not in current_groups:
         raise ValueError("Connector peer type evidence must match a current fitted alias group")
