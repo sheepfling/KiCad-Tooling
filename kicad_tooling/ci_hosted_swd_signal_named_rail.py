@@ -25,33 +25,34 @@ def swd_signal_named_rail_fixture_lane(
         rule_id="bus.swd_signal_on_named_rail",
         fixture_directory="swd-signal-named-rail",
         source_hashes={
-            "fault": "62837263395b23916e1b61ec5687c1d658666c92c7db0a7cc064c44711bfa675",
-            "control": "787e89740492874bc952fdad71e4f605d449b292c7d0db7d217f5fbc92f77e19",
+            "fault": "e62b668c34f6c3a77f7923cb8e494e1f9ca54324131a678188a8fc5dca70bc3b",
+            "control": "29ee2641ec06a7d7ec4b120d4e54007c3c3cdee5cbefdc9061468e08c0a22699",
         },
         expected_pin_functions={
             "U1.1": "SYS_JTMS-SWDIO",
             "U1.2": "SYS_JTCK-SWCLK",
             "U1.3": "SWO",
-            "U1.4": "GPIO_OTHER",
+            "U1.4": "nRESET",
         },
         expected_nets={
             "fault": {
                 "GND": ("U1.1",),
                 "SYS_JTCK-SWCLK": ("U1.2",),
                 "+3V3": ("U1.3",),
-                "GPIO_OTHER": ("U1.4",),
+                "+5V": ("U1.4",),
             },
             "control": {
                 "SYS_JTMS-SWDIO": ("U1.1",),
                 "SYS_JTCK-SWCLK": ("U1.2",),
                 "SWO_TRACE": ("U1.3",),
-                "GPIO_OTHER": ("U1.4",),
+                "nRESET_LINE": ("U1.4",),
             },
         },
         expected_subjects={
             "fault": (
                 "U1.1: SYS_JTMS-SWDIO on return-like net GND",
                 "U1.3: SWO on supply-like net +3V3",
+                "U1.4: nRESET on supply-like net +5V",
             ),
             "control": (),
         },

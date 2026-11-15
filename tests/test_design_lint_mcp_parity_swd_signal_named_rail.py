@@ -35,7 +35,9 @@ class _SwdSignalNamedRailParity(McpParityHarness):
     async def _case_swd_signal_named_rail_cli_mcp_parity(self) -> None:
         native = self.native_evidence()
         netlist = native.parent / "netlist.xml"
-        source = swd_signal_named_rail_netlist(rail_pins={"1": "GND", "2": "+3V3", "3": "+1V8"})
+        source = swd_signal_named_rail_netlist(
+            rail_pins={"1": "GND", "2": "+3V3", "3": "+1V8", "4": "+5V"}
+        )
         netlist.write_text(peer_pin_netlist_xml(source), encoding="utf-8")
         self.rehash_native_netlist(native)
         native_summary = read_model(native, ValidationSummary)
@@ -91,6 +93,7 @@ class _SwdSignalNamedRailParity(McpParityHarness):
             "U1.1: SYS_JTMS-SWDIO on return-like net GND",
             "U1.2: SYS_JTCK-SWCLK on supply-like net +3V3",
             "U1.3: SWO on supply-like net +1V8",
+            "U1.4: nRESET on supply-like net +5V",
         )
 
 

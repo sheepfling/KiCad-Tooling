@@ -10,7 +10,7 @@ DEFAULT_FUNCTIONS = (
     "SYS_JTMS-SWDIO",
     "SYS_JTCK-SWCLK",
     "SWO",
-    "GPIO_OTHER",
+    "nRESET",
 )
 
 

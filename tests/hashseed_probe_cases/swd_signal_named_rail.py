@@ -12,7 +12,11 @@ from tests.json_types import JsonObject
 def report_cases() -> JsonObject:
     fault = evaluate(
         "synthetic-swd-signal-named-rail-fault",
-        coach(swd_signal_named_rail_netlist(rail_pins={"1": "GND", "2": "+3V3", "3": "+1V8"})),
+        coach(
+            swd_signal_named_rail_netlist(
+                rail_pins={"1": "GND", "2": "+3V3", "3": "+1V8", "4": "+5V"}
+            )
+        ),
         DesignLintPolicy(),
     )
     control = evaluate(

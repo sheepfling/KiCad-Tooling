@@ -8861,19 +8861,20 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining complete fitted IC or recognized connector pin inventory, native pin functions, exact assignments, and net labels",
-      "predicate": "For each fitted U/IC or recognized connector candidate with a complete unique native pin inventory, identify exactly one SWDIO and one SWCLK/SWDCLK function. Require both pins to have distinct single net assignments. Emit REVIEW for either pin when its assigned net label matches the bounded supply-like or return-like vocabulary. If present, also review exactly one explicit SWO function on its own distinct singly assigned net when that net label matches the same vocabulary. Composite native functions such as SYS_JTMS-SWDIO and SYS_JTCK-SWCLK are supported; JTMS/JTCK alone do not identify SWD, and JTDO alone does not identify SWO.",
+      "predicate": "For each fitted U/IC or recognized connector candidate with a complete unique native pin inventory, identify exactly one SWDIO and one SWCLK/SWDCLK function. Require both pins to have distinct single net assignments. Emit REVIEW for either pin when its assigned net label matches the bounded supply-like or return-like vocabulary. If present, also review one explicit SWO or reset function when that role is unique, its pin has one assignment on a third distinct net, and the net label matches the same vocabulary. Composite native functions such as SYS_JTMS-SWDIO and SYS_JTCK-SWCLK are supported; JTMS/JTCK alone do not identify SWD, and JTDO alone does not identify SWO.",
       "supported_kicad_versions": [
         "Digest-pinned KiCad 10.0.0 and 10.0.5 native fixture exports; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Native pin function text and rail-like labels are review clues, not proof that SWD is enabled, that a label reflects electrical potential, or that an assignment is wrong. Intentional assignments remain project decisions.",
-        "Only fitted ICs or recognized connector candidates with complete unique metadata and one distinct-net SWDIO/SWCLK pair are considered. DNP endpoints, duplicate or ambiguous required roles, open or multiply assigned pair pins, incomplete inventories, and same-net SWDIO/SWCLK pairs are skipped. An optional SWO candidate also requires one explicit SWO token, one assignment on a third distinct net, and no duplicate SWO role; JTDO alone does not identify SWO.",
-        "This check detects direct net assignments only. It does not analyze valid pull-up/down resistor paths, endpoint intent, whether SWO trace is enabled or required, reset, PCB copper, external wiring, or physical continuity."
+        "Only fitted ICs or recognized connector candidates with complete unique metadata and one distinct-net SWDIO/SWCLK pair are considered. DNP endpoints, duplicate or ambiguous required roles, open or multiply assigned pair pins, incomplete inventories, and same-net SWDIO/SWCLK pairs are skipped. Optional SWO and reset candidates require one exact role token, one assignment on a third distinct net, and no duplicate role; JTDO alone does not identify SWO.",
+        "This check detects direct net assignments only. It does not analyze valid pull-up/down resistor paths, endpoint intent, whether SWO trace is enabled or required, reset polarity or state, PCB copper, external wiring, or physical continuity."
       ],
       "fault_fixtures": [
         "tests.test_swd_signal_named_rail.test_complete_swd_pair_on_named_rails_requests_review_with_source_evidence",
         "tests.test_swd_signal_named_rail.test_explicit_connector_pair_is_reviewed_but_neutral_signal_nets_are_quiet",
         "tests.test_swd_signal_named_rail.test_explicit_swo_pin_on_a_named_rail_is_reviewed_for_ic_and_connector",
+        "tests.test_swd_signal_named_rail.test_explicit_reset_pin_on_a_named_rail_is_reviewed_for_ic_and_connector",
         "tests.test_design_lint_mcp_parity_swd_signal_named_rail.test_swd_signal_named_rail_cli_mcp_parity",
         "tests.test_swd_signal_named_rail_native_fixture_lane.test_native_swd_signal_named_rail_fault_and_control_repeat"
       ],
@@ -8881,7 +8882,7 @@
         "tests.test_swd_signal_named_rail.test_explicit_connector_pair_is_reviewed_but_neutral_signal_nets_are_quiet",
         "tests.test_swd_signal_named_rail.test_normal_resistor_bias_paths_are_outside_direct_pin_assignment_predicate",
         "tests.test_swd_signal_named_rail.test_only_a_complete_unique_distinct_assigned_swd_pair_establishes_identity",
-        "tests.test_swd_signal_named_rail.test_swo_is_optional_and_requires_one_explicit_unique_distinct_assignment",
+        "tests.test_swd_signal_named_rail.test_optional_debug_functions_require_one_explicit_unique_distinct_assignment",
         "tests.test_swd_signal_named_rail_native_fixture_lane.test_native_swd_signal_named_rail_fault_and_control_repeat"
       ],
       "metamorphic_fixtures": [

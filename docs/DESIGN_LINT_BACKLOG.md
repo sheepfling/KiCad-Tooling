@@ -28653,10 +28653,10 @@ acceptance threads while new lint features proceed:
   pull-up or pull-down paths through resistors. It does not establish that SWD
   is enabled, that a rail-like name reflects electrical potential, that a pin
   assignment is faulty, or that optional SWO/reset pins are part of the
-  interface. At initial LINT-501 acceptance, SWO was outside the predicate;
-  LINT-502 below extends this same configurable rule with an explicitly named
-  optional SWO clue. Same-net SWDIO/SWCLK pairs remain with the separate
-  same-net rule.
+  interface. At initial LINT-501 acceptance, SWO and reset were outside the
+  predicate; LINT-502 and LINT-503 below extend this same configurable rule
+  with explicit optional SWO and reset clues. Same-net SWDIO/SWCLK pairs remain
+  with the separate same-net rule.
   PCB copper, external wiring, and physical continuity are outside scope.
 - **Evidence:** Synthetic faults and controls cover both pair roles, explicit
   connector roles, the historical SWDCLK alias, resistor-mediated bias paths,
@@ -28737,6 +28737,45 @@ acceptance threads while new lint features proceed:
   checkout playtest passed. Package and preview jobs were skipped under
   prerelease policy.
 
+#### LINT-503 — Review explicit SWD reset pins assigned to named rails
+
+- **Priority:** P2 extension to the SWD signal named-rail review. Arm defines
+  an optional `nRESET` contact on its Cortex Debug connectors and shows reset
+  in a typical SWD circuit. A direct assignment to a rail-like net is a review
+  clue; reset may intentionally be pulled high or held low.
+- **Status:** Extends `bus.swd_signal_on_named_rail` without adding a rule ID or
+  changing its default `review` policy. Reset is considered only when the
+  fitted endpoint also has one complete, unique, separately assigned
+  SWDIO/SWCLK pair.
+- **Predicate:** Recognize one explicit bounded reset token in native pin
+  function metadata: `RESET`, `RESETN`, `NRESET`, `NRST`, or `NSRST`. Require
+  the optional pin to have one assignment distinct from both required pair
+  nets, and review it only when that net label matches the existing bounded
+  supply-like or return-like vocabulary. Missing, multiply assigned, duplicate,
+  ambiguous, or pair-shared reset pins do not suppress pair findings.
+- **Source basis:** Arm's [Cortex Debug Connector][arm-cortex-debug-connector]
+  identifies `nRESET` on the 10-pin and 20-pin Cortex debug connectors; its
+  typical SWD circuit connects debugger `nSRST` to target `nRESET` with a
+  pull-up. This supports the reset role only, not a board-specific requirement
+  or correct reset implementation.
+- **Limitations:** The heuristic does not infer reset polarity, default state,
+  timing, button circuits, whether debug reset is enabled, the intended rail,
+  or PCB copper and physical continuity. A reset pin connected directly to a
+  rail can be intentional and remains review-only.
+- **Evidence:** Synthetic IC and connector cases put explicit `nRESET`
+  functions on return-like and supply-like nets. Controls cover neutral and
+  absent reset signals, `NRST`/`nSRST`/`RESET_N` aliases, duplicate roles,
+  open and multiply assigned pins, sharing either required pair net, and
+  preservation of the SWDIO/SWCLK findings. Updated tooling-owned native
+  fault/control schematics run twice against digest-pinned KiCad 10.0.0 and
+  10.0.5 images with ERC clear.
+- **Selection:** Use the existing
+  `bus.swd_signal_on_named_rail` selector, focused SWD interface tests,
+  endpoint-architecture checks, native fixture lane, hash-seed determinism,
+  CLI/MCP parity, and catalog reachability.
+- **Local acceptance:** Pending the LINT-503 scoped release gate.
+- **Hosted acceptance:** Pending the LINT-503 annotated prerelease tag.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -28805,6 +28844,7 @@ quality, or first-article continuity.
 [arm-jtag-signals]: https://documentation-service.arm.com/static/5f900a61f86e16515cdc0610
 [arm-swd-signals]: https://documentation-service.arm.com/static/5f900abff86e16515cdc063b
 [arm-coresight-swo]: https://documentation-service.arm.com/static/63a03a981d698c4dc521ca77
+[arm-cortex-debug-connector]: https://documentation-service.arm.com/static/5fce6c49e167456a35b36af1
 [kicad-10-5-marker-serializer]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/pcb_marker.cpp
 [kicad-pcb-parser-zone-id-100]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/pcb_io/kicad_sexpr/pcb_io_kicad_sexpr_parser.cpp
 [kicad-pcb-parser-zone-id-105]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/pcb_io/kicad_sexpr/pcb_io_kicad_sexpr_parser.cpp

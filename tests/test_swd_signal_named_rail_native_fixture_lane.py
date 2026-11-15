@@ -60,6 +60,7 @@ def test_native_swd_signal_named_rail_fault_and_control_repeat(
     assert tuple(results["swd-signal-named-rail-fixture/fault"]["subjects"].split(";")) == (
         "U1.1: SYS_JTMS-SWDIO on return-like net GND",
         "U1.3: SWO on supply-like net +3V3",
+        "U1.4: nRESET on supply-like net +5V",
     )
     assert results["swd-signal-named-rail-fixture/control"]["subjects"] == "none"
     for case in ("fault", "control"):

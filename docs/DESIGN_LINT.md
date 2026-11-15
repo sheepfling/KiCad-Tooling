@@ -4272,30 +4272,36 @@ pin is reported when its net label matches the existing supply-like or
 return-like clue vocabulary. Composite function names such as
 `SYS_JTMS-SWDIO` and `SYS_JTCK-SWCLK` are supported. `JTMS` and `JTCK` alone do
 not identify SWD. When the complete pair is present, one additional uniquely
-assigned `SWO` pin on a third net is also reviewed if its own assigned net has
-a supply-like or return-like label. A function that explicitly names `SWO`,
-including a combined `JTDO-SWO` label, is recognized; `JTDO` alone is not.
+assigned `SWO` pin or reset pin on a third net is also reviewed if its own
+assigned net has a supply-like or return-like label. A function that explicitly
+names `SWO`, including a combined `JTDO-SWO` label, is recognized; `JTDO` alone
+is not. Reset recognition is limited to bounded `RESET`, `RESETN`, `NRESET`,
+`NRST`, or `NSRST` function tokens.
 
 This is an endpoint-identity and label heuristic. It does not establish that
 SWD is enabled, that the label is the electrical potential, or that an
 assignment is wrong. The predicate checks the signal pin's direct net
 assignment; normal SWDIO pull-up and SWCLK pull-down resistor paths are outside
 its scope. Duplicate or ambiguous roles, open or multiply assigned pair pins,
-same-net pairs, DNP endpoints, and incomplete inventories stay quiet. SWO is
-optional and is never required by this check; ambiguous, open, multiply
-assigned, or pair-shared SWO pins are ignored. The check does not assess reset,
-PCB copper, or continuity.
+same-net pairs, DNP endpoints, and incomplete inventories stay quiet. SWO and
+reset are optional and are never required by this check; duplicate, ambiguous,
+open, multiply assigned, or pair-shared optional pins are ignored without
+suppressing the required pair findings. This does not establish reset polarity,
+state, or timing, or assess PCB copper and continuity.
 Projects can promote the cue to `block`, turn it `off`, or ignore one exact
 fingerprint.
 
 The SWDIO/SWCLK role pair follows Arm's [Debug Interface v5 specification][arm-swd-signals];
 the optional SWO trace output follows the [CoreSight Architecture Specification][arm-coresight-swo].
-Synthetic regressions cover direct rail assignments on SWDIO, SWCLK, and SWO,
-a resistor-bias control, explicit connector functions, JTMS/JTCK/TDO-only and
-incomplete-pair controls, optional/ambiguous/open SWO boundaries, policy,
-source-bound evidence, stable ordering, CLI/MCP parity, and three-process
-hash-seed stability. The tooling-owned fault/control schematics are exported
-twice with digest-pinned KiCad 10.0.0 and 10.0.5 Docker images; see the
+Arm's [Cortex Debug Connector][arm-cortex-debug-connector] defines an optional
+`nRESET` contact, and its typical SWD circuit shows a reset connection and
+pull-up. Synthetic regressions cover direct rail assignments on SWDIO, SWCLK,
+SWO, and reset, a resistor-bias control, explicit connector functions,
+JTMS/JTCK/TDO-only and incomplete-pair controls, optional/ambiguous/open reset
+and SWO boundaries, policy, source-bound evidence, stable ordering, CLI/MCP
+parity, and three-process hash-seed stability. The tooling-owned fault/control
+schematics are exported twice with digest-pinned KiCad 10.0.0 and 10.0.5 Docker
+images; see the
 [fixture record](../tests/fixtures/design_lint/swd-signal-named-rail/README.md).
 
 ```sh
@@ -11347,3 +11353,4 @@ Review the actual board and assembly requirements before approving a build.
 [arm-jtag-signals]: https://documentation-service.arm.com/static/5f900a61f86e16515cdc0610
 [arm-swd-signals]: https://documentation-service.arm.com/static/5f900abff86e16515cdc063b
 [arm-coresight-swo]: https://documentation-service.arm.com/static/63a03a981d698c4dc521ca77
+[arm-cortex-debug-connector]: https://documentation-service.arm.com/static/5fce6c49e167456a35b36af1

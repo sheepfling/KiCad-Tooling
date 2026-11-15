@@ -99,7 +99,24 @@ def test_explicit_swo_pin_on_a_named_rail_is_reviewed_for_ic_and_connector() -> 
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
-def test_swo_is_optional_and_requires_one_explicit_unique_distinct_assignment() -> None:
+def test_explicit_reset_pin_on_a_named_rail_is_reviewed_for_ic_and_connector() -> None:
+    ic_fault = swd_signal_named_rail_netlist(rail_pins={"4": "GND"})
+    connector_fault = swd_signal_named_rail_netlist(reference="J1", rail_pins={"4": "+5V"})
+    ic_findings = _findings(_report(ic_fault))
+    connector_findings = _findings(_report(connector_fault))
+
+    assert tuple(item.subject for item in ic_findings) == ("U1.4: nRESET on return-like net GND",)
+    assert ic_findings[0].evidence["swd_role"] == ("reset",)
+    assert ic_findings[0].evidence["swd_identity_basis"] == (
+        "unique assigned native SWDIO/SWCLK pair with one explicit RESET function",
+    )
+    assert tuple(item.subject for item in connector_findings) == (
+        "J1.4: nRESET on supply-like net +5V",
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_optional_debug_functions_require_one_explicit_unique_distinct_assignment() -> None:
     source = swd_signal_named_rail_netlist(rail_pins={"1": "GND", "2": "+3V3", "3": "+1V8"})
     open_nets = {
         name: tuple(pin for pin in pins if pin != "U1.3") for name, pins in source.nets.items()
@@ -116,6 +133,31 @@ def test_swo_is_optional_and_requires_one_explicit_unique_distinct_assignment() 
         functions=("SYS_JTMS-SWDIO", "SYS_JTCK-SWCLK", "JTDO", "GPIO"),
         rail_pins={"1": "GND", "2": "+3V3"},
     )
+    duplicate_reset = swd_signal_named_rail_netlist(
+        functions=("SYS_JTMS-SWDIO", "SYS_JTCK-SWCLK", "SWO", "nRESET", "NRST"),
+        rail_pins={"1": "GND", "2": "+3V3"},
+    )
+    reset_on_named_rail = swd_signal_named_rail_netlist(
+        functions=("SYS_JTMS-SWDIO", "SYS_JTCK-SWCLK", "GPIO", "nRESET"),
+        rail_pins={"1": "GND", "2": "+3V3", "4": "+5V"},
+    )
+    open_reset_nets = {
+        name: tuple(pin for pin in pins if pin != "U1.4")
+        for name, pins in reset_on_named_rail.nets.items()
+    }
+    open_reset = reset_on_named_rail.model_copy(
+        update={"nets": {name: pins for name, pins in open_reset_nets.items() if pins}}
+    )
+    multiple_reset_nets = reset_on_named_rail.model_copy(
+        update={"nets": {**reset_on_named_rail.nets, "ALT": ("U1.4",)}}
+    )
+    reset_shared_pair = swd_signal_named_rail_netlist(rail_pins={"1": "GND", "2": "+3V3"})
+    reset_shared_nets = {
+        name: (*pins, "U1.4") if name == "GND" else pins
+        for name, pins in reset_shared_pair.nets.items()
+        if name != "SWD_SIGNAL_4"
+    }
+    reset_shared_swdio = reset_shared_pair.model_copy(update={"nets": reset_shared_nets})
     swo_on_swdio_net = swd_signal_named_rail_netlist(rail_pins={"1": "GND"})
     same_net_nets = {
         name: (*pins, "U1.3") if name == "GND" else pins
@@ -128,6 +170,11 @@ def test_swo_is_optional_and_requires_one_explicit_unique_distinct_assignment() 
     assert swd_function_role("JTDO-SWO") == "swo"
     assert swd_function_role("JTDO") is None
     assert swd_function_role("SWO-SWDIO") is None
+    assert swd_function_role("nRESET") == "reset"
+    assert swd_function_role("NRST") == "reset"
+    assert swd_function_role("nSRST") == "reset"
+    assert swd_function_role("RESET_N") == "reset"
+    assert swd_function_role("RESET-SWO") is None
     endpoints = SwdEndpointInventory.from_netlist(source).endpoint_pairs()
     assert len(endpoints) == 1
     assert (endpoints[0].swdio_pin, endpoints[0].swclk_pin) == ("U1.1", "U1.2")
@@ -138,7 +185,16 @@ def test_swo_is_optional_and_requires_one_explicit_unique_distinct_assignment() 
         "U1.1: SYS_JTMS-SWDIO on return-like net GND",
         "U1.2: SYS_JTCK-SWCLK on supply-like net +3V3",
     )
-    for case in (open_swo, multiple_swo_nets, duplicate_swo, tdo_without_swo):
+    for case in (
+        open_swo,
+        multiple_swo_nets,
+        duplicate_swo,
+        duplicate_reset,
+        open_reset,
+        multiple_reset_nets,
+        reset_shared_swdio,
+        tdo_without_swo,
+    ):
         assert (
             tuple(item.subject for item in swd_signal_on_named_rail_candidates(case))
             == expected_pair_findings
