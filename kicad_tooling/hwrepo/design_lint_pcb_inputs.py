@@ -7,10 +7,14 @@ from dataclasses import dataclass
 from .design_lint_types import Candidate
 from .pcb_component_inventory_models import PcbComponentInventoryCoverageReport
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
-from .pcb_drc_models import PcbDifferentialPairRuleCoverageReport, PcbSignalPathRuleCoverageReport
+from .pcb_drc_models import (
+    PcbDifferentialPairRuleCoverageReport,
+    PcbDifferentialPairRuleMap,
+    PcbSignalPathRuleCoverageReport,
+)
 from .pcb_keepout_models import PcbKeepoutCoverageReport
 from .pcb_protection_path_models import PcbProtectionPathCoverageReport
-from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport
+from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport, PcbReferencePlaneMap
 from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from .pcb_switching_loop_models import PcbSwitchingLoopCoverageReport
 from .pcb_thermal_via_models import PcbThermalViaCoverageReport, PcbThermalViaMap
@@ -40,3 +44,5 @@ class PcbCandidateInputs:
     dru_rule_candidates: tuple[Candidate, ...] = ()
     native_drc_candidates: tuple[Candidate, ...] = ()
     thermal_via_map: PcbThermalViaMap | None = None
+    differential_pair_rule_map: PcbDifferentialPairRuleMap | None = None
+    reference_plane_map: PcbReferencePlaneMap | None = None

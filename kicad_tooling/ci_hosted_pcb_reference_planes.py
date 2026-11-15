@@ -22,6 +22,8 @@ from .hwrepo.pcb_return_path_capture import (
 )
 from .hwrepo.project_models import ProjectConfig
 
+_REFERENCE_PLANE_SNAPSHOT_SCHEMA_VERSIONS = frozenset(str(version) for version in range(10, 24))
+
 
 def pcb_reference_plane_via_fixture_lane(
     root: Path, *, project: str, image: str, log: HostedLog
@@ -79,8 +81,7 @@ def pcb_reference_plane_via_fixture_lane(
             if snapshot is None:
                 raise ValueError("Native PCB reference-via fixture returned no snapshot")
             if (
-                snapshot.schema_version
-                not in {"10", "11", "12", "13", "14", "15", "16", "17", "18"}
+                snapshot.schema_version not in _REFERENCE_PLANE_SNAPSHOT_SCHEMA_VERSIONS
                 or snapshot.board_sha256 != source_hash
                 or snapshot.kicad_version != config.kicad_version
                 or snapshot.image != config.image
@@ -252,8 +253,7 @@ def pcb_reference_plane_narrow_void_fixture_lane(
                 if snapshot is None:
                     raise ValueError(f"Native reference-plane {case} returned no snapshot")
                 if (
-                    snapshot.schema_version
-                    not in {"10", "11", "12", "13", "14", "15", "16", "17", "18"}
+                    snapshot.schema_version not in _REFERENCE_PLANE_SNAPSHOT_SCHEMA_VERSIONS
                     or snapshot.board_sha256 != source_hash
                     or snapshot.kicad_version != config.kicad_version
                     or snapshot.image != config.image

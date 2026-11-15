@@ -31,7 +31,7 @@ from .pcb_drc_models import (
 )
 from .pcb_keepout_models import PcbKeepoutCoverageReport
 from .pcb_protection_path_models import PcbProtectionPathCoverageReport
-from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport
+from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport, PcbReferencePlaneMap
 from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
 from .pcb_switching_loop_models import PcbSwitchingLoopCoverageReport
 from .pcb_thermal_via_models import PcbThermalViaCoverageReport
@@ -80,6 +80,7 @@ class LegacyCandidateArguments(TypedDict, total=False):
     power_path_map: PowerPathMap | None
     power_sequence_map: PowerSequenceMap | None
     pcb_reference_plane_coverage: PcbReferencePlaneCoverageReport | None
+    pcb_reference_plane_map: PcbReferencePlaneMap | None
     control_input_bias_coverage: ControlInputBiasHeuristicCoverage | None
     i2c_pullup_heuristic_coverage: I2cPullupHeuristicCoverage | None
     digital_peer_voltage_context: DigitalPeerVoltageLintContext | None

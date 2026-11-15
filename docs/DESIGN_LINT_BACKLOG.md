@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 393 rules are implemented with synthetic regression coverage.
+The following 394 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 393 active rules.
+The catalog currently contains 394 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -732,6 +732,7 @@ skipped under prerelease policy.
 - `pcb.switching_regulator_loop_map_coverage`
 - `pcb.differential_pair_rule_coverage`
 - `pcb.differential_pair_unmapped_native_rule`
+- `pcb.differential_pair_reference_plane_scope_missing`
 - `pcb.signal_path_rule_coverage`
 - `pcb.signal_path_unmapped_native_rule`
 - `pcb.signal_path_unmapped_edge_clearance_rule`
@@ -4470,7 +4471,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 393 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 394 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -27788,6 +27789,48 @@ acceptance threads while new lint features proceed:
   wheel verification, external inventory/surface/verification, and adapted
   checkout playtest. The hosted run resolved the annotated tag to commit
   `401dd3a42ac866f882a34289a5ecf52bc002a21a`.
+
+#### LINT-483 — Review differential pairs missing reference-plane map scope
+
+- **Priority:** P2 configurable coverage heuristic. A project may define
+  differential-pair identity and DRC bounds while omitting those nets from the
+  separate reference-plane coverage map.
+- **Status:** Implemented as
+  `pcb.differential_pair_reference_plane_scope_missing`, defaulting to REVIEW.
+- **Predicate:** For each pair in a project-authored
+  `pcb_differential_pair_rule_map` on a PCB project, report the exact positive
+  or negative net absent from `pcb_reference_plane_map.signal_net` entries. An
+  absent plane map leaves both pair nets uncovered. A plane map covering both
+  exact nets is quiet.
+- **Interpretation:** Differential-pair DRC rules and reference-plane geometry
+  are separate project decisions. This prompt asks whether plane coverage
+  should also be reviewed; it does not require a common return, ground, layer,
+  threshold, or geometry check. It does not claim the pair is routed on the
+  board. Projects may disable or exactly ignore the review.
+- **Evidence:** Synthetic tests cover absent and partial map scope, full-map,
+  no-pair-map, and non-PCB controls. The project-level CLI/MCP parity fixture
+  exercises both the review candidate and a complete plane-map control using
+  tooling-owned inputs. A requirement-order metamorphic test keeps candidate
+  ordering stable. No native geometry claim or external board fixture is
+  involved; no proprietary source is used. The adjacent mapped-plane Docker
+  fixture lane also exposed an allowlist lag: its schema gate accepted native
+  snapshot schemas only through 18 although the typed snapshot supports 23.
+  The native fixture allowlist now accepts the reviewed 10–23 range.
+- **Selection:** Run
+  `tests/test_pcb_differential_pair_reference_plane_scope.py`,
+  `tests/test_design_lint_mcp_parity_pcb_pairs.py`, and
+  `tests/test_design_lint_architecture_pcb_differential_pair_reference_plane_scope.py`
+  with `design_lint and pcb_lint` and the exact rule selector.
+- **Acceptance:** The scoped `scripts/ci.py` gate passed all 55 selected tests,
+  including CLI/MCP parity and six native reference-plane fault/control cases
+  on digest-pinned KiCad 10.0.0 and 10.0.5. The two via-antipad and two
+  narrow-void cases passed after the schema allowlist repair; both alternate
+  reference-net cases passed. Full-repository Ruff, Alphus module-boundary and
+  shared-utility checks, Rumdl, and mdrepo passed. Linux and Windows-target
+  Pyright, wheel, sdist, sdist-wheel, installed-wheel verification, external
+  inventory/surface/verification, and adapted public-template playtest passed.
+  The pair-scope rule itself remains map-only and does not claim native
+  geometry evidence.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 

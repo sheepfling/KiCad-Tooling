@@ -26,9 +26,13 @@ from .design_lint_pcb_track_width_candidate_evidence import (
 )
 from .design_lint_types import Candidate
 from .pcb_decoupling_models import PcbDecouplingCoverageReport
+from .pcb_drc_models import PcbDifferentialPairRuleMap
+from .pcb_pair_reference_plane_scope import (
+    pcb_differential_pair_reference_plane_scope_candidates,
+)
 from .pcb_protection_path_models import PcbProtectionPathCoverageReport
 from .pcb_reference_plane_islands import unanchored_reference_zone_island_candidates
-from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport
+from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport, PcbReferencePlaneMap
 from .pcb_reference_plane_transitions import alternate_reference_plane_run_candidates
 from .pcb_thermal_via_models import PcbThermalViaCoverageReport
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
@@ -42,6 +46,9 @@ def scan_pcb_measurement_candidates(inputs: PcbCandidateInputs) -> tuple[Candida
         pcb_track_width_coverage=inputs.track_width,
         pcb_reference_plane_coverage=inputs.reference_plane,
         pcb_thermal_via_coverage=inputs.thermal_via,
+        pcb_differential_pair_rule_map=inputs.differential_pair_rule_map,
+        pcb_reference_plane_map=inputs.reference_plane_map,
+        is_pcb_project=inputs.is_pcb_project,
     )
 
 
@@ -52,9 +59,19 @@ def pcb_measurement_coverage_candidates(
     pcb_track_width_coverage: PcbTrackWidthCoverageReport | None = None,
     pcb_reference_plane_coverage: PcbReferencePlaneCoverageReport | None = None,
     pcb_thermal_via_coverage: PcbThermalViaCoverageReport | None = None,
+    pcb_differential_pair_rule_map: PcbDifferentialPairRuleMap | None = None,
+    pcb_reference_plane_map: PcbReferencePlaneMap | None = None,
+    is_pcb_project: bool = False,
 ) -> tuple[Candidate, ...]:
     """Translate PCB measurement coverage gaps into review candidates."""
     found: list[Candidate] = []
+    found.extend(
+        pcb_differential_pair_reference_plane_scope_candidates(
+            pcb_differential_pair_rule_map,
+            pcb_reference_plane_map,
+            is_pcb_project=is_pcb_project,
+        )
+    )
     if pcb_decoupling_coverage is not None:
         for entry in pcb_decoupling_coverage.entries:
             if entry.status == "COMPLETE" and entry.max_distance_um is not None:

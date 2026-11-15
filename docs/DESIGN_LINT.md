@@ -1080,7 +1080,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 393 active rules.
+The catalog currently contains 394 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -6023,6 +6023,22 @@ both digest-pinned KiCad 10.0.0 and 10.0.5 images: the F.Cu trace resolves to
 `INCOMPLETE`. The clearance ring bounds are 12.3995–13.6005 mm on both axes
 around the synthetic pad at (13, 13) mm. This native evidence tests polygon
 capture and route interpretation; it does not establish electrical adequacy.
+
+## Review differential pairs missing reference-plane map scope
+
+When a PCB project already names a differential pair in
+`pcb_differential_pair_rule_map`, `pcb.differential_pair_reference_plane_scope_missing`
+asks whether each member also needs an independently authored entry in
+`pcb_reference_plane_map`. It reports the exact omitted net or nets. A complete
+map covering both pair nets is quiet.
+
+This is a map-coverage heuristic, not a connectivity or return-path check. It
+does not require a common ground or reference net, identify which layers should
+be reviewed, choose thresholds, or infer that a reference-plane screen applies
+to every pair. The pair map and plane map declare different engineering
+decisions. The prompt defaults to `review` and can be disabled or exactly
+ignored after review. It compares project maps and does not claim native PCB
+geometry evidence.
 
 ## Review differential-pair DRC rule coverage
 

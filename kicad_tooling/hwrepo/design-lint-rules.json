@@ -13332,6 +13332,46 @@
       ]
     },
     {
+      "rule_id": "pcb.differential_pair_reference_plane_scope_missing",
+      "title": "Explicit differential-pair maps omit reference-plane scope",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "Project-authored differential-pair rule map compared with the independently authored PCB reference-plane map",
+      "predicate": "For a PCB project with a project-authored differential-pair rule map, emit one REVIEW candidate for each mapped pair where either exact positive_net or negative_net is absent from pcb_reference_plane_map.signal_net entries. An absent plane map omits both nets. Do not infer the required reference net, commonality, copper layer, threshold, or whether reference-plane coverage applies.",
+      "supported_kicad_versions": [
+        "Version-independent project-map comparison; no native geometry measurement is claimed"
+      ],
+      "limitations": [
+        "The rule checks only exact pair-map and reference-plane-map net names in PCB projects. It does not inspect native routes, prove the pair is present on the board, or establish that reference-plane screening is applicable.",
+        "Differential-pair constraints and reference-plane coverage are independent project requirements. Missing scope is a REVIEW prompt; it does not require a shared ground/reference net or any specific layer, threshold, or return strategy.",
+        "An absent or partial map can reflect an intentional design decision. Use the rule's project override or exact finding ignore after review."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_differential_pair_reference_plane_scope.test_explicit_pair_without_reference_plane_scope_is_reviewable",
+        "tests.test_pcb_differential_pair_reference_plane_scope.test_partial_plane_map_names_only_the_omitted_pair_net",
+        "tests.test_design_lint_mcp_parity_pcb_pairs.test_pcb_differential_pair_rule_coverage_parity"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_differential_pair_reference_plane_scope.test_both_pair_nets_in_plane_map_are_a_quiet_control",
+        "tests.test_pcb_differential_pair_reference_plane_scope.test_no_pair_map_and_non_pcb_projects_are_out_of_scope",
+        "tests.test_design_lint_mcp_parity_pcb_pairs.test_pcb_differential_pair_rule_coverage_parity"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_pcb_differential_pair_reference_plane_scope.test_candidate_projection_keeps_source_maps_and_is_stable",
+        "tests.test_pcb_differential_pair_reference_plane_scope.test_pair_and_plane_requirement_order_does_not_change_candidate_order"
+      ],
+      "required_native_fixtures": [],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_pair_reference_plane_scope.py#pcb_differential_pair_reference_plane_scope_candidates",
+        "kicad_tooling/hwrepo/design_lint_pcb_measurement_candidates.py#pcb_measurement_coverage_candidates",
+        "kicad_tooling/hwrepo/design_lint_pcb_inputs.py#PcbCandidateInputs"
+      ],
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_pair_reference_plane_scope.py#pcb_differential_pair_reference_plane_scope_candidates"
+    },
+    {
       "rule_id": "pcb.reference_plane_coverage",
       "title": "Mapped PCB signal track has limited adjacent reference-copper coverage",
       "status": "active",

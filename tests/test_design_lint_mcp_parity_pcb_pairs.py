@@ -30,6 +30,8 @@ from kicad_tooling.hwrepo.models import (
     DesignLintPolicy,
     DesignLintReport,
     DesignLintRuleOverride,
+    PcbReferencePlaneMap,
+    PcbReferencePlaneRequirement,
     ProjectManifest,
     ProjectTestContract,
     ValidationSummary,
@@ -144,6 +146,8 @@ class _DesignLintMcpParityPcbPairsCases(McpParityHarness):
                 ("missing", "INCOMPLETE", (), "review"),
                 ("ignored", "INCOMPLETE", ("skew_out_of_range",), "review"),
                 ("disabled", "DISABLED", (), "off"),
+                ("plane-map-control", "COMPLETE", (), "review"),
+                ("pair-plane-rule-off", "COMPLETE", (), "review"),
             ):
                 with self.subTest(scenario=scenario):
                     if scenario == "missing":
@@ -172,21 +176,58 @@ class _DesignLintMcpParityPcbPairsCases(McpParityHarness):
                         ),
                     )
                     current_contract = read_model(contract_path, ProjectTestContract)
+                    overrides = []
+                    if mode == "off":
+                        overrides.append(
+                            DesignLintRuleOverride(
+                                rule_id="pcb.differential_pair_rule_coverage",
+                                mode="off",
+                                reason="Synthetic parity case explicitly disables this audit",
+                            )
+                        )
+                    if scenario == "plane-map-control":
+                        overrides.append(
+                            DesignLintRuleOverride(
+                                rule_id="pcb.reference_plane_coverage",
+                                mode="off",
+                                reason="Synthetic case tests map-scope review without geometry",
+                            )
+                        )
+                    if scenario == "pair-plane-rule-off":
+                        overrides.append(
+                            DesignLintRuleOverride(
+                                rule_id="pcb.differential_pair_reference_plane_scope_missing",
+                                mode="off",
+                                reason="Synthetic project intentionally disables this review",
+                            )
+                        )
+                    plane_map = (
+                        PcbReferencePlaneMap(
+                            basis="Synthetic pair reference-plane scope control",
+                            requirements=tuple(
+                                PcbReferencePlaneRequirement(
+                                    id=f"usb-pair-{net.casefold()}",
+                                    basis=f"Synthetic reviewed plane scope for {net}",
+                                    signal_net=net,
+                                    signal_layers=("F.Cu",),
+                                    reference_net="GND",
+                                    minimum_track_length_um=1,
+                                    minimum_referenced_fraction=0.9,
+                                )
+                                for net in ("USB_D_P", "USB_D_N")
+                            ),
+                        )
+                        if scenario == "plane-map-control"
+                        else None
+                    )
                     write_model(
                         contract_path,
                         current_contract.model_copy(
                             update={
                                 "design_lint": DesignLintPolicy(
                                     pcb_differential_pair_rule_map=synthetic_differential_pair_map(),
-                                    rules=(
-                                        DesignLintRuleOverride(
-                                            rule_id="pcb.differential_pair_rule_coverage",
-                                            mode="off",
-                                            reason="Synthetic parity case explicitly disables this audit",
-                                        ),
-                                    )
-                                    if mode == "off"
-                                    else (),
+                                    pcb_reference_plane_map=plane_map,
+                                    rules=tuple(overrides),
                                 )
                             }
                         ),
@@ -239,10 +280,28 @@ class _DesignLintMcpParityPcbPairsCases(McpParityHarness):
                         )
                     else:
                         self.assertFalse(unmapped)
+                    missing_plane_scope = tuple(
+                        item
+                        for item in mcp_report.findings
+                        if item.rule_id == "pcb.differential_pair_reference_plane_scope_missing"
+                    )
+                    if scenario == "plane-map-control":
+                        self.assertFalse(missing_plane_scope)
+                    elif scenario == "pair-plane-rule-off":
+                        self.assertEqual(len(missing_plane_scope), 1)
+                        self.assertEqual(missing_plane_scope[0].mode, "off")
+                        self.assertEqual(missing_plane_scope[0].disposition, "RULE_OFF")
+                    else:
+                        self.assertEqual(len(missing_plane_scope), 1)
+                        self.assertEqual(
+                            missing_plane_scope[0].evidence["missing_reference_plane_nets"],
+                            ("USB_D_P", "USB_D_N"),
+                        )
 
 
 @pytest.mark.design_lint_rule(rule_id="pcb.differential_pair_rule_coverage")
 @pytest.mark.design_lint_rule(rule_id="pcb.differential_pair_unmapped_native_rule")
+@pytest.mark.design_lint_rule(rule_id="pcb.differential_pair_reference_plane_scope_missing")
 def test_pcb_differential_pair_rule_coverage_parity() -> None:
     run_mcp_parity(
         _DesignLintMcpParityPcbPairsCases, "_case_test_pcb_differential_pair_rule_coverage_parity"

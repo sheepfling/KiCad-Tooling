@@ -76,6 +76,18 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
                 ),
             }
         ),
+        "pcb.differential_pair_reference_plane_scope_missing": MappingProxyType(
+            {
+                "fault_fixtures": _refs(
+                    "tests.test_design_lint_mcp_parity_pcb_pairs",
+                    "test_pcb_differential_pair_rule_coverage_parity",
+                ),
+                "valid_control_fixtures": _refs(
+                    "tests.test_design_lint_mcp_parity_pcb_pairs",
+                    "test_pcb_differential_pair_rule_coverage_parity",
+                ),
+            }
+        ),
         "pcb.drc_exact_net_scope_unmatched": MappingProxyType(
             {
                 "fault_fixtures": _refs(

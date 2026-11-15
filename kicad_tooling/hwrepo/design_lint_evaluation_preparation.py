@@ -350,6 +350,8 @@ def prepare_evaluation(
         stm32_pin_map=coverage.stm32_pin_map,
         is_pcb_project=coach.project_kind in {ProjectKind.PCB, ProjectKind.PCB_ONLY},
         thermal_via_map=policy.pcb_thermal_via_map,
+        differential_pair_rule_map=policy.pcb_differential_pair_rule_map,
+        reference_plane_map=policy.pcb_reference_plane_map,
         dru_rule_candidates=request.pcb_dru_rule_candidates,
         native_drc_candidates=request.pcb_native_drc_candidates,
     )
