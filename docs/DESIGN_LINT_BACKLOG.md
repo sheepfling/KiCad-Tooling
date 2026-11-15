@@ -12749,6 +12749,17 @@ control are documented in the
   python -I -m pytest tests -m 'design_lint and design_lint_rule(rule_id="connector.footprint_peer_pin_metadata_assignment_divergence")'
   ```
 
+- **Parity verification repair:** The existing CLI/MCP fault/control test now
+  installs the shared source-bound synthetic DRC receipt before invoking lint.
+  Previously, its incomplete native summary blocked evaluation before the
+  connector rule ran. The fix changes no predicate, rule ID, or project
+  contract; it makes this existing parity evidence meaningful again.
+- **Local validation:** The exact rule selector passed 18 tests with 2 native
+  cases skipped; the Docker native selector passed 2 cases on KiCad 10.0.0 and
+  10.0.5, and the full parity module passed 16 tests. Ruff format/check,
+  Markdown checks, and mdrepo passed. Hosted acceptance is pending tag
+  `v0.5.3rc798`.
+
 #### LINT-165 — Review split connector-alias assignments when pin metadata is missing
 
 - **Status:** Implemented as the default-review rule

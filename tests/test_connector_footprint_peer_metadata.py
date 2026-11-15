@@ -35,6 +35,7 @@ from tests.connector_footprint_peer_support import (
     peer_metadata_divergence_netlist,
 )
 from tests.mcp_parity_support import semantic_design_lint_report
+from tests.pcb_drc_parity_support import install_source_bound_drc_receipt
 from tests.synthetic_design_lint_project import (
     run_design_lint_cli,
     synthetic_design_lint_project,
@@ -329,6 +330,7 @@ def test_metadata_divergence_matches_cli_and_mcp(tmp_path: Path) -> None:
         )
     )
     root, summary_path = synthetic_design_lint_project(tmp_path, policy)
+    install_source_bound_drc_receipt(root, summary_path)
     manifest_path = root / "projects/controller/project.json"
     manifest = read_model(manifest_path, ProjectManifest)
     write_model(
