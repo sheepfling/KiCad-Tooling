@@ -28318,7 +28318,11 @@ acceptance threads while new lint features proceed:
   Windows type checking, wheel/sdist builds, isolated installs, and the external
   KiCad-Test checkout playtest passed. Pinned Docker KiCad 10.0.0 and 10.0.5
   fault/control fixture runs passed.
-- **Hosted acceptance:** Pending tagged workflow acceptance.
+- **Hosted acceptance:** Passed tagged workflow run `43712666837`: 480 passed,
+  9,680 deselected in 177.26 seconds. Docker fixtures passed on
+  KiCad 10.0.0 and 10.0.5; Pyright, Windows types, wheel/sdist, installation,
+  and external checkout/playtest stages passed. Package and preview jobs were
+  skipped under prerelease policy.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
