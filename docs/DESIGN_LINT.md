@@ -9068,12 +9068,14 @@ require exactly two local resistors. It counts only conventional resistor
 references with unique native net assignments; arrays, switchable options,
 split networks, off-board termination, tolerance, placement, and PCB copper
 remain outside the check. Synthetic controls cover two fitted resistors, a DNP
-third resistor, and out-of-window values. Dedicated tooling-owned native
-schematics add a two-resistor control and three-resistor fault, exported with
-the exact KiCad 10.0.0 and 10.0.5 toolchains. Catalog maturity remains
-`synthetic_validated`; native export compatibility is recorded separately and
+third resistor, and out-of-window values. Tooling-owned native schematics add a
+two-resistor control, three-resistor excess fault, and DNP termination fault.
+They exercise both termination review rules using the exact KiCad 10.0.0 and
+10.0.5 toolchains. The missing-termination rule stays at `REVIEW` because
+split or external topologies can be valid. Catalog maturity remains
+`synthetic_validated`; native fixture compatibility is recorded separately and
 does not establish field value. See the [synthetic native fault/control fixture
-record](../tests/fixtures/design_lint/can-excess-termination-native/README.md)
+record](../tests/fixtures/design_lint/can-termination-heuristics-native/README.md)
 for source hashes and coverage boundaries.
 
 ## Require a USB-C port role and pin map

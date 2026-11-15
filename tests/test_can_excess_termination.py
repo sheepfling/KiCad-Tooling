@@ -26,7 +26,7 @@ from kicad_tooling.hwrepo.models import (
     DesignLintRuleOverride,
     NetlistContract,
 )
-from tests.can_excess_termination_fixture_manifest import NATIVE_FIXTURE_SOURCE_HASHES
+from tests.can_termination_heuristic_fixture_manifest import NATIVE_FIXTURE_SOURCE_HASHES
 from tests.design_lint_fixtures import can_netlist, coach
 
 RULE_ID = "bus.can_excess_termination"
@@ -39,7 +39,7 @@ pytestmark = [
 
 
 def test_native_fixture_sources_match_reviewed_hashes() -> None:
-    fixture_root = Path(__file__).parent / "fixtures/design_lint/can-excess-termination-native"
+    fixture_root = Path(__file__).parent / "fixtures/design_lint/can-termination-heuristics-native"
     assert {
         case: digest(fixture_root / f"{case}.kicad_sch") for case in NATIVE_FIXTURE_SOURCE_HASHES
     } == NATIVE_FIXTURE_SOURCE_HASHES

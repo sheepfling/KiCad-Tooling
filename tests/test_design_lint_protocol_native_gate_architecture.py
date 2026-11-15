@@ -36,9 +36,15 @@ _PROTOCOL_NATIVE_CASES = (
         id="can-peer-assignment",
     ),
     pytest.param(
+        "bus.can_missing_termination",
+        "KICAD_RUN_NATIVE_CAN_TERMINATION_FIXTURES",
+        "tests.test_can_native_fixture_lanes.test_native_can_termination_heuristics_fault_and_control",
+        id="can-missing-termination",
+    ),
+    pytest.param(
         "bus.can_excess_termination",
         "KICAD_RUN_NATIVE_CAN_TERMINATION_FIXTURES",
-        "tests.test_can_native_fixture_lanes.test_native_can_excess_termination_fault_and_control",
+        "tests.test_can_native_fixture_lanes.test_native_can_termination_heuristics_fault_and_control",
         id="can-excess-termination",
     ),
     pytest.param(

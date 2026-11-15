@@ -8077,18 +8077,24 @@
         "The rule does not evaluate bus topology, placement, resistor power, edge quality, or physical impedance."
       ],
       "fault_fixtures": [
-        "tests.test_design_lint_can.test_can_termination_hint_requires_a_direct_resistor_and_is_configurable"
+        "tests.test_design_lint_can.test_can_termination_hint_requires_a_direct_resistor_and_is_configurable",
+        "tests.test_can_native_fixture_lanes.test_native_can_termination_heuristics_fault_and_control"
       ],
       "valid_control_fixtures": [
-        "tests.test_design_lint_can.test_can_termination_hint_requires_a_direct_resistor_and_is_configurable"
+        "tests.test_design_lint_can.test_can_termination_hint_requires_a_direct_resistor_and_is_configurable",
+        "tests.test_can_native_fixture_lanes.test_native_can_termination_heuristics_fault_and_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
         "tests.test_design_lint_can.test_can_termination_finding_is_order_stable_and_population_sensitive"
       ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CAN_TERMINATION_FIXTURES"
+      ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/can_termination_heuristics.py#can_buses_without_local_termination",
-        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
+        "kicad_tooling/ci_hosted_can_termination_heuristics.py#can_termination_heuristics_native_fixture_lane"
       ],
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/can_termination_heuristics.py#can_buses_without_local_termination"
@@ -8111,11 +8117,11 @@
       ],
       "fault_fixtures": [
         "tests.test_can_excess_termination.test_three_fitted_direct_terminators_prompt_for_bus_topology_review",
-        "tests.test_can_native_fixture_lanes.test_native_can_excess_termination_fault_and_control"
+        "tests.test_can_native_fixture_lanes.test_native_can_termination_heuristics_fault_and_control"
       ],
       "valid_control_fixtures": [
         "tests.test_can_excess_termination.test_two_terminators_and_nonlocal_or_unfitted_parts_are_valid_controls",
-        "tests.test_can_native_fixture_lanes.test_native_can_excess_termination_fault_and_control"
+        "tests.test_can_native_fixture_lanes.test_native_can_termination_heuristics_fault_and_control"
       ],
       "metamorphic_status": "covered",
       "metamorphic_fixtures": [
@@ -8130,7 +8136,8 @@
         "kicad_tooling/hwrepo/resistor_paths.py#direct_resistors",
         "kicad_tooling/hwrepo/bus_signal_roles.py#can_function_role",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
-        "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_candidates"
+        "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_candidates",
+        "kicad_tooling/ci_hosted_can_termination_heuristics.py#can_termination_heuristics_native_fixture_lane"
       ],
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/can_termination_heuristics.py#can_buses_with_excessive_local_termination"

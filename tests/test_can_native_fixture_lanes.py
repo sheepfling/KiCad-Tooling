@@ -13,13 +13,13 @@ import pytest
 
 from kicad_tooling.ci_hosted import (
     HostedLog,
-    can_excess_termination_native_fixture_lane,
     can_peer_assignment_fixture_lane,
+    can_termination_heuristics_native_fixture_lane,
     can_termination_native_fixture_lane,
 )
 from kicad_tooling.ci_hosted_can_peer_reference import can_peer_reference_native_fixture_lane
 from kicad_tooling.hwrepo.electrical import selected_config
-from tests.can_excess_termination_fixture_manifest import NATIVE_FIXTURE_SOURCE_HASHES
+from tests.can_termination_heuristic_fixture_manifest import NATIVE_FIXTURE_SOURCE_HASHES
 from tests.native_fixture_support import assert_native_fixture_mounts
 from tests.support import reference_root
 
@@ -148,39 +148,58 @@ def test_native_can_split_termination_fault_and_control(
     reason="native CAN termination fixtures run in the digest-pinned package acceptance lane",
 )
 @pytest.mark.design_lint_rule(rule_id="bus.can_excess_termination")
+@pytest.mark.design_lint_rule(rule_id="bus.can_missing_termination")
 @pytest.mark.parametrize(("project", "version", "image"), PROJECT_TOOLCHAINS)
-def test_native_can_excess_termination_fault_and_control(
+def test_native_can_termination_heuristics_fault_and_control(
     native_project_root: Path, project: str, version: str, image: str
 ) -> None:
     config = selected_config(native_project_root, project)
     assert (config.kicad_version, config.image) == (version, image)
-    log = HostedLog(native_project_root, f"native-can-excess-termination-{project}")
-    can_excess_termination_native_fixture_lane(
+    log = HostedLog(native_project_root, f"native-can-termination-heuristics-{project}")
+    can_termination_heuristics_native_fixture_lane(
         native_project_root,
         project=project,
         image=config.image,
         log=log,
     )
-    results = _stage_results(log, "can-excess-termination-fixture/")
+    results = _stage_results(log, "can-termination-heuristics-fixture/")
     assert set(results) == {
-        "can-excess-termination-fixture/native-export",
-        "can-excess-termination-fixture/control",
-        "can-excess-termination-fixture/fault",
+        "can-termination-heuristics-fixture/native-export",
+        "can-termination-heuristics-fixture/control",
+        "can-termination-heuristics-fixture/fault",
+        "can-termination-heuristics-fixture/missing",
     }
-    assert results["can-excess-termination-fixture/native-export"]["status"] == "PASS"
-    assert results["can-excess-termination-fixture/control"]["status"] == "PASS"
-    assert results["can-excess-termination-fixture/control"]["findings"] == 0
-    assert results["can-excess-termination-fixture/fault"]["status"] == "PASS"
-    assert results["can-excess-termination-fixture/fault"]["findings"] == 1
-    assert results["can-excess-termination-fixture/fault"]["evidence"]
+    assert results["can-termination-heuristics-fixture/native-export"]["status"] == "PASS"
+    assert results["can-termination-heuristics-fixture/control"]["status"] == "PASS"
+    assert results["can-termination-heuristics-fixture/control"]["findings"] == 0
+    assert results["can-termination-heuristics-fixture/fault"]["status"] == "PASS"
+    assert results["can-termination-heuristics-fixture/fault"]["findings"] == 1
+    assert results["can-termination-heuristics-fixture/fault"]["evidence"]
+    assert results["can-termination-heuristics-fixture/missing"]["status"] == "PASS"
+    assert results["can-termination-heuristics-fixture/missing"]["findings"] == 0
     for case, expected_source_hash in NATIVE_FIXTURE_SOURCE_HASHES.items():
-        result = results[f"can-excess-termination-fixture/{case}"]
+        result = results[f"can-termination-heuristics-fixture/{case}"]
         assert result["kicad_version"] == version
         assert result["repeatable"] == "true"
         assert result["source_sha256"] == expected_source_hash
         assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
         assert re.fullmatch(r"[0-9a-f]{64}", result["normalized_netlist_sha256"])
         assert_native_fixture_mounts(native_project_root, result["command_receipt"])
+
+    missing_results = _stage_results(log, "can-missing-termination-fixture/")
+    assert set(missing_results) == {
+        f"can-missing-termination-fixture/{case}" for case in NATIVE_FIXTURE_SOURCE_HASHES
+    }
+    assert {
+        case: missing_results[f"can-missing-termination-fixture/{case}"]["findings"]
+        for case in NATIVE_FIXTURE_SOURCE_HASHES
+    } == {
+        "control": 0,
+        "fault": 0,
+        "missing": 1,
+    }
+    assert missing_results["can-missing-termination-fixture/missing"]["dnp_components"] == "R1,R2"
+    assert missing_results["can-missing-termination-fixture/missing"]["evidence"]
 
 
 @pytest.mark.skipif(

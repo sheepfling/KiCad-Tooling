@@ -29052,6 +29052,39 @@ acceptance threads while new lint features proceed:
   scoped type checks, package build/install, and external-template playtest
   passed. Package and preview jobs were skipped under prerelease policy.
 
+#### LINT-509 — Validate missing CAN termination from native fitted-state evidence
+
+- **Priority:** P1 evidence closure. `bus.can_missing_termination` had
+  synthetic contract coverage but no exact-version native fault/control for
+  the path from KiCad's exported component population and netlist into the
+  review heuristic.
+- **Change:** Keep the predicate and default `REVIEW` disposition unchanged.
+  Add hash-pinned native coverage alongside the existing CAN termination
+  heuristic fixtures and verify the direct-resistor rule and the missing-
+  termination rule against the same exported contracts.
+- **Fixtures:** The fitted two-terminator control and three-terminator excess
+  fault stay quiet for missing termination. A separate fault marks both
+  120 Ω options DNP and must prompt. All three sources are tooling-owned
+  synthetic schematics and are exported repeatedly by digest-pinned KiCad
+  10.0.0 and 10.0.5 images. No project or proprietary source is used. See the
+  [CAN termination heuristic fixture record](../tests/fixtures/design_lint/can-termination-heuristics-native/README.md).
+- **Selection:** Run `tests/test_can_native_fixture_lanes.py` with
+  `design_lint and interface_lint and native_kicad`, the exact
+  `bus.can_missing_termination` selector, and
+  `KICAD_RUN_NATIVE_CAN_TERMINATION_FIXTURES=1`.
+- **Boundary:** The rule still reports REVIEW because split and external
+  termination can be valid. This verifies native fitted-state and netlist
+  handling; it does not prove physical bus endpoints, resistor tolerance,
+  placement, impedance, or PCB copper.
+- **Local acceptance:** The tag-equivalent `scripts/ci.py` gate passed
+  480 tests with 9,779 deselected at
+  `build/ci/run-nlwk6men`. The missing-DNP fault, fitted control, and excess
+  control ran twice through digest-pinned Docker exports on KiCad 10.0.0 and
+  10.0.5. Ruff, Alphus boundaries, Rumdl, mdrepo, Linux and Windows Pyright
+  (including the native fixture adapter), wheel/sdist builds, installed-wheel
+  checks, and the external-template playtest passed.
+- **Hosted acceptance:** Pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

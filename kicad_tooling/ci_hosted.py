@@ -13,11 +13,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-from .ci_hosted_can_excess_termination import can_excess_termination_native_fixture_lane
 from .ci_hosted_can_generic_connector_lane import can_generic_connector_fixture_lane
 from .ci_hosted_can_peer_assignment import can_peer_assignment_fixture_lane
 from .ci_hosted_can_termination_arrays import can_termination_array_native_fixture_lane
 from .ci_hosted_can_termination_fixtures import can_termination_native_fixture_lane
+from .ci_hosted_can_termination_heuristics import can_termination_heuristics_native_fixture_lane
 from .ci_hosted_can_unconnected_direction_pins import can_unconnected_direction_pin_fixture_lane
 from .ci_hosted_can_unconnected_line import can_unconnected_line_fixture_lane
 from .ci_hosted_complementary_pairs import complementary_pair_fixture_lane
@@ -129,10 +129,10 @@ __all__ = (
     "TWO_PIN_COMPONENT_FIXTURE_CASES",
     "HostedCommandError",
     "HostedLog",
-    "can_excess_termination_native_fixture_lane",
     "can_generic_connector_fixture_lane",
     "can_peer_assignment_fixture_lane",
     "can_termination_array_native_fixture_lane",
+    "can_termination_heuristics_native_fixture_lane",
     "can_termination_native_fixture_lane",
     "can_unconnected_direction_pin_fixture_lane",
     "can_unconnected_line_fixture_lane",

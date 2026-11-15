@@ -604,6 +604,9 @@ KICAD_RUN_NATIVE_CAN_TERMINATION_FIXTURES=1 \
 KICAD_RUN_NATIVE_CAN_PEER_FIXTURES=1 python -I -B -m pytest -q \
   -m "design_lint and interface_lint and native_kicad" \
   tests/test_can_native_fixture_lanes.py
+KICAD_RUN_NATIVE_CAN_TERMINATION_FIXTURES=1 python -I -B -m pytest -q \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_missing_termination")' \
+  tests/test_can_native_fixture_lanes.py -k can_termination_heuristics
 KICAD_RUN_NATIVE_SERIAL_PEER_FIXTURES=1 python -I -B -m pytest -q \
   -m "design_lint and interface_lint and native_kicad" \
   tests/test_serial_peer_native_fixture_lane.py
