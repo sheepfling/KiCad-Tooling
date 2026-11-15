@@ -850,7 +850,15 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc830):** LINT-504 adds
+- **Latest published lint-gate checkpoint (v0.5.3rc831):** LINT-505 extends
+  serial named-rail review to exact DTR/DSR/DCD/RI modem-control functions.
+  Hosted acceptance passed in GitHub Actions run `43745150050`: 511 selected
+  tests passed and 9,728 were deselected, including repeated Docker fixtures on
+  KiCad 10.0.0 and 10.0.5. Tag-scope resolution, Ruff, Alphus, Rumdl, mdrepo,
+  Linux and Windows type checks, wheel/sdist builds, and installed-wheel
+  verification against the separate public template checkout passed. Package
+  and preview jobs were skipped under prerelease policy.
+- **Previous checkpoint (v0.5.3rc830):** LINT-504 adds
   conservative CTS/RTS named-rail review. Hosted acceptance passed in GitHub
   Actions run `43742830825`: 494 selected tests passed and 9,728 were
   deselected, including repeatable Docker fixtures on KiCad 10.0.0 and 10.0.5.
@@ -28881,6 +28889,12 @@ acceptance threads while new lint features proceed:
   native exports; Ruff, Alphus boundaries, Rumdl, mdrepo, Linux and Windows
   type checks, wheel/sdist builds, and installed-origin/version checks passed.
   The separate public-template checkout rehearsal runs in hosted acceptance.
+- **Hosted acceptance:** Tag `v0.5.3rc831` passed GitHub Actions run
+  `43745150050`: 511 selected tests passed and 9,728 were deselected. Exact
+  KiCad 10.0.0 and 10.0.5 native fixtures, scoped type checks, wheel/sdist
+  builds, and installed-wheel rehearsal against the separate public template
+  checkout passed. Package and preview jobs were skipped under prerelease
+  policy.
 
 ## Completion and release gate
 
