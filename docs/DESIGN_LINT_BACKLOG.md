@@ -847,7 +847,15 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc827):** LINT-501 adds
+- **Latest published lint-gate checkpoint (v0.5.3rc828):** LINT-502 extends
+  SWD named-rail review to explicit optional SWO pins. Hosted acceptance passed
+  in GitHub Actions run `43736758403`: 484 selected tests passed and 9,729
+  were deselected, including repeatable Docker fixtures on KiCad 10.0.0 and
+  10.0.5. Tag-scope resolution, Ruff, Alphus, Rumdl, mdrepo, Linux and Windows
+  type checks, packaging, and installed-wheel verification against a separate
+  project passed. Package and preview jobs were skipped under prerelease
+  policy.
+- **Previous published lint-gate checkpoint (v0.5.3rc827):** LINT-501 adds
   SWD signal-on-named-rail review. Hosted acceptance passed in GitHub Actions
   run `43733502511`: 482 selected tests passed and 9,729 were deselected,
   including repeatable Docker fixtures on KiCad 10.0.0 and 10.0.5. Tag-scope
@@ -28715,8 +28723,19 @@ acceptance threads while new lint features proceed:
 - **Selection:** Use the existing
   `bus.swd_signal_on_named_rail` selector, focused SWD interface tests,
   endpoint-architecture checks, native fixture lane, and catalog reachability.
-- **Local acceptance:** Pending the LINT-502 scoped release gate.
-- **Hosted acceptance:** Pending the LINT-502 annotated prerelease tag.
+- **Local acceptance:** Exact scoped prerelease pipeline passed on 2026-11-15
+  at `build/ci/run-o9oxw1re`: 484 passed, 9,729 deselected, including native
+  Docker fault/control fixtures on KiCad 10.0.0 and 10.0.5. Ruff, Alphus
+  module boundaries and shared-utility checks, Rumdl, mdrepo, Linux and
+  Windows Pyright, wheel/sdist builds, clean installed-wheel checks, and the
+  separate KiCad-Test inventory, verification, and playtest all passed.
+- **Hosted acceptance:** Annotated tag `v0.5.3rc828` passed GitHub Actions run
+  `43736758403`: 484 selected tests passed and 9,729 were deselected, including
+  repeatable native Docker fault/control fixtures on KiCad 10.0.0 and 10.0.5.
+  Ruff, Alphus boundaries, Rumdl, mdrepo, Linux and Windows type checks,
+  wheel/sdist builds, installed-wheel checks, and the external KiCad-Test
+  checkout playtest passed. Package and preview jobs were skipped under
+  prerelease policy.
 
 ## Completion and release gate
 
