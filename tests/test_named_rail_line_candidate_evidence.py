@@ -54,3 +54,20 @@ def test_rs485_line_candidate_retains_and_rechecks_pair_and_identity() -> None:
     changed_pin = NamedRailPinSource(observed=changed, evidence=source.pin.evidence)
     with pytest.raises(ValueError, match="current native pair"):
         replace(source, pin=changed_pin)
+
+
+def test_rs485_connector_line_candidate_retains_and_rechecks_pair_and_identity() -> None:
+    candidate = rs485_line_on_named_rail_candidates(rs485_line_named_rail_netlist(pin="J1.1"))[0]
+    assert isinstance(candidate, NamedRailLineCandidate)
+    source = candidate.source_evidence
+    assert isinstance(source, Rs485LineNamedRailEvidence)
+    assert source.pin.evidence.reference_kind == "connector"
+    assert source.peer.pin == "J1.2"
+    assert candidate.evidence["identity_basis"] == ("Connector:Conn_01x02 RS-485 connector",)
+
+    pin_functions = dict(source.pin.observed.pin_functions)
+    pin_functions["J1.2"] = "A"
+    changed = source.pin.observed.model_copy(update={"pin_functions": pin_functions})
+    changed_pin = NamedRailPinSource(observed=changed, evidence=source.pin.evidence)
+    with pytest.raises(ValueError, match="current native pair"):
+        replace(source, pin=changed_pin)

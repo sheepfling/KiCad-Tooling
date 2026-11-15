@@ -9915,20 +9915,20 @@
     },
     {
       "rule_id": "bus.rs485_line_on_named_rail",
-      "title": "RS-485 transceiver bus line pin assigned to a named rail",
+      "title": "RS-485 endpoint bus line pin assigned to a named rail",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For each fitted U/IC with exactly one bounded A and one bounded B pin-function alias, require explicit RS-485 identity in the native symbol library ID or component value, complete native pin inventory membership for both line pins, and exactly one assignment for the examined pin. Emit a REVIEW candidate when that assignment has a supply-like or return-like label.",
+      "predicate": "For each fitted IC or connector candidate with exactly one bounded A and one bounded B pin-function alias, require explicit RS-485 identity in the native symbol library ID or component value, complete native pin inventory membership for both line pins, and exactly one assignment for the examined pin. Emit a REVIEW candidate when that assignment has a supply-like or return-like label.",
       "supported_kicad_versions": [
         "KiCad 10.0.0 and 10.0.5 digest-pinned synthetic fixture lanes"
       ],
       "limitations": [
         "Identity matching is limited to explicit RS-485/RS485 text and bounded MAX48xx, SP3485, ADM48xx, SN65HVD485, and THVD family markers. Generic A/B pins and the SN65HVD23x CAN family do not qualify.",
         "Only exact A/B function aliases are recognized. Function and label text are review clues only; a direct rail assignment may be intentional. The finding does not establish electrical potential, a required bus topology, a defect, board copper, or physical continuity. Projects may review, block, disable, or ignore the finding.",
-        "DNP, open, multiply assigned, connector, incomplete-inventory, and non-unique A/B pair cases are skipped. The complementary line pin is included as evidence; its assignment is not inferred or required by this rule."
+        "DNP, open, multiply assigned, generic connector, incomplete-inventory, and non-unique A/B pair cases are skipped. A connector is considered only when its native symbol library ID or value has explicit RS-485 identity. The complementary line pin is included as evidence; its assignment is not inferred or required by this rule."
       ],
       "fault_fixtures": [
         "tests.test_rs485_line_named_rail.test_explicit_rs485_line_pins_on_named_rails_request_review",
@@ -9951,6 +9951,8 @@
         "kicad_tooling/hwrepo/rs485_line_functions.py#rs485_bus_line_role",
         "kicad_tooling/hwrepo/rs485_data_functions.py#explicit_rs485_transceiver_identity",
         "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_connector_pins",
+        "kicad_tooling/hwrepo/connector_identity.py#connector_candidate_references",
         "kicad_tooling/hwrepo/named_rail_pin_evidence.py#named_rail_pin_evidence_matches_source",
         "kicad_tooling/hwrepo/design_lint_named_rail_line_candidate_evidence.py#NamedRailLineCandidate",
         "kicad_tooling/hwrepo/design_lint_named_rail_line_candidate_evidence.py#Rs485LineNamedRailEvidence",

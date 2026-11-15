@@ -41,8 +41,8 @@ _NAMED_RAIL_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
 _LINE_NAMED_RAIL_RULE_ID = "bus.rs485_line_on_named_rail"
 _LINE_NAMED_RAIL_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
     {
-        "fault": "4e15a47d7418c3b17ae5cd2cf10cfcc6dc7e0ef796bbf9023aebbbe029ba6d1b",
-        "control": "ec8a53ce7ae539d233baf7952e773adb1911cd5d930c98f4b120d22b6865c4e3",
+        "fault": "df8e09f872f11cee4f17011eff4121bc41811458a0374f7662890bcbb9ddc810",
+        "control": "0629329bf9bb963b9e35c82f95100caa8d9bfe6570b0cd2ba171aea972f0e5e4",
     }
 )
 _LINE_LABEL_MISMATCH_RULE_ID = "bus.rs485_line_label_mismatch"
@@ -99,6 +99,8 @@ def _rs485_fixture_lane(
     expected_functions = {"U1.1": "D", "U1.2": "R"}
     if feature in {"line_named_rail", "line_label_mismatch"}:
         expected_functions = {"U1.1": "A", "U1.2": "B"}
+    if feature == "line_named_rail":
+        expected_functions.update({"J1.1": "A", "J1.2": "B"})
     if feature == "same_net":
         fixture_directory = "rs485-data-same-net"
         stage_prefix = "rs485-data-same-net-fixture"
@@ -137,12 +139,21 @@ def _rs485_fixture_lane(
         source_names = {"fault": "fault.kicad_sch", "control": "control.kicad_sch"}
         reviewed_hashes = _LINE_NAMED_RAIL_SOURCE_HASHES
         expected_subjects = {
-            "fault": ("U1.1: A on return-like net GND",),
+            "fault": (
+                "J1.1: A on return-like net GND",
+                "U1.1: A on return-like net GND",
+            ),
             "control": (),
         }
         expected_nets = {
-            "fault": {"GND": ("U1.1",), "HOST_RX": ("U1.2",)},
-            "control": {"RS485_A": ("U1.1",), "RS485_B": ("U1.2",)},
+            "fault": {
+                "GND": ("J1.1", "U1.1"),
+                "HOST_RX": ("J1.2", "U1.2"),
+            },
+            "control": {
+                "RS485_A": ("J1.1", "U1.1"),
+                "RS485_B": ("J1.2", "U1.2"),
+            },
         }
     else:
         fixture_directory = "rs485-line-label-mismatch"
@@ -243,7 +254,13 @@ def _rs485_fixture_lane(
             if not netlist_path.is_file() or not erc_path.is_file():
                 raise ValueError(f"Native KiCad omitted RS-485 {feature} {case} evidence")
             observed = read_netlist(netlist_path)
-            if observed.component_pin_numbers.get("U1") != ("1", "2"):
+            expected_inventories = {"U1": ("1", "2")}
+            if feature == "line_named_rail":
+                expected_inventories["J1"] = ("1", "2")
+            if any(
+                observed.component_pin_numbers.get(reference) != inventory
+                for reference, inventory in expected_inventories.items()
+            ):
                 raise ValueError(f"Native RS-485 {feature} {case} lost pin inventory")
             if any(
                 observed.pin_functions.get(pin) != function
@@ -259,6 +276,12 @@ def _rs485_fixture_lane(
                 or observed.components["U1"].value != "RS-485 transceiver"
             ):
                 raise ValueError(f"Native RS-485 {feature} {case} lost explicit identity evidence")
+            if feature == "line_named_rail" and (
+                observed.component_symbols.get("J1") != "Synthetic:Rs485Connector"
+                or observed.components.get("J1") is None
+                or observed.components["J1"].value != "RS-485 connector"
+            ):
+                raise ValueError("Native RS-485 line named-rail connector identity changed")
             expected_case_nets = expected_nets[case]
             if any(observed.nets.get(net) != pins for net, pins in expected_case_nets.items()):
                 actual_nets = {net: observed.nets.get(net) for net in expected_case_nets}

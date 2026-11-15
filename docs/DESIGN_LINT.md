@@ -2237,15 +2237,17 @@ KICAD_RUN_NATIVE_RS485_SIGNAL_NAMED_RAIL_FIXTURES=1 \
 
 ### RS-485 A/B bus-line pins assigned directly to named rails
 
-`bus.rs485_line_on_named_rail` reviews a fitted IC only when its native symbol
-ID or value identifies RS-485 and its complete native pin inventory contains
-one exact A and one exact B function. It prompts when either line pin has one
-direct assignment to a supply-like or return-like net label. Generic A/B pins,
-ambiguous pairs, CAN identities, DNP parts, and incomplete assignments remain
-quiet. This defaults to `review`: label and function names are clues, and the
-prompt does not establish electrical potential, intended bus topology, a
-defect, routed copper, or physical continuity. The project can set an exact
-mode or record a reasoned ignore. Source hashes and scope are in the
+`bus.rs485_line_on_named_rail` reviews a fitted IC or connector candidate only
+when its native symbol ID or value identifies RS-485 and its complete native
+pin inventory contains one exact A and one exact B function. Connectors must
+carry that explicit identity themselves; generic connectors with A/B pins are
+quiet. The rule prompts when either line pin has one direct assignment to a
+supply-like or return-like net label. Generic A/B pins, ambiguous pairs, CAN
+identities, DNP parts, and incomplete assignments remain quiet. This defaults
+to `review`: label and function names are clues, and the prompt does not
+establish electrical potential, intended bus topology, a defect, routed copper,
+or physical continuity. The project can set an exact mode or record a reasoned
+ignore. Source hashes and scope are in the
 [synthetic fixture record](../tests/fixtures/design_lint/rs485-line-named-rail/README.md).
 
 ```sh

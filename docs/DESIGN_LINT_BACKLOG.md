@@ -28110,6 +28110,42 @@ acceptance threads while new lint features proceed:
   run `43702804376`. Tag-scope resolution selected this rule; the scoped
   lint gate and installed-wheel check against a separate project passed.
 
+#### LINT-490 — Review explicitly identified RS-485 connector A/B pins on named rails
+
+- **Priority:** P2 configurable interface heuristic. An RS-485 connector whose
+  own symbol or value identifies the protocol can expose the same suspicious
+  A/B-to-rail assignment as a transceiver pin.
+- **Status:** Extends `bus.rs485_line_on_named_rail`; keeps its rule ID, default
+  REVIEW mode, policy controls, and source-bound pair evidence.
+- **Predicate:** Apply the unique exact A/B pair, complete inventory, fitted
+  endpoint, explicit RS-485 identity, and single-assignment checks to both ICs
+  and recognized connector candidates. Generic connectors with A/B pins remain
+  outside scope unless their own symbol ID or value explicitly identifies
+  RS-485.
+- **Interpretation:** The connector identity and rail-like label are review
+  clues. This does not establish the approved connector pinout, intended cable
+  wiring, electrical potential, PCB copper, or physical continuity.
+- **Evidence:** Synthetic connector fault and controls cover supply and return
+  labels, generic connector identity, DNP, open, ambiguous, incomplete
+  inventory, unique A/B pairing, policy, and stable ordering. The native
+  fault/control schematics include identified U1 and J1 A/B pairs; J1 is on
+  `GND`/`HOST_RX` in the fault and `RS485_A`/`RS485_B` in the control. Hash-bound
+  exports repeat with clean ERC on digest-pinned KiCad 10.0.0 and 10.0.5. All
+  fixtures are synthetic and tooling-owned.
+- **Selection:** Use the exact `bus.rs485_line_on_named_rail` selector for the
+  lint and native fixture suites. Also run the shared named-rail evidence,
+  architecture, catalog-reachability, and determinism suites. Native export
+  uses `KICAD_RUN_NATIVE_RS485_LINE_NAMED_RAIL_FIXTURES=1`.
+- **Local acceptance:** The focused `scripts/ci.py` gate passed all 15 selected
+  tests, including repeatable Docker exports on KiCad 10.0.0 and 10.0.5. Ruff,
+  Alphus module-boundary and shared-utility checks, Rumdl, mdrepo, Linux and
+  Windows-target Pyright, wheel/sdist builds, installed-origin/version checks,
+  and the installed-wheel rehearsal against the separate KiCAD-Test checkout
+  passed. External inventory, CLI/MCP surface, project verification, relocated
+  layout checks, and playtest passed. Supplemental source-evidence,
+  architecture, catalog-reachability, and determinism suites passed.
+- **Hosted acceptance:** Pending tagged workflow acceptance.
+
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
 ## Completion and release gate

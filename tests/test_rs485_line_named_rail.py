@@ -35,16 +35,20 @@ def _findings(report: DesignLintReport) -> tuple[DesignLintFinding, ...]:
 
 
 @pytest.mark.parametrize(
-    ("pin", "rail", "function", "role", "peer"),
+    ("pin", "rail", "function", "role", "peer", "identity_basis"),
     (
-        ("U1.1", "GND", "A", "a", "U1.2"),
-        ("U1.1", "+3V3", "A", "a", "U1.2"),
-        ("U1.2", "GND", "B", "b", "U1.1"),
-        ("U1.2", "+5V", "B", "b", "U1.1"),
+        ("U1.1", "GND", "A", "a", "U1.2", "Synthetic:Rs485Transceiver RS-485 transceiver"),
+        ("U1.1", "+3V3", "A", "a", "U1.2", "Synthetic:Rs485Transceiver RS-485 transceiver"),
+        ("U1.2", "GND", "B", "b", "U1.1", "Synthetic:Rs485Transceiver RS-485 transceiver"),
+        ("U1.2", "+5V", "B", "b", "U1.1", "Synthetic:Rs485Transceiver RS-485 transceiver"),
+        ("J1.1", "GND", "A", "a", "J1.2", "Connector:Conn_01x02 RS-485 connector"),
+        ("J1.1", "+3V3", "A", "a", "J1.2", "Connector:Conn_01x02 RS-485 connector"),
+        ("J1.2", "GND", "B", "b", "J1.1", "Connector:Conn_01x02 RS-485 connector"),
+        ("J1.2", "+5V", "B", "b", "J1.1", "Connector:Conn_01x02 RS-485 connector"),
     ),
 )
 def test_explicit_rs485_line_pins_on_named_rails_request_review(
-    pin: str, rail: str, function: str, role: str, peer: str
+    pin: str, rail: str, function: str, role: str, peer: str, identity_basis: str
 ) -> None:
     source = rs485_line_named_rail_netlist(pin=pin, rail_name=rail, function=function)
     finding = _findings(_report(source))[0]
@@ -55,7 +59,7 @@ def test_explicit_rs485_line_pins_on_named_rails_request_review(
     assert finding.mode == "review"
     assert finding.evidence["rs485_line_role"] == (role,)
     assert finding.evidence["complementary_line_pin"] == (peer,)
-    assert finding.evidence["identity_basis"] == ("Synthetic:Rs485Transceiver RS-485 transceiver",)
+    assert finding.evidence["identity_basis"] == (identity_basis,)
     assert _report(source).status == "REVIEW"
     assert "not proof of electrical potential" in finding.message
 
@@ -77,6 +81,9 @@ def test_only_bounded_a_b_functions_and_explicit_rs485_identity_are_considered()
             identity="SN65HVD230", symbol="Vendor:Transceiver", rail_name="GND"
         ),
         rs485_line_named_rail_netlist(function="Y", rail_name="GND"),
+        rs485_line_named_rail_netlist(
+            pin="J1.1", identity="Generic connector", symbol="Connector:Conn_01x02"
+        ),
     )
     for control in controls:
         assert not _findings(_report(control))
@@ -84,6 +91,7 @@ def test_only_bounded_a_b_functions_and_explicit_rs485_identity_are_considered()
 
 def test_dnp_open_ambiguous_duplicate_and_incomplete_pair_evidence_are_skipped() -> None:
     source = rs485_line_named_rail_netlist()
+    connector = rs485_line_named_rail_netlist(pin="J1.1")
     controls = (
         rs485_line_named_rail_netlist(dnp=True),
         source.model_copy(update={"nets": {"RS485_B": ("U1.2",)}}),
@@ -91,15 +99,17 @@ def test_dnp_open_ambiguous_duplicate_and_incomplete_pair_evidence_are_skipped()
         source.model_copy(update={"component_pin_numbers": {"U1": ("2",)}}),
         source.model_copy(update={"pin_functions": {"U1.1": "A", "u1.1": "B", "U1.2": "B"}}),
         source.model_copy(update={"pin_functions": {"U1.1": "A", "U1.2": "A"}}),
-        source.model_copy(
-            update={
-                "components": {"J1": source.components["U1"]},
-                "nets": {"GND": ("J1.1",), "RS485_B": ("J1.2",)},
-                "component_symbols": {"J1": "Connector:Conn_01x02"},
-                "pin_functions": {"J1.1": "A", "J1.2": "B"},
-                "component_pin_numbers": {"J1": ("1", "2")},
-            }
+        rs485_line_named_rail_netlist(
+            pin="J1.1", identity="Generic connector", symbol="Connector:Conn_01x02"
         ),
+        connector.model_copy(update={"dnp_components": ("J1",)}),
+        connector.model_copy(update={"nets": {"RS485_B": ("J1.2",)}}),
+        connector.model_copy(
+            update={"nets": {"GND": ("J1.1",), "RS485_A": ("J1.1",), "RS485_B": ("J1.2",)}}
+        ),
+        connector.model_copy(update={"component_pin_numbers": {"J1": ("2",)}}),
+        connector.model_copy(update={"pin_functions": {"J1.1": "A"}}),
+        connector.model_copy(update={"pin_functions": {"J1.1": "A", "J1.2": "A"}}),
     )
     for control in controls:
         assert not _findings(_report(control))
@@ -147,7 +157,19 @@ def test_reordering_is_stable_and_moving_the_pin_to_a_bus_net_clears_review() ->
         }
     )
     repaired = fault.model_copy(update={"nets": {"RS485_A": ("U1.1",), "RS485_B": ("U1.2",)}})
+    connector = rs485_line_named_rail_netlist(pin="J1.1")
+    connector_reordered = connector.model_copy(
+        update={
+            "nets": dict(reversed(tuple(connector.nets.items()))),
+            "pin_functions": dict(reversed(tuple(connector.pin_functions.items()))),
+        }
+    )
+    connector_repaired = rs485_line_named_rail_netlist(pin="J1.1", rail_name="RS485_A")
 
+    assert tuple(item.model_dump() for item in _findings(_report(connector))) == tuple(
+        item.model_dump() for item in _findings(_report(connector_reordered))
+    )
+    assert not _findings(_report(connector_repaired))
     assert tuple(item.model_dump() for item in _findings(_report(fault))) == tuple(
         item.model_dump() for item in _findings(_report(reordered))
     )

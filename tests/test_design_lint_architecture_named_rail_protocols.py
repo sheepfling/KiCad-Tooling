@@ -138,3 +138,6 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
     can_line_refs = catalog["bus.can_line_on_named_rail"].implementation_refs
     assert CONNECTOR_PIN_EVIDENCE in can_line_refs
     assert CONNECTOR_CANDIDATE_REFERENCES in can_line_refs
+    rs485_line_refs = catalog["bus.rs485_line_on_named_rail"].implementation_refs
+    assert CONNECTOR_PIN_EVIDENCE in rs485_line_refs
+    assert CONNECTOR_CANDIDATE_REFERENCES in rs485_line_refs

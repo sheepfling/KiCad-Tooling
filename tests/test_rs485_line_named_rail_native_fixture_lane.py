@@ -58,7 +58,7 @@ def test_native_rs485_line_named_rail_fault_and_control_repeat(
     }
     fault = results["rs485-line-named-rail-fixture/fault"]
     control = results["rs485-line-named-rail-fixture/control"]
-    assert fault["subjects"] == "U1.1: A on return-like net GND"
+    assert fault["subjects"] == "J1.1: A on return-like net GND;U1.1: A on return-like net GND"
     assert control["subjects"] == "none"
     assert fault["erc_errors"] == control["erc_errors"] == "none"
     native_export = results["rs485-line-named-rail-fixture/native-export"]
