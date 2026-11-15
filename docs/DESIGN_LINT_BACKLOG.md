@@ -12757,8 +12757,13 @@ control are documented in the
 - **Local validation:** The exact rule selector passed 18 tests with 2 native
   cases skipped; the Docker native selector passed 2 cases on KiCad 10.0.0 and
   10.0.5, and the full parity module passed 16 tests. Ruff format/check,
-  Markdown checks, and mdrepo passed. Hosted acceptance is pending tag
-  `v0.5.3rc798`.
+  Markdown checks, and mdrepo passed.
+- **Hosted acceptance:** Annotated tag `v0.5.3rc798` passed GitHub Actions
+  [run 43660321649](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43660321649):
+  470 scoped tests passed with 9,602 deselected, including the repaired
+  CLI/MCP case and both digest-pinned native KiCad versions. Linux/Windows
+  Pyright, wheel/sdist builds, installed-wheel verification, external project
+  checks, adapted checkout checks, and the public playtest also passed.
 
 #### LINT-165 — Review split connector-alias assignments when pin metadata is missing
 
