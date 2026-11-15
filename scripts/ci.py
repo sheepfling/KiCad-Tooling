@@ -23,7 +23,7 @@ from kicad_tooling.hwrepo.contracts import repo_path_is_within
 from kicad_tooling.package_build import build_distributions
 from kicad_tooling.platforms import is_windows_host
 from kicad_tooling.pytest_metrics import report_pytest_metrics
-from kicad_tooling.pytest_scope import validate_test_module_files
+from kicad_tooling.pytest_scope import pytest_selection_arguments, validate_test_module_files
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -237,7 +237,7 @@ def main() -> int:
     parser.add_argument(
         "--pytest-paths",
         nargs="+",
-        help="Optional explicit test modules; these replace --pytest-markexpr selection",
+        help="Optional explicit test modules to combine with --pytest-markexpr selection",
     )
     parser.add_argument(
         "--typecheck-paths",
@@ -264,7 +264,8 @@ def main() -> int:
         )
         if Path(origin.stdout.strip()).resolve() != (ROOT / "kicad_tooling/__init__.py").resolve():
             raise RuntimeError(
-                "Install this checkout with python -m pip install -e '.[dev]' "
+                "Install this checkout with python -m pip install -e "
+                "'.[dev,fabrication_connectivity]' "
                 "before running its regression suite"
             )
         stage(
@@ -363,10 +364,7 @@ def main() -> int:
             "-q",
             "--durations=10",
         )
-        if pytest_paths:
-            unit_command += pytest_paths
-        elif args.pytest_markexpr:
-            unit_command += ("-m", args.pytest_markexpr)
+        unit_command += pytest_selection_arguments(pytest_paths, args.pytest_markexpr)
         stage(
             "unit",
             unit_command,
@@ -398,7 +396,12 @@ def main() -> int:
             "Scripts/kicad-team.exe" if is_windows_host() else "bin/kicad-team"
         )
         install = [str(python), "-m", "pip", "install", "--no-cache-dir"]
-        stage("install", (*install, f"{rebuilt_wheel}[project,mcp]"), output, cwd=output)
+        stage(
+            "install",
+            (*install, f"{rebuilt_wheel}[project,mcp,fabrication_connectivity]"),
+            output,
+            cwd=output,
+        )
         external = os.environ.copy()
         external.pop("PYTHONPATH", None)
         origin = stage(

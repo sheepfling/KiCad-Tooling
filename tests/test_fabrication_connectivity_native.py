@@ -135,6 +135,7 @@ def test_native_gerber_ipc356_connectivity_fault_controls_repeat(
             board, fabrication, FabricationConnectivitySettings()
         )
         assert first == repeated
+        assert not first.unsupported_reasons, first.unsupported_reasons
         assert (first.status, {item.code for item in first.findings}) == (
             expected_status,
             expected_codes,

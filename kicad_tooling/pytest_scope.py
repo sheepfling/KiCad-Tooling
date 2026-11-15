@@ -52,6 +52,12 @@ def validate_test_module_files(paths: Iterable[str], repository: Path) -> tuple[
     return test_paths
 
 
+def pytest_selection_arguments(paths: Iterable[str], markexpr: str | None) -> tuple[str, ...]:
+    """Combine explicit test modules with an optional marker filter."""
+    selected = tuple(paths)
+    return (*selected, "-m", markexpr) if markexpr else selected
+
+
 def pytest_collection_patterns(
     repository: Path,
 ) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:

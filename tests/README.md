@@ -1,8 +1,9 @@
 # Tooling regression tests
 
 Install the [development environment](../README.md#development-check) before running these tests.
-It uses `python -m pip install -e '.[dev,cad]'` from this tooling checkout in an active virtual
-environment; the project-facing extras alone do not install Ruff, Pyright or package build tools.
+It uses `python -m pip install -e '.[dev,cad,fabrication_connectivity]'` from
+this tooling checkout in an active virtual environment; the project-facing
+extras alone do not install Ruff, Pyright or package build tools.
 The shared Python regression suite belongs to this repository. Board contracts,
 firmware checks, and product integration tests remain in their project repository.
 The [Alphus quality checks](../docs/ALPHUS_QUALITY_GATES.md) document the

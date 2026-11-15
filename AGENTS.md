@@ -10,8 +10,9 @@ project repository. Reusable Python services, CLI/MCP mappings, and regression
 tests belong here.
 
 Use normal installed imports and the active interpreter's `-I -m` entry points
-for Python subprocesses. Install this checkout with `python -m pip install -e '.[dev]'`
-before regression tests. Do not add project/source directories to `PYTHONPATH` or
+for Python subprocesses. Install this checkout with
+`python -m pip install -e '.[dev,fabrication_connectivity]'` before regression tests.
+Do not add project/source directories to `PYTHONPATH` or
 `sys.path`, guess executable prefixes, or borrow another environment's site-packages.
 Keep unavoidable native-tool adapters in the tooling package; see the
 [execution contract](docs/PACKAGING.md#execution-and-import-boundaries).

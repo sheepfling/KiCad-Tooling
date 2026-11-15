@@ -14,7 +14,7 @@ distribution. A plain source archive without Git or source-distribution metadata
 cannot establish a version and fails the build. CI fetches full Git history.
 
 ```sh
-python3.11 -m pip install -e '.[dev]'
+python3.11 -m pip install -e '.[dev,fabrication_connectivity]'
 python3.11 -m build
 kicad-team --version
 ```
@@ -32,7 +32,9 @@ python3.11 scripts/ci.py --project-root /path/to/populated-project-checkout
 The Python CI driver records each stage's output and timing under ignored
 `build/ci/`. Its pytest stage reports the ten slowest selected test cases along
 with pass, skip, and deselection counts. It runs unit tests, Ruff, strict
-Pyright, markdown checks, and packaging.
+Pyright, markdown checks, and packaging. The development install includes the
+`fabrication_connectivity` extra so its source and native artifact regressions
+run with their declared raster dependencies.
 It builds a wheel and source distribution, rebuilds the wheel from that source
 distribution outside any Git tree, compares metadata and package contents, then
 installs the rebuilt wheel in a fresh environment. The installed command must

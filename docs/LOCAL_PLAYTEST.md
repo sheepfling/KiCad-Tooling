@@ -62,7 +62,7 @@ Keep the Python environment active, switch to the tooling checkout, and add its
 
 ```sh
 cd /absolute/path/to/KiCad-Tooling
-python -m pip install -e '.[dev,cad]'
+python -m pip install -e '.[dev,cad,fabrication_connectivity]'
 export KICAD_TEMPLATE_ROOT=/absolute/path/to/template
 python -B scripts/ci.py --project-root "$KICAD_TEMPLATE_ROOT"
 ```

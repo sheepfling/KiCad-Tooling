@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from kicad_tooling.pytest_scope import pytest_selection_arguments
 from scripts.lint_gate_scope import (
     configured_native_fixtures,
     required_native_fixtures_by_rule,
@@ -61,4 +62,30 @@ def test_full_acceptance_enables_every_active_rule_native_fixture() -> None:
 
     assert not missing, (
         f"Full acceptance must enable every native fixture required by active rules: {missing}"
+    )
+
+
+@pytest.mark.pcb_lint
+def test_fabrication_connectivity_extra_is_installed_for_lint_acceptance() -> None:
+    repository = Path(__file__).resolve().parents[1]
+    workflow = (repository / ".github/workflows/tooling.yml").read_text(encoding="utf-8")
+    package = _job_section(workflow, "package", "prerelease-lint-gate")
+    lint_gate = workflow.split("  prerelease-lint-gate:\n", 1)[1]
+
+    assert "-e '.[dev,fabrication_connectivity]'" in package
+    assert "-e '.[dev,fabrication_connectivity]'" in lint_gate
+
+
+@pytest.mark.pcb_lint
+def test_explicit_pytest_paths_keep_the_scoped_marker_expression() -> None:
+    paths = ("tests/test_a.py", "tests/test_b.py")
+
+    assert pytest_selection_arguments(paths, "design_lint and pcb_lint") == (
+        *paths,
+        "-m",
+        "design_lint and pcb_lint",
+    )
+    assert pytest_selection_arguments((), "design_lint and pcb_lint") == (
+        "-m",
+        "design_lint and pcb_lint",
     )

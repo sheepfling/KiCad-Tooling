@@ -197,7 +197,7 @@ CAD support before running these checks. On macOS/Linux:
 cd /absolute/path/to/KiCad-Tooling
 python3.11 -m venv .venv
 . .venv/bin/activate
-python -m pip install -e '.[dev,cad]'
+python -m pip install -e '.[dev,cad,fabrication_connectivity]'
 export KICAD_TEMPLATE_ROOT=/absolute/path/to/KiCad-Team-Workflow-Template
 python -B scripts/ci.py --project-root "$KICAD_TEMPLATE_ROOT"
 ```
