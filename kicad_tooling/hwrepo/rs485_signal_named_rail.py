@@ -8,7 +8,11 @@ from .design_lint_named_rail_candidate_evidence import (
 )
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .named_rail_pin_evidence import NamedRailPinSource, assigned_named_rail_ic_pins
+from .named_rail_pin_evidence import (
+    NamedRailPinSource,
+    assigned_named_rail_connector_pins,
+    assigned_named_rail_ic_pins,
+)
 from .netlist_contract_models import NetlistContract
 from .rs485_data_functions import explicit_rs485_transceiver_identity, rs485_data_pin_role
 
@@ -16,14 +20,17 @@ RULE_ID: DesignLintRuleId = "bus.rs485_signal_on_named_rail"
 
 
 def rs485_signal_on_named_rail_candidates(observed: NetlistContract) -> tuple[Candidate, ...]:
-    """Review fitted, identified RS-485 D/DI or R/RO pins assigned to named rails.
+    """Review identified RS-485 IC or connector D/DI and R/RO pins on named rails.
 
     Function and net labels are clues only. Some RS-485 devices intentionally
     strap a data pin for a chosen mode, so this rule asks for review rather than
     claiming a defect.
     """
     candidates: list[Candidate] = []
-    for item in assigned_named_rail_ic_pins(observed):
+    for item in (
+        *assigned_named_rail_ic_pins(observed),
+        *assigned_named_rail_connector_pins(observed),
+    ):
         identity = explicit_rs485_transceiver_identity(observed, item.reference)
         role = rs485_data_pin_role(item.function)
         if identity is None or role is None:
@@ -38,7 +45,7 @@ def rs485_signal_on_named_rail_candidates(observed: NetlistContract) -> tuple[Ca
                 ),
                 subject=f"{item.pin}: {item.function} on {item.rail_role} net {item.net_name}",
                 message=(
-                    f"The identified RS-485 {role_name} function is assigned to a net whose "
+                    f"The identified RS-485 endpoint {role_name} function is assigned to a net whose "
                     f"label ({item.net_name!r}) is recognized as {item.rail_role}. Review "
                     "whether this direct assignment is intentional. Identity, function, and "
                     "label are review clues, not proof of electrical potential, required "

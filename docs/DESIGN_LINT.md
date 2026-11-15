@@ -2219,14 +2219,15 @@ KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -
 
 ### RS-485 data pins assigned directly to named rails
 
-`bus.rs485_signal_on_named_rail` reviews fitted IC pins with bounded D/DI
-driver-input or R/RO receiver-output functions when an explicit RS-485 marker
-appears in the native symbol library ID or component value and the pin has one
-assignment to a recognized supply-like or return-like net label. Generic D/R
-pins and the SN65HVD23x CAN identity do not qualify. This defaults to `review`:
-a direct rail assignment can be an intentional transceiver mode choice. The
-finding does not prove electrical potential, a defect, routed copper, or
-physical continuity. Source hashes and scope are in the
+`bus.rs485_signal_on_named_rail` reviews fitted ICs and recognized connectors
+with bounded D/DI driver-input or R/RO receiver-output functions when an
+explicit RS-485 marker appears in the native symbol library ID or component
+value and the pin has one assignment to a recognized supply-like or
+return-like net label. A connector must itself carry the explicit identity;
+generic D/R pins and the SN65HVD23x CAN identity do not qualify. This defaults
+to `review`: a direct rail assignment can be an intentional transceiver mode
+choice. The finding does not prove electrical potential, a defect, routed
+copper, or physical continuity. Source hashes and scope are in the
 [synthetic fixture record](../tests/fixtures/design_lint/rs485-signal-named-rail/README.md).
 
 ```sh

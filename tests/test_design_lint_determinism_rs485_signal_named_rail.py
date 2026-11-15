@@ -22,5 +22,8 @@ def test_rs485_signal_named_rail_reports_are_hashseed_deterministic() -> None:
     control = reports["rs485_signal_named_rail_control"]
     findings = tuple(item for item in fault["findings"] if item["rule_id"] == RULE_ID)
 
-    assert tuple(item["subject"] for item in findings) == ("U1.1: D on return-like net GND",)
+    assert tuple(item["subject"] for item in findings) == (
+        "J1.1: DI on return-like net GND",
+        "J1.2: RO on supply-like net +3V3",
+    )
     assert not any(item["rule_id"] == RULE_ID for item in control["findings"])

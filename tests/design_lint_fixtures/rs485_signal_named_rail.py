@@ -30,3 +30,29 @@ def rs485_signal_named_rail_netlist(
         pin_functions=functions,
         component_pin_numbers={"U1": ("1", "2")},
     )
+
+
+def rs485_module_connector_named_rail_netlist(
+    *,
+    connector_value: str = "MAX485 transceiver module",
+    pin_numbers: tuple[str, ...] = ("1", "2"),
+    dnp: bool = False,
+) -> NetlistContract:
+    """Add an identified module connector with DI and RO pins on named rails."""
+    base = rs485_signal_named_rail_netlist(rail_name="HOST_TX")
+    return base.model_copy(
+        update={
+            "components": {
+                **base.components,
+                "J1": base.components["U1"].model_copy(update={"value": connector_value}),
+            },
+            "component_symbols": {
+                **base.component_symbols,
+                "J1": "Connector_Generic:Conn_01x02",
+            },
+            "pin_functions": {**base.pin_functions, "J1.1": "DI", "J1.2": "RO"},
+            "component_pin_numbers": {**base.component_pin_numbers, "J1": pin_numbers},
+            "dnp_components": ("J1",) if dnp else (),
+            "nets": {**base.nets, "GND": ("J1.1",), "+3V3": ("J1.2",)},
+        }
+    )

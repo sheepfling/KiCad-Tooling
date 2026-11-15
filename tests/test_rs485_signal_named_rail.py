@@ -11,7 +11,10 @@ from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.models import DesignLintRuleOverride, NetlistContract
 from kicad_tooling.hwrepo.rs485_signal_named_rail import rs485_signal_on_named_rail_candidates
 from tests.design_lint_fixtures import coach
-from tests.design_lint_fixtures.rs485_signal_named_rail import rs485_signal_named_rail_netlist
+from tests.design_lint_fixtures.rs485_signal_named_rail import (
+    rs485_module_connector_named_rail_netlist,
+    rs485_signal_named_rail_netlist,
+)
 
 RULE_ID = "bus.rs485_signal_on_named_rail"
 
@@ -91,6 +94,27 @@ def test_bounded_identity_and_data_function_aliases_are_supported() -> None:
     )
     for source in controls:
         assert len(_findings(_report(source))) == 1
+
+
+def test_explicit_rs485_connector_data_pins_on_named_rails_request_review() -> None:
+    source = rs485_module_connector_named_rail_netlist()
+
+    assert tuple(item.subject for item in _findings(_report(source))) == (
+        "J1.1: DI on return-like net GND",
+        "J1.2: RO on supply-like net +3V3",
+    )
+    assert all(item.mode == "review" for item in _findings(_report(source)))
+
+
+def test_generic_connector_data_functions_and_incomplete_connector_evidence_are_quiet() -> None:
+    controls = (
+        rs485_module_connector_named_rail_netlist(connector_value="Serial connector"),
+        rs485_module_connector_named_rail_netlist(pin_numbers=("3",)),
+        rs485_module_connector_named_rail_netlist(dnp=True),
+    )
+
+    for control in controls:
+        assert not any(item.subject.startswith("J1.") for item in _findings(_report(control)))
 
 
 def test_dnp_open_ambiguous_duplicate_and_incomplete_evidence_are_skipped() -> None:

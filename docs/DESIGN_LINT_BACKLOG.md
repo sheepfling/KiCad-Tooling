@@ -28409,6 +28409,41 @@ acceptance threads while new lint features proceed:
   Windows types, wheel/sdist, installation, and external checkout/playtest
   stages passed. Package and preview jobs were skipped under prerelease policy.
 
+#### LINT-497 — Review identified RS-485 module connector data pins on named rails
+
+- **Priority:** P2 configurable interface heuristic. The RS-485 data-pin
+  named-rail rule covered transceiver ICs but omitted explicitly identified
+  module connectors that expose the same bounded D/DI and R/RO roles.
+- **Status:** Extends `bus.rs485_signal_on_named_rail`; retains its rule ID,
+  REVIEW default, project policy controls, and source-bound finding shape.
+- **Predicate:** Inspect fitted IC and recognized connector pins with bounded
+  RS-485 D/DI/driver-input or R/RO/receiver-output functions. Require an
+  explicit RS-485 marker in native symbol identity or component value, native
+  inventory membership, and one net assignment. Review assignments to
+  recognized supply-like or return-like labels.
+- **Interpretation:** A connector's explicit RS-485 text is identity evidence,
+  not proof of its physical contents or interface wiring. Generic connector
+  D/R labels remain out of scope. Rail-like labels are review clues; a direct
+  strap can be intentional, and the finding does not establish voltage,
+  operating mode, a defect, PCB copper, or continuity.
+- **Evidence:** Synthetic cases cover connector DI/RO faults, a generic serial
+  connector control, missing inventory membership, DNP, policy, neutral nets,
+  and deterministic repair. The native fault/control schematics include a
+  tooling-owned MAX485 module connector; repeated exports and ERC run with
+  digest-pinned KiCad 10.0.0 and 10.0.5. No cohort board or product project was
+  imported.
+- **Selection:** Run `tests/test_rs485_signal_named_rail.py` and the named-rail
+  architecture/catalog suites with `design_lint and interface_lint` plus the
+  exact rule selector. The Docker lane uses
+  `tests/test_rs485_signal_named_rail_native_fixture_lane.py` and
+  `KICAD_RUN_NATIVE_RS485_SIGNAL_NAMED_RAIL_FIXTURES=1`.
+- **Local acceptance:** Passed scoped `scripts/ci.py` at
+  `build/ci/run-cjoe401h`: 483 passed and 9,681 deselected. Pinned Docker
+  fixtures passed on KiCad 10.0.0 and 10.0.5. Ruff, Alphus boundaries,
+  Rumdl, mdrepo, Linux/Windows Pyright, wheel/sdist builds, isolated install,
+  and the external KiCad-Test checkout playtest passed.
+- **Hosted acceptance:** Pending the tagged workflow.
+
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
 ## Completion and release gate

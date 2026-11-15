@@ -34,8 +34,8 @@ _SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
 _NAMED_RAIL_RULE_ID = "bus.rs485_signal_on_named_rail"
 _NAMED_RAIL_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
     {
-        "fault": "4808cd9ba83174fd0d32d182f5816effa20a88da097dc18dea419f5115a39d23",
-        "control": "aa38e247661a1bf88460122caf2214bf3ad11468debdc4b6edd71a628a02e512",
+        "fault": "a75fbc5e1f4df313e8c85df80abbf98b0746da4b35c33d3ca44f0e9b4bd70e18",
+        "control": "89558687fad23317ce7f83e75f55c18f632bd8ea6b9e710dd0c4776af873a2e8",
     }
 )
 _LINE_NAMED_RAIL_RULE_ID = "bus.rs485_line_on_named_rail"
@@ -97,6 +97,8 @@ def _rs485_fixture_lane(
         raise ValueError(f"RS-485 native fixtures do not cover KiCad {version} with this image")
     pinned = pinned_image(image)
     expected_functions = {"U1.1": "D", "U1.2": "R"}
+    if feature == "named_rail":
+        expected_functions.update({"J1.1": "DI", "J1.2": "RO"})
     if feature in {"line_named_rail", "line_label_mismatch"}:
         expected_functions = {"U1.1": "A", "U1.2": "B"}
     if feature == "line_named_rail":
@@ -125,12 +127,18 @@ def _rs485_fixture_lane(
         source_names = {"fault": "fault.kicad_sch", "control": "control.kicad_sch"}
         reviewed_hashes = _NAMED_RAIL_SOURCE_HASHES
         expected_subjects = {
-            "fault": ("U1.1: D on return-like net GND",),
+            "fault": (
+                "J1.1: DI on return-like net GND",
+                "U1.1: D on return-like net GND",
+            ),
             "control": (),
         }
         expected_nets = {
-            "fault": {"GND": ("U1.1",), "HOST_RX": ("U1.2",)},
-            "control": {"HOST_TX": ("U1.1",), "HOST_RX": ("U1.2",)},
+            "fault": {"GND": ("J1.1", "U1.1"), "HOST_RX": ("J1.2", "U1.2")},
+            "control": {
+                "HOST_TX": ("J1.1", "U1.1"),
+                "HOST_RX": ("J1.2", "U1.2"),
+            },
         }
     elif feature == "line_named_rail":
         fixture_directory = "rs485-line-named-rail"
@@ -255,7 +263,7 @@ def _rs485_fixture_lane(
                 raise ValueError(f"Native KiCad omitted RS-485 {feature} {case} evidence")
             observed = read_netlist(netlist_path)
             expected_inventories = {"U1": ("1", "2")}
-            if feature == "line_named_rail":
+            if feature in {"line_named_rail", "named_rail"}:
                 expected_inventories["J1"] = ("1", "2")
             if any(
                 observed.component_pin_numbers.get(reference) != inventory
@@ -282,6 +290,12 @@ def _rs485_fixture_lane(
                 or observed.components["J1"].value != "RS-485 connector"
             ):
                 raise ValueError("Native RS-485 line named-rail connector identity changed")
+            if feature == "named_rail" and (
+                observed.component_symbols.get("J1") != "Synthetic:Rs485ModuleConnector"
+                or observed.components.get("J1") is None
+                or observed.components["J1"].value != "MAX485 transceiver module"
+            ):
+                raise ValueError("Native RS-485 data named-rail connector identity changed")
             expected_case_nets = expected_nets[case]
             if any(observed.nets.get(net) != pins for net, pins in expected_case_nets.items()):
                 actual_nets = {net: observed.nets.get(net) for net in expected_case_nets}
