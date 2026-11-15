@@ -14,12 +14,12 @@ from tests.json_types import JsonObject
 def report_cases() -> JsonObject:
     fault = evaluate(
         "synthetic-ethernet-signal-named-rail-fault",
-        coach(ethernet_signal_on_named_rail_netlist()),
+        coach(ethernet_signal_on_named_rail_netlist(pin="J1.1")),
         DesignLintPolicy(),
     )
     control = evaluate(
         "synthetic-ethernet-signal-named-rail-control",
-        coach(ethernet_signal_on_named_rail_netlist(rail_name="ETH_TX_P")),
+        coach(ethernet_signal_on_named_rail_netlist(rail_name="ETH_TX_P", pin="J1.1")),
         DesignLintPolicy(),
     )
     return {

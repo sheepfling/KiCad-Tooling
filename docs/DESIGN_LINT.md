@@ -2175,15 +2175,17 @@ KICAD_RUN_NATIVE_ETHERNET_DATA_UNCONNECTED_FIXTURES=1 .venv/bin/python -I -m pyt
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_data_unconnected_pin")'
 ```
 
-### Ethernet PHY pins assigned directly to named rails
+### Ethernet pins assigned directly to named rails
 
-`bus.ethernet_signal_on_named_rail` reviews a fitted PHY IC's bounded Ethernet
-TX/RX data-pair functions when a pin has one assignment to a supply-like or
-return-like net label. This defaults to `review`: a direct rail connection can
-be an intentional strap or mode selection. Pin functions and labels do not
-establish electrical potential, signal integrity, endpoint topology, routed
-copper, or physical continuity. The digest-pinned fault and control schematics
-are Tooling-authored; their source hashes and native-lane limits are in the
+`bus.ethernet_signal_on_named_rail` reviews a fitted IC or recognized connector
+pin with a bounded Ethernet TX/RX data-pair function when it has one assignment
+to a supply-like or return-like net label. Connector identity alone does not
+produce a finding; the native pin function must match a supported Ethernet data
+alias. This defaults to `review`: a direct rail connection can be an intentional
+strap or mode selection. Pin functions and labels do not establish electrical
+potential, signal integrity, endpoint topology, routed copper, or physical
+continuity. The digest-pinned fault and control schematics are Tooling-authored;
+their source hashes and native-lane limits are in the
 [fixture record](../tests/fixtures/design_lint/ethernet-signal-named-rail/README.md).
 
 ```sh

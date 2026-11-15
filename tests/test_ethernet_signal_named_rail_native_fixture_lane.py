@@ -63,7 +63,9 @@ def test_native_ethernet_signal_named_rail_fault_and_control_repeat(
     }
     fault = results["ethernet-signal-named-rail-fixture/fault"]
     control = results["ethernet-signal-named-rail-fixture/control"]
-    assert fault["findings"] == "U1.1: TDP on return-like net GND"
+    assert fault["findings"] == (
+        "J1.1: TDP on return-like net GND;U1.1: TDP on return-like net GND"
+    )
     assert control["findings"] == "none"
     native_export = results["ethernet-signal-named-rail-fixture/native-export"]
     assert_native_fixture_mounts(root, native_export["command_receipt"])

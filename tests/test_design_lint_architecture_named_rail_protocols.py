@@ -141,6 +141,9 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
     usb_signal_refs = catalog["bus.usb_signal_on_named_rail"].implementation_refs
     assert CONNECTOR_PIN_EVIDENCE in usb_signal_refs
     assert CONNECTOR_CANDIDATE_REFERENCES in usb_signal_refs
+    ethernet_signal_refs = catalog["bus.ethernet_signal_on_named_rail"].implementation_refs
+    assert CONNECTOR_PIN_EVIDENCE in ethernet_signal_refs
+    assert CONNECTOR_CANDIDATE_REFERENCES in ethernet_signal_refs
     rs485_line_refs = catalog["bus.rs485_line_on_named_rail"].implementation_refs
     assert CONNECTOR_PIN_EVIDENCE in rs485_line_refs
     assert CONNECTOR_CANDIDATE_REFERENCES in rs485_line_refs

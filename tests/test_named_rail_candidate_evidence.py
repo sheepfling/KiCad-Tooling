@@ -143,6 +143,18 @@ def test_usb_connector_named_rail_source_revalidates_current_assignment() -> Non
         replace(source, observed=stale_netlist)
 
 
+def test_ethernet_connector_named_rail_source_revalidates_current_assignment() -> None:
+    candidate = ethernet_signal_on_named_rail_candidates(
+        ethernet_signal_on_named_rail_netlist(pin="J1.1")
+    )[0]
+    source = candidate.source_evidence.pin
+    assert source.evidence.reference_kind == "connector"
+
+    stale_netlist = source.observed.model_copy(update={"nets": {"TDN": ("J1.2",)}})
+    with pytest.raises(ValueError, match="current native netlist"):
+        replace(source, observed=stale_netlist)
+
+
 def test_rs485_source_rechecks_explicit_transceiver_identity() -> None:
     candidate = rs485_signal_on_named_rail_candidates(rs485_signal_named_rail_netlist())[0]
     assert isinstance(candidate, NamedRailSignalCandidate)

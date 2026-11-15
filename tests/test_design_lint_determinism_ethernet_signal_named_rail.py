@@ -22,5 +22,5 @@ def test_ethernet_signal_named_rail_reports_are_hashseed_deterministic() -> None
     control = reports["ethernet_signal_named_rail_control"]
     findings = tuple(item for item in fault["findings"] if item["rule_id"] == RULE_ID)
 
-    assert tuple(item["subject"] for item in findings) == ("U1.1: TDP on return-like net GND",)
+    assert tuple(item["subject"] for item in findings) == ("J1.1: TDP on return-like net GND",)
     assert not any(item["rule_id"] == RULE_ID for item in control["findings"])

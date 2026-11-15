@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from kicad_tooling.hwrepo.bus_ethernet_signal_named_rail import (
+    ethernet_signal_on_named_rail_candidates,
+)
 from kicad_tooling.hwrepo.design_lint import candidates
 from kicad_tooling.hwrepo.rs485_peer_reference_scan import scan_rs485_peer_references
 from kicad_tooling.hwrepo.serial_participants import SerialPeerRosterContext
@@ -15,6 +18,9 @@ from tests.design_lint_fixtures.catalog_reachability import (
 )
 from tests.design_lint_fixtures.catalog_reachability_ethernet_management_same_net import (
     ethernet_management_same_net_rule_ids,
+)
+from tests.design_lint_fixtures.ethernet_signal_named_rail import (
+    ethernet_signal_on_named_rail_netlist,
 )
 from tests.design_lint_fixtures.gpio_control_voltage import gpio_control_voltage_netlist
 from tests.design_lint_fixtures.i2c_signal_named_rail import (
@@ -76,6 +82,12 @@ def protocol_rule_ids() -> set[str]:
     emitted.update(item.rule_id for item in candidates(rs485_line_named_rail_netlist(pin="J1.1")))
     emitted.update(
         item.rule_id for item in candidates(usb_signal_on_named_rail_netlist(pin="J1.1"))
+    )
+    emitted.update(
+        item.rule_id
+        for item in ethernet_signal_on_named_rail_candidates(
+            ethernet_signal_on_named_rail_netlist(pin="J1.1")
+        )
     )
     emitted.update(item.rule_id for item in candidates(can_line_named_rail_netlist()))
     emitted.update(item.rule_id for item in candidates(can_line_named_rail_netlist(reference="J1")))

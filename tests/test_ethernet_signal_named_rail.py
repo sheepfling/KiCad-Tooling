@@ -61,8 +61,33 @@ def test_ethernet_data_pin_on_named_rail_requests_review(
         "net_label_role_clue": (rail_role,),
         "component_pin_inventory": ("1", "2", "3", "4"),
     }
-    assert "intentional PHY strap" in finding.message
+    assert "intentional assignment" in finding.message
     assert "do not establish electrical potential" in finding.message
+
+
+@pytest.mark.parametrize(
+    ("pin", "rail", "function", "direction", "side", "rail_role"),
+    (
+        ("J1.1", "GND", "TDP", "TX", "positive", "return-like"),
+        ("J1.2", "+3V3", "TDN", "TX", "negative", "supply-like"),
+        ("J1.3", "VBUS", "RDP", "RX", "positive", "supply-like"),
+        ("J1.4", "0V PHY", "RDN", "RX", "negative", "return-like"),
+    ),
+)
+def test_ethernet_connector_data_pin_on_named_rail_requests_review(
+    pin: str, rail: str, function: str, direction: str, side: str, rail_role: str
+) -> None:
+    report = _report(ethernet_signal_on_named_rail_netlist(rail_name=rail, pin=pin))
+    finding = next(item for item in report.findings if item.rule_id == RULE_ID)
+
+    assert report.status == "REVIEW"
+    assert finding.subject == f"{pin}: {function} on {rail_role} net {rail}"
+    assert finding.evidence["pin"] == (pin,)
+    assert finding.evidence["pin_function"] == (function,)
+    assert finding.evidence["ethernet_direction"] == (direction,)
+    assert finding.evidence["ethernet_pair_side"] == (side,)
+    assert finding.evidence["component_pin_inventory"] == ("1", "2", "3", "4")
+    assert "on this fitted connector pin" in finding.message
 
 
 def test_bounded_ethernet_function_aliases_and_non_data_functions() -> None:
@@ -82,22 +107,35 @@ def test_neutral_labels_and_unsupported_functions_are_quiet() -> None:
         assert not any(item.rule_id == RULE_ID for item in _report(control).findings)
 
 
-def test_dnp_open_ambiguous_duplicate_and_connector_pins_are_skipped() -> None:
+def test_dnp_open_ambiguous_duplicate_and_incomplete_ic_pins_are_skipped() -> None:
     source = ethernet_signal_on_named_rail_netlist()
     controls = (
         source.model_copy(update={"dnp_components": ("U1",)}),
         source.model_copy(update={"nets": {"ETH_RX_P": ("U1.3",), "ETH_RX_N": ("U1.4",)}}),
         source.model_copy(update={"nets": {**source.nets, "0V": ("U1.1",)}}),
         source.model_copy(update={"pin_functions": {"U1.1": "TDP", "u1.1": "RDP"}}),
+    )
+    for control in controls:
+        assert not any(item.rule_id == RULE_ID for item in _report(control).findings)
+
+
+def test_connector_candidate_requires_exact_function_complete_inventory_and_assignment() -> None:
+    source = ethernet_signal_on_named_rail_netlist(pin="J1.1")
+    controls = (
+        ethernet_signal_on_named_rail_netlist(pin="J1.1", function="SIG_A"),
+        source.model_copy(update={"dnp_components": ("J1",)}),
         source.model_copy(
             update={
-                "components": {"J1": source.components["U1"]},
-                "nets": {"GND": ("J1.1",), "ETH_RX_P": ("J1.2",)},
-                "component_symbols": {"J1": "Connector:Conn_01x02"},
-                "pin_functions": {"J1.1": "TDP", "J1.2": "RDP"},
-                "component_pin_numbers": {"J1": ("1", "2")},
+                "nets": {
+                    "TDN_NET": ("J1.2",),
+                    "RDP_NET": ("J1.3",),
+                    "RDN_NET": ("J1.4",),
+                }
             }
         ),
+        source.model_copy(update={"nets": {"GND": ("J1.1",), "0V": ("J1.1",)}}),
+        source.model_copy(update={"pin_functions": {**source.pin_functions, "j1.1": "TDN"}}),
+        source.model_copy(update={"component_pin_numbers": {"J1": ("2", "3", "4")}}),
     )
     for control in controls:
         assert not any(item.rule_id == RULE_ID for item in _report(control).findings)

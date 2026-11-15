@@ -28207,6 +28207,40 @@ acceptance threads while new lint features proceed:
   separate project passed. Package and preview jobs were skipped under
   prerelease policy.
 
+#### LINT-492 — Review Ethernet connector data pins assigned to named rails
+
+- **Priority:** P2 configurable interface heuristic. An Ethernet connector
+  with explicit TX/RX pair functions can expose the same suspicious data-to-
+  rail assignment as a PHY pin.
+- **Status:** Extends `bus.ethernet_signal_on_named_rail`; keeps its rule ID,
+  REVIEW default, policy controls, and typed source evidence.
+- **Predicate:** Apply the existing bounded Ethernet TX/RX function and
+  named-rail checks to fitted IC pins and recognized connector candidates.
+  Connector identity alone is insufficient; an exact supported data function
+  and one native assignment are required.
+- **Interpretation:** The function and net label are review clues, not an
+  approved connector pinout or defect verdict. They do not establish electrical
+  potential, signal integrity, endpoint topology, PCB copper, or physical
+  continuity.
+- **Evidence:** Synthetic tests cover all four connector data functions,
+  generic functions, DNP, open, ambiguous, duplicate-function, incomplete
+  inventory, policy, ordering, and source freshness. Native fault/control
+  schematics include an RJ45-style connector and an Ethernet PHY; the fault
+  assigns both TDP pins to `GND`, while the control assigns their data pins to
+  neutral Ethernet nets. The hash-bound netlist exports repeat on digest-pinned
+  KiCad 10.0.0 and 10.0.5. Fixtures are synthetic and
+  tooling-owned.
+- **Selection:** Use the exact `bus.ethernet_signal_on_named_rail` selector for
+  the lint and native fixture suites. Also run source-evidence, architecture,
+  catalog-reachability, and determinism suites. Native export uses
+  `KICAD_RUN_NATIVE_ETHERNET_SIGNAL_NAMED_RAIL_FIXTURES=1`.
+- **Local acceptance:** Passed tag-resolved `scripts/ci.py` scope on 2026-11-15:
+  486 passed, 9671 deselected; exact native fixtures ran with the approved
+  digest-pinned KiCad 10.0.0 and 10.0.5 Docker images. Ruff, Alphus, Rumdl,
+  mdrepo, Pyright, Windows type checks, wheel/sdist/install, and external
+  KiCad-Test checkout inventory/surface/verify/adapted playtest all passed.
+- **Hosted acceptance:** Pending tagged workflow acceptance.
+
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
 ## Completion and release gate
