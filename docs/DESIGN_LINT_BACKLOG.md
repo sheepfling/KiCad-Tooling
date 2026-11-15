@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 398 rules are implemented with synthetic regression coverage.
+The following 399 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 398 active rules.
+The catalog currently contains 399 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -28896,6 +28896,45 @@ acceptance threads while new lint features proceed:
   checkout passed. Package and preview jobs were skipped under prerelease
   policy.
 
+#### LINT-506 — Review a fitted resistor bridging I2C SDA and SCL nets
+
+- **Priority:** P2 review heuristic. A fitted resistor directly spanning a
+  recognized controller's separately assigned SDA and SCL nets is a useful
+  topology clue for explicit review. NXP's [UM10204 I2C specification][i2c-spec]
+  describes SDA and SCL as distinct bus lines with pull-up paths; it does not
+  make this heuristic a universal electrical requirement.
+- **Status:** Added as `bus.i2c_sda_scl_resistive_bridge`, default-`review`, with
+  normal per-project mode and fingerprint-ignore controls. The existing
+  I2C same-net heuristic and this rule now share one bounded fitted-endpoint
+  recognizer.
+- **Predicate:** For a fitted U/IC with a complete native inventory, identify
+  exactly one bounded SDA pin and one SCL pin, each assigned to a distinct
+  exact net. Emit a candidate when one fitted two-terminal resistor with a
+  known value directly spans those nets. Zero-ohm resistors are included
+  because they still represent a direct schematic connection.
+- **Interpretation:** This is a deterministic review clue, not a defect verdict.
+  A designed resistor network can be valid. Function names do not prove I2C
+  usage or requirements; this rule does not traverse chains, infer board copper,
+  check firmware, or establish physical continuity.
+- **Evidence:** Synthetic fault/control tests cover an intended bridge, zero ohms,
+  absent/DNP/capacitor/series/unrelated paths, incomplete evidence, duplicate roles, deterministic
+  ordering, and policy overrides. Dedicated synthetic native schematics exercise the fitted bridge
+  and unrelated-net control with repeated, source-hashed KiCad 10.0.0 and 10.0.5 exports. No project
+  or proprietary source is used. The fixtures and exact reproduction commands are in the
+  [fixture README](../tests/fixtures/design_lint/i2c-sda-scl-resistive-bridge/README.md).
+- **Focused selection:** Run
+  `tests/test_i2c_sda_scl_resistive_bridge.py` with the exact
+  `bus.i2c_sda_scl_resistive_bridge` selector. The native lane is
+  `tests/test_i2c_sda_scl_resistive_bridge_native_fixture_lane.py` and uses
+  `KICAD_RUN_NATIVE_I2C_SDA_SCL_RESISTIVE_BRIDGE_FIXTURES=1`.
+- **Local acceptance:** The rule-scoped `scripts/ci.py` gate passed 480 tests
+  with 9,767 deselected. Both digest-pinned Docker versions exercised repeated
+  native exports. Ruff, Alphus boundaries, Rumdl, mdrepo, Pyright,
+  Windows-target typing, wheel/sdist builds, and installed-origin/version
+  checks passed. The separate public-template checkout rehearsal runs in
+  hosted acceptance.
+- **Hosted acceptance:** Pending tagged GitHub Actions run.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -28918,6 +28957,7 @@ quality, or first-article continuity.
 [happy-value-syntax-v301]: https://github.com/aklofas/kicad-happy/blob/7d9d4d9fef87ac2d3eb16cfc5cdc9a0869f417f4/CHANGELOG.md
 [happy-changelog]: https://github.com/aklofas/kicad-happy/blob/main/CHANGELOG.md
 [happy-analyzer]: https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/scripts/signal_detectors.py#L3633-L3673
+[i2c-spec]: https://www.nxp.com/docs/en/user-guide/UM10204.pdf
 [kicad-device-library]: https://kicad.github.io/symbols/Device.html
 [kicad-thermistor-symbol-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Device.kicad_symdir/Thermistor.kicad_sym>
 [kicad-thermistor-ntc-symbol-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Device.kicad_symdir/Thermistor_NTC.kicad_sym>

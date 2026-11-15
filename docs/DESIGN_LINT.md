@@ -1104,7 +1104,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 398 active rules.
+The catalog currently contains 399 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -2822,6 +2822,31 @@ Source hashes and fixture details are in the
 KICAD_RUN_NATIVE_I2C_SDA_SCL_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_i2c_sda_scl_same_net_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2c_sda_scl_same_net")'
+```
+
+### I2C SDA/SCL resistor bridge review
+
+`bus.i2c_sda_scl_resistive_bridge` prompts when one fitted U/IC has exactly
+one bounded SDA pin and one SCL pin, each present in its complete native
+inventory and assigned to a distinct net, and a fitted two-terminal resistor
+with a known value directly joins those nets. Zero-ohm resistors are included.
+The function names only identify a review candidate: a resistor network can
+be intentional, so the default is `review` with project overrides and exact
+fingerprint ignores. This rule does not traverse multi-part paths, infer
+firmware configuration, prove I2C use, or establish PCB or off-board
+connectivity. NXP's [UM10204 specification][i2c-spec] treats SDA and SCL as
+distinct bus lines with their own pull-up behavior; this heuristic does not
+claim that every resistor bridge is prohibited.
+The [tooling-owned fixtures](../tests/fixtures/design_lint/i2c-sda-scl-resistive-bridge/README.md)
+exercise repeated digest-pinned KiCad 10.0.0 and 10.0.5 fault/control exports.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_i2c_sda_scl_resistive_bridge.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i2c_sda_scl_resistive_bridge")'
+
+KICAD_RUN_NATIVE_I2C_SDA_SCL_RESISTIVE_BRIDGE_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_i2c_sda_scl_resistive_bridge_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2c_sda_scl_resistive_bridge")'
 ```
 
 ### I3C SDA/SCL same-net review
@@ -11364,3 +11389,4 @@ Review the actual board and assembly requirements before approving a build.
 [arm-swd-signals]: https://documentation-service.arm.com/static/5f900abff86e16515cdc063b
 [arm-coresight-swo]: https://documentation-service.arm.com/static/63a03a981d698c4dc521ca77
 [arm-cortex-debug-connector]: https://documentation-service.arm.com/static/5fce6c49e167456a35b36af1
+[i2c-spec]: https://www.nxp.com/docs/en/user-guide/UM10204.pdf

@@ -23,6 +23,9 @@ from tests.design_lint_fixtures.ethernet_signal_named_rail import (
     ethernet_signal_on_named_rail_netlist,
 )
 from tests.design_lint_fixtures.gpio_control_voltage import gpio_control_voltage_netlist
+from tests.design_lint_fixtures.i2c_sda_scl_resistive_bridge import (
+    i2c_sda_scl_resistive_bridge_netlist,
+)
 from tests.design_lint_fixtures.i2c_signal_named_rail import (
     i2c_connector_signal_on_named_rail_netlist,
 )
@@ -113,6 +116,7 @@ def protocol_rule_ids() -> set[str]:
     emitted.update(item.rule_id for item in candidates(usb_c_cc_controller_same_net_netlist()))
     emitted.update(item.rule_id for item in candidates(usb_c_cc_endpoint_pairing_netlist()))
     emitted.update(item.rule_id for item in candidates(usb_data_pair_bridge_netlist()))
+    emitted.update(item.rule_id for item in candidates(i2c_sda_scl_resistive_bridge_netlist()))
     emitted.update(item.rule_id for item in candidates(i3c_signal_named_rail_netlist()))
     emitted.update(
         item.rule_id for item in candidates(i3c_signal_named_rail_netlist(reference="J1"))
