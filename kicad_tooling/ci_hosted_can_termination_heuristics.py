@@ -39,11 +39,13 @@ def can_termination_heuristics_native_fixture_lane(
         tooling_checkout_root() / "tests/fixtures/design_lint/can-termination-heuristics-native"
     )
     fixtures = {
-        case: fixture_root / f"{case}.kicad_sch" for case in ("control", "fault", "missing")
+        case: fixture_root / f"{case}.kicad_sch"
+        for case in ("control", "fault", "missing", "partial")
     }
     source_hashes = {case: digest(path) for case, path in fixtures.items()}
     expected_source_hashes = {
         "missing": "b60b3cde1767d6b44c4995b6683b711bbd74941094818187653a203710cf5a96",
+        "partial": "48b1296d067ff5af71dfc20cd990aa6526741ecb5f0758c1b16c37b1a8ea098d",
         "control": "3baa84f1494dc7cdd8b4bef63aa1df792adccfbc8b429410895b6d8fc1c45ed7",
         "fault": "97f8f0b2feaff11d2a8dd73e6ccb0f4e8f745b5a550813728b703a7216d28756",
     }
@@ -71,7 +73,7 @@ def can_termination_heuristics_native_fixture_lane(
         'actual="$(kicad-cli version)"\n'
         'printf "kicad_version=%s\\n" "$actual"\n'
         f'test "$actual" = "{config.kicad_version}"\n'
-        "for case in control fault missing; do\n"
+        "for case in control fault missing partial; do\n"
         "  for run in first repeat; do\n"
         "    kicad-cli sch export netlist --format kicadxml \\\n"
         '      --output "/output/${case}.${run}.netlist.xml" \\\n'
@@ -308,6 +310,67 @@ def can_termination_heuristics_native_fixture_lane(
             evidence=(
                 json.dumps(dict(missing_candidates[0].evidence), sort_keys=True)
                 if missing_candidates
+                else "none"
+            ),
+            dnp_components=",".join(observed.dnp_components),
+            repeatable="true",
+            command_receipt=command_receipt,
+        )
+        single_local_candidates = tuple(
+            item
+            for item in can_candidates(observed)
+            if item.rule_id == "bus.can_single_local_termination"
+        )
+        expected_single_local_count = 1 if case == "partial" else 0
+        if len(single_local_candidates) != expected_single_local_count:
+            log.event(
+                f"can-single-local-termination-fixture/{case}",
+                "FAIL",
+                project=project,
+                kicad_version=config.kicad_version,
+                image=pinned,
+                source_sha256=source_hashes[case],
+                normalized_netlist_sha256=first_hash,
+                findings=len(single_local_candidates),
+                expected_findings=expected_single_local_count,
+                dnp_components=",".join(observed.dnp_components),
+                command_receipt=command_receipt,
+            )
+            raise ValueError(
+                f"Native CAN {case} exported {len(single_local_candidates)} single-local-"
+                f"termination findings; expected {expected_single_local_count}"
+            )
+        if case == "partial" and (
+            "R2" not in observed.dnp_components
+            or single_local_candidates[0].evidence.get("endpoint_components") != ("U1", "U2", "U3")
+            or single_local_candidates[0].evidence.get("terminations") != ("R1=120 Ω",)
+        ):
+            log.event(
+                f"can-single-local-termination-fixture/{case}",
+                "FAIL",
+                project=project,
+                kicad_version=config.kicad_version,
+                image=pinned,
+                source_sha256=source_hashes[case],
+                normalized_netlist_sha256=first_hash,
+                evidence=json.dumps(dict(single_local_candidates[0].evidence), sort_keys=True),
+                dnp_components=",".join(observed.dnp_components),
+                command_receipt=command_receipt,
+            )
+            raise ValueError("Native CAN single-local-termination evidence lost its DNP state")
+        log.event(
+            f"can-single-local-termination-fixture/{case}",
+            "PASS",
+            project=project,
+            kicad_version=config.kicad_version,
+            image=pinned,
+            source_sha256=source_hashes[case],
+            normalized_netlist_sha256=first_hash,
+            repeat_normalized_netlist_sha256=repeat_hash,
+            findings=len(single_local_candidates),
+            evidence=(
+                json.dumps(dict(single_local_candidates[0].evidence), sort_keys=True)
+                if single_local_candidates
                 else "none"
             ),
             dnp_components=",".join(observed.dnp_components),

@@ -12,6 +12,10 @@ CAN_TERMINATION_MIN_OHMS = 108.0
 CAN_TERMINATION_MAX_OHMS = 132.0
 
 
+def _ordered_net_pair(first_net: str, second_net: str) -> tuple[str, str]:
+    return (first_net, second_net) if first_net <= second_net else (second_net, first_net)
+
+
 @dataclass(frozen=True, slots=True)
 class CanSignalPair:
     high_net: str
@@ -35,6 +39,16 @@ class CanTerminationExcess:
     high_pins: tuple[str, ...]
     low_pins: tuple[str, ...]
     terminations: tuple[DirectResistor, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class CanSingleLocalTermination:
+    high_net: str
+    low_net: str
+    high_pins: tuple[str, ...]
+    low_pins: tuple[str, ...]
+    endpoint_references: tuple[str, ...]
+    termination: DirectResistor
 
 
 def recognized_can_signal_pairs(observed: NetlistContract) -> tuple[CanSignalPair, ...]:
@@ -123,9 +137,7 @@ def can_buses_with_excessive_local_termination(
     excesses: list[CanTerminationExcess] = []
     reviewed_pairs: set[tuple[str, str]] = set()
     for bus in recognized_can_signal_pairs(observed):
-        pair = (bus.high_net, bus.low_net)
-        if pair[0] > pair[1]:
-            pair = (pair[1], pair[0])
+        pair = _ordered_net_pair(bus.high_net, bus.low_net)
         if pair in reviewed_pairs:
             continue
         terminations = tuple(by_pair.get(pair, []))
@@ -142,3 +154,42 @@ def can_buses_with_excessive_local_termination(
             )
         )
     return tuple(excesses)
+
+
+def can_buses_with_single_local_termination(
+    observed: NetlistContract,
+) -> tuple[CanSingleLocalTermination, ...]:
+    """Review one local direct terminator across two or more fitted CAN endpoints."""
+    by_pair: dict[tuple[str, str], list[DirectResistor]] = {}
+    for resistor in direct_resistors(observed):
+        if CAN_TERMINATION_MIN_OHMS <= resistor.resistance_ohms <= CAN_TERMINATION_MAX_OHMS:
+            pair = _ordered_net_pair(resistor.first_net, resistor.second_net)
+            by_pair.setdefault(pair, []).append(resistor)
+
+    reviews: list[CanSingleLocalTermination] = []
+    reviewed_pairs: set[tuple[str, str]] = set()
+    for bus in recognized_can_signal_pairs(observed):
+        pair = _ordered_net_pair(bus.high_net, bus.low_net)
+        if pair in reviewed_pairs:
+            continue
+        endpoints = tuple(
+            sorted(
+                {pin.rsplit(".", 1)[0] for pin in (*bus.high_pins, *bus.low_pins)},
+                key=str.casefold,
+            )
+        )
+        terminations = by_pair.get(pair, [])
+        if len(endpoints) < 2 or len(terminations) != 1:
+            continue
+        reviewed_pairs.add(pair)
+        reviews.append(
+            CanSingleLocalTermination(
+                high_net=bus.high_net,
+                low_net=bus.low_net,
+                high_pins=bus.high_pins,
+                low_pins=bus.low_pins,
+                endpoint_references=endpoints,
+                termination=terminations[0],
+            )
+        )
+    return tuple(reviews)

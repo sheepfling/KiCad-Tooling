@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 399 rules are implemented with synthetic regression coverage.
+The following 400 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 399 active rules.
+The catalog currently contains 400 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -605,6 +605,7 @@ skipped under prerelease policy.
 - `bus.i3c_unconnected_pin`
 - `bus.i3c_generic_connector_pair_review`
 - `bus.i2c_sda_scl_same_net`
+- `bus.i2c_sda_scl_resistive_bridge`
 - `bus.i2s_signal_on_named_rail`
 - `bus.serial_endpoint_role_collision`
 - `bus.spi_unmapped_participant`
@@ -668,6 +669,7 @@ skipped under prerelease policy.
 - `bus.can_unconnected_line`
 - `bus.can_missing_termination`
 - `bus.can_excess_termination`
+- `bus.can_single_local_termination`
 - `bus.can_peer_assignment_divergence`
 - `bus.can_peer_reference_review`
 - `bus.can_line_polarity_label_mismatch`
@@ -4592,7 +4594,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 398 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 400 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -29092,6 +29094,46 @@ acceptance threads while new lint features proceed:
   wheel/sdist builds, installed-wheel checks, and the separate public-template
   checkout playtest passed. Package and preview jobs were skipped under
   prerelease policy.
+
+#### LINT-510 — Review one local CAN terminator across multiple endpoints
+
+- **Priority:** P1 coverage closure. The existing CAN termination heuristics
+  prompted when no fitted direct 108 Ω–132 Ω resistor was visible and when
+  more than two were present, but stayed quiet with exactly one resistor even
+  when multiple fitted CAN endpoint components shared the pair.
+- **Predicate:** For one supported, distinct CANH/CANL net pair, require at
+  least two fitted components with explicit recognized CANH/CANL functions
+  assigned to that pair and exactly one fitted conventional direct resistor
+  in the existing 108 Ω–132 Ω interval. Emit one source-bound REVIEW prompt
+  with endpoint references, pins, and resistor identity.
+- **Boundary:** This is a topology review hint; one local resistor may be
+  correct when the other termination is external, split, switchable, or not
+  applicable. It does not require two local resistors, determine which
+  components are physical bus ends, recognize resistor arrays, or establish
+  PCB copper or off-board continuity. A one-endpoint circuit with one direct
+  resistor remains quiet. Project `block`, `off`, and exact-ignore policy
+  continue to control disposition.
+- **Fixtures:** Tooling-owned synthetic tests cover a three-endpoint one-
+  resistor prompt; two-resistor and one-endpoint controls; DNP state; policy
+  modes; exact ignore; stable ordering; repair; and inclusive 108 Ω and
+  132 Ω boundaries with adjacent 107 Ω and 133 Ω controls. A source-bound
+  synthetic project verifies CLI/MCP report parity. A hash-pinned native
+  `partial.kicad_sch` fixture keeps three fitted CAN endpoints and marks only
+  R2 DNP while R1 remains fitted. The lane exports all four fixtures twice
+  on digest-pinned KiCad 10.0.0 and 10.0.5. No project or proprietary source
+  is used; see the
+  [fixture record](../tests/fixtures/design_lint/can-termination-heuristics-native/README.md).
+- **Selection:** Run `tests/test_can_single_termination.py` with
+  `design_lint and interface_lint and
+  design_lint_rule(rule_id="bus.can_single_local_termination")`. The native
+  lane uses `tests/test_can_native_fixture_lanes.py` and
+  `KICAD_RUN_NATIVE_CAN_TERMINATION_FIXTURES=1`.
+- **Local acceptance:** Scoped `scripts/ci.py` package acceptance passed
+  483 tests with 9,782 deselected. Both exact Docker native fixture versions
+  passed; each exported the four synthetic fixtures twice. Ruff, both Alphus
+  profiles, Rumdl, mdrepo, Linux and Windows Pyright, wheel/sdist builds,
+  installed-wheel checks, and the separate public-template playtest passed.
+- **Hosted acceptance:** Pending.
 
 ## Completion and release gate
 

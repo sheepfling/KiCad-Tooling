@@ -402,6 +402,8 @@ INTERFACE_LINT_TEST_MODULES = frozenset(
         "tests/test_can_generic_connector_native_fixture_registry.py",
         "tests/test_design_lint_architecture_can_generic_connector.py",
         "tests/test_design_lint_mcp_parity_can_generic_connector_pair.py",
+        "tests/test_can_single_termination.py",
+        "tests/test_design_lint_mcp_parity_can_single_termination.py",
         "tests/test_i2c_generic_connector_pair_review.py",
         "tests/test_i2c_generic_connector_native_fixture_lane.py",
         "tests/test_i2c_generic_connector_native_fixture_registry.py",

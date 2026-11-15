@@ -5,10 +5,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TypeAlias
 
-from .can_termination_heuristics import CanTerminationExcess, CanTerminationGap
+from .can_termination_heuristics import (
+    CanSingleLocalTermination,
+    CanTerminationExcess,
+    CanTerminationGap,
+)
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 
-CanTerminationCandidateEvidence: TypeAlias = CanTerminationGap | CanTerminationExcess
+CanTerminationCandidateEvidence: TypeAlias = (
+    CanTerminationGap | CanTerminationExcess | CanSingleLocalTermination
+)
 
 
 def project_can_termination_evidence(
@@ -23,6 +29,19 @@ def project_can_termination_evidence(
                 "CANL": (source.low_net,),
                 "pins": (*source.high_pins, *source.low_pins),
                 "termination": (),
+            },
+        )
+    if isinstance(source, CanSingleLocalTermination):
+        return CandidateEvidenceProjection(
+            rule_id="bus.can_single_local_termination",
+            evidence={
+                "CANH": (source.high_net,),
+                "CANL": (source.low_net,),
+                "pins": (*source.high_pins, *source.low_pins),
+                "endpoint_components": source.endpoint_references,
+                "terminations": (
+                    f"{source.termination.reference}={source.termination.resistance_ohms:g} Ω",
+                ),
             },
         )
     terminations = tuple(

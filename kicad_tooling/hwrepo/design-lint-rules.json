@@ -8143,6 +8143,50 @@
       "implementation_owner": "kicad_tooling/hwrepo/can_termination_heuristics.py#can_buses_with_excessive_local_termination"
     },
     {
+      "rule_id": "bus.can_single_local_termination",
+      "title": "Multiple CAN endpoints share one visible local terminator",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
+      "predicate": "For one recognized CANH/CANL native net pair with at least two fitted endpoint components and exactly one fitted direct two-terminal resistor from 108 Ω through 132 Ω, emit a REVIEW candidate with the endpoint references and resistor identity.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; native fixture acceptance is pinned to 10.0.0 and 10.0.5"
+      ],
+      "limitations": [
+        "One local direct resistor may be correct for an external, split, switchable, or specialized topology; the candidate asks for review and does not require two local resistors.",
+        "Endpoint components are identified only from explicit supported CANH/CANL pin functions on the exact native net pair; the rule does not identify physical bus ends or prove that the components share one intended bus.",
+        "Only conventional fitted resistor references with two unique native net assignments and nominal values in the stated interval are counted; resistor arrays, tolerance, placement, external termination, and PCB copper are not evaluated."
+      ],
+      "fault_fixtures": [
+        "tests.test_can_single_termination.test_multi_endpoint_can_pair_with_one_local_terminator_prompts_for_review",
+        "tests.test_can_native_fixture_lanes.test_native_can_termination_heuristics_fault_and_control",
+        "tests.test_design_lint_mcp_parity_can_single_termination.test_can_single_local_termination_cli_mcp_parity"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_can_single_termination.test_single_local_termination_rule_uses_fitted_state_and_policy",
+        "tests.test_can_native_fixture_lanes.test_native_can_termination_heuristics_fault_and_control"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_can_single_termination.test_single_local_termination_is_order_stable_and_repairs_clear"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CAN_TERMINATION_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/can_termination_heuristics.py#can_buses_with_single_local_termination",
+        "kicad_tooling/hwrepo/can_termination_heuristics.py#recognized_can_signal_pairs",
+        "kicad_tooling/hwrepo/resistor_paths.py#direct_resistors",
+        "kicad_tooling/hwrepo/bus_signal_roles.py#can_function_role",
+        "kicad_tooling/hwrepo/design_lint_can_termination_candidate_evidence.py#project_can_termination_evidence",
+        "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_candidates",
+        "kicad_tooling/ci_hosted_can_termination_heuristics.py#can_termination_heuristics_native_fixture_lane"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/can_termination_heuristics.py#can_buses_with_single_local_termination"
+    },
+    {
       "rule_id": "bus.can_peer_assignment_divergence",
       "title": "CAN peers sharing one line use different complementary nets",
       "status": "active",

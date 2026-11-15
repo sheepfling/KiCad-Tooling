@@ -12,6 +12,7 @@ from .can_peer_reference_scan import (
 from .can_signal_named_rail import can_signal_on_named_rail_candidates
 from .can_termination_heuristics import (
     can_buses_with_excessive_local_termination,
+    can_buses_with_single_local_termination,
     can_buses_without_local_termination,
 )
 from .can_tx_output_sharing import can_tx_output_sharing_candidates
@@ -61,6 +62,22 @@ def can_candidates(
                     "recognized CANH/CANL pair. Review the intended bus endpoints and any "
                     "switchable, split, or external termination; the schematic does not show "
                     "which nodes are physical bus ends."
+                ),
+            )
+        )
+    for bus in can_buses_with_single_local_termination(observed):
+        found.append(
+            CanTerminationCandidate.from_source_evidence(
+                source_evidence=bus,
+                subject=(
+                    f"CANH {bus.high_net} / CANL {bus.low_net}: one local terminator across "
+                    f"{len(bus.endpoint_references)} fitted endpoints"
+                ),
+                message=(
+                    "These fitted components share the same recognized CANH/CANL pair, and "
+                    "one fitted direct 108 Ω–132 Ω resistor is visible. Review whether the "
+                    "intended topology includes external, split, switchable, or other local "
+                    "termination; this netlist cannot identify physical bus ends."
                 ),
             )
         )

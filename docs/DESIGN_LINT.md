@@ -1104,7 +1104,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 399 active rules.
+The catalog currently contains 400 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -9069,14 +9069,27 @@ references with unique native net assignments; arrays, switchable options,
 split networks, off-board termination, tolerance, placement, and PCB copper
 remain outside the check. Synthetic controls cover two fitted resistors, a DNP
 third resistor, and out-of-window values. Tooling-owned native schematics add a
-two-resistor control, three-resistor excess fault, and DNP termination fault.
-They exercise both termination review rules using the exact KiCad 10.0.0 and
-10.0.5 toolchains. The missing-termination rule stays at `REVIEW` because
+two-resistor control, three-resistor excess fault, both-resistors-DNP missing
+fault, and one-resistor-across-three-endpoints partial case. The existing
+missing and excess rules run on all cases, and the single-local rule reviews
+only the partial case using the exact KiCad 10.0.0 and 10.0.5 toolchains. The
+missing-termination rule stays at `REVIEW` because
 split or external topologies can be valid. Catalog maturity remains
 `synthetic_validated`; native fixture compatibility is recorded separately and
 does not establish field value. See the [synthetic native fault/control fixture
 record](../tests/fixtures/design_lint/can-termination-heuristics-native/README.md)
 for source hashes and coverage boundaries.
+
+`bus.can_single_local_termination` asks for review when at least two fitted
+components expose the same supported CANH/CANL pair and exactly one fitted
+direct 108 Ω–132 Ω resistor spans it. The prompt includes endpoint references
+and the fitted resistor, but does not claim that another local resistor is
+required: external, split, switchable, or specialized topologies can be valid.
+A one-endpoint circuit with one direct resistor stays quiet. The check
+supports `review`, project `block` or `off`, and exact ignores. Its native
+fault/control adds a three-endpoint schematic with one of two 120 Ω options
+marked DNP; exports are repeated with KiCad 10.0.0 and 10.0.5. See the
+[fixture record](../tests/fixtures/design_lint/can-termination-heuristics-native/README.md).
 
 ## Require a USB-C port role and pin map
 

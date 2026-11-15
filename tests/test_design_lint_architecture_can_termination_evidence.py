@@ -41,3 +41,4 @@ def test_can_termination_candidates_use_the_theme_evidence_owner() -> None:
     assert "design_lint_can_termination_candidate_evidence" in imports
     assert "bus.can_missing_termination" not in direct_candidate_rules
     assert "bus.can_excess_termination" not in direct_candidate_rules
+    assert "bus.can_single_local_termination" not in direct_candidate_rules

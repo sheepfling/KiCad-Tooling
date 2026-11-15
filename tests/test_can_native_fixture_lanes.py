@@ -149,6 +149,7 @@ def test_native_can_split_termination_fault_and_control(
 )
 @pytest.mark.design_lint_rule(rule_id="bus.can_excess_termination")
 @pytest.mark.design_lint_rule(rule_id="bus.can_missing_termination")
+@pytest.mark.design_lint_rule(rule_id="bus.can_single_local_termination")
 @pytest.mark.parametrize(("project", "version", "image"), PROJECT_TOOLCHAINS)
 def test_native_can_termination_heuristics_fault_and_control(
     native_project_root: Path, project: str, version: str, image: str
@@ -168,6 +169,7 @@ def test_native_can_termination_heuristics_fault_and_control(
         "can-termination-heuristics-fixture/control",
         "can-termination-heuristics-fixture/fault",
         "can-termination-heuristics-fixture/missing",
+        "can-termination-heuristics-fixture/partial",
     }
     assert results["can-termination-heuristics-fixture/native-export"]["status"] == "PASS"
     assert results["can-termination-heuristics-fixture/control"]["status"] == "PASS"
@@ -197,9 +199,23 @@ def test_native_can_termination_heuristics_fault_and_control(
         "control": 0,
         "fault": 0,
         "missing": 1,
+        "partial": 0,
     }
     assert missing_results["can-missing-termination-fixture/missing"]["dnp_components"] == "R1,R2"
     assert missing_results["can-missing-termination-fixture/missing"]["evidence"]
+
+    single_results = _stage_results(log, "can-single-local-termination-fixture/")
+    assert set(single_results) == {
+        f"can-single-local-termination-fixture/{case}" for case in NATIVE_FIXTURE_SOURCE_HASHES
+    }
+    assert {
+        case: single_results[f"can-single-local-termination-fixture/{case}"]["findings"]
+        for case in NATIVE_FIXTURE_SOURCE_HASHES
+    } == {"control": 0, "fault": 0, "missing": 0, "partial": 1}
+    assert single_results["can-single-local-termination-fixture/partial"]["dnp_components"] == "R2"
+    assert json.loads(single_results["can-single-local-termination-fixture/partial"]["evidence"])[
+        "endpoint_components"
+    ] == ["U1", "U2", "U3"]
 
 
 @pytest.mark.skipif(

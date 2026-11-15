@@ -132,6 +132,11 @@ CAN_GENERIC_CONNECTOR_THEME_SUITES = (
     "test_can_generic_connector_native_fixture_registry.py",
     "test_design_lint_mcp_parity_can_generic_connector_pair.py",
 )
+CAN_TERMINATION_THEME_SUITES = (
+    "test_can_single_termination.py",
+    "test_can_native_fixture_lanes.py",
+    "test_design_lint_mcp_parity_can_single_termination.py",
+)
 I2C_GENERIC_CONNECTOR_THEME_SUITES = (
     "test_i2c_generic_connector_pair_review.py",
     "test_i2c_generic_connector_native_fixture_lane.py",
@@ -414,6 +419,7 @@ def test_design_lint_theme_suites_stay_below_review_limit() -> None:
                     *I2C_ADDRESS_THEME_SUITES,
                     *USB_HOSTED_THEME_SUITES,
                     *CAN_GENERIC_CONNECTOR_THEME_SUITES,
+                    *CAN_TERMINATION_THEME_SUITES,
                     *I2C_GENERIC_CONNECTOR_THEME_SUITES,
                     *I3C_CONNECTOR_RETURN_THEME_SUITES,
                     *SPI_GENERIC_CONNECTOR_THEME_SUITES,
