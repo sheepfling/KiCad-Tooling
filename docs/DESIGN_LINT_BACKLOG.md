@@ -29133,7 +29133,15 @@ acceptance threads while new lint features proceed:
   passed; each exported the four synthetic fixtures twice. Ruff, both Alphus
   profiles, Rumdl, mdrepo, Linux and Windows Pyright, wheel/sdist builds,
   installed-wheel checks, and the separate public-template playtest passed.
-- **Hosted acceptance:** Pending.
+- **Hosted acceptance:** Annotated tag `v0.5.3rc836` passed GitHub Actions
+  [run `43763878446`](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43763878446)
+  at commit `b7534ef2`: 483 selected tests passed and 9,782 were deselected.
+  The native fault/control lane passed on digest-pinned KiCad 10.0.0 and
+  10.0.5 Docker images. Ruff formatting and lint, Alphus boundaries and
+  shared-utility checks, Rumdl, mdrepo, Linux and Windows type checks,
+  wheel/sdist builds, installed-wheel checks, and the separate public-template
+  checkout playtest passed. Package and preview jobs were skipped under
+  prerelease policy.
 
 ## Completion and release gate
 
