@@ -95,6 +95,7 @@ def protocol_rule_ids() -> set[str]:
         item.rule_id for item in candidates(can_connector_signal_on_named_rail_netlist())
     )
     emitted.update(item.rule_id for item in candidates(usb_c_cc_named_rail_netlist()))
+    emitted.update(item.rule_id for item in candidates(usb_c_cc_named_rail_netlist(reference="J1")))
     emitted.update(usb_c_vbus_and_connector_return_review_rule_ids())
     emitted.update(item.rule_id for item in candidates(usb_c_cc_same_net_netlist()))
     emitted.update(

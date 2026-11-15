@@ -28279,7 +28279,10 @@ acceptance threads while new lint features proceed:
   the lint and native fixture suites. Also run catalog reachability,
   architecture, and rule-gate integrity. Native export uses
   `KICAD_RUN_NATIVE_USB_C_CC_NAMED_RAIL_FIXTURES=1`.
-- **Local acceptance:** Pending focused validation.
+- **Local acceptance:** Passed scoped CI on 2026-11-15: 481 passed and 9,678
+  deselected; exact-version Docker fixtures passed on KiCad 10.0.0 and 10.0.5.
+  Pyright, Windows type checks, wheel and source builds, installed-wheel
+  verification, and external project verification passed.
 - **Hosted acceptance:** Pending tagged workflow acceptance.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md

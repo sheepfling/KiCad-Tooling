@@ -1,4 +1,4 @@
-"""Focused regressions for USB-C CC controller pins on named rails."""
+"""Focused regressions for USB-C CC pins on named rails."""
 
 from __future__ import annotations
 
@@ -67,6 +67,19 @@ def test_unique_usb_c_cc_function_on_named_rail_requests_review(
     assert "does not trace passive paths" in finding.message
 
 
+def test_connector_cc_functions_on_named_rails_request_review() -> None:
+    report = _report(usb_c_cc_named_rail_netlist(reference="J1"))
+    findings = tuple(item for item in report.findings if item.rule_id == RULE_ID)
+
+    assert report.status == "REVIEW"
+    assert tuple(item.subject for item in findings) == (
+        "J1.1: CC1 on return-like net GND",
+        "J1.2: CC2 on supply-like net +3V3",
+    )
+    assert all("fitted connector USB-C" in item.message for item in findings)
+    assert tuple(item.evidence["usb_c_cc_role"] for item in findings) == (("CC1",), ("CC2",))
+
+
 def test_cc_function_aliases_are_bounded_and_share_one_parser() -> None:
     assert usb_c_cc_role("CC-1") == "CC1"
     assert usb_c_cc_role("cc_2") == "CC2"
@@ -91,7 +104,7 @@ def test_neutral_labels_and_non_cc_functions_are_quiet() -> None:
         assert not any(item.rule_id == RULE_ID for item in _report(control).findings)
 
 
-def test_dnp_open_ambiguous_duplicate_connector_and_incomplete_cases_are_skipped() -> None:
+def test_dnp_open_ambiguous_duplicate_and_incomplete_cases_are_skipped() -> None:
     source = usb_c_cc_named_rail_netlist()
     controls = (
         usb_c_cc_named_rail_netlist(dnp=True),
@@ -112,18 +125,23 @@ def test_dnp_open_ambiguous_duplicate_connector_and_incomplete_cases_are_skipped
                 "nets": {"GND": ("U1.1", "U1.3"), "+3V3": ("U1.2",)},
             }
         ),
-        source.model_copy(
-            update={
-                "components": {"J1": source.components["U1"]},
-                "nets": {"GND": ("J1.1",), "+3V3": ("J1.2",)},
-                "component_symbols": {"J1": "Synthetic:USB_C_Controller"},
-                "pin_functions": {"J1.1": "CC1", "J1.2": "CC2"},
-                "component_pin_numbers": {"J1": ("1", "2")},
-            }
-        ),
         source.model_copy(update={"component_pin_numbers": {"U1": ("1",)}}),
     )
 
+    for index, control in enumerate(controls):
+        assert not any(item.rule_id == RULE_ID for item in _report(control).findings), index
+
+
+def test_connector_cc_pair_requires_both_functions_and_complete_inventory() -> None:
+    source = usb_c_cc_named_rail_netlist(reference="J1")
+    controls = (
+        usb_c_cc_named_rail_netlist(reference="J1", cc1_function="CFG1", cc2_function="CFG2"),
+        source.model_copy(update={"dnp_components": ("J1",)}),
+        source.model_copy(update={"nets": {"+3V3": ("J1.2",)}}),
+        source.model_copy(update={"nets": {"GND": ("J1.1",), "0V": ("J1.1",)}}),
+        source.model_copy(update={"pin_functions": {"J1.1": "CC1", "J1.2": "CC1"}}),
+        source.model_copy(update={"component_pin_numbers": {"J1": ("2",)}}),
+    )
     for index, control in enumerate(controls):
         assert not any(item.rule_id == RULE_ID for item in _report(control).findings), index
 

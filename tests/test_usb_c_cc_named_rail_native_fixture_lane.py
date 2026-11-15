@@ -58,6 +58,7 @@ def test_native_usb_c_cc_named_rail_fault_and_control_repeat(
     fault = results["usb-c-cc-named-rail-fixture/fault"]
     control = results["usb-c-cc-named-rail-fixture/control"]
     assert fault["subjects"] == (
+        "J1.1: CC1 on return-like net GND;J1.2: CC2 on supply-like net +3V3;"
         "U1.1: CC1 on return-like net GND;U1.2: CC2 on supply-like net +3V3"
     )
     assert control["subjects"] == "none"

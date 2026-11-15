@@ -1,11 +1,14 @@
-"""Review fitted USB-C CC controller pins assigned directly to named rails."""
+"""Review fitted USB-C CC pins assigned directly to named rails."""
 
 from __future__ import annotations
 
 from .bus_signal_roles import usb_c_cc_role
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .named_rail_pin_evidence import assigned_named_rail_ic_pins
+from .named_rail_pin_evidence import (
+    assigned_named_rail_connector_pins,
+    assigned_named_rail_ic_pins,
+)
 from .netlist_contract_models import NetlistContract
 
 RULE_ID: DesignLintRuleId = "bus.usb_c_cc_signal_on_named_rail"
@@ -14,7 +17,7 @@ RULE_ID: DesignLintRuleId = "bus.usb_c_cc_signal_on_named_rail"
 def usb_c_cc_signal_on_named_rail_candidates(
     observed: NetlistContract,
 ) -> tuple[Candidate, ...]:
-    """Review unique fitted IC CC1/CC2 functions on supply/return-like labels.
+    """Review unique fitted IC or connector CC1/CC2 pins on named rails.
 
     The exact CC role, fitted U/IC reference, complete pin inventory, and
     unambiguous direct rail assignment are review clues. A matching name does
@@ -28,8 +31,16 @@ def usb_c_cc_signal_on_named_rail_candidates(
             continue
         cc_roles_by_reference.setdefault(reference.casefold(), {}).setdefault(role, []).append(pin)
 
+    assigned_nets_by_pin: dict[str, set[str]] = {}
+    for net_name, pins in observed.nets.items():
+        for pin in pins:
+            assigned_nets_by_pin.setdefault(pin.casefold(), set()).add(net_name)
+
     candidates: list[Candidate] = []
-    for item in assigned_named_rail_ic_pins(observed):
+    for item in (
+        *assigned_named_rail_ic_pins(observed),
+        *assigned_named_rail_connector_pins(observed),
+    ):
         role = usb_c_cc_role(item.function)
         if role is None:
             continue
@@ -43,13 +54,19 @@ def usb_c_cc_signal_on_named_rail_candidates(
             for pin in pair_pins
         ):
             continue
+        if any(
+            len(assigned_nets_by_pin.get(pin.casefold(), set())) != 1
+            for pair_pins in pair.values()
+            for pin in pair_pins
+        ):
+            continue
 
         candidates.append(
             Candidate(
                 rule_id=RULE_ID,
                 subject=f"{item.pin}: {role} on {item.rail_role} net {item.net_name}",
                 message=(
-                    f"The fitted IC USB-C {role} function is assigned to a net whose label "
+                    f"The fitted {item.reference_kind} USB-C {role} function is assigned to a net whose label "
                     f"({item.net_name!r}) is recognized as {item.rail_role}. Review whether "
                     "this direct assignment is intentional. Function and label are review "
                     "clues, not proof of electrical potential, port role, Rp/Rd requirements, "

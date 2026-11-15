@@ -2527,16 +2527,17 @@ KICAD_RUN_NATIVE_USB_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest 
 
 ### USB-C CC pins assigned directly to named rails
 
-`bus.usb_c_cc_signal_on_named_rail` reviews a fitted U/IC pin whose exact
-function pair is CC1 and CC2 when an assigned pair pin's net label is
-supply-like or return-like. It requires both pins in the complete native
-inventory and skips generic CC names, connectors, duplicate roles, DNP parts,
-open or ambiguous assignments, and incomplete inventories. The default is `review`; source/sink
-role, Rp/Rd behavior, and direct straps remain project decisions. The finding
-does not trace passive paths or prove electrical potential, PCB copper, or
-physical continuity. Synthetic fault/control, alias, policy, boundary,
-ordering, repair, and hash-seed cases are paired with digest-pinned KiCad
-10.0.0 and 10.0.5 fault/control exports. See the
+`bus.usb_c_cc_signal_on_named_rail` reviews a fitted U/IC or recognized
+connector candidate whose complete inventory contains exactly one CC1 and one
+CC2 function when both pins have one unambiguous assignment and either
+assignment has a supply-like or return-like net label. Generic CC names,
+duplicate roles, DNP parts, open or ambiguous pair assignments, and incomplete
+inventories are skipped. The default is `review`;
+source/sink role, Rp/Rd behavior, and direct straps remain project decisions.
+The finding does not trace passive paths or prove electrical potential, PCB
+copper, or physical continuity. Synthetic fault/control, alias, policy,
+boundary, ordering, repair, and hash-seed cases are paired with digest-pinned
+KiCad 10.0.0 and 10.0.5 fault/control exports. See the
 [fixture notes](../tests/fixtures/design_lint/usb-c-cc-named-rail/README.md).
 
 ```sh
