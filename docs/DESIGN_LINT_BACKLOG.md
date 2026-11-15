@@ -850,15 +850,23 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc829):** LINT-503 extends
-  SWD named-rail review to explicit optional reset pins. Hosted acceptance
-  passed in GitHub Actions run `43738997981`: 485 selected tests passed and
-  9,729 were deselected, including repeatable Docker fixtures on KiCad 10.0.0
-  and 10.0.5. Tag-scope resolution, Ruff, Alphus, Rumdl, mdrepo, Linux and
-  Windows type checks, packaging, and installed-wheel verification against a
-  separate project passed. Package and preview jobs were skipped under
-  prerelease policy.
-- **Previous published lint-gate checkpoint (v0.5.3rc828):** LINT-502 extends
+- **Latest published lint-gate checkpoint (v0.5.3rc830):** LINT-504 adds
+  conservative CTS/RTS named-rail review. Hosted acceptance passed in GitHub
+  Actions run `43742830825`: 494 selected tests passed and 9,728 were
+  deselected, including repeatable Docker fixtures on KiCad 10.0.0 and 10.0.5.
+  Tag-scope resolution, Ruff, Alphus, Rumdl, mdrepo, Linux and Windows type
+  checks, wheel/sdist builds, and installed-wheel verification against the
+  separate public template checkout passed. Package and preview jobs were
+  skipped under prerelease policy.
+- **Previous checkpoint (v0.5.3rc829):** LINT-503 extends SWD named-rail
+  review to explicit optional reset pins. Hosted acceptance passed in GitHub
+  Actions run `43738997981`: 485 selected tests passed and 9,729 were
+  deselected, including repeatable Docker fixtures on KiCad 10.0.0 and 10.0.5.
+  Tag-scope resolution, Ruff, Alphus, Rumdl, mdrepo, Linux and Windows type
+  checks, packaging, and installed-wheel verification against a separate
+  project passed. Package and preview jobs were skipped under prerelease
+  policy.
+- **Earlier checkpoint (v0.5.3rc828):** LINT-502 extends
   SWD named-rail review to explicit optional SWO pins. Hosted acceptance passed
   in GitHub Actions run `43736758403`: 484 selected tests passed and 9,729
   were deselected, including repeatable Docker fixtures on KiCad 10.0.0 and
@@ -28830,7 +28838,11 @@ acceptance threads while new lint features proceed:
   digest-pinned KiCad 10.0.0 and 10.0.5. Ruff, Alphus boundaries, Rumdl,
   mdrepo, Linux and Windows-target type checks, wheel/sdist builds, and
   installed-origin/version checks passed.
-- **Hosted acceptance:** Pending tagged GitHub Actions validation.
+- **Hosted acceptance:** Tag `v0.5.3rc830` passed GitHub Actions run
+  `43742830825`: 494 selected tests passed and 9,728 were deselected. The
+  exact-version native fixtures, scoped type checks, wheel/sdist builds, and
+  installed-wheel rehearsal against the separate public template checkout
+  passed. Package and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
