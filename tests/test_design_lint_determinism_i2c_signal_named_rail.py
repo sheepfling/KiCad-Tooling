@@ -23,6 +23,6 @@ def test_i2c_signal_named_rail_reports_are_hashseed_deterministic() -> None:
     fault_findings = tuple(item for item in fault["findings"] if item["rule_id"] == RULE_ID)
 
     assert tuple(item["subject"] for item in fault_findings) == (
-        "U1.1: SDA on return-like net GND",
+        "J1.1: SDA on return-like net GND",
     )
     assert not any(item["rule_id"] == RULE_ID for item in control["findings"])

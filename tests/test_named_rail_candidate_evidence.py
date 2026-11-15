@@ -39,7 +39,10 @@ from tests.design_lint_fixtures.ethernet_management_labels import ethernet_manag
 from tests.design_lint_fixtures.ethernet_signal_named_rail import (
     ethernet_signal_on_named_rail_netlist,
 )
-from tests.design_lint_fixtures.i2c_signal_named_rail import i2c_signal_on_named_rail_netlist
+from tests.design_lint_fixtures.i2c_signal_named_rail import (
+    i2c_connector_signal_on_named_rail_netlist,
+    i2c_signal_on_named_rail_netlist,
+)
 from tests.design_lint_fixtures.i3c_signal_named_rail import i3c_signal_named_rail_netlist
 from tests.design_lint_fixtures.rs485_signal_named_rail import rs485_signal_named_rail_netlist
 from tests.design_lint_fixtures.serial_signal_named_rail import (
@@ -92,6 +95,16 @@ def test_each_protocol_variant_retains_and_rechecks_its_native_pin_source() -> N
         stale_netlist = candidate.source_evidence.pin.observed.model_copy(update={"nets": {}})
         with pytest.raises(ValueError, match="current native netlist"):
             replace(candidate.source_evidence.pin, observed=stale_netlist)
+
+
+def test_i2c_connector_named_rail_source_revalidates_current_assignment() -> None:
+    candidate = i2c_signal_on_named_rail_candidates(i2c_connector_signal_on_named_rail_netlist())[0]
+    source = candidate.source_evidence.pin
+    assert source.evidence.reference_kind == "connector"
+
+    stale_netlist = source.observed.model_copy(update={"nets": {"I2C_SCL": ("J1.2",)}})
+    with pytest.raises(ValueError, match="current native netlist"):
+        replace(source, observed=stale_netlist)
 
 
 def test_rs485_source_rechecks_explicit_transceiver_identity() -> None:

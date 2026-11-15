@@ -2,9 +2,11 @@
 
 These are synthetic tooling fixtures with one two-pin I2C controller. The
 role fault swaps the explicit `I2C_SDA` and `I2C_SCL` labels while retaining
-both pin assignments. The named-rail fault assigns the native SDA pin directly
-to `GND`. The control keeps the labels aligned with native SDA and SCL pin
-functions.
+both pin assignments. The named-rail fault assigns IC U1.1 directly to
+`GND`. The control keeps the labels aligned with native SDA and SCL pin
+functions. The same acceptance lane also exports the connector-only
+named-rail fault/control pair in
+`../i2c-connector-signal-named-rail-native/`.
 
 | Case             | Source                           | SHA-256                                                            |
 | ---------------- | -------------------------------- | ------------------------------------------------------------------ |

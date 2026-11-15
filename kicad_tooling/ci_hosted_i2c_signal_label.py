@@ -30,16 +30,23 @@ def i2c_signal_label_fixture_lane(root: Path, *, version: str, image: str, log: 
     pinned = pinned_image(image)
     repository = tooling_checkout_root()
     fixture_root = repository / "tests/fixtures/design_lint/i2c-signal-label-native"
+    connector_fixture_root = (
+        repository / "tests/fixtures/design_lint/i2c-connector-signal-named-rail-native"
+    )
     sources = {
         "control": fixture_root / "correct-i2c-lines.kicad_sch",
         "fault": fixture_root / "mismatched-i2c-lines.kicad_sch",
         "rail_fault": fixture_root / "sda-on-ground.kicad_sch",
+        "connector_control": connector_fixture_root / "control.kicad_sch",
+        "connector_rail_fault": connector_fixture_root / "fault.kicad_sch",
     }
     source_hashes = {case: digest(source) for case, source in sources.items()}
     expected_hashes = {
         "control": "c9129c01d99cc2636e2c1f5176fbf04cadc0ec875562ea83cc9f6dabe9ccf586",
         "fault": "a9e9f961a03948608a2c36e2c7bf718003c8e3453f01593ce951ccdeb7d9774c",
         "rail_fault": "a79212cd736bb83af906f7537cca72085fd190f7c5b1f0775b2fa9b4a4c476a9",
+        "connector_control": "bf5318dc16afd190043a20423c021312c3fd75f07a2b8bab03a8c9793461428e",
+        "connector_rail_fault": "1eaa12a955dece6deb9f7c8f7af06f9aca5a0f4cd459251fea2ecf3c0bd406f6",
     }
     if source_hashes != expected_hashes:
         raise ValueError("I2C signal-role fixture sources changed from their reviewed hashes")
@@ -63,7 +70,7 @@ def i2c_signal_label_fixture_lane(root: Path, *, version: str, image: str, log: 
         'actual="$(kicad-cli version)"\n'
         'printf "kicad_version=%s\\n" "$actual"\n'
         f'test "$actual" = "{version}"\n'
-        "for case in control fault rail_fault; do\n"
+        "for case in control fault rail_fault connector_control connector_rail_fault; do\n"
         "  for run in first repeat; do\n"
         '    kicad-cli sch export netlist --format kicadxml --output "/output/${case}.${run}.netlist.xml" '
         '"/fixtures/${case}.kicad_sch"\n'
@@ -153,7 +160,8 @@ def i2c_signal_label_fixture_lane(root: Path, *, version: str, image: str, log: 
     expected_subjects = ("U1.1: SDA on I2C_SCL", "U1.2: SCL on I2C_SDA")
     label_rule_id = "bus.i2c_signal_label_role_mismatch"
     rail_rule_id = "bus.i2c_signal_on_named_rail"
-    for case in ("control", "fault", "rail_fault"):
+    cases = ("control", "fault", "rail_fault", "connector_control", "connector_rail_fault")
+    for case in cases:
         report = reports[(case, "first")]
         label_findings = tuple(item for item in report.findings if item.rule_id == label_rule_id)
         label_subjects = tuple(item.subject for item in label_findings)
@@ -165,7 +173,12 @@ def i2c_signal_label_fixture_lane(root: Path, *, version: str, image: str, log: 
             )
         rail_findings = tuple(item for item in report.findings if item.rule_id == rail_rule_id)
         rail_subjects = tuple(item.subject for item in rail_findings)
-        expected_rail = ("U1.1: SDA on return-like net GND",) if case == "rail_fault" else ()
+        if case == "rail_fault":
+            expected_rail = ("U1.1: SDA on return-like net GND",)
+        elif case == "connector_rail_fault":
+            expected_rail = ("J1.1: SDA on return-like net GND",)
+        else:
+            expected_rail = ()
         if rail_subjects != expected_rail:
             raise ValueError(
                 f"Native I2C named-rail {case} produced {rail_subjects!r}; "

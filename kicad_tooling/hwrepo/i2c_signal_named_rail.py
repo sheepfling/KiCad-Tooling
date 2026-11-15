@@ -8,7 +8,11 @@ from .design_lint_named_rail_candidate_evidence import (
     NamedRailSignalCandidate,
 )
 from .design_lint_rule_types import DesignLintRuleId
-from .named_rail_pin_evidence import NamedRailPinSource, assigned_named_rail_ic_pins
+from .named_rail_pin_evidence import (
+    NamedRailPinSource,
+    assigned_named_rail_connector_pins,
+    assigned_named_rail_ic_pins,
+)
 from .netlist_contract_models import NetlistContract
 
 RULE_ID: DesignLintRuleId = "bus.i2c_signal_on_named_rail"
@@ -17,13 +21,18 @@ RULE_ID: DesignLintRuleId = "bus.i2c_signal_on_named_rail"
 def i2c_signal_on_named_rail_candidates(
     observed: NetlistContract,
 ) -> tuple[NamedRailSignalCandidate, ...]:
-    """Review a fitted IC's explicit SDA/SCL pin when assigned directly to a named rail.
+    """Review fitted IC or connector SDA/SCL pins assigned directly to named rails.
 
-    The pin function and net label are review clues. This check does not infer
-    that the rail connection is wrong or that the I2C endpoint is required.
+    Bounded native pin functions, connector identity, and net labels are review
+    clues. This check does not infer that the rail connection is wrong or that
+    the I2C endpoint is required.
     """
     candidates: list[NamedRailSignalCandidate] = []
-    for item in assigned_named_rail_ic_pins(observed):
+    pin_evidence = (
+        *assigned_named_rail_ic_pins(observed),
+        *assigned_named_rail_connector_pins(observed),
+    )
+    for item in pin_evidence:
         pin_role = i2c_signal_role(item.function)
         if pin_role is None:
             continue

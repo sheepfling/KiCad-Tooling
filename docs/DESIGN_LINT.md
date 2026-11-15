@@ -2755,14 +2755,18 @@ KICAD_RUN_NATIVE_I2C_SIGNAL_LABEL_FIXTURES=1 python -I -m pytest \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2c_signal_label_role_mismatch")'
 ```
 
-`bus.i2c_signal_on_named_rail` separately reviews a fitted IC's explicit SDA
-or SCL pin when its one assigned net has a recognized supply-like or
-return-like label. It uses the same bounded native I2C role aliases and
-requires the pin number in the component's exported inventory. Intentional
-rail straps remain possible, so the rule reports a configurable review clue;
-it does not claim a fault or require a connection. Indexed/vendor aliases,
-DNP pins, open or multiply assigned pins, connectors, and incomplete pin
-inventories remain outside the predicate.
+`bus.i2c_signal_on_named_rail` separately reviews a fitted IC or candidate
+connector pin with an explicit SDA or SCL function when its one assigned net
+has a recognized supply-like or return-like label. It uses the same bounded
+native I2C role aliases and requires the pin number in the component's exported
+inventory. Connector identity is a candidate clue, not an approved pinout.
+Intentional rail straps remain possible, so the rule reports a configurable
+review clue; it does not claim a fault or require a connection. Indexed/vendor
+aliases, DNP pins, open or multiply assigned pins, and incomplete inventories
+remain outside the predicate.
+
+The connector signal fault/control source hashes and native-fixture boundary are recorded in the
+[I2C connector named-rail fixture notes](../tests/fixtures/design_lint/i2c-connector-signal-named-rail-native/README.md).
 
 ```sh
 python -I -m pytest tests/test_i2c_signal_named_rail.py \

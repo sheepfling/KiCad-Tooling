@@ -13,8 +13,10 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
 )
 from tests.design_lint_fixtures import coach
-from tests.design_lint_fixtures.i2c_signal_label import i2c_signal_label_netlist
-from tests.design_lint_fixtures.i2c_signal_named_rail import i2c_signal_on_named_rail_netlist
+from tests.design_lint_fixtures.i2c_signal_named_rail import (
+    i2c_connector_signal_on_named_rail_netlist,
+    i2c_signal_on_named_rail_netlist,
+)
 
 RULE_ID = "bus.i2c_signal_on_named_rail"
 
@@ -64,28 +66,57 @@ def test_explicit_i2c_pin_on_named_rail_requests_review_with_exact_evidence(
     assert "intentional rail strap" in finding.message
 
 
+@pytest.mark.parametrize(
+    ("rail_name", "pin", "function", "role_clue"),
+    (
+        ("GND", "J1.1", "SDA", "return-like"),
+        ("+5V", "J1.2", "SCL", "supply-like"),
+    ),
+)
+def test_explicit_i2c_connector_pin_on_named_rail_requests_review_with_exact_evidence(
+    rail_name: str, pin: str, function: str, role_clue: str
+) -> None:
+    report = _report(i2c_connector_signal_on_named_rail_netlist(rail_name=rail_name, pin=pin))
+    finding = next(item for item in report.findings if item.rule_id == RULE_ID)
+
+    assert report.status == "REVIEW"
+    assert finding.subject == f"{pin}: {function} on {role_clue} net {rail_name}"
+    assert finding.evidence == {
+        "pin": (pin,),
+        "pin_function": (function,),
+        "pin_role": (function,),
+        "assigned_net": (rail_name,),
+        "net_label_role_clue": (role_clue,),
+        "component_pin_inventory": ("1", "2"),
+    }
+    assert "not proof of electrical potential" in finding.message
+    assert "intentional rail strap" in finding.message
+
+
 def test_neutral_labels_and_unsupported_pin_functions_are_controls() -> None:
     source = i2c_signal_on_named_rail_netlist(rail_name="POWER_SENSE")
     unrecognized_function = source.model_copy(
         update={"pin_functions": {"U1.1": "I2C1_SDA", "U1.2": "SCL"}}
     )
     incomplete_inventory = source.model_copy(update={"component_pin_numbers": {"U1": ("2",)}})
-    connector = source.model_copy(
-        update={
-            "components": {
-                "J1": source.components["U1"],
-            },
-            "nets": {"POWER_SENSE": ("J1.1",), "I2C_SCL": ("J1.2",)},
-            "component_symbols": {"J1": "Connector_Generic:Conn_01x02"},
-            "pin_functions": {"J1.1": "SDA", "J1.2": "SCL"},
-            "component_pin_numbers": {"J1": ("1", "2")},
-        }
+    connector = i2c_connector_signal_on_named_rail_netlist(rail_name="POWER_SENSE")
+    connector_control = i2c_connector_signal_on_named_rail_netlist(rail_name="I2C_SDA")
+    connector_unrecognized = connector.model_copy(
+        update={"pin_functions": {"J1.1": "I2C1_SDA", "J1.2": "SCL"}}
+    )
+    connector_incomplete_inventory = connector.model_copy(
+        update={"component_pin_numbers": {"J1": ("2",)}}
     )
 
     assert not any(item.rule_id == RULE_ID for item in _report(source).findings)
     assert not any(item.rule_id == RULE_ID for item in _report(unrecognized_function).findings)
     assert not any(item.rule_id == RULE_ID for item in _report(incomplete_inventory).findings)
     assert not any(item.rule_id == RULE_ID for item in _report(connector).findings)
+    assert not any(item.rule_id == RULE_ID for item in _report(connector_control).findings)
+    assert not any(item.rule_id == RULE_ID for item in _report(connector_unrecognized).findings)
+    assert not any(
+        item.rule_id == RULE_ID for item in _report(connector_incomplete_inventory).findings
+    )
 
 
 def test_dnp_open_and_ambiguous_assignments_stay_outside_the_predicate() -> None:
@@ -103,6 +134,16 @@ def test_dnp_open_and_ambiguous_assignments_stay_outside_the_predicate() -> None
     )
 
     for control in (dnp, open_pin, ambiguous):
+        assert not any(item.rule_id == RULE_ID for item in _report(control).findings)
+
+    connector = i2c_connector_signal_on_named_rail_netlist()
+    connector_dnp = connector.model_copy(update={"dnp_components": ("J1",)})
+    connector_open = connector.model_copy(update={"nets": {"I2C_SCL": ("J1.2",)}})
+    connector_ambiguous = connector.model_copy(
+        update={"nets": {"GND": ("J1.1",), "0V": ("J1.1",), "I2C_SCL": ("J1.2",)}}
+    )
+
+    for control in (connector_dnp, connector_open, connector_ambiguous):
         assert not any(item.rule_id == RULE_ID for item in _report(control).findings)
 
 
@@ -146,14 +187,14 @@ def test_project_policy_and_exact_ignore_control_the_review() -> None:
 
 
 def test_mapping_order_is_stable_and_repairing_assignment_clears_review() -> None:
-    fault = i2c_signal_on_named_rail_netlist()
+    fault = i2c_connector_signal_on_named_rail_netlist()
     reordered = fault.model_copy(
         update={
             "nets": dict(reversed(tuple(fault.nets.items()))),
             "pin_functions": dict(reversed(tuple(fault.pin_functions.items()))),
         }
     )
-    corrected = i2c_signal_label_netlist()
+    corrected = i2c_connector_signal_on_named_rail_netlist(rail_name="I2C_SDA")
 
     fault_findings = tuple(item for item in _report(fault).findings if item.rule_id == RULE_ID)
     assert tuple(item.model_dump() for item in fault_findings) == tuple(

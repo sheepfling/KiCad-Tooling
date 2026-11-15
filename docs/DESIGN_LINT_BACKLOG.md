@@ -27937,9 +27937,51 @@ acceptance threads while new lint features proceed:
   `bus.serial_signal_on_named_rail` selector. Native execution uses
   `KICAD_RUN_NATIVE_SERIAL_TX_RX_LABEL_MISMATCH_FIXTURES=1`.
 - **Acceptance:** Focused lint, catalog, architecture, deterministic, and
-  exact-version native Docker results are recorded after completion. This gate
-  adds a conservative review signal; it does not certify the intended
+  exact-version native Docker fixture selectors passed locally. Tag
+  `v0.5.3rc808` stopped at tag-scope parsing because its annotated message
+  omitted the required rule selector; it did not reach the lint gate.
+  Corrected tag `v0.5.3rc809` passed hosted run `43695348604`, including the
+  scoped lint gate and installed-wheel check against a separate project. This
+  gate adds a conservative review signal; it does not certify the intended
   connector design or physical continuity.
+
+#### LINT-486 — Review I2C connector signal pins assigned to named rails
+
+- **Priority:** P2 configurable interface heuristic. Native SDA/SCL function
+  names on connector pins can expose a signal assigned to a supply-like or
+  return-like label even when the connector has no project-authored pin map.
+- **Status:** Extends `bus.i2c_signal_on_named_rail`; the existing rule remains
+  default REVIEW and keeps the same stable rule ID and policy controls.
+- **Predicate:** Reuse the shared named-rail source projection for fitted ICs
+  and bounded connector candidates. Require an exact supported SDA/SCL native
+  function, complete native pin inventory, one unambiguous assignment, and a
+  recognized named-rail clue. Other connector pins and IC behavior are
+  unchanged.
+- **Interpretation:** A connector reference and native pin function are
+  candidate evidence, not an approved pinout. A rail assignment may be
+  intentional. The finding does not require the connector to join a bus or
+  ground domain, determine electrical potential, or inspect PCB copper or
+  physical continuity.
+- **Evidence:** Synthetic fault/control tests cover SDA on a return-like net,
+  SCL on a supply-like net, neutral labels, unsupported functions, DNP, open,
+  ambiguous assignment, incomplete inventory, policy, ordering, and source
+  revalidation. A tooling-owned schematic pair keeps the connector and IC
+  pinouts constant and changes only J1.1's label from `I2C_SDA` to `GND`; it is
+  included in the existing digest-pinned native lane for KiCad 10.0.0 and
+  10.0.5. No cohort or proprietary project source is used.
+- **Selection:** Run `tests/test_i2c_signal_named_rail.py`,
+  `tests/test_named_rail_candidate_evidence.py`, and
+  `tests/test_design_lint_determinism_i2c_signal_named_rail.py` with the exact
+  `bus.i2c_signal_on_named_rail` selector. The native case is selected from
+  `tests/test_i2c_signal_label_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_I2C_SIGNAL_LABEL_FIXTURES=1` and the same rule selector.
+- **Acceptance:** The local scoped `scripts/ci.py` gate passed 481 selected
+  tests with 9,649
+  unrelated tests deselected, including the KiCad 10.0.0 and 10.0.5 Docker
+  fixtures. Ruff, module boundaries, shared-utility checks, Rumdl, mdrepo,
+  Linux and Windows-target Pyright, wheel/sdist builds, and installed-origin
+  and version checks passed. Hosted external-template verification is pending
+  on the scoped prerelease tag.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
