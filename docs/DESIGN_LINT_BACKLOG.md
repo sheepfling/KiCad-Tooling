@@ -27744,9 +27744,9 @@ acceptance threads while new lint features proceed:
   `connector.footprint_peer_pin_function_metadata_incomplete` rule to review a
   blank, absent, or KiCad-unnamed function name on one or more exact-part peer
   symbols when another peer names the same assigned pin meaningfully.
-- **Status:** Implemented in the current worktree; targeted validation and
-  publication are in progress. This is an extension of the existing rule ID,
-  not a new electrical requirement or a separate rule count.
+- **Status:** Implemented and published as `v0.5.3rc797`. This extends the
+  existing rule ID; it is not a new electrical requirement or a separate rule
+  count.
 - **Predicate:** Retain the existing fitted-peer, distinct-native-symbol,
   exact nonempty `PART_ID`, value, footprint, complete identical inventory,
   complete electrical-type metadata, matching types, one target mismatch,
@@ -27780,9 +27780,14 @@ acceptance threads while new lint features proceed:
   and sdist-wheel builds passed. Separately, the exact native fixture selector
   passed 2 tests with repeated exports on digest-pinned KiCad 10.0.0 and 10.0.5
   Docker images. Local installed-wheel verification could not finish because
-  pip could not resolve PyPI while installing the wheel's pinned dependencies;
-  hosted installed-wheel verification remains required. Hosted publication
-  evidence is pending.
+  sandbox DNS could not resolve PyPI while installing the wheel's pinned
+  dependencies. The hosted equivalent passed: annotated tag `v0.5.3rc797`
+  triggered [run 43658774978](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43658774978),
+  which passed 486 scoped tests with 9,586 deselected, including both native
+  Docker versions, Linux and Windows Pyright, wheel/sdist builds, installed
+  wheel verification, external inventory/surface/verification, and adapted
+  checkout playtest. The hosted run resolved the annotated tag to commit
+  `401dd3a42ac866f882a34289a5ecf52bc002a21a`.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
