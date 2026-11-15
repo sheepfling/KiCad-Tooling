@@ -847,14 +847,21 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc801):** LINT-484 reviews
+- **Latest published lint-gate checkpoint (v0.5.3rc813):** LINT-489 extends
+  CANH/CANL named-rail review to bounded connector pins while preserving the
+  unique-pair requirement. Hosted acceptance passed in GitHub Actions run
+  `43702804376`; tag-scope resolution selected the rule, and the scoped lint
+  gate plus installed-wheel check against a separate project passed. The exact-
+  version synthetic native fixtures passed on KiCad 10.0.0 and 10.0.5. Package
+  and preview jobs were skipped under prerelease policy.
+- **Previous published lint-gate checkpoint (v0.5.3rc801):** LINT-484 reviews
   skew-bounded differential pairs without a matching authored route-skew
-  bundle. Hosted acceptance passed in GitHub Actions run `43669646827`:
-  459 selected tests passed and 9,629 were deselected. Linux and Windows
-  Pyright, wheel and sdist builds, installed-wheel origin/version checks,
-  external-project checks, and the external playtest passed. Package and
-  preview jobs were skipped under prerelease policy. This map-only rule makes
-  no native geometry claim.
+  bundle. Hosted acceptance passed in GitHub Actions run `43669646827`: 459
+  selected tests passed and 9,629 were deselected. Linux and Windows Pyright,
+  wheel and sdist builds, installed-wheel origin/version checks, external-
+  project checks, and the external playtest passed. Package and preview jobs
+  were skipped under prerelease policy. This map-only rule makes no native
+  geometry claim.
 - **Previous published lint-gate checkpoint (v0.5.3rc784):** LINT-473 reviews
   fitted ICs with native non-return `power_in` pins that are omitted from an
   authored decoupling map. Hosted acceptance passed in GitHub Actions run
@@ -28099,7 +28106,9 @@ acceptance threads while new lint features proceed:
   origin/version checks, and the installed-extras rehearsal passed. The
   direct CAN/evidence/architecture/catalog/determinism suites passed 14
   tests.
-- **Hosted acceptance:** Pending annotated lint-gate tag.
+- **Hosted acceptance:** Annotated tag `v0.5.3rc813` passed GitHub Actions
+  run `43702804376`. Tag-scope resolution selected this rule; the scoped
+  lint gate and installed-wheel check against a separate project passed.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
