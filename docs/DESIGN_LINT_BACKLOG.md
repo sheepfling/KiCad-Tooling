@@ -28283,7 +28283,11 @@ acceptance threads while new lint features proceed:
   deselected; exact-version Docker fixtures passed on KiCad 10.0.0 and 10.0.5.
   Pyright, Windows type checks, wheel and source builds, installed-wheel
   verification, and external project verification passed.
-- **Hosted acceptance:** Pending tagged workflow acceptance.
+- **Hosted acceptance:** Passed run `43710401360`: 481 selected tests passed
+  and 9,678 were deselected; the exact-version Docker fixtures passed on KiCad
+  10.0.0 and 10.0.5. Scope resolution, the scoped lint gate, and installed-
+  wheel verification against the separate public project passed. Package and
+  preview jobs were skipped under prerelease policy.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
