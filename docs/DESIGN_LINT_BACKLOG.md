@@ -28504,7 +28504,12 @@ acceptance threads while new lint features proceed:
   fixtures passed on KiCad 10.0.0 and 10.0.5; Ruff, Alphus boundaries,
   Rumdl, mdrepo, Linux and Windows type checks, wheel/sdist builds, isolated
   install, and external KiCad-Test checkout playtest passed.
-- **Hosted acceptance:** Pending.
+- **Hosted acceptance:** Annotated tag `v0.5.3rc824` passed GitHub Actions
+  run `43721899760`: 487 passed and 9,683 deselected. Digest-pinned Docker
+  fixtures passed on KiCad 10.0.0 and 10.0.5. Tag-scope resolution, Ruff,
+  Alphus boundaries, Rumdl, mdrepo, Linux and Windows type checks,
+  wheel/sdist builds, isolated install, and the external KiCad-Test checkout
+  playtest passed. Package and preview jobs were skipped under prerelease policy.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
