@@ -60,6 +60,7 @@ def test_native_can_line_named_rail_fault_and_control_repeat(
     fault = results["can-line-named-rail-fixture/fault"]
     control = results["can-line-named-rail-fixture/control"]
     assert fault["subjects"] == (
+        "J1.1: CANH on return-like net GND;J1.2: CANL on supply-like net +3V3;"
         "U1.1: CANH on return-like net GND;U1.2: CANL on supply-like net +3V3"
     )
     assert control["subjects"] == "none"

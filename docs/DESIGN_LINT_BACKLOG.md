@@ -28066,6 +28066,41 @@ acceptance threads while new lint features proceed:
   gate plus installed-wheel check against a separate project completed
   successfully.
 
+#### LINT-489 — Review connector CANH/CANL pins assigned to named rails
+
+- **Priority:** P2 configurable interface heuristic. An external CAN connector
+  can carry a bounded native CANH/CANL function pair, and a rail-like
+  assignment deserves explicit review.
+- **Status:** Extends `bus.can_line_on_named_rail`; its rule ID, default REVIEW
+  mode, block/off controls, and exact-fingerprint ignores remain stable.
+- **Predicate:** Apply the existing exact CANH/CANL pair and named-rail checks
+  to fitted U/IC and bounded connector candidates. Require a unique pair, both
+  pins in the component inventory, a fitted reference, and one unambiguous net
+  assignment for the examined pin.
+- **Interpretation:** Connector identity, pin functions, and rail-like labels
+  are review clues, not approved pinout requirements or proof of a defect. The
+  rule does not establish electrical potential, bus participation, PCB copper,
+  or off-board continuity.
+- **Evidence:** Synthetic controls retain neutral bus nets, DNP, open, ambiguous,
+  incomplete inventory, incomplete pair, and duplicate-role cases. Exact-version
+  native fault/control exports include both U1 and J1 CANH/CANL pairs, with the
+  connector assigned to rail-like nets only in the fault. Both schematics are
+  hash-bound and run twice with clean ERC on digest-pinned KiCad 10.0.0 and
+  10.0.5. No product or cohort source is used.
+- **Selection:** Apply the exact `bus.can_line_on_named_rail` selector to
+  `tests/test_can_line_named_rail.py` and
+  `tests/test_can_line_named_rail_native_fixture_lane.py`. Also run named-rail
+  evidence, architecture, catalog reachability, and determinism suites. Native
+  export uses `KICAD_RUN_NATIVE_CAN_LINE_NAMED_RAIL_FIXTURES=1`.
+- **Local acceptance:** The focused `scripts/ci.py` gate passed 11 selected
+  tests, including repeatable Docker exports on KiCad 10.0.0 and 10.0.5.
+  Ruff, Alphus module-boundary and shared-utility checks, Rumdl, mdrepo,
+  Linux and Windows-target Pyright, wheel/sdist builds, installed-package
+  origin/version checks, and the installed-extras rehearsal passed. The
+  direct CAN/evidence/architecture/catalog/determinism suites passed 14
+  tests.
+- **Hosted acceptance:** Pending annotated lint-gate tag.
+
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
 ## Completion and release gate

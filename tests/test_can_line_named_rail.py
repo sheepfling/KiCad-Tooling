@@ -33,13 +33,16 @@ def _report(
 
 
 @pytest.mark.parametrize(
-    ("pin", "function", "rail", "role", "peer_pin", "peer_function"),
+    ("reference", "pin", "function", "rail", "role", "peer_pin", "peer_function"),
     (
-        ("U1.1", "CANH", "GND", "return-like", "U1.2", "CANL"),
-        ("U1.2", "CANL", "+3V3", "supply-like", "U1.1", "CANH"),
+        ("U1", "U1.1", "CANH", "GND", "return-like", "U1.2", "CANL"),
+        ("U1", "U1.2", "CANL", "+3V3", "supply-like", "U1.1", "CANH"),
+        ("J1", "J1.1", "CANH", "GND", "return-like", "J1.2", "CANL"),
+        ("J1", "J1.2", "CANL", "+3V3", "supply-like", "J1.1", "CANH"),
     ),
 )
 def test_can_bus_line_pin_assigned_to_named_rail_requests_review(
+    reference: str,
     pin: str,
     function: str,
     rail: str,
@@ -48,8 +51,9 @@ def test_can_bus_line_pin_assigned_to_named_rail_requests_review(
     peer_function: str,
 ) -> None:
     source = can_line_named_rail_netlist(
-        high_net=rail if pin == "U1.1" else "CANH_BUS",
-        low_net=rail if pin == "U1.2" else "CANL_BUS",
+        reference=reference,
+        high_net=rail if pin.endswith(".1") else "CANH_BUS",
+        low_net=rail if pin.endswith(".2") else "CANL_BUS",
     )
     report = _report(source)
     finding = next(item for item in report.findings if item.rule_id == RULE_ID)
@@ -85,15 +89,20 @@ def test_compacted_can_high_low_aliases_are_recognized() -> None:
 def test_neutral_rail_labels_and_non_line_functions_are_quiet() -> None:
     neutral = can_line_named_rail_netlist(high_net="CANH_BUS", low_net="CANL_BUS")
     unsupported = can_line_named_rail_netlist(high_function="H", low_function="L")
+    connector_neutral = can_line_named_rail_netlist(
+        reference="J1", high_net="CANH_BUS", low_net="CANL_BUS"
+    )
 
-    for control in (neutral, unsupported):
+    for control in (neutral, unsupported, connector_neutral):
         assert not any(item.rule_id == RULE_ID for item in _report(control).findings)
 
 
 def test_dnp_open_ambiguous_duplicate_connector_and_incomplete_pairs_are_skipped() -> None:
     source = can_line_named_rail_netlist()
+    connector = can_line_named_rail_netlist(reference="J1")
     controls = (
         can_line_named_rail_netlist(dnp=True),
+        can_line_named_rail_netlist(reference="J1", dnp=True),
         source.model_copy(update={"nets": {"CANL_BUS": ("U1.2",)}}),
         source.model_copy(update={"nets": {"GND": ("U1.1",), "CANH_BUS": ("U1.1",)}}),
         source.model_copy(
@@ -107,17 +116,35 @@ def test_dnp_open_ambiguous_duplicate_connector_and_incomplete_pairs_are_skipped
                 "nets": {"GND": ("U1.1",), "CANL_BUS": ("U1.2",), "CANH_BUS": ("U1.3",)},
             }
         ),
-        source.model_copy(
-            update={
-                "components": {"J1": source.components["U1"]},
-                "nets": {"GND": ("J1.1",), "CANL_BUS": ("J1.2",)},
-                "component_symbols": {"J1": "Synthetic:CAN_Transceiver"},
-                "pin_functions": {"J1.1": "CANH", "J1.2": "CANL"},
-                "component_pin_numbers": {"J1": ("1", "2")},
-            }
-        ),
         source.model_copy(update={"component_pin_numbers": {"U1": ("1",)}}),
         source.model_copy(update={"pin_functions": {"U1.1": "CANH"}}),
+        connector.model_copy(update={"nets": {"CANL_BUS": ("J1.2",)}}),
+        connector.model_copy(
+            update={
+                "nets": {
+                    "GND": ("J1.1",),
+                    "CANH_BUS": ("J1.1",),
+                    "CANL_BUS": ("J1.2",),
+                }
+            }
+        ),
+        connector.model_copy(update={"component_pin_numbers": {"J1": ("1",)}}),
+        connector.model_copy(update={"pin_functions": {"J1.1": "CANH"}}),
+        connector.model_copy(
+            update={
+                "pin_functions": {
+                    "J1.1": "CANH",
+                    "J1.2": "CANL",
+                    "J1.3": "CAN_LOW",
+                },
+                "component_pin_numbers": {"J1": ("1", "2", "3")},
+                "nets": {
+                    "GND": ("J1.1",),
+                    "CANL_BUS": ("J1.2",),
+                    "CANH_BUS": ("J1.3",),
+                },
+            }
+        ),
     )
 
     for control in controls:

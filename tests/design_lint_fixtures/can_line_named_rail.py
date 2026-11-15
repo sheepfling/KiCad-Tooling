@@ -9,6 +9,7 @@ from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 
 def can_line_named_rail_netlist(
     *,
+    reference: str = "U1",
     high_net: str = "GND",
     low_net: str = "CANL_BUS",
     high_function: str = "CANH",
@@ -16,17 +17,21 @@ def can_line_named_rail_netlist(
     inventory: Sequence[str] = ("1", "2"),
     dnp: bool = False,
 ) -> NetlistContract:
-    """Return a fitted or DNP synthetic device exposing one CANH/CANL pair."""
+    """Return one synthetic IC or connector exposing a CANH/CANL pair."""
+    high_pin = f"{reference}.1"
+    low_pin = f"{reference}.2"
     nets: dict[str, tuple[str, ...]] = {}
-    nets[high_net] = ("U1.1",)
-    nets[low_net] = (*nets[low_net], "U1.2") if low_net in nets else ("U1.2",)
+    nets[high_net] = (high_pin,)
+    nets[low_net] = (*nets[low_net], low_pin) if low_net in nets else (low_pin,)
+    is_connector = reference.upper().startswith(("J", "P", "X", "CN"))
+    footprint = "Synthetic:Conn_01x02" if is_connector else "Synthetic:QFN"
     return NetlistContract(
         components={
-            "U1": ComponentContract(value="Synthetic CAN transceiver", footprint="Synthetic:QFN")
+            reference: ComponentContract(value="Synthetic CAN endpoint", footprint=footprint)
         },
         nets=nets,
-        component_symbols={"U1": "Synthetic:CAN_Transceiver"},
-        pin_functions={"U1.1": high_function, "U1.2": low_function},
-        component_pin_numbers={"U1": tuple(inventory)},
-        dnp_components=("U1",) if dnp else (),
+        component_symbols={reference: "Synthetic:CAN_Endpoint"},
+        pin_functions={high_pin: high_function, low_pin: low_function},
+        component_pin_numbers={reference: tuple(inventory)},
+        dnp_components=(reference,) if dnp else (),
     )

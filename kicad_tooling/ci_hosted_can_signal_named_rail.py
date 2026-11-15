@@ -34,8 +34,8 @@ _SIGNAL_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
 _LINE_RULE_ID = "bus.can_line_on_named_rail"
 _LINE_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
     {
-        "fault": "c50e8988e1ab51fa4cf57d1fb9f6b5cd3dd8be7ab6331a361a9cc190b47e279a",
-        "control": "1a7b40e9d2b44fe45548cb870787aa8790487faebe905f36060ba72d99f92947",
+        "fault": "b35e61b7b03a30af1df1fcbba40e6cfe3fd3e59c3a4022929f37fba42bace526",
+        "control": "9f4fa5661ffbc0552ecd89657663b14f9377dbcbf4e3bca2370958763b9f7ce8",
     }
 )
 
@@ -97,16 +97,27 @@ def _can_named_rail_fixture_lane(
         fixture_directory = "can-line-named-rail"
         stage_prefix = "can-line-named-rail-fixture"
         reviewed_hashes = _LINE_SOURCE_HASHES
-        expected_functions = {"U1.1": "CANH", "U1.2": "CANL"}
+        expected_functions = {
+            "U1.1": "CANH",
+            "U1.2": "CANL",
+            "J1.1": "CANH",
+            "J1.2": "CANL",
+        }
         expected_nets = {
-            "fault": {"GND": ("U1.1",), "+3V3": ("U1.2",)},
-            "control": {"CANH_BUS": ("U1.1",), "CANL_BUS": ("U1.2",)},
+            "fault": {"GND": {"U1.1", "J1.1"}, "+3V3": {"U1.2", "J1.2"}},
+            "control": {
+                "CANH_BUS": {"U1.1", "J1.1"},
+                "CANL_BUS": {"U1.2", "J1.2"},
+            },
         }
         expected_subjects = {
-            "fault": ("U1.1: CANH on return-like net GND;U1.2: CANL on supply-like net +3V3"),
+            "fault": (
+                "J1.1: CANH on return-like net GND;J1.2: CANL on supply-like net +3V3;"
+                "U1.1: CANH on return-like net GND;U1.2: CANL on supply-like net +3V3"
+            ),
             "control": "none",
         }
-        expected_inventories = {"U1": ("1", "2")}
+        expected_inventories = {"U1": ("1", "2"), "J1": ("1", "2")}
     fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint" / fixture_directory
     sources = {case: fixture_root / f"{case}.kicad_sch" for case in ("fault", "control")}
     source_hashes = {case: digest(source) for case, source in sources.items()}

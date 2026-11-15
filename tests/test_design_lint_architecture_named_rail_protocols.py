@@ -135,3 +135,6 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
 
     for rule_id in TYPED_LINE_RULES:
         assert TYPED_LINE_OWNER in catalog[rule_id].implementation_refs
+    can_line_refs = catalog["bus.can_line_on_named_rail"].implementation_refs
+    assert CONNECTOR_PIN_EVIDENCE in can_line_refs
+    assert CONNECTOR_CANDIDATE_REFERENCES in can_line_refs

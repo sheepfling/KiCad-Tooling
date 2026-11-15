@@ -1,4 +1,4 @@
-"""Review CAN transceiver bus-line pins assigned directly to named rails."""
+"""Review CAN bus-line pins assigned directly to named rails."""
 
 from __future__ import annotations
 
@@ -10,21 +10,34 @@ from .design_lint_named_rail_line_candidate_evidence import (
 )
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
-from .named_rail_pin_evidence import NamedRailPinSource, assigned_named_rail_ic_pins
+from .named_rail_pin_evidence import (
+    NamedRailPinEvidence,
+    NamedRailPinSource,
+    assigned_named_rail_connector_pins,
+    assigned_named_rail_ic_pins,
+)
 from .netlist_contract_models import NetlistContract
 
 RULE_ID: DesignLintRuleId = "bus.can_line_on_named_rail"
 
 
 def can_line_on_named_rail_candidates(observed: NetlistContract) -> tuple[Candidate, ...]:
-    """Review fitted IC CANH/CANL pins assigned to supply- or return-like labels.
+    """Review fitted IC or bounded connector CANH/CANL pins on named rails.
 
     A unique exported CANH/CANL function pair and complete native inventory
     distinguish bus-side pins from controller TX/RX signals. The assignment
     and rail-like name remain review clues, not proof of a defect.
     """
     candidates: list[Candidate] = []
-    for item in assigned_named_rail_ic_pins(observed):
+    pin_evidence_by_pin: dict[str, NamedRailPinEvidence] = {}
+    for item in (
+        *assigned_named_rail_ic_pins(observed),
+        *assigned_named_rail_connector_pins(observed),
+    ):
+        pin_evidence_by_pin.setdefault(item.pin.casefold(), item)
+    for item in sorted(
+        pin_evidence_by_pin.values(), key=lambda evidence: (evidence.pin.casefold(), evidence.pin)
+    ):
         role = can_function_role(item.function)
         if role not in {"CANH", "CANL"}:
             continue

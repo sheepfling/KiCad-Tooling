@@ -73,6 +73,7 @@ def protocol_rule_ids() -> set[str]:
     )
     emitted.update(item.rule_id for item in candidates(rs485_line_named_rail_netlist()))
     emitted.update(item.rule_id for item in candidates(can_line_named_rail_netlist()))
+    emitted.update(item.rule_id for item in candidates(can_line_named_rail_netlist(reference="J1")))
     emitted.update(
         item.rule_id for item in candidates(can_connector_signal_on_named_rail_netlist())
     )
