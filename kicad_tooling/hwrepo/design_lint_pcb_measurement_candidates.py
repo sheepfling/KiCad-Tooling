@@ -30,10 +30,12 @@ from .pcb_drc_models import PcbDifferentialPairRuleMap
 from .pcb_pair_reference_plane_scope import (
     pcb_differential_pair_reference_plane_scope_candidates,
 )
+from .pcb_pair_route_skew_scope import pcb_differential_pair_route_skew_scope_candidates
 from .pcb_protection_path_models import PcbProtectionPathCoverageReport
 from .pcb_reference_plane_islands import unanchored_reference_zone_island_candidates
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport, PcbReferencePlaneMap
 from .pcb_reference_plane_transitions import alternate_reference_plane_run_candidates
+from .pcb_signal_path_rule_models import PcbSignalPathRuleMap
 from .pcb_thermal_via_models import PcbThermalViaCoverageReport
 from .pcb_track_width_models import PcbTrackWidthCoverageReport
 
@@ -48,6 +50,7 @@ def scan_pcb_measurement_candidates(inputs: PcbCandidateInputs) -> tuple[Candida
         pcb_thermal_via_coverage=inputs.thermal_via,
         pcb_differential_pair_rule_map=inputs.differential_pair_rule_map,
         pcb_reference_plane_map=inputs.reference_plane_map,
+        pcb_signal_path_rule_map=inputs.signal_path_rule_map,
         is_pcb_project=inputs.is_pcb_project,
     )
 
@@ -61,6 +64,7 @@ def pcb_measurement_coverage_candidates(
     pcb_thermal_via_coverage: PcbThermalViaCoverageReport | None = None,
     pcb_differential_pair_rule_map: PcbDifferentialPairRuleMap | None = None,
     pcb_reference_plane_map: PcbReferencePlaneMap | None = None,
+    pcb_signal_path_rule_map: PcbSignalPathRuleMap | None = None,
     is_pcb_project: bool = False,
 ) -> tuple[Candidate, ...]:
     """Translate PCB measurement coverage gaps into review candidates."""
@@ -69,6 +73,13 @@ def pcb_measurement_coverage_candidates(
         pcb_differential_pair_reference_plane_scope_candidates(
             pcb_differential_pair_rule_map,
             pcb_reference_plane_map,
+            is_pcb_project=is_pcb_project,
+        )
+    )
+    found.extend(
+        pcb_differential_pair_route_skew_scope_candidates(
+            pcb_differential_pair_rule_map,
+            pcb_signal_path_rule_map,
             is_pcb_project=is_pcb_project,
         )
     )

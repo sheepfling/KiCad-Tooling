@@ -16,6 +16,7 @@ from .pcb_keepout_models import PcbKeepoutCoverageReport
 from .pcb_protection_path_models import PcbProtectionPathCoverageReport
 from .pcb_reference_plane_models import PcbReferencePlaneCoverageReport, PcbReferencePlaneMap
 from .pcb_rf_antenna_models import PcbRfModuleAntennaCoverageReport
+from .pcb_signal_path_rule_models import PcbSignalPathRuleMap
 from .pcb_switching_loop_models import PcbSwitchingLoopCoverageReport
 from .pcb_thermal_via_models import PcbThermalViaCoverageReport, PcbThermalViaMap
 from .pcb_touch_pad_clearance_models import PcbTouchPadClearanceCoverageReport
@@ -46,3 +47,4 @@ class PcbCandidateInputs:
     thermal_via_map: PcbThermalViaMap | None = None
     differential_pair_rule_map: PcbDifferentialPairRuleMap | None = None
     reference_plane_map: PcbReferencePlaneMap | None = None
+    signal_path_rule_map: PcbSignalPathRuleMap | None = None

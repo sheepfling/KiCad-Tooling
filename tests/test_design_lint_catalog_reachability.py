@@ -73,6 +73,9 @@ from tests.design_lint_fixtures.catalog_reachability_pcb import pcb_rule_ids
 from tests.design_lint_fixtures.catalog_reachability_pcb_differential_pair_plane_scope import (
     differential_pair_plane_scope_rule_ids,
 )
+from tests.design_lint_fixtures.catalog_reachability_pcb_differential_pair_route_skew_scope import (
+    differential_pair_route_skew_scope_rule_ids,
+)
 from tests.design_lint_fixtures.catalog_reachability_pcb_power_width import (
     power_pin_width_map_rule_ids,
 )
@@ -291,6 +294,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     )
     emitted.update(pcb_rule_ids())
     emitted.update(differential_pair_plane_scope_rule_ids())
+    emitted.update(differential_pair_route_skew_scope_rule_ids())
     emitted.update(
         item.rule_id
         for item in switching_regulator_loop_map_candidates(

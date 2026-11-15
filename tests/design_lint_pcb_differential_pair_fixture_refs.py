@@ -32,5 +32,17 @@ PCB_DIFFERENTIAL_PAIR_PARITY_FIXTURES = MappingProxyType(
                 ),
             }
         ),
+        "pcb.differential_pair_route_skew_scope_missing": MappingProxyType(
+            {
+                "fault_fixtures": _refs(
+                    "tests.test_design_lint_mcp_parity_pcb_pairs",
+                    "test_pcb_differential_pair_rule_coverage_parity",
+                ),
+                "valid_control_fixtures": _refs(
+                    "tests.test_design_lint_mcp_parity_pcb_pairs",
+                    "test_pcb_differential_pair_rule_coverage_parity",
+                ),
+            }
+        ),
     }
 )

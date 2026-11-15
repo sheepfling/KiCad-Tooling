@@ -13372,6 +13372,46 @@
       "implementation_owner": "kicad_tooling/hwrepo/pcb_pair_reference_plane_scope.py#pcb_differential_pair_reference_plane_scope_candidates"
     },
     {
+      "rule_id": "pcb.differential_pair_route_skew_scope_missing",
+      "title": "Skew-bounded differential-pair maps omit route-skew bundles",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "Project-authored differential-pair rule map compared with the independently authored PCB signal-path map",
+      "predicate": "For a PCB project with a project-authored differential-pair rule map, emit one REVIEW candidate for each exact pair that has an authored skew bound but lacks any project-authored signal-path bundle with max_skew set and paths on both exact positive_net and negative_net. Exact path net names are compared case-insensitively. Paths without a common qualifying bundle do not provide route-skew measurement coverage. Do not infer endpoints, choose a skew limit, or require that every skew-bounded pair be measured by the signal-path analyzer.",
+      "supported_kicad_versions": [
+        "Version-independent project-map comparison; no native geometry measurement is claimed"
+      ],
+      "limitations": [
+        "The rule checks only project-authored pair and signal-path maps in PCB projects. It does not inspect routes, prove that the pair exists on the board, or establish that route-skew analysis is required.",
+        "A differential-pair DRC skew bound and a signal-path route-skew bundle are independent project decisions. Missing bundle scope is a REVIEW prompt; it does not prescribe endpoints, thresholds, DRC rules, or physical pair membership.",
+        "Projects may intentionally rely on native DRC or another approved analysis without a signal-path bundle. Use the rule override or exact finding ignore after review."
+      ],
+      "fault_fixtures": [
+        "tests.test_pcb_differential_pair_route_skew_scope.test_skew_bounded_pair_without_signal_path_map_is_reviewable",
+        "tests.test_pcb_differential_pair_route_skew_scope.test_partial_paths_and_unbundled_pair_routes_remain_reviewable",
+        "tests.test_design_lint_mcp_parity_pcb_pairs.test_pcb_differential_pair_rule_coverage_parity"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_pcb_differential_pair_route_skew_scope.test_skew_bundle_covering_both_exact_pair_nets_is_a_quiet_control",
+        "tests.test_pcb_differential_pair_route_skew_scope.test_pairs_without_skew_bounds_and_non_pcb_projects_are_out_of_scope",
+        "tests.test_design_lint_mcp_parity_pcb_pairs.test_pcb_differential_pair_rule_coverage_parity"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_pcb_differential_pair_route_skew_scope.test_evidence_and_candidate_fingerprint_are_stable",
+        "tests.test_pcb_differential_pair_route_skew_scope.test_pair_and_path_order_do_not_change_finding_order"
+      ],
+      "required_native_fixtures": [],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/pcb_pair_route_skew_scope.py#pcb_differential_pair_route_skew_scope_candidates",
+        "kicad_tooling/hwrepo/design_lint_pcb_measurement_candidates.py#pcb_measurement_coverage_candidates",
+        "kicad_tooling/hwrepo/design_lint_pcb_inputs.py#PcbCandidateInputs"
+      ],
+      "theme": "pcb",
+      "implementation_owner": "kicad_tooling/hwrepo/pcb_pair_route_skew_scope.py#pcb_differential_pair_route_skew_scope_candidates"
+    },
+    {
       "rule_id": "pcb.reference_plane_coverage",
       "title": "Mapped PCB signal track has limited adjacent reference-copper coverage",
       "status": "active",

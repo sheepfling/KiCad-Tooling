@@ -1628,6 +1628,15 @@ for dispositions and timing; leave unmeasured values unstated.
   false-positive rates across real interface naming conventions. No private
   design was inspected.
 
+#### Follow-up: skew-bound route-map scope
+
+The trial's geometry finding depends on an authored signal-path bundle, while
+some projects may author a differential-pair skew bound without creating that
+separate route bundle. LINT-484 adds a map-only REVIEW prompt for this missing
+analysis scope. It reuses no candidate code or global skew threshold, and it
+does not claim the signal-path analyzer is mandatory. The prompt is configurable
+per project and remains subject to independent review.
+
 ### Follow-up trial: pcb-inspector HEUR-GND-001 narrow-void pair (2026-10-08)
 
 - **Candidate and provenance:** `takzen/pcb-inspector` at pinned commit
@@ -2750,10 +2759,10 @@ Source: [kicad-happy release notes][happy-fiducial-release-notes].
   proprietary project, cohort board, or upstream source was stored.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 394 active rules. Each entry has a deterministic predicate, evidence
+contains 395 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
-Of the 394 active rules, 329 default to `review`, 64 to `off`, and
+Of the 395 active rules, 330 default to `review`, 64 to `off`, and
 `pcb.required_fitted_reference` to `block`. Off-by-default checks include
 schematic geometry, generic peer assignment, selected component topology
 reviews such as the BJT base-bias and base/collector same-net prompts, and

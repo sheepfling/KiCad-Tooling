@@ -182,6 +182,7 @@ def candidates(
                 thermal_via_map=legacy.get("pcb_thermal_via_map"),
                 differential_pair_rule_map=legacy.get("pcb_differential_pair_rule_map"),
                 reference_plane_map=legacy.get("pcb_reference_plane_map"),
+                signal_path_rule_map=legacy.get("pcb_signal_path_rule_map"),
             ),
             usb_data_path=UsbDataPathCandidateInputs(authored_map=legacy.get("usb_data_path_map")),
             netlist_sha256=legacy.get("netlist_sha256"),

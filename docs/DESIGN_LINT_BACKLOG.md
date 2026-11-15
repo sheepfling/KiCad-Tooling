@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 394 rules are implemented with synthetic regression coverage.
+The following 395 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 394 active rules.
+The catalog currently contains 395 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -4471,7 +4471,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 394 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 395 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -27831,6 +27831,39 @@ acceptance threads while new lint features proceed:
   inventory/surface/verification, and adapted public-template playtest passed.
   The pair-scope rule itself remains map-only and does not claim native
   geometry evidence.
+
+#### LINT-484 — Review skew-bounded pairs without route-skew bundles
+
+- **Priority:** P2 configurable coverage heuristic. A project's differential-
+  pair map can declare a skew bound while its separate signal-path map lacks a
+  skew-bounded bundle covering both exact pair nets.
+- **Status:** Implemented as
+  `pcb.differential_pair_route_skew_scope_missing`, defaulting to REVIEW.
+- **Predicate:** For each exact pair with an authored skew bound on a PCB
+  project, emit a candidate when no authored signal-path bundle has `max_skew`
+  set and includes paths on both exact positive and negative nets. Net names
+  are compared case-insensitively; a single path or separate unbundled paths
+  do not count as paired route-skew coverage.
+- **Interpretation:** The pair-map bound and route-map bundle are independent
+  analysis decisions. This prompt asks whether the local route-skew analyzer
+  also needs coverage; it does not require that analyzer, compare the two
+  bounds, infer endpoints or geometry, or claim a physical defect. Projects
+  may rely on native DRC or another approved check and can override or exactly
+  ignore the review.
+- **Evidence:** Tooling-owned synthetic tests cover absent, partial, unbundled,
+  and complete map scope; non-skew and non-PCB controls; stable projection;
+  path-order invariance; catalog reachability; and CLI/MCP parity with an
+  explicit rule-off override. The rule consumes authored maps only and has no
+  native fixture requirement. No external project source is used.
+- **Selection:** Run the focused rule suite with
+  `design_lint and pcb_lint and interface_lint` and the exact rule selector;
+  include catalog reachability and the pair-map CLI/MCP parity test.
+- **Acceptance:** The scoped local `scripts/ci.py` run passed 459 selected tests,
+  formatting, Ruff, module-boundary and shared-utility checks, Rumdl, mdrepo,
+  scoped Linux and Windows Pyright, wheel, sdist, and sdist-wheel builds. Its
+  clean-environment wheel install could not finish because sandbox DNS could
+  not resolve PyPI for pinned dependencies. Hosted annotated-tag acceptance is
+  pending.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 

@@ -148,6 +148,7 @@ class _DesignLintMcpParityPcbPairsCases(McpParityHarness):
                 ("disabled", "DISABLED", (), "off"),
                 ("plane-map-control", "COMPLETE", (), "review"),
                 ("pair-plane-rule-off", "COMPLETE", (), "review"),
+                ("route-skew-rule-off", "COMPLETE", (), "review"),
             ):
                 with self.subTest(scenario=scenario):
                     if scenario == "missing":
@@ -197,6 +198,14 @@ class _DesignLintMcpParityPcbPairsCases(McpParityHarness):
                         overrides.append(
                             DesignLintRuleOverride(
                                 rule_id="pcb.differential_pair_reference_plane_scope_missing",
+                                mode="off",
+                                reason="Synthetic project intentionally disables this review",
+                            )
+                        )
+                    if scenario == "route-skew-rule-off":
+                        overrides.append(
+                            DesignLintRuleOverride(
+                                rule_id="pcb.differential_pair_route_skew_scope_missing",
                                 mode="off",
                                 reason="Synthetic project intentionally disables this review",
                             )
@@ -297,11 +306,29 @@ class _DesignLintMcpParityPcbPairsCases(McpParityHarness):
                             missing_plane_scope[0].evidence["missing_reference_plane_nets"],
                             ("USB_D_P", "USB_D_N"),
                         )
+                    missing_skew_scope = tuple(
+                        item
+                        for item in mcp_report.findings
+                        if item.rule_id == "pcb.differential_pair_route_skew_scope_missing"
+                    )
+                    if scenario == "route-skew-rule-off":
+                        self.assertEqual(len(missing_skew_scope), 1)
+                        self.assertEqual(missing_skew_scope[0].mode, "off")
+                        self.assertEqual(missing_skew_scope[0].disposition, "RULE_OFF")
+                    else:
+                        self.assertEqual(len(missing_skew_scope), 1)
+                        self.assertEqual(
+                            missing_skew_scope[0].evidence["positive_net"], ("USB_D_P",)
+                        )
+                        self.assertEqual(
+                            missing_skew_scope[0].evidence["negative_net"], ("USB_D_N",)
+                        )
 
 
 @pytest.mark.design_lint_rule(rule_id="pcb.differential_pair_rule_coverage")
 @pytest.mark.design_lint_rule(rule_id="pcb.differential_pair_unmapped_native_rule")
 @pytest.mark.design_lint_rule(rule_id="pcb.differential_pair_reference_plane_scope_missing")
+@pytest.mark.design_lint_rule(rule_id="pcb.differential_pair_route_skew_scope_missing")
 def test_pcb_differential_pair_rule_coverage_parity() -> None:
     run_mcp_parity(
         _DesignLintMcpParityPcbPairsCases, "_case_test_pcb_differential_pair_rule_coverage_parity"

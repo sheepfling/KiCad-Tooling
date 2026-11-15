@@ -352,6 +352,7 @@ def prepare_evaluation(
         thermal_via_map=policy.pcb_thermal_via_map,
         differential_pair_rule_map=policy.pcb_differential_pair_rule_map,
         reference_plane_map=policy.pcb_reference_plane_map,
+        signal_path_rule_map=policy.pcb_signal_path_rule_map,
         dru_rule_candidates=request.pcb_dru_rule_candidates,
         native_drc_candidates=request.pcb_native_drc_candidates,
     )

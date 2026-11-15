@@ -1080,7 +1080,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 394 active rules.
+The catalog currently contains 395 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -6039,6 +6039,22 @@ to every pair. The pair map and plane map declare different engineering
 decisions. The prompt defaults to `review` and can be disabled or exactly
 ignored after review. It compares project maps and does not claim native PCB
 geometry evidence.
+
+## Review skew-bounded pairs without route-skew bundles
+
+When `pcb_differential_pair_rule_map` gives an exact pair a skew bound, the
+local routed-skew analyzer can measure it only when `pcb_signal_path_rule_map`
+also contains exact paths for both nets in a bundle with an authored skew
+bound. `pcb.differential_pair_route_skew_scope_missing` asks whether that
+route-level review is needed when no such bundle exists. A map with both exact
+paths and a qualifying bundle is quiet; separate path entries without a common
+bundle remain a review prompt.
+
+The check compares project maps only. It does not infer endpoint pads, require
+the local geometry analyzer, choose or reconcile skew thresholds, assert that
+the pair is routed, or claim a signal-integrity defect. Native DRC may already
+be the project's complete skew check. The default mode is `review`, with the
+standard project override and exact-ignore policy.
 
 ## Review differential-pair DRC rule coverage
 
