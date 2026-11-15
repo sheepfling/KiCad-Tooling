@@ -25,8 +25,8 @@ SPI_SIGNAL_NAMED_RAIL_TOOLCHAINS = SPI_NATIVE_TOOLCHAINS
 _RULE_ID = "bus.spi_signal_on_named_rail"
 _SOURCE_HASHES = MappingProxyType(
     {
-        "fault": "ea7aa06bf78c24996bdfa8754c88822cb0a6ed8b86b0c6010ab9b79f6705aebf",
-        "control": "8c18aae7ec349d9e971928e85dfc4843397aad1a3f7623100d25cc1b7d4e5221",
+        "fault": "ff78ffd2e8bec8c68a6a72cec9d8a2bfdd46e514646f05cf31405d29d3c6643b",
+        "control": "30d060168425387083f95022aca995be3e2cca22ac512dc49f0a343b62572242",
     }
 )
 
@@ -121,11 +121,20 @@ def spi_signal_named_rail_fixture_lane(
                 raise ValueError(f"Native KiCad omitted SPI named-rail {case} evidence")
             observed = read_netlist(netlist_path)
             expected_nets = (
-                {"GND": ("U1.1",), "SPI1_CS": ("U1.2",)}
+                {
+                    "GND": {"J1.1", "U1.1"},
+                    "GND_B": {"J1.2"},
+                    "SPI1_CS": {"U1.2"},
+                }
                 if case == "fault"
-                else {"SPI1_SCK": ("U1.1",), "SPI1_CS": ("U1.2",)}
+                else {
+                    "GND_B": {"J1.2"},
+                    "SPI1_CS": {"U1.2"},
+                    "SPI1_SCK": {"U1.1"},
+                    "SPI2_SCK": {"J1.1"},
+                }
             )
-            if any(observed.nets.get(net) != pins for net, pins in expected_nets.items()):
+            if any(set(observed.nets.get(net, ())) != pins for net, pins in expected_nets.items()):
                 raise ValueError(f"Native SPI named-rail {case} net assignments changed")
             normalized = json.dumps(
                 observed.model_dump(mode="json"),
@@ -153,7 +162,7 @@ def spi_signal_named_rail_fixture_lane(
             subjects = tuple(item.subject for item in report.findings if item.rule_id == _RULE_ID)
             results[(case, run)] = (";".join(subjects) or "none", report.status, "none")
 
-    expected_subject = "U1.1: SPI1_SCK on return-like net GND"
+    expected_subject = "J1.1: SPI2_SCK on return-like net GND;U1.1: SPI1_SCK on return-like net GND"
     for case in sources:
         first = normalized_hashes[(case, "first")]
         repeat = normalized_hashes[(case, "repeat")]

@@ -21,6 +21,9 @@ from tests.design_lint_fixtures.i3c_same_net import i3c_same_net_netlist
 from tests.design_lint_fixtures.i3c_signal_named_rail import i3c_signal_named_rail_netlist
 from tests.design_lint_fixtures.open_drain_control_voltage import open_drain_control_voltage_netlist
 from tests.design_lint_fixtures.rs485_line_named_rail import rs485_line_named_rail_netlist
+from tests.design_lint_fixtures.spi_signal_named_rail import (
+    spi_connector_signal_on_named_rail_netlist,
+)
 from tests.design_lint_fixtures.usb_c_cc_endpoint_pairing import usb_c_cc_endpoint_pairing_netlist
 from tests.design_lint_fixtures.usb_c_cc_named_rail import usb_c_cc_named_rail_netlist
 from tests.design_lint_fixtures.usb_c_cc_same_net import usb_c_cc_same_net_netlist
@@ -85,6 +88,9 @@ def protocol_rule_ids() -> set[str]:
     emitted.update(item.rule_id for item in candidates(i3c_signal_named_rail_netlist()))
     emitted.update(
         item.rule_id for item in candidates(i2c_connector_signal_on_named_rail_netlist())
+    )
+    emitted.update(
+        item.rule_id for item in candidates(spi_connector_signal_on_named_rail_netlist())
     )
     i3c_source = i3c_same_net_netlist()
     emitted.update(item.rule_id for item in candidates(i3c_source))

@@ -2470,17 +2470,18 @@ KICAD_RUN_NATIVE_SPI_CLOCK_SELECT_LABEL_FIXTURES=1 python -I -m pytest \
 
 ### SPI signal pins assigned directly to named rails
 
-`bus.spi_signal_on_named_rail` reviews fitted U/IC pins with a bounded SPI
-clock, chip-select, or data-role function when the pin has one native assignment
-to a net whose label resembles a supply or return. It requires a complete pin
-inventory and skips DNP parts, connectors, open or ambiguous assignments, and
-unrecognized function aliases. Direct rail straps can be intentional, including
-a chip-select held inactive, so the rule defaults to `review` and supports
-project `block`, `off`, and exact-fingerprint ignore decisions. Pin functions
-and names are clues; this check does not establish required SPI connectivity,
-electrical potential, PCB copper, or physical continuity. The tooling-authored
-fault and control export twice with clean ERC on digest-pinned KiCad 10.0.0 and
-10.0.5 images; see the
+`bus.spi_signal_on_named_rail` reviews fitted U/IC or bounded connector pins
+with a recognized SPI clock, chip-select, or data-role function when the pin
+has one native assignment to a net whose label resembles a supply or return.
+It requires the pin number in the native inventory and skips DNP parts, open or
+ambiguous assignments, pins absent from the inventory, and unrecognized
+function aliases. Direct rail straps can be intentional, including a chip-select
+held inactive, so the rule defaults to `review` and supports project `block`,
+`off`, and exact-fingerprint ignore decisions. Pin functions and names are
+clues; this check does not establish required SPI connectivity, electrical
+potential, PCB copper, or physical continuity. The tooling-authored IC and
+connector fault and control export twice with clean ERC on digest-pinned KiCad
+10.0.0 and 10.0.5 images; see the
 [fixture note](../tests/fixtures/design_lint/spi-signal-named-rail/README.md).
 
 ```sh

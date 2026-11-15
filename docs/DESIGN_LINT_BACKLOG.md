@@ -27986,6 +27986,42 @@ acceptance threads while new lint features proceed:
   external-template inventory/surface/verification, adapted-checkout checks,
   and the external playtest all passed.
 
+#### LINT-487 — Review connector SPI signal pins assigned to named rails
+
+- **Priority:** P2 configurable interface heuristic. A connector may carry a
+  native SPI clock, chip-select, or data function while its only assigned net
+  label resembles a supply or return.
+- **Status:** Extends `bus.spi_signal_on_named_rail`; the stable rule ID remains
+  default REVIEW with existing block, off, and exact-fingerprint ignore
+  controls.
+- **Predicate:** Apply the existing SPI role aliases and named-rail vocabulary
+  to fitted U/IC and bounded connector pins. Require a supported exact function,
+  a pin number in the native inventory, and one unambiguous native net
+  assignment.
+- **Interpretation:** Connector identity, native function, and rail-like net
+  label are clues. A strap can be intentional; the rule does not determine
+  connector intent, electrical potential, SPI participation, PCB copper, or
+  physical continuity.
+- **Evidence:** Synthetic cases cover all four SPI roles on connectors, neutral
+  signal labels, DNP, open, ambiguous, and absent-inventory controls, policy,
+  source freshness, and mapping-order stability. The exact-version native pair
+  contains an IC and connector signal on GND in the fault; its control assigns
+  separate clock nets while retaining the connector's distinct `GND_B` return.
+  Both schematics are Tooling-authored, hash-bound, and exported twice with
+  digest-pinned KiCad 10.0.0 and 10.0.5. No project or cohort source is used.
+- **Selection:** Apply the exact `bus.spi_signal_on_named_rail` selector to
+  `tests/test_spi_signal_named_rail.py` and
+  `tests/test_spi_signal_named_rail_native_fixture_lane.py`. Also run the
+  shared named-rail evidence, architecture, and protocol catalog-reachability
+  suites directly. Native export uses
+  `KICAD_RUN_NATIVE_SPI_SIGNAL_NAMED_RAIL_FIXTURES=1`.
+- **Local acceptance:** The focused CI run passed all 14 selected tests,
+  including repeatable Docker exports on both pinned KiCad versions. Ruff,
+  module-boundary and shared-utility checks, Rumdl, mdrepo, Linux and
+  Windows-target Pyright, wheel/sdist builds, and installed-origin/version
+  checks passed. The five direct SPI/evidence/architecture/catalog/determinism
+  suites passed 20 tests. Hosted tagged acceptance follows publication.
+
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
 ## Completion and release gate

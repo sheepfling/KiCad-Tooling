@@ -48,7 +48,10 @@ from tests.design_lint_fixtures.rs485_signal_named_rail import rs485_signal_name
 from tests.design_lint_fixtures.serial_signal_named_rail import (
     serial_signal_on_named_rail_netlist,
 )
-from tests.design_lint_fixtures.spi_signal_named_rail import spi_signal_on_named_rail_netlist
+from tests.design_lint_fixtures.spi_signal_named_rail import (
+    spi_connector_signal_on_named_rail_netlist,
+    spi_signal_on_named_rail_netlist,
+)
 from tests.design_lint_fixtures.usb_c_sbu_named_rail import usb_c_sbu_named_rail_netlist
 from tests.design_lint_fixtures.usb_signal_named_rail import usb_signal_on_named_rail_netlist
 
@@ -103,6 +106,16 @@ def test_i2c_connector_named_rail_source_revalidates_current_assignment() -> Non
     assert source.evidence.reference_kind == "connector"
 
     stale_netlist = source.observed.model_copy(update={"nets": {"I2C_SCL": ("J1.2",)}})
+    with pytest.raises(ValueError, match="current native netlist"):
+        replace(source, observed=stale_netlist)
+
+
+def test_spi_connector_named_rail_source_revalidates_current_assignment() -> None:
+    candidate = spi_signal_on_named_rail_candidates(spi_connector_signal_on_named_rail_netlist())[0]
+    source = candidate.source_evidence.pin
+    assert source.evidence.reference_kind == "connector"
+
+    stale_netlist = source.observed.model_copy(update={"nets": {"SPI2_MOSI": ("J1.2",)}})
     with pytest.raises(ValueError, match="current native netlist"):
         replace(source, observed=stale_netlist)
 

@@ -13,7 +13,10 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
 )
 from tests.design_lint_fixtures import coach
-from tests.design_lint_fixtures.spi_signal_named_rail import spi_signal_on_named_rail_netlist
+from tests.design_lint_fixtures.spi_signal_named_rail import (
+    spi_connector_signal_on_named_rail_netlist,
+    spi_signal_on_named_rail_netlist,
+)
 
 RULE_ID = "bus.spi_signal_on_named_rail"
 
@@ -70,6 +73,36 @@ def test_spi_pin_assigned_to_named_rail_requests_review_with_exact_evidence(
     assert "intentional rail strap" in finding.message
 
 
+@pytest.mark.parametrize(
+    ("pin", "function", "pin_role"),
+    (
+        ("J1.1", "SPI2_SCK", "clock"),
+        ("J1.2", "SPI2_MOSI", "data_input"),
+        ("J1.3", "SPI2_MISO", "data_output"),
+        ("J1.4", "SPI2_NSS", "chip_select"),
+    ),
+)
+def test_spi_connector_pin_assigned_to_named_rail_requests_review_with_exact_evidence(
+    pin: str, function: str, pin_role: str
+) -> None:
+    report = _report(spi_connector_signal_on_named_rail_netlist(pin=pin))
+    finding = next(item for item in report.findings if item.rule_id == RULE_ID)
+
+    assert report.status == "REVIEW"
+    assert finding.subject == f"{pin}: {function} on return-like net GND"
+    assert finding.evidence == {
+        "pin": (pin,),
+        "pin_function": (function,),
+        "pin_role": (pin_role,),
+        "spi_channel": ("index2",),
+        "assigned_net": ("GND",),
+        "net_label_role_clue": ("return-like",),
+        "component_pin_inventory": ("1", "2", "3", "4"),
+    }
+    assert "not proof of electrical potential" in finding.message
+    assert "intentional rail strap" in finding.message
+
+
 def test_neutral_labels_and_unsupported_spi_functions_are_quiet() -> None:
     source = spi_signal_on_named_rail_netlist(rail_name="CLOCK_A")
     unsupported_function = source.model_copy(
@@ -78,23 +111,22 @@ def test_neutral_labels_and_unsupported_spi_functions_are_quiet() -> None:
     incomplete_inventory = source.model_copy(
         update={"component_pin_numbers": {"U1": ("2", "3", "4")}}
     )
-    connector = source.model_copy(
-        update={
-            "components": {"J1": source.components["U1"]},
-            "nets": {"GND": ("J1.1",), "SPI1_CS": ("J1.4",)},
-            "component_symbols": {"J1": "Connector_Generic:Conn_01x04"},
-            "pin_functions": {
-                f"J1.{index}": function
-                for index, function in enumerate(source.pin_functions.values(), 1)
-            },
-            "component_pin_numbers": {"J1": ("1", "2", "3", "4")},
-        }
+    connector_control = spi_connector_signal_on_named_rail_netlist(rail_name="SPI2_SCK")
+    connector_unsupported_function = connector_control.model_copy(
+        update={"pin_functions": {**connector_control.pin_functions, "J1.1": "SPI2_TX"}}
     )
     non_spi_signal = source.model_copy(
         update={"pin_functions": {**source.pin_functions, "U1.1": "GPIO1"}}
     )
 
-    for control in (source, unsupported_function, incomplete_inventory, connector, non_spi_signal):
+    for control in (
+        source,
+        unsupported_function,
+        incomplete_inventory,
+        connector_control,
+        connector_unsupported_function,
+        non_spi_signal,
+    ):
         assert not any(item.rule_id == RULE_ID for item in _report(control).findings)
 
 
@@ -108,6 +140,22 @@ def test_dnp_open_ambiguous_and_duplicate_pin_metadata_are_skipped() -> None:
     )
 
     for control in (dnp, open_pin, ambiguous, incomplete_functions):
+        assert not any(item.rule_id == RULE_ID for item in _report(control).findings)
+
+    connector = spi_connector_signal_on_named_rail_netlist()
+    connector_dnp = connector.model_copy(update={"dnp_components": ("J1",)})
+    connector_open = connector.model_copy(update={"nets": {"SPI2_MOSI": ("J1.2",)}})
+    connector_ambiguous = connector.model_copy(update={"nets": {"GND": ("J1.1",), "0V": ("J1.1",)}})
+    connector_incomplete_inventory = spi_connector_signal_on_named_rail_netlist(
+        pin="J1.4"
+    ).model_copy(update={"component_pin_numbers": {"J1": ("1", "2", "3")}})
+
+    for control in (
+        connector_dnp,
+        connector_open,
+        connector_ambiguous,
+        connector_incomplete_inventory,
+    ):
         assert not any(item.rule_id == RULE_ID for item in _report(control).findings)
 
 
@@ -171,3 +219,23 @@ def test_mapping_order_is_stable_and_repaired_assignment_clears_review() -> None
         item.model_dump() for item in reordered_findings
     )
     assert not any(item.rule_id == RULE_ID for item in _report(repaired).findings)
+
+    connector_fault = spi_connector_signal_on_named_rail_netlist()
+    connector_reordered = connector_fault.model_copy(
+        update={
+            "nets": dict(reversed(tuple(connector_fault.nets.items()))),
+            "pin_functions": dict(reversed(tuple(connector_fault.pin_functions.items()))),
+        }
+    )
+    connector_repaired = spi_connector_signal_on_named_rail_netlist(rail_name="SPI2_SCK")
+    connector_findings = tuple(
+        item for item in _report(connector_fault).findings if item.rule_id == RULE_ID
+    )
+    connector_reordered_findings = tuple(
+        item for item in _report(connector_reordered).findings if item.rule_id == RULE_ID
+    )
+
+    assert tuple(item.model_dump() for item in connector_findings) == tuple(
+        item.model_dump() for item in connector_reordered_findings
+    )
+    assert not any(item.rule_id == RULE_ID for item in _report(connector_repaired).findings)

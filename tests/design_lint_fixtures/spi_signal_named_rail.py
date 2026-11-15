@@ -40,3 +40,32 @@ def spi_signal_on_named_rail_netlist(
         pin_functions=pin_functions,
         component_pin_numbers={"U1": tuple(pin.rsplit(".", 1)[-1] for pin in pin_functions)},
     )
+
+
+def spi_connector_signal_on_named_rail_netlist(
+    *, rail_name: str = "GND", pin: str = "J1.1"
+) -> NetlistContract:
+    """Assign one explicit SPI connector function to a named-rail label."""
+    pin_functions = {
+        "J1.1": "SPI2_SCK",
+        "J1.2": "SPI2_MOSI",
+        "J1.3": "SPI2_MISO",
+        "J1.4": "SPI2_NSS",
+    }
+    if pin not in pin_functions:
+        raise ValueError(f"Unsupported synthetic SPI connector pin: {pin}")
+    nets = {
+        function: (pin_name,) for pin_name, function in pin_functions.items() if pin_name != pin
+    }
+    nets[rail_name] = (pin,)
+    return NetlistContract(
+        components={
+            "J1": ComponentContract(
+                value="Synthetic SPI connector", footprint="Synthetic:Conn_01x04"
+            )
+        },
+        nets=nets,
+        component_symbols={"J1": "Connector_Generic:Conn_01x04"},
+        pin_functions=pin_functions,
+        component_pin_numbers={"J1": ("1", "2", "3", "4")},
+    )

@@ -9,7 +9,11 @@ from .design_lint_named_rail_candidate_evidence import (
     SpiSignalNamedRailEvidence,
 )
 from .design_lint_rule_types import DesignLintRuleId
-from .named_rail_pin_evidence import NamedRailPinSource, assigned_named_rail_ic_pins
+from .named_rail_pin_evidence import (
+    NamedRailPinSource,
+    assigned_named_rail_connector_pins,
+    assigned_named_rail_ic_pins,
+)
 from .netlist_contract_models import NetlistContract
 from .spi_participants import spi_signal_role_and_channel
 
@@ -28,13 +32,17 @@ _ROLE_LABELS = MappingProxyType(
 def spi_signal_on_named_rail_candidates(
     observed: NetlistContract,
 ) -> tuple[NamedRailSignalCandidate, ...]:
-    """Review fitted IC SPI pins with one assignment to a rail-like net name.
+    """Review fitted IC or connector SPI pins assigned to a rail-like net name.
 
     Native pin functions and net labels are clues only. A direct rail strap,
     including an intentionally inactive chip select, can be valid.
     """
     candidates: list[NamedRailSignalCandidate] = []
-    for item in assigned_named_rail_ic_pins(observed):
+    pin_evidence = (
+        *assigned_named_rail_ic_pins(observed),
+        *assigned_named_rail_connector_pins(observed),
+    )
+    for item in pin_evidence:
         role_channel = spi_signal_role_and_channel(item.function)
         if role_channel is None:
             continue

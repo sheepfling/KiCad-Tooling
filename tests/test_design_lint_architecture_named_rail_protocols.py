@@ -30,7 +30,7 @@ TYPED_SIGNAL_RULES = frozenset(
 TYPED_SIGNAL_OWNER = (
     "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#NamedRailSignalCandidate"
 )
-I2C_CONNECTOR_PIN_EVIDENCE = (
+CONNECTOR_PIN_EVIDENCE = (
     "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_connector_pins"
 )
 CONNECTOR_CANDIDATE_REFERENCES = (
@@ -117,10 +117,15 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
     for rule_id in TYPED_SIGNAL_RULES:
         assert TYPED_SIGNAL_OWNER in catalog[rule_id].implementation_refs
 
-    assert I2C_CONNECTOR_PIN_EVIDENCE in catalog["bus.i2c_signal_on_named_rail"].implementation_refs
+    assert CONNECTOR_PIN_EVIDENCE in catalog["bus.i2c_signal_on_named_rail"].implementation_refs
     assert (
         CONNECTOR_CANDIDATE_REFERENCES
         in catalog["bus.i2c_signal_on_named_rail"].implementation_refs
+    )
+    assert CONNECTOR_PIN_EVIDENCE in catalog["bus.spi_signal_on_named_rail"].implementation_refs
+    assert (
+        CONNECTOR_CANDIDATE_REFERENCES
+        in catalog["bus.spi_signal_on_named_rail"].implementation_refs
     )
 
     for rule_id in TYPED_LINE_RULES:

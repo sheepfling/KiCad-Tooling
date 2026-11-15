@@ -59,7 +59,9 @@ def test_native_spi_signal_named_rail_fault_and_control_repeat(
     }
     fault = results["spi-signal-named-rail-fixture/fault"]
     control = results["spi-signal-named-rail-fixture/control"]
-    assert fault["subjects"] == "U1.1: SPI1_SCK on return-like net GND"
+    assert fault["subjects"] == (
+        "J1.1: SPI2_SCK on return-like net GND;U1.1: SPI1_SCK on return-like net GND"
+    )
     assert control["subjects"] == "none"
     assert fault["lint_status"] == "REVIEW"
     native_export = results["spi-signal-named-rail-fixture/native-export"]
