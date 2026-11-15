@@ -847,7 +847,14 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc816):** LINT-491 extends
+- **Latest published lint-gate checkpoint (v0.5.3rc817):** LINT-492 extends
+  Ethernet named-rail review to recognized connector pins with exact TX/RX
+  functions. Hosted acceptance passed in GitHub Actions run `43708890088`: 486
+  selected tests passed and 9,671 were deselected, including repeatable Docker
+  native fixtures on KiCad 10.0.0 and 10.0.5. Tag-scope resolution, the scoped
+  lint gate, and installed-wheel verification against a separate project
+  passed. Package and preview jobs were skipped under prerelease policy.
+- **Previous published lint-gate checkpoint (v0.5.3rc816):** LINT-491 extends
   USB named-rail review to recognized connector pins with explicit USB 2.0 or
   SuperSpeed data functions. Hosted acceptance passed in GitHub Actions run
   `43706655463`: 494 selected tests passed and 9,657 were deselected, including
@@ -855,7 +862,7 @@ standalone parity work when it closes a demonstrated feature regression.
   resolution, the scoped lint gate, and installed-wheel verification against a
   separate project passed. Package and preview jobs were skipped under
   prerelease policy.
-- **Previous published lint-gate checkpoint (v0.5.3rc815):** LINT-490 extends
+- **Earlier published lint-gate checkpoint (v0.5.3rc815):** LINT-490 extends
   RS-485 A/B named-rail review to connectors whose own symbol or value
   explicitly identifies RS-485. Hosted acceptance passed in GitHub Actions run
   `43705076684`: 484 selected tests passed and 9,661 were deselected, including
@@ -28239,6 +28246,40 @@ acceptance threads while new lint features proceed:
   digest-pinned KiCad 10.0.0 and 10.0.5 Docker images. Ruff, Alphus, Rumdl,
   mdrepo, Pyright, Windows type checks, wheel/sdist/install, and external
   KiCad-Test checkout inventory/surface/verify/adapted playtest all passed.
+- **Hosted acceptance:** Annotated tag `v0.5.3rc817` passed GitHub Actions
+  run `43708890088`: 486 selected tests passed and 9,671 were deselected; the
+  exact-version Docker fixtures passed on KiCad 10.0.0 and 10.0.5. Scope
+  resolution, the scoped lint gate, and installed-wheel verification against a
+  separate project passed. Package and preview jobs were skipped under
+  prerelease policy.
+
+#### LINT-493 — Review USB-C connector CC pins assigned to named rails
+
+- **Priority:** P2 configurable interface heuristic. A USB-C receptacle CC pin
+  on a direct rail should get the same bounded review prompt as a CC controller
+  pin.
+- **Status:** Extends `bus.usb_c_cc_signal_on_named_rail`; keeps its rule ID,
+  REVIEW default, policy controls, and complete CC1/CC2 pair requirement.
+- **Predicate:** Apply the existing exact CC1/CC2 recognition, inventory, and
+  named-rail checks to fitted IC pins and recognized connector candidates.
+  Connector identity alone is insufficient; both CC functions must be unique
+  and present in the complete component inventory.
+- **Interpretation:** This is a review clue, not a USB-C compliance or defect
+  verdict. The check does not establish source/sink role, Rp/Rd behavior, trace
+  through passive parts, electrical potential, PCB copper, or physical
+  continuity.
+- **Evidence:** Synthetic tests cover connector CC1/CC2 rail findings, generic
+  functions, DNP, open, ambiguous, duplicate-role, incomplete-pair, inventory,
+  policy, and mapping-order controls. Existing native fault/control schematics
+  include a USB-C receptacle and controller; the fault puts CC1 on `GND` and
+  CC2 on `+3V3`, while the control uses separate neutral CC buses. The pair
+  repeats on digest-pinned KiCad 10.0.0 and 10.0.5 with clean ERC. Fixtures are
+  synthetic and tooling-owned.
+- **Selection:** Use the exact `bus.usb_c_cc_signal_on_named_rail` selector for
+  the lint and native fixture suites. Also run catalog reachability,
+  architecture, and rule-gate integrity. Native export uses
+  `KICAD_RUN_NATIVE_USB_C_CC_NAMED_RAIL_FIXTURES=1`.
+- **Local acceptance:** Pending focused validation.
 - **Hosted acceptance:** Pending tagged workflow acceptance.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
