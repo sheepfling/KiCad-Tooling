@@ -28773,8 +28773,16 @@ acceptance threads while new lint features proceed:
   `bus.swd_signal_on_named_rail` selector, focused SWD interface tests,
   endpoint-architecture checks, native fixture lane, hash-seed determinism,
   CLI/MCP parity, and catalog reachability.
-- **Local acceptance:** Pending the LINT-503 scoped release gate.
-- **Hosted acceptance:** Pending the LINT-503 annotated prerelease tag.
+- **Local acceptance:** Passed the LINT-503 scoped release gate with 485 tests
+  passed and 9,729 deselected. Native synthetic fixtures exported repeatedly
+  with digest-pinned KiCad 10.0.0 and 10.0.5 Docker images. Ruff, Pyright,
+  Windows type checking, wheel/sdist builds, and installed-wheel checks against
+  external project checkouts passed.
+- **Hosted acceptance:** Passed on tag `v0.5.3rc829` in GitHub Actions run
+  `43738997981` at commit `f42f6e32`. The focused run reports 485 passed and 9,729
+  deselected; native Docker fixtures, Pyright, Windows type checking,
+  wheel/sdist builds, installed-wheel checks, and external template playtest
+  passed. Package and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
