@@ -42,6 +42,7 @@ HASHSEED_REPORT_FAMILIES = (
     "i3c_same_net",
     "i2s_clock_data_same_net",
     "i2s_clock_frame_same_net",
+    "i2s_signal_named_rail",
     "swd_signal_same_net",
     "i3c_unconnected_pin",
     "spi_unconnected_clock_pin",

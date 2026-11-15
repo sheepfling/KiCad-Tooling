@@ -26,6 +26,7 @@ from tests.design_lint_fixtures.gpio_control_voltage import gpio_control_voltage
 from tests.design_lint_fixtures.i2c_signal_named_rail import (
     i2c_connector_signal_on_named_rail_netlist,
 )
+from tests.design_lint_fixtures.i2s_signal_named_rail import i2s_signal_named_rail_netlist
 from tests.design_lint_fixtures.i3c_same_net import i3c_same_net_netlist
 from tests.design_lint_fixtures.i3c_signal_named_rail import i3c_signal_named_rail_netlist
 from tests.design_lint_fixtures.open_drain_control_voltage import open_drain_control_voltage_netlist
@@ -119,6 +120,9 @@ def protocol_rule_ids() -> set[str]:
     )
     emitted.update(
         item.rule_id for item in candidates(spi_connector_signal_on_named_rail_netlist())
+    )
+    emitted.update(
+        item.rule_id for item in candidates(i2s_signal_named_rail_netlist(rail_pins={"1": "GND"}))
     )
     i3c_source = i3c_same_net_netlist()
     emitted.update(item.rule_id for item in candidates(i3c_source))

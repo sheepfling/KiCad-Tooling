@@ -16,6 +16,7 @@ pytestmark = [
 TYPED_SIGNAL_RULES = frozenset(
     {
         "bus.i2c_signal_on_named_rail",
+        "bus.i2s_signal_on_named_rail",
         "bus.i3c_signal_on_named_rail",
         "bus.spi_signal_on_named_rail",
         "bus.serial_signal_on_named_rail",
@@ -49,6 +50,10 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
         "bus.i2c_signal_on_named_rail": (
             "i2c_signal_named_rail.py",
             "kicad_tooling/hwrepo/i2c_signal_named_rail.py#i2c_signal_on_named_rail_candidates",
+        ),
+        "bus.i2s_signal_on_named_rail": (
+            "i2s_signal_named_rail.py",
+            "kicad_tooling/hwrepo/i2s_signal_named_rail.py#i2s_signal_on_named_rail_candidates",
         ),
         "bus.serial_signal_on_named_rail": (
             "serial_signal_named_rail.py",
@@ -106,6 +111,7 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
         IMPLEMENTATION_MAX_LINES
     )
     assert line_count(HWREPO / "can_signal_functions.py") < IMPLEMENTATION_MAX_LINES
+    assert line_count(HWREPO / "i2s_endpoint_inventory.py") < IMPLEMENTATION_MAX_LINES
     assert line_count(HWREPO / "design_lint_named_rail_line_candidate_evidence.py") < (
         IMPLEMENTATION_MAX_LINES
     )
@@ -119,6 +125,14 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
 
     for rule_id in TYPED_SIGNAL_RULES:
         assert TYPED_SIGNAL_OWNER in catalog[rule_id].implementation_refs
+
+    i2s_refs = catalog["bus.i2s_signal_on_named_rail"].implementation_refs
+    assert (
+        "kicad_tooling/hwrepo/i2s_endpoint_inventory.py#I2sEndpointInventory.named_rail_signal_pins"
+        in i2s_refs
+    )
+    assert CONNECTOR_PIN_EVIDENCE in i2s_refs
+    assert CONNECTOR_CANDIDATE_REFERENCES in i2s_refs
 
     assert CONNECTOR_PIN_EVIDENCE in catalog["bus.i2c_signal_on_named_rail"].implementation_refs
     assert (

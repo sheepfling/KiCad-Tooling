@@ -8753,6 +8753,55 @@
       "implementation_owner": "kicad_tooling/hwrepo/i2s_same_net.py#i2s_clock_frame_same_net_candidates"
     },
     {
+      "rule_id": "bus.i2s_signal_on_named_rail",
+      "title": "I2S signal pin is assigned directly to a named rail",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining complete fitted IC or connector pin inventory, native pin functions, exact assignments, and net labels",
+      "predicate": "For each fitted U/IC or recognized connector candidate with a complete unique native pin inventory, identify I2S bit-clock, word-select, serial-data, and master-clock functions. Explicit I2S function tokens identify roles directly; otherwise generic clock, frame, data, and master-clock aliases are accepted only when the same endpoint has exactly one assigned strong bit-clock function and one assigned word-select function. Require one direct assignment for the examined pin and emit REVIEW when its net label matches the bounded supply-like or return-like vocabulary.",
+      "supported_kicad_versions": [
+        "Digest-pinned KiCad 10.0.0 and 10.0.5 native fixture exports; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Native pin function text and a rail-like label are review clues, not proof that the endpoint uses I2S, that the label reflects electrical potential, or that the assignment is wrong. Intentional direct assignments remain project decisions.",
+        "Only fitted U/IC references or recognized connector candidates with complete unique pin metadata are considered. DNP endpoints, duplicate or ambiguous role functions, open or multiply assigned examined pins, incomplete inventories, and generic clock/data aliases without a complete assigned I2S clock/frame context are skipped.",
+        "The schematic-netlist prompt does not establish endpoint intent, clock direction, audio mode, passive paths, PCB copper, external wiring, or physical continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_i2s_signal_named_rail.test_explicit_i2s_functions_on_named_rails_request_review",
+        "tests.test_i2s_signal_named_rail.test_complete_generic_connector_uses_clock_frame_context_for_data_and_master_clock",
+        "tests.test_design_lint_mcp_parity_i2s_signal_named_rail.test_i2s_signal_named_rail_cli_mcp_parity",
+        "tests.test_i2s_signal_named_rail_native_fixture_lane.test_native_i2s_signal_named_rail_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_i2s_signal_named_rail.test_generic_clock_aliases_need_a_complete_assigned_i2s_pair",
+        "tests.test_i2s_signal_named_rail.test_neutral_labels_and_irregular_source_evidence_are_controls",
+        "tests.test_i2s_signal_named_rail_native_fixture_lane.test_native_i2s_signal_named_rail_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_i2s_signal_named_rail.test_reordered_mappings_are_stable_and_repair_clears_findings",
+        "tests.test_design_lint_determinism_i2s_signal_named_rail.test_i2s_signal_named_rail_reports_are_hashseed_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_I2S_SIGNAL_NAMED_RAIL_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/i2s_signal_named_rail.py#i2s_signal_on_named_rail_candidates",
+        "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#I2sSignalNamedRailEvidence",
+        "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#NamedRailSignalCandidate",
+        "kicad_tooling/hwrepo/i2s_endpoint_inventory.py#I2sEndpointInventory.named_rail_signal_pins",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_connector_pins",
+        "kicad_tooling/hwrepo/connector_identity.py#connector_candidate_references",
+        "kicad_tooling/hwrepo/named_rail_roles.py#named_rail_role_clue",
+        "kicad_tooling/hwrepo/design_lint_bus_named_rail_candidates.py#bus_named_rail_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/i2s_signal_named_rail.py#i2s_signal_on_named_rail_candidates"
+    },
+    {
       "rule_id": "bus.jtag_generic_connector_pair_review",
       "title": "Generic connector contacts match native JTAG TCK/TMS nets",
       "status": "active",

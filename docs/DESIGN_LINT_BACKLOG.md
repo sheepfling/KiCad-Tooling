@@ -28511,6 +28511,52 @@ acceptance threads while new lint features proceed:
   wheel/sdist builds, isolated install, and the external KiCad-Test checkout
   playtest passed. Package and preview jobs were skipped under prerelease policy.
 
+#### LINT-499 — Review identified I2S signals assigned to named rails
+
+- **Priority:** P2 configurable interface heuristic. Native I2S signal pins on
+  a supply-like or return-like named net may indicate an unexpected pin
+  assignment, but native pin names and net labels are incomplete design intent.
+- **Status:** Adds `bus.i2s_signal_on_named_rail`, default `review`, with
+  existing per-project mode and exact-fingerprint ignore controls.
+- **Predicate:** Inspect fitted IC and connector candidates only when their
+  native component inventory, pin functions, electrical types, and unique net
+  assignments are complete. A bounded `I2S` function token identifies roles
+  directly. Generic aliases require one assigned strong bit-clock
+  (`BCLK`/`BCK`/`BITCLK`/`BITCLOCK`) and one assigned word-select pin on the
+  same endpoint. Review recognized bit-clock, word-select, data, and
+  master-clock pins assigned to labels in the existing named-rail clue set.
+- **Interpretation:** This reports name and assignment evidence for review. It
+  does not establish active I2S use, potential, an incorrect strap, a required
+  separation, PCB copper, or external continuity. `SCK` alone, incomplete or
+  ambiguous inventories, DNP endpoints, and open or multiply assigned pins do
+  not qualify. Intentional pin muxes and straps remain valid possibilities.
+- **Evidence:** Tooling-owned synthetic fault/control sources cover explicit
+  I2S roles, a generic connector with a complete clock/frame pair, neutral and
+  SPI controls, incomplete/ambiguous evidence, policy, deterministic repair,
+  hash-seed stability, CLI/MCP parity, and catalog ownership. Digest-pinned
+  KiCad 10.0.0 and 10.0.5 Docker fixtures export the fault/control schematics
+  twice and check native assignments, versions, repeatability, and ERC. Source
+  hashes are recorded in the
+  [fixture record](../tests/fixtures/design_lint/i2s-signal-named-rail/README.md).
+  No external or product-board source is used.
+- **Selection:** Run `tests/test_i2s_signal_named_rail.py`,
+  `tests/test_design_lint_mcp_parity_i2s_signal_named_rail.py`, and
+  `tests/test_design_lint_determinism_i2s_signal_named_rail.py` with
+  `design_lint and interface_lint` and the exact rule selector. Include the
+  named-rail and rule-gate architecture suites. The Docker lane is
+  `tests/test_i2s_signal_named_rail_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_I2S_SIGNAL_NAMED_RAIL_FIXTURES=1`.
+- **Focused evidence:** The unit, native Docker, architecture, determinism, and
+  CLI/MCP parity selection passed 14 tests on 2026-11-15 before the full
+  scoped acceptance below.
+- **Local acceptance:** Passed rule-scoped `scripts/ci.py` on 2026-11-15 at
+  `build/ci/run-n71l_6ti`: 483 passed and 9,701 deselected. Digest-pinned Docker
+  fixtures passed on KiCad 10.0.0 and 10.0.5. Ruff, Alphus boundaries,
+  Rumdl, mdrepo, Linux/Windows type checks, wheel/sdist builds, installed-wheel
+  checks, and the separate KiCad-Test checkout playtest passed. Tag-scope
+  preflight also confirmed the fixture switch is enabled by full acceptance.
+- **Hosted acceptance:** Pending tag-scoped GitHub Actions acceptance.
+
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
 ## Completion and release gate

@@ -79,8 +79,18 @@ class I2sClockDataEndpoint:
 
 
 @dataclass(frozen=True, slots=True)
+class I2sNamedRailSignalPin:
+    """One complete fitted endpoint pin with a bounded I2S signal role."""
+
+    pin: str
+    function: str
+    role: str
+    identity_basis: str
+
+
+@dataclass(frozen=True, slots=True)
 class I2sEndpointInventory:
-    """Native pin metadata and assignment indexes for fitted audio ICs."""
+    """Native pin metadata and assignment indexes for fitted I2S endpoints."""
 
     symbols: Mapping[str, str]
     reference_spellings: Mapping[str, str]
@@ -251,3 +261,82 @@ class I2sEndpointInventory:
                     )
                 )
         return tuple(endpoints)
+
+    def named_rail_signal_pins(self, reference: str) -> tuple[I2sNamedRailSignalPin, ...]:
+        """Classify I2S signal roles on one complete fitted IC or connector.
+
+        Explicit I2S function metadata can identify the endpoint on its own.
+        Generic ``BCLK``/``LRCLK`` and data/master-clock aliases need a unique,
+        assigned clock/frame pair on the same complete native pin inventory.
+        """
+        reference_key = reference.casefold()
+        native_reference = self.reference_spellings.get(reference_key)
+        numbers = self.inventories.get(reference_key)
+        if (
+            native_reference is None
+            or reference_key not in self.components
+            or reference_key in self.dnp_references
+            or not numbers
+            or len({number.casefold() for number in numbers}) != len(numbers)
+            or not connector_pin_metadata_matches_inventory(
+                reference_key, numbers, self.functions, self.electrical_types
+            )
+        ):
+            return ()
+
+        function_by_pin = {
+            f"{native_reference}.{number}": self.functions[f"{reference_key}.{number.casefold()}"]
+            for number in numbers
+        }
+        explicit_i2s = any(
+            "i2s" in {token.casefold() for token in _FUNCTION_TOKENS.findall(function)}
+            for function in function_by_pin.values()
+        )
+        strong_clock_pins = tuple(
+            pin
+            for pin, function in function_by_pin.items()
+            if _i2s_function_roles(function) == frozenset({"bit_clock"})
+            and bool(
+                {token.casefold() for token in _FUNCTION_TOKENS.findall(function)}
+                & _STRONG_BIT_CLOCK_TOKENS
+            )
+            and len(self.assignments.get(pin.casefold(), frozenset())) == 1
+        )
+        word_select_pins = tuple(
+            pin
+            for pin, function in function_by_pin.items()
+            if _i2s_function_roles(function) == frozenset({"word_select"})
+            and len(self.assignments.get(pin.casefold(), frozenset())) == 1
+        )
+        paired_i2s_context = len(strong_clock_pins) == 1 and len(word_select_pins) == 1
+        if not explicit_i2s and not paired_i2s_context:
+            return ()
+
+        identity_basis = (
+            "explicit I2S pin-function metadata"
+            if explicit_i2s
+            else "unique native bit-clock and word-select pair"
+        )
+        signal_pins: list[I2sNamedRailSignalPin] = []
+        for pin, function in function_by_pin.items():
+            roles = _i2s_function_roles(function)
+            data_function = _i2s_data_function(function)
+            tokens = {token.casefold() for token in _FUNCTION_TOKENS.findall(function)}
+            master_clock = bool(tokens & {"mclk", "masterclock"})
+            if len(roles) > 1 or sum((bool(roles), data_function, master_clock)) != 1:
+                continue
+            if roles:
+                role = next(iter(roles))
+            elif data_function:
+                role = "serial_data"
+            else:
+                role = "master_clock"
+            signal_pins.append(
+                I2sNamedRailSignalPin(
+                    pin=pin,
+                    function=function,
+                    role=role,
+                    identity_basis=identity_basis,
+                )
+            )
+        return tuple(sorted(signal_pins, key=lambda item: (item.pin.casefold(), item.pin)))

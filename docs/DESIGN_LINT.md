@@ -1094,7 +1094,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 395 active rules.
+The catalog currently contains 396 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -4179,6 +4179,48 @@ schematics; see the
 KICAD_RUN_NATIVE_I2S_CLOCK_DATA_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest -q \
   tests/test_i2s_clock_data_same_net_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2s_clock_data_same_net")'
+```
+
+## Review I2S signal pins assigned to named rails
+
+`bus.i2s_signal_on_named_rail` emits a default `review` finding when a fitted
+IC or connector has a complete, unique native pin inventory and an identified
+I2S clock, word-select, data, or master-clock pin is assigned to a net whose
+label matches the existing supply-like or return-like clue vocabulary. A
+bounded `I2S` token in pin-function metadata identifies the interface
+directly. Generic aliases require the same complete endpoint to have exactly
+one assigned strong bit-clock (`BCLK`, `BCK`, `BITCLK`, or `BITCLOCK`) and one
+assigned word-select (`LRCK`, `LRCLK`, `WCLK`, `WORDCLOCK`, `WORDSEL`,
+`WORDSELECT`, or `WS`) pin. `SCK` alone does not establish this generic
+context. The review identifies the pin, native function, role, endpoint
+identity basis, net assignment, and rail-label clue.
+
+This is an identity and label heuristic. It does not establish that the
+interface is active, the label is the electrical potential, the assignment is
+wrong, or I2S signals must use separate nets. A deliberate strap or unusual
+pin mux can be valid. Duplicate, ambiguous, open, multiply assigned, DNP, or
+incomplete endpoints stay quiet. Project policy can promote the cue to
+`block`, turn it `off`, or ignore one exact fingerprint. The check covers
+schematic net assignments; it does not prove PCB copper continuity or
+external wiring.
+
+Synthetic regressions cover explicit I2S roles on supply-like and return-like
+labels, contextual generic connector aliases, a distinct-net control, generic
+SPI and unpaired-clock controls, incomplete and ambiguous evidence, policy,
+repair, stable ordering, CLI/MCP parity, and three-process hash-seed report
+stability. The tooling-owned fault/control schematics are exported twice and
+checked with digest-pinned KiCad 10.0.0 and 10.0.5 Docker images; see the
+[fixture record](../tests/fixtures/design_lint/i2s-signal-named-rail/README.md).
+
+```sh
+.venv/bin/python -I -m pytest -q tests/test_i2s_signal_named_rail.py \
+  tests/test_design_lint_mcp_parity_i2s_signal_named_rail.py \
+  tests/test_design_lint_determinism_i2s_signal_named_rail.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i2s_signal_on_named_rail")'
+
+KICAD_RUN_NATIVE_I2S_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest -q \
+  tests/test_i2s_signal_named_rail_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2s_signal_on_named_rail")'
 ```
 
 ## Review an SWD connector without an identified return
