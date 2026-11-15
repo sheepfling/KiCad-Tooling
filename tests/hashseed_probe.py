@@ -61,6 +61,8 @@ REPORT_ORDER = (
     "serial_endpoint_role_collision_control",
     "usb_c_sbu_named_rail_fault",
     "usb_c_sbu_named_rail_control",
+    "usb_c_sbu_named_rail_connector_fault",
+    "usb_c_sbu_named_rail_connector_control",
     "usb_c_sbu_unconnected_pin_fault",
     "usb_c_sbu_unconnected_pin_control",
     "usb_c_sbu_same_net_fault",

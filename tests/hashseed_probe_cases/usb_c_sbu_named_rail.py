@@ -20,7 +20,21 @@ def report_cases() -> JsonObject:
         coach(usb_c_sbu_named_rail_netlist(sbu1_net="SBU1_BUS", sbu2_net="SBU2_BUS")),
         DesignLintPolicy(),
     )
+    connector_fault = evaluate(
+        "synthetic-usb-c-sbu-named-rail-connector-fault",
+        coach(usb_c_sbu_named_rail_netlist(reference="J1")),
+        DesignLintPolicy(),
+    )
+    connector_control = evaluate(
+        "synthetic-usb-c-sbu-named-rail-connector-control",
+        coach(
+            usb_c_sbu_named_rail_netlist(reference="J1", sbu1_net="SBU1_BUS", sbu2_net="SBU2_BUS")
+        ),
+        DesignLintPolicy(),
+    )
     return {
         "usb_c_sbu_named_rail_fault": fault.model_dump(mode="json"),
         "usb_c_sbu_named_rail_control": control.model_dump(mode="json"),
+        "usb_c_sbu_named_rail_connector_fault": connector_fault.model_dump(mode="json"),
+        "usb_c_sbu_named_rail_connector_control": connector_control.model_dump(mode="json"),
     }

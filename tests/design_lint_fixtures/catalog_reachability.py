@@ -123,6 +123,7 @@ from tests.design_lint_fixtures.spi_shared_chip_select import spi_shared_chip_se
 from tests.design_lint_fixtures.spi_shared_data_outputs import spi_shared_data_output_netlist
 from tests.design_lint_fixtures.spi_signal_named_rail import spi_signal_on_named_rail_netlist
 from tests.design_lint_fixtures.thermal_pad_catalog_reachability import thermal_pad_catalog_rule_ids
+from tests.design_lint_fixtures.usb_c_sbu_named_rail import usb_c_sbu_named_rail_netlist
 from tests.design_lint_fixtures.usb_data_pair_crossing import usb_data_pair_crossing_netlist
 from tests.design_lint_fixtures.usb_signal_named_rail import usb_signal_on_named_rail_netlist
 from tests.schematic_erc_exclusion_support import source_bound_erc_exclusion_rule_ids
@@ -331,6 +332,7 @@ def catalog_reachability_rule_ids() -> set[str]:
         item.rule_id
         for item in candidates(ethernet_management_netlist(reference="J1", labels=("GND", "+3V3")))
     )
+    result.update(item.rule_id for item in candidates(usb_c_sbu_named_rail_netlist(reference="J1")))
     result.update(
         item.rule_id for item in candidates(ethernet_management_netlist(open_functions=("MDC",)))
     )

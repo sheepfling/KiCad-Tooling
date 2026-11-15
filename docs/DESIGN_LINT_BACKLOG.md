@@ -847,13 +847,14 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc817):** LINT-492 extends
-  Ethernet named-rail review to recognized connector pins with exact TX/RX
-  functions. Hosted acceptance passed in GitHub Actions run `43708890088`: 486
-  selected tests passed and 9,671 were deselected, including repeatable Docker
-  native fixtures on KiCad 10.0.0 and 10.0.5. Tag-scope resolution, the scoped
-  lint gate, and installed-wheel verification against a separate project
-  passed. Package and preview jobs were skipped under prerelease policy.
+- **Latest published lint-gate checkpoint (v0.5.3rc819):** LINT-494 extends
+  Ethernet management named-rail review to recognized connector pins with
+  exact MDC/MDIO functions. Hosted acceptance passed in GitHub Actions run
+  `43712666837`: 480 selected tests passed and 9,680 were deselected, including
+  repeatable Docker native fixtures on KiCad 10.0.0 and 10.0.5. Tag-scope
+  resolution, the scoped lint gate, and installed-wheel verification against a
+  separate project passed. Package and preview jobs were skipped under
+  prerelease policy.
 - **Previous published lint-gate checkpoint (v0.5.3rc816):** LINT-491 extends
   USB named-rail review to recognized connector pins with explicit USB 2.0 or
   SuperSpeed data functions. Hosted acceptance passed in GitHub Actions run
@@ -28323,6 +28324,39 @@ acceptance threads while new lint features proceed:
   KiCad 10.0.0 and 10.0.5; Pyright, Windows types, wheel/sdist, installation,
   and external checkout/playtest stages passed. Package and preview jobs were
   skipped under prerelease policy.
+
+#### LINT-495 — Review USB-C connector SBU pins assigned to named rails
+
+- **Priority:** P2 configurable interface heuristic. The existing SBU named-rail
+  rule already recognizes complete SBU1/SBU2 pairs on ICs; connector pins with
+  those same exact functions were an unreviewed boundary.
+- **Status:** Extends `bus.usb_c_sbu_signal_on_named_rail`; keeps its rule ID,
+  REVIEW default, project policy controls, and source-evidence shape.
+- **Predicate:** Apply the existing exact SBU1/SBU2 pair, complete native
+  inventory, fitted-state, unique assignment, and bounded named-rail checks to
+  recognized connector candidates as well as IC pins.
+- **Interpretation:** Exact SBU functions and rail-like labels prompt review;
+  they do not establish controller identity, alternate-mode use, electrical
+  potential, required connectivity, PCB copper, or a defect. Direct assignments
+  can be valid for a project.
+- **Evidence:** Synthetic tests cover connector SBU1 on `GND` and SBU2 on
+  `+3V3`, neutral labels, aliases, generic functions, unsupported references,
+  DNP, open or ambiguous assignments, duplicate roles, incomplete inventory,
+  policy, ordering, repair, and hash-seed stability. The existing digest-pinned
+  native fault/control schematics already contain both a USB-C receptacle and
+  controller: the fault puts their SBU pins on rail-like nets and the control
+  uses separate neutral SBU nets. Native results repeat on KiCad 10.0.0 and
+  10.0.5. Fixtures are synthetic and tooling-owned.
+- **Selection:** Use the exact `bus.usb_c_sbu_signal_on_named_rail` selector for
+  lint and native fixture suites, plus architecture, catalog reachability, and
+  rule-gate integrity. Native export uses
+  `KICAD_RUN_NATIVE_USB_C_SBU_NAMED_RAIL_FIXTURES=1`.
+- **Local acceptance:** Passed `scripts/ci.py` scoped to this rule and
+  rule-gate integrity: 480 passed, 9,681 deselected. Ruff, Alphus, rumdl,
+  mdrepo, Pyright, Windows type checking, wheel/sdist builds, isolated installs,
+  and the external KiCad-Test checkout playtest passed. Pinned Docker KiCad
+  10.0.0 and 10.0.5 fault/control fixture runs passed.
+- **Hosted acceptance:** Pending tagged workflow acceptance.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 

@@ -1,4 +1,4 @@
-"""Focused regressions for USB-C SBU controller pins on named rails."""
+"""Focused regressions for USB-C SBU pins on components and connectors."""
 
 from __future__ import annotations
 
@@ -67,6 +67,22 @@ def test_unique_usb_c_sbu_function_on_named_rail_requests_review(
     assert "does not trace passive paths" in finding.message
 
 
+def test_recognized_connector_sbu_functions_on_named_rails_request_review() -> None:
+    report = _report(usb_c_sbu_named_rail_netlist(reference="J1"))
+    findings = tuple(item for item in report.findings if item.rule_id == RULE_ID)
+
+    assert report.status == "REVIEW"
+    assert tuple(item.subject for item in findings) == (
+        "J1.1: SBU1 on return-like net GND",
+        "J1.2: SBU2 on supply-like net +3V3",
+    )
+    assert tuple(item.evidence["component_pin_inventory"] for item in findings) == (
+        ("1", "2"),
+        ("1", "2"),
+    )
+    assert all("not proof of electrical potential" in item.message for item in findings)
+
+
 def test_sbu_aliases_are_bounded_and_share_one_parser() -> None:
     assert usb_c_sbu_role("SBU-1") == "SBU1"
     assert usb_c_sbu_role("sbu_2") == "SBU2"
@@ -91,7 +107,7 @@ def test_neutral_labels_and_unrecognized_functions_are_quiet() -> None:
         assert not any(item.rule_id == RULE_ID for item in _report(control).findings)
 
 
-def test_dnp_open_ambiguous_duplicate_connector_and_incomplete_cases_are_skipped() -> None:
+def test_dnp_open_ambiguous_duplicate_and_incomplete_cases_are_skipped() -> None:
     source = usb_c_sbu_named_rail_netlist(sbu1_net="SBU1_BUS", sbu2_net="SBU2_BUS")
     controls = (
         usb_c_sbu_named_rail_netlist(dnp=True),
@@ -112,15 +128,8 @@ def test_dnp_open_ambiguous_duplicate_connector_and_incomplete_cases_are_skipped
                 "nets": {"GND": ("U1.1", "U1.3"), "SBU2_BUS": ("U1.2",)},
             }
         ),
-        source.model_copy(
-            update={
-                "components": {"J1": source.components["U1"]},
-                "nets": {"GND": ("J1.1",), "SBU2_BUS": ("J1.2",)},
-                "component_symbols": {"J1": "Synthetic:USB_C_Controller"},
-                "pin_functions": {"J1.1": "SBU1", "J1.2": "SBU2"},
-                "component_pin_numbers": {"J1": ("1", "2")},
-            }
-        ),
+        usb_c_sbu_named_rail_netlist(reference="J1", sbu1_function="AUX1"),
+        usb_c_sbu_named_rail_netlist(reference="R1"),
         source.model_copy(update={"component_pin_numbers": {"U1": ("1",)}}),
     )
 

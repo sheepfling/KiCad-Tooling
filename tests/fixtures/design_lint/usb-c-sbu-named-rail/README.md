@@ -4,8 +4,8 @@ These two small schematics are tooling-owned synthetic fault and control
 fixtures. They contain no project or product board data. The symbol functions
 are `SBU1` and `SBU2` on both a generic connector and a fitted controller.
 
-- `fault.kicad_sch`: the controller-side pins are assigned to `GND` and
-  `+3V3`; both SBU pin functions request review.
+- `fault.kicad_sch`: the receptacle and controller SBU pins are assigned to
+  `GND` and `+3V3`; all four function pins request review.
 - `control.kicad_sch`: the same pins use neutral `SBU1_BUS` and `SBU2_BUS`
   labels; the heuristic stays quiet.
 

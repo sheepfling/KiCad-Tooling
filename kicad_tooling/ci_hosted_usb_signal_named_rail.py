@@ -185,6 +185,8 @@ def _usb_named_rail_fixture_lane(
         }
         expected_subjects = {
             "fault": (
+                "J1.1: SBU1 on return-like net GND",
+                "J1.2: SBU2 on supply-like net +3V3",
                 "U1.1: SBU1 on return-like net GND",
                 "U1.2: SBU2 on supply-like net +3V3",
             ),

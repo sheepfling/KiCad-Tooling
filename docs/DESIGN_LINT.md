@@ -2578,17 +2578,17 @@ KICAD_RUN_NATIVE_USB_C_CC_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
 
 ### USB-C SBU pins assigned directly to named rails
 
-`bus.usb_c_sbu_signal_on_named_rail` reviews a fitted U/IC's unique SBU1/SBU2
-function pair when an assigned pair pin's net label is supply-like or
-return-like. It requires both pins in the complete native inventory and skips
-generic SBU names, connectors, duplicate roles, DNP parts, open or ambiguous
-assignments, and incomplete inventories. The default is `review`; direct rail
-assignments remain project decisions. A function and label do not establish
-controller identity, alternate-mode use, electrical potential, or a defect.
-The check does not trace passive paths or establish PCB or physical continuity.
-Synthetic fault/control, alias, policy, boundary, ordering, repair, and
-hash-seed tests are paired with digest-pinned KiCad 10.0.0 and 10.0.5 native
-fault/control exports. See the
+`bus.usb_c_sbu_signal_on_named_rail` reviews a fitted IC or recognized connector
+candidate's unique SBU1/SBU2 function pair when an assigned pair pin's net
+label is supply-like or return-like. It requires both pins in the complete
+native inventory and skips generic SBU names, unsupported references, duplicate
+roles, DNP parts, open or ambiguous assignments, and incomplete inventories.
+The default is `review`; direct rail assignments remain project decisions. A
+function and label do not establish controller identity, alternate-mode use,
+electrical potential, or a defect. The check does not trace passive paths or
+establish PCB or physical continuity. Synthetic fault/control, alias, policy,
+boundary, ordering, repair, and hash-seed tests are paired with digest-pinned
+KiCad 10.0.0 and 10.0.5 native fault/control exports. See the
 [fixture notes](../tests/fixtures/design_lint/usb-c-sbu-named-rail/README.md).
 
 ```sh
