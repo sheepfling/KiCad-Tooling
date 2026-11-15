@@ -19,7 +19,6 @@ from .markdown import release_review, write_markdown
 from .models import (
     InterfacesCatalog,
     LibrariesCatalog,
-    ReleaseExportReport,
     ScopedReleasePortableReport,
 )
 from .native_dependencies import prepare_native_dependencies
@@ -62,6 +61,7 @@ from .release_contract_models import (
 from .release_model_types import ReleaseClass
 from .release_operation_models import ReleasePreparationRequest
 from .release_population import verify_board_population
+from .release_report_models import ReleaseExportReport
 
 
 def reference(root: Path, path: Path) -> EvidenceFile:

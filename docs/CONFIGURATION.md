@@ -107,6 +107,54 @@ Configuration is declarative. It does not execute project-supplied Python or
 shell hooks. Add new behavior as a reviewed tooling service shared by CLI and
 MCP, with regression tests for the additional contract.
 
+## Review exported copper connectivity
+
+PCB projects can opt in to comparing the connectivity reconstructed from the
+fabrication Gerbers and drill files with the expected net contacts in a
+KiCad-generated IPC-D-356 file. Add the setting to the project's
+`release_exports` object in `project.json`:
+
+```json
+{
+  "release_exports": {
+    "gerber_layers": ["F.Cu", "B.Cu", "Edge.Cuts"],
+    "coordinate_origin": "absolute",
+    "supplier_formats": ["ipcd356"],
+    "fabrication_connectivity": {
+      "mode": "review",
+      "pixel_density": 50,
+      "ignores": []
+    }
+  }
+}
+```
+
+The existing `kicad-team release export` command and MCP `export_project`
+operation both use this setting through the same service.
+
+Install the tooling's optional `fabrication_connectivity` dependency extra to
+run the raster analysis. If it is missing, or the source/export uses an
+unsupported format, the result is `UNSUPPORTED`; the release gate does not
+report a clean pass. This initial analyzer supports only a two-layer
+positive-polarity F.Cu/B.Cu stack, absolute coordinates, and the supported
+Gerber, Excellon, and IPC-D-356 subset. Other copper stacks fail closed.
+
+`review` (the default) retains findings in the export receipt without blocking
+the export. `block` fails the export when the analyzer reports an open, short,
+missing copper at a contact, or missing plated drill. An intentional exception
+must use the exact finding fingerprint and a written reason; stale fingerprints
+fail closed. The receipt binds the board source, project settings, and each
+generated artifact hash. Release verification recomputes the analysis and
+rejects missing or mismatched evidence.
+
+This comparison uses IPC-D-356 net names as its expected connectivity domains.
+It cannot infer that two separately named connector returns were intended to
+be common; declare that relationship in an authored connector/ground contract
+or review it with a separate heuristic. Raster connectivity is bounded by the
+configured pixel density. This gate is artifact review evidence, not electrical
+approval, complete multilayer analysis, or a substitute for first-article
+continuity testing.
+
 ## Approve a different KiCad version
 
 Each project selects a `toolchain_id` from its configured toolchains catalog.

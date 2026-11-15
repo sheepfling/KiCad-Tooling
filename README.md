@@ -159,7 +159,8 @@ The template layout is the default. A project-owned `kicad-tooling.toml` can
 relocate catalogs, scaffold templates, workflow guides, and project creation.
 Discovery supports bounded nested groups while retaining unique project IDs.
 CLI and MCP share these settings. See [configuration](docs/CONFIGURATION.md)
-for an example and the explicit native compatibility policy.
+for an example, the explicit native compatibility policy, and optional
+[exported-copper connectivity review](docs/CONFIGURATION.md#review-exported-copper-connectivity).
 
 Package versions now come from Git through `setuptools-scm`. Run
 `kicad-team --version` to see the installed version; see

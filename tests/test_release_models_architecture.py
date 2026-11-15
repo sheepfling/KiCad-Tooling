@@ -14,7 +14,9 @@ pytestmark = pytest.mark.architecture
 
 _REPOSITORY_ROOT = Path(__file__).parents[1]
 _RELEASE_TYPE_NAMES = frozenset({"ReleaseClass"})
-_RELEASE_REPORT_NAMES = frozenset({"ReleasePackageReport", "ReleaseReadinessReport"})
+_RELEASE_REPORT_NAMES = frozenset(
+    {"ReleaseExportReport", "ReleasePackageReport", "ReleaseReadinessReport"}
+)
 
 
 def _owner_imports(path: Path) -> set[str]:
@@ -35,10 +37,15 @@ def test_release_model_owners_are_small_and_have_closed_dependencies() -> None:
     assert len(report_path.read_text(encoding="utf-8").splitlines()) < 500
     assert _owner_imports(type_path) == {"enum"}
     assert _owner_imports(report_path) == {
+        "collections.abc",
         "typing",
         "model_primitives",
         "policy_issue_models",
+        "project_models",
         "release_model_types",
+        "command_evidence_models",
+        "fabrication_connectivity_models",
+        "source_state_models",
     }
 
 
@@ -72,6 +79,7 @@ def test_production_modules_import_release_models_from_their_owners() -> None:
 def test_models_registry_reexports_preserve_release_identity_and_json() -> None:
     assert models.ReleaseClass is release_model_types.ReleaseClass
     assert models.ReleasePackageReport is release_report_models.ReleasePackageReport
+    assert models.ReleaseExportReport is release_report_models.ReleaseExportReport
     assert models.ReleaseReadinessReport is release_report_models.ReleaseReadinessReport
 
     readiness = release_report_models.ReleaseReadinessReport(

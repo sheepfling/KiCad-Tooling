@@ -295,6 +295,8 @@ COMPLEMENTARY_PAIR_THEME_SUITES = (
 )
 DC_REFERENCE_NATIVE_THEME_SUITES = ("test_net_dc_reference_native_fixture_lane.py",)
 PCB_THEME_SUITES = (
+    "test_fabrication_connectivity.py",
+    "test_fabrication_connectivity_native.py",
     *PCB_SOURCE_INTEGRITY_SUITES,
     "test_ci_hosted_pcb_fixture_schedule.py",
     "test_pcb_reference_plane_native_fixture_lane.py",

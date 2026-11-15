@@ -846,7 +846,15 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc784):** LINT-473 reviews
+- **Latest published lint-gate checkpoint (v0.5.3rc801):** LINT-484 reviews
+  skew-bounded differential pairs without a matching authored route-skew
+  bundle. Hosted acceptance passed in GitHub Actions run `43669646827`:
+  459 selected tests passed and 9,629 were deselected. Linux and Windows
+  Pyright, wheel and sdist builds, installed-wheel origin/version checks,
+  external-project checks, and the external playtest passed. Package and
+  preview jobs were skipped under prerelease policy. This map-only rule makes
+  no native geometry claim.
+- **Previous published lint-gate checkpoint (v0.5.3rc784):** LINT-473 reviews
   fitted ICs with native non-return `power_in` pins that are omitted from an
   authored decoupling map. Hosted acceptance passed in GitHub Actions run
   `43610088226`: 458 tests passed and 9,470 were deselected. The exact-version
@@ -19650,6 +19658,32 @@ candidate commit and installation inputs before any new runtime comparison.
 | Mapped bundle route length and inter-signal skew   | LINT-095 audits project-authored exact endpoints, bundle membership, and active native DRC length/skew rules; LINT-022 covers differential-pair constraint coverage.                                                                     | Keep using native DRC for route measurement and LINT-095 for authored intent and rule coverage. Reconsider a separate geometry engine only if it adds independently confirmed coverage or materially clearer localization beyond those checks.                                                                                                                                                                                                                                                                     |
 | Thermal-via coverage for mapped dissipating parts  | LINT-071 compares exact-part dissipated power with an authored derated power limit; it does not estimate package temperature or via benefit.                                                                                             | Keep deferred until a project-authored thermal requirement identifies the exact package, heat path, layers, connected via population, copper stack, and boundary basis. Test any narrow geometry screen against pad-connected, unconnected, wrong-plane, DNP, and datasheet-supported alternatives. Stop if via count or density is presented as thermal adequacy without an independently reviewed model.                                                                                                         |
 
+**FA-001 — Exported copper connectivity versus IPC-D-356 (implemented, opt-in):**
+The release exporter can reconstruct connectivity from its exact source PCB,
+two-layer positive-polarity F.Cu/B.Cu Gerbers, PTH/NPTH drill files, and
+IPC-D-356 export. Project settings select `review` or `block`, raster density,
+and exact reasoned finding ignores; the receipt binds source, configuration,
+and per-run artifact hashes. Unsupported source stacks or artwork fail closed.
+The intentionally narrow subset does not support multilayer boards, blind or
+buried vias, negative polarity, step-and-repeat, or unresolved gaps below the
+configured raster resolution. A `review` result records findings without
+blocking release; `block` turns findings into a gate failure.
+
+The digest-pinned KiCad 10.0.0 and 10.0.5 Docker acceptance fixtures produced
+the expected clean and intentionally isolated passes, disconnected same-net
+open, cross-net short, plated-via pass, and missing-drill finding. Repeat analysis was
+deterministic. Focused tests cover unsupported/mismatched evidence, source
+binding, policy, stale ignores, architecture boundaries, and release-export
+service wiring. The release-export regression confirms the opt-in summary is
+retained and recomputed by export verification. This is synthetic acceptance
+only; it is not a precision claim for field boards. Most importantly,
+IPC-D-356 defines the expected net domains: FA-001 cannot infer that
+separately named connector returns should have been connected. That requires
+an authored connector/ground contract or a separate review heuristic.
+The public MIT cohort trial informed this first-party implementation; no
+external code or fixtures are used at runtime. See the
+[recorded source trial and implementation evidence](DESIGN_LINT_COHORT_TRIALS.md#recorded-trial-pcb-layout-skill-gerber-connectivity).
+
 **EG-001 source review (2026-10-10):** The pinned
 [kicad-happy `check_esd_coverage_gaps` source](https://github.com/aklofas/kicad-happy/blob/06840467ad0f5d76af45f64449b1f5ecb10f052f/skills/kicad/scripts/cross_analysis.py)
 collects detected protection nets globally, then prompts for each recognized
@@ -27445,8 +27479,8 @@ acceptance threads while new lint features proceed:
   deselected. Architecture/catalog selection passed 102 tests, Linux and
   Windows-targeted Pyright reported zero issues, and Ruff/format/JSON/diff
   checks passed. Hosted prerelease acceptance passed in
-  [run 43617396766](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43617396766)
-  for tag `v0.5.3rc787`; its wheel rehearsal used the separate public template.
+  hosted GitHub Actions run `43617396766` for tag `v0.5.3rc787`; its wheel
+  rehearsal used the separate public template.
 
 #### LINT-476 — Review connector peer electrical-type disagreement on a shared assignment
 
@@ -27668,7 +27702,7 @@ acceptance threads while new lint features proceed:
   installed-wheel verification against the external project template passed.
   Annotated tag `v0.5.3rc794` resolved to this rule and passed the hosted scoped
   lint gate and installed-wheel check in
-  [run 43647820391](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43647820391).
+  hosted GitHub Actions run `43647820391`.
 
 #### LINT-481 — Review generic connector peer pin-function metadata
 
@@ -27720,7 +27754,7 @@ acceptance threads while new lint features proceed:
   exact-version native fixtures passed 3 additional tests after the shared
   evidence extraction. The focused pytest marker, suite-size, and rule-selector
   architecture selection passed 43 tests. Tag `v0.5.3rc795` triggered hosted
-  run [43653353763](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43653353763),
+  run `43653353763`,
   whose scoped unit stage reported three failures: the active-rule reachability
   inventory omitted this rule's synthetic case, the connector native-case
   registry omitted its exact test node, and `tests/hashseed_probe.py` exceeded
@@ -27731,7 +27765,7 @@ acceptance threads while new lint features proceed:
   472 tests, including both pinned Docker native KiCad versions; the full
   345-report hash-seed inventory and focused architecture checks also passed.
   Follow-up tag `v0.5.3rc796` carries these repairs and passed hosted run
-  [43654951786](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43654951786):
+  `43654951786`:
   472 scoped tests passed, including both pinned Docker native KiCad versions,
   followed by Linux and Windows Pyright, wheel/sdist builds, installed-wheel
   checks, and external-project verification. The equivalent installed-wheel
@@ -27783,7 +27817,7 @@ acceptance threads while new lint features proceed:
   Docker images. Local installed-wheel verification could not finish because
   sandbox DNS could not resolve PyPI while installing the wheel's pinned
   dependencies. The hosted equivalent passed: annotated tag `v0.5.3rc797`
-  triggered [run 43658774978](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43658774978),
+  triggered run `43658774978`,
   which passed 486 scoped tests with 9,586 deselected, including both native
   Docker versions, Linux and Windows Pyright, wheel/sdist builds, installed
   wheel verification, external inventory/surface/verification, and adapted
@@ -27864,7 +27898,7 @@ acceptance threads while new lint features proceed:
   clean-environment wheel install could not finish because sandbox DNS could
   not resolve PyPI for pinned dependencies. The hosted equivalent passed on
   annotated tag `v0.5.3rc801` in
-  [GitHub Actions run 43669646827](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43669646827):
+  GitHub Actions run `43669646827`:
   459 selected tests passed with 9,629 deselected; Linux and Windows-target
   Pyright, wheel/sdist builds, installed-wheel origin/version checks, external
   inventory/surface/verification, adapted-checkout checks, and the external

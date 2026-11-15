@@ -10,6 +10,7 @@ from pydantic import Field, model_validator
 
 from .connector_coverage_models import ConnectorInterfaceReview, ConnectorInventoryReview
 from .design_lint_policy_models import DesignLintPolicy
+from .fabrication_connectivity_models import FabricationConnectivitySettings
 from .model_primitives import (
     Digest,
     Identifier,
@@ -278,11 +279,17 @@ class ReleaseExportSettings(StrictModel):
     position_units: Literal["mm", "in"] = "mm"
     assembly_variant: NonEmptyText | None = None
     supplier_formats: tuple[Literal["odb", "ipc2581", "ipcd356"], ...] = ()
+    fabrication_connectivity: FabricationConnectivitySettings | None = None
 
     @model_validator(mode="after")
     def unique_supplier_formats(self) -> ReleaseExportSettings:
         if len(set(self.supplier_formats)) != len(self.supplier_formats):
             raise ValueError("supplier_formats must not contain duplicates")
+        if self.fabrication_connectivity is not None:
+            if "ipcd356" not in self.supplier_formats:
+                raise ValueError("fabrication connectivity review requires the ipcd356 export")
+            if self.coordinate_origin != "absolute":
+                raise ValueError("fabrication connectivity review requires absolute coordinates")
         return self
 
 

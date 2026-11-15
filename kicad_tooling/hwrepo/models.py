@@ -671,6 +671,7 @@ class LibrarySbom(StrictModel):
 PolicyIssue = _policy_issue_models.PolicyIssue
 LocalRescueReport = _diagnostics_models.LocalRescueReport
 ReleasePackageReport = _release_report_models.ReleasePackageReport
+ReleaseExportReport = _release_report_models.ReleaseExportReport
 ReleaseReadinessReport = _release_report_models.ReleaseReadinessReport
 SupplierOffer = _sourcing_models.SupplierOffer
 SourcingSnapshot = _sourcing_models.SourcingSnapshot
@@ -789,19 +790,6 @@ class ImpactPlan(StrictModel):
     changed_paths: tuple[str, ...]
     reasons: tuple[NonEmptyText, ...]
     docs_changed: bool = False
-
-
-class ReleaseExportReport(StrictModel):
-    schema_version: Literal["1"] = "1"
-    project_id: Identifier
-    source: SourceState
-    toolchain_id: Identifier
-    settings: ReleaseExportSettings
-    assembly_variant: NonEmptyText | None = None
-    commands: Mapping[Identifier, CommandEvidence]
-    artifacts_sha256: Mapping[RepositoryPath, Digest]
-    status: Literal["PASS", "FAIL"]
-    issues: tuple[NonEmptyText, ...] = ()
 
 
 class ReleasePackageIndex(StrictModel):

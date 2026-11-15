@@ -67,6 +67,7 @@ def test_project_models_are_bounded_and_depend_on_contract_owners() -> None:
         "pydantic",
         "connector_coverage_models",
         "design_lint_policy_models",
+        "fabrication_connectivity_models",
         "model_primitives",
         "netlist_contract_models",
     }

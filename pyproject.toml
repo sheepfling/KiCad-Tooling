@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = "Guided KiCad workflows for onboarding, triage, verification, BOMs, and review evidence"
 readme = "README.md"
 license = "MIT"
-license-files = ["LICENSE"]
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
 requires-python = ">=3.11"
 dependencies = [
   "pydantic==2.13.5",
@@ -24,6 +24,11 @@ project = [
 mcp = ["mcp==2.2.0"]
 charts = ["matplotlib==3.11.2"]
 cad = ["easyeda2kicad==1.0.1"]
+fabrication_connectivity = [
+  "numpy==2.4.6",
+  "Pillow==13.0.0",
+  "scipy==1.16.3",
+]
 dev = [
   "alphus @ git+https://github.com/sheepfling/alphus.git@3435f81aff7abac7716a5780d26319e8f314d61d",
   "build>=1.2",

@@ -16,9 +16,9 @@ from .contracts import (
 )
 from .discovery import load_config, load_registry
 from .evidence import digest, evidence_path, source_state, verify_source
+from .fabrication_connectivity import analyze_fabrication_connectivity
 from .generation import csv_cell
 from .kicad_compatibility import require_cli_profile
-from .models import ReleaseExportReport
 from .native_command import execute
 from .part_catalog_models import PartsCatalog
 from .project_models import (
@@ -26,6 +26,7 @@ from .project_models import (
     ReleaseExportSettings,
 )
 from .release_contract_models import EvidenceFile
+from .release_report_models import ReleaseExportReport
 from .source_state_models import SourceState
 
 
@@ -217,6 +218,7 @@ def export(
         ).items()
     }
     issues: list[str] = []
+    artifact_connectivity = None
     if commands["bom"].returncode == 0:
         try:
             purchasing_bom(
@@ -224,6 +226,20 @@ def export(
             )
         except (OSError, ValueError) as exc:
             issues.append(f"Purchasing BOM: {exc}")
+    if settings.fabrication_connectivity is not None:
+        artifact_connectivity = analyze_fabrication_connectivity(
+            repo_path(root, config.project).with_suffix(".kicad_pcb"),
+            output / "fabrication",
+            settings.fabrication_connectivity,
+        )
+        if artifact_connectivity.status in {"FAIL", "UNSUPPORTED"}:
+            explanation = "; ".join(
+                artifact_connectivity.unsupported_reasons
+                or artifact_connectivity.stale_ignore_fingerprints
+            )
+            issues.append(
+                "Fabrication connectivity gate failed" + (f": {explanation}" if explanation else "")
+            )
     expected = (
         tuple((output / "fabrication").glob("*.gbr")),
         tuple((output / "fabrication").glob("*.drl")),
@@ -242,6 +258,10 @@ def export(
             for group in expected
         )
         and review_artifacts_valid(output, settings)
+        and (
+            artifact_connectivity is None
+            or artifact_connectivity.status not in {"FAIL", "UNSUPPORTED"}
+        )
         and source_state(root) == source
     )
     report = ReleaseExportReport(
@@ -254,6 +274,7 @@ def export(
         artifacts_sha256=files,
         status="PASS" if passed else "FAIL",
         issues=tuple(issues),
+        artifact_connectivity=artifact_connectivity,
     )
     write_model(output / "exports.json", report)
     return report
@@ -398,4 +419,17 @@ def verify_exports(
         )
     ):
         raise ValueError("Release exports lack fabrication or assembly files")
+    if settings.fabrication_connectivity is None:
+        if report.artifact_connectivity is not None:
+            raise ValueError("Release report contains undeclared fabrication connectivity evidence")
+    else:
+        fresh_connectivity = analyze_fabrication_connectivity(
+            repo_path(root, config.project).with_suffix(".kicad_pcb"),
+            path.parent / "fabrication",
+            settings.fabrication_connectivity,
+        )
+        if report.artifact_connectivity != fresh_connectivity:
+            raise ValueError("Fabrication connectivity evidence is missing, stale, or mismatched")
+        if fresh_connectivity.status in {"FAIL", "UNSUPPORTED"}:
+            raise ValueError("Fabrication connectivity gate is not releasable")
     return report

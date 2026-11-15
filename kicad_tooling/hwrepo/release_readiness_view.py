@@ -17,11 +17,11 @@ from .contracts import parse_model_text, read_model, relative_path_from, repo_pa
 from .electrical_report_models import ElectricalAnalysisReport
 from .evidence import digest
 from .model_primitives import Digest, RepositoryPath
-from .models import ReleaseExportReport
 from .native_project_validation_models import ValidationSummary
 from .release import check
 from .release_contract_models import ReleaseManifest
 from .release_readiness_view_models import ReleaseDependencyInventory, ReleaseReadinessViewReport
+from .release_report_models import ReleaseExportReport
 from .repository import checkout_input_hashes
 
 

@@ -330,6 +330,115 @@ for dispositions and timing; leave unmeasured values unstated.
   determine USB intent from a generic symbol and does not establish PCB copper
   connectivity or electrical correctness.
 
+### Recorded trial: pcb-layout-skill Gerber connectivity
+
+- **Source and license:** Read-only evaluation of the public
+  [`studio-edul/pcb-layout-skill` repository][layout-skill-revision] at commit
+  `62921624db3dffdb0afa097f6b270f68acde3c4d`.
+  The repository declares MIT. Its `gerber_check.py` is 785 lines and its
+  documented runtime requires NumPy, Pillow, and SciPy; the checked source
+  SHA-256 is
+  `09f2cdfe92c1beccedb7e85b31d03fd88cde3ae963eefc2c59a83b313e78aff3`, and
+  the license SHA-256 is
+  `030eb1325a793ea5e517c374dd4f036887b1fd2aea76d273dbd615ea207296ce`.
+  The checkout and isolated Python 3.9.6 trial environment stayed under
+  `/private/tmp`; no candidate source, fixture, or dependency was added to
+  Tooling.
+- **Synthetic run:** Ran the candidate's `netcheck` command on its committed
+  `examples/gerber/board_ok` and `board_bad` directories against their
+  `board_ok.ipc` and `board_bad.ipc` files. The isolated trial used NumPy
+  2.0.2, Pillow 11.3.0, and SciPy 1.13.1. The clean board reported six pads
+  and vias, zero shorts, zero opens, zero pads without copper, and zero
+  undrilled vias. The injected-fault board reported one short, one open, and
+  an undrilled via at `R1` / `(10.00, 10.00)`. Both commands completed with
+  the expected status: clean returned 0; fault returned 1. The candidate's
+  isolated repository test suite also passed all 38 tests.
+- **Native KiCad artifact trial (2026-11-14):** Exported the tooling-owned two-layer fixtures in
+  [`tests/fixtures/fabrication-connectivity`](../tests/fixtures/fabrication-connectivity/README.md)
+  with KiCad 10.0.0 and 10.0.5 from the digest-pinned images
+  `ghcr.io/kicad/kicad:10.0.0@sha256:9549d3a08e0822f9434a9eda0782c812451ab4a733c73535f9e8beed42039bc3`
+  and
+  `ghcr.io/kicad/kicad:10.0.5@sha256:fdcfa0e8d41f640d16edfb28e027fe8862ab31af9e45dcacbc662cec5c916e4c`.
+  Each export included F.Cu, B.Cu, Edge.Cuts, separate PTH/NPTH Excellon files, and IPC-D-356. The
+  cohort checker reported the expected result on two exports per version for each case: clean
+  common-net track (0), open same-net track (one `OPEN`), cross-net bridge (one `SHORT`),
+  intentional separate-net isolation (0), and plated through-via control (0). On both versions,
+  removing only the PTH drill file from a copied via artifact produced one `NO_DRILL`. Result text
+  and exit status were identical across the two analyzer runs.
+- **Repeatability boundary:** In the 10.0.5 repeat comparison, KiCad's Gerber
+  and Excellon headers contained different creation timestamps, so those raw
+  files were not byte-for-byte equal. The normalized connectivity findings
+  remained identical across both exports and both KiCad versions. A first-party
+  receipt must bind each run to that run's exact artifact hashes; it must not
+  require timestamp-bearing exports to hash identically across runs. This
+  trial used `linux/amd64` emulation on a `linux/arm64` host.
+- **Local gap and incremental value at trial time:** Tooling's release exporter
+  generated configured Gerbers and could generate IPC-D-356. The release gate
+  then required nonempty Gerber and drill output groups, recorded artifact hashes,
+  and checks configured required files; it does not reconstruct copper
+  connectivity from the exported artwork and compare it with the fabrication
+  netlist. This cohort concept could add an independent check at the final
+  artifact boundary, catching export-level opens or shorts that a board-source
+  check cannot establish. This exact-version synthetic comparison confirms
+  that the candidate can read KiCad 10.0.5's generated files for these cases;
+  it does not validate the raster algorithm on real boards or other supported
+  KiCad versions.
+- **Original-failure boundary:** The analyzer treats each IPC-D-356 net as the
+  expected connectivity domain. It cannot infer that two separately named
+  connector returns were intended to share one domain. Catching that case
+  requires an authored pinout/grounding contract or a separate peer-connector
+  REVIEW heuristic; this artifact trial does not cover it.
+- **First-party implementation (2026-11-14):** The FA-001 release gate now
+  uses a narrow first-party parser and configurable raster analyzer. It accepts
+  only exact two-layer positive-polarity F.Cu/B.Cu artwork with PTH/NPTH drill
+  files and a matching IPC-D-356 file; unsupported stacks, mismatched source
+  net names, and unsupported constructs fail closed. Review/block modes,
+  configured pixel density, exact reasoned ignores, and source/configuration/
+  per-run-artifact binding are covered by focused regressions. A release-service
+  regression confirms export retains the typed summary and verification
+  recomputes it against the selected source and artifacts; command outputs and
+  that service test's analyzer result are synthetic. No external parser, source
+  file, or fixture is used at runtime. The optional analysis dependencies are
+  not part of the base install.
+- **Native acceptance:** The first-party analyzer was run against artifacts
+  exported by digest-pinned KiCad 10.0.0 and 10.0.5 Docker images. It passed clean and intentional
+  isolation controls, reported the open, short, and missing-drill faults, and
+  passed the plated-via control. Repeated analysis returned identical evidence.
+  This demonstrates those synthetic cases only; it does not establish field
+  precision, multilayer support, or sub-resolution gap detection. The
+  candidate's raster limitations and feature coverage were not imported as
+  guarantees.
+- **Disposition and boundary:** Adopt the narrow first-party artifact gate as
+  opt-in release evidence. Do not adopt the candidate wholesale or make its
+  scientific stack a mandatory package dependency. IPC-D-356 defines expected
+  net identity, so this gate cannot infer that two separately named connector
+  returns should have been common. That remains an authored connector/ground
+  contract or separate review-heuristic gap. No external project or
+  proprietary board was used.
+- **References:** [Candidate README][layout-skill-readme],
+  [`gerber_check.py` at the pinned commit][layout-skill-gerber-check], and
+  [MIT license][layout-skill-license].
+
+### Source review: mfgs-us/pcb-dfm artifact-connectivity applicability
+
+- **Source and license:** Read-only source review of
+  [`mfgs-us/pcb-dfm` at `b94d0f7a39f4a743de736906f74f9973d74b989d`](https://github.com/mfgs-us/pcb-dfm/tree/b94d0f7a39f4a743de736906f74f9973d74b989d).
+  The pinned repository declares Apache-2.0 and requires Python 3.10 or newer;
+  its package depends on Pydantic and `gerbonara>=1.5,<1.6`. The checkout stayed
+  under `/private/tmp`; it was not installed or copied into Tooling.
+- **Relevant capability:** `geometry/net_map.py` can attach IPC-D-356 net labels
+  to Gerber copper polygons, and the reviewed tests cover registration,
+  cross-layer label propagation, and conflicting labels. The inspected
+  `unconnected_pads` advisory concerns a two-terminal passive whose design-data
+  pad inventory has one assigned leg and one unassigned leg. The examined
+  checks do not compare same-net IPC contacts against connected Gerber
+  components or report cross-net artwork bridges.
+- **Disposition:** This candidate supplies a useful geometry/net-labeling
+  model, but no ready-made detector for FA-001. Its passive-pad advisory is
+  not adopted; its incremental value over native ERC and local component-pin
+  rules was not benchmarked. It does not change the FA-001 implementation
+  decision.
+
 ### Recorded public screen: 74th relay-switched USB hub (2026-11-14)
 
 - **Source and boundary:** Read-only screen of the public
@@ -2804,3 +2913,7 @@ it does not claim field validation or effectiveness against private boards.
 [kicad-10-pcb-manual]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html
 [lint448-track-angle]: DESIGN_LINT_BACKLOG.md#lint-448--review-project-authored-per-net-track-angle-drc-coverage
 [track-angle-fixture]: ../tests/fixtures/design_lint/pcb-track-angle/README.md
+[layout-skill-revision]: https://github.com/studio-edul/pcb-layout-skill/tree/62921624db3dffdb0afa097f6b270f68acde3c4d
+[layout-skill-readme]: https://github.com/studio-edul/pcb-layout-skill/blob/62921624db3dffdb0afa097f6b270f68acde3c4d/README.md
+[layout-skill-gerber-check]: https://github.com/studio-edul/pcb-layout-skill/blob/62921624db3dffdb0afa097f6b270f68acde3c4d/skills/pcb-layout-design/scripts/gerber_check.py
+[layout-skill-license]: https://github.com/studio-edul/pcb-layout-skill/blob/62921624db3dffdb0afa097f6b270f68acde3c4d/LICENSE

@@ -7,11 +7,11 @@ import subprocess
 import zipfile
 from pathlib import Path
 
-from kicad_tooling.hwrepo.models import ReleaseExportReport
 from kicad_tooling.hwrepo.release_contract_models import ReleaseManifest
 from kicad_tooling.hwrepo.release_model_types import ReleaseClass
 from kicad_tooling.hwrepo.release_operation_models import ReleasePreparationRequest
 from kicad_tooling.hwrepo.release_report_models import (
+    ReleaseExportReport,
     ReleasePackageReport,
     ReleaseReadinessReport,
 )
