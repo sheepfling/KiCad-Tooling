@@ -17,6 +17,12 @@ RTS cases change the exact function from TX to RTS. The fault assigns J1.2 to
 exercise both CTS and RTS recognition without implying that hardware flow
 control must be enabled in a real design.
 
+The modem-control pair exposes DTR, DSR, DCD, and RI as native connector
+functions. Its fault assigns them to two return-like and two supply-like nets;
+the control keeps each on a distinct neutral `MODEM_*` net. This checks exact
+recognition of all four optional modem-control roles without assuming a UART
+bridge enables or requires them.
+
 The rule uses the native pin function, complete connector pin inventory, and
 single assigned net label to raise a default-REVIEW finding. It does not infer
 the approved connector pinout, prove an electrical fault, or inspect PCB copper
@@ -30,6 +36,8 @@ Source SHA-256:
 - `cts-fault.kicad_sch`: `5019a069d0bafc353c8a48894a9053479dacc3129347984727d6682074efe6ac`
 - `rts-control.kicad_sch`: `32574617203027bca3e234317e74740746bdf4323ed64e86dc46ed79e182cd7f`
 - `rts-fault.kicad_sch`: `e65817db762a1aac10574ef55c913bdcbd648939cc246c987419895daf761b6d`
+- `modem-control.kicad_sch`: `888bd9424b3d20155da4d55eafcdd21997e1fbebfbe2a57f9897d83b7114aa67`
+- `modem-fault.kicad_sch`: `945d2e06455cf2616e4adb999d5a8d394a19ac0317f351b1ede2f916eb3c7645`
 
 The native lane exports all sources twice with digest-pinned KiCad 10.0.0 and
 10.0.5 images, compares normalized netlists, and requires one finding on each

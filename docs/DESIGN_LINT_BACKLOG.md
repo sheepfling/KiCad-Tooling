@@ -28844,6 +28844,44 @@ acceptance threads while new lint features proceed:
   installed-wheel rehearsal against the separate public template checkout
   passed. Package and preview jobs were skipped under prerelease policy.
 
+#### LINT-505 — Review UART modem-control pins assigned directly to named rails
+
+- **Priority:** P2 review heuristic. Native DTR, DSR, DCD, and RI pin functions
+  assigned to a supply-like or return-like label are worth an explicit review
+  question. The [CP2102N data sheet][cp2102n-data-sheet] documents these as
+  host-enabled modem-control signals; this is one public example, not a
+  universal requirement.
+- **Status:** Extends the existing `bus.serial_signal_on_named_rail` rule with
+  exact DTR/DSR/DCD/RI aliases and UART/USART prefixes. The rule remains
+  default-`review`; its configuration, rule ID, and ignore behavior do not
+  change.
+- **Predicate:** Apply only to fitted U/IC or bounded connector pins with a
+  complete native inventory, one assignment, and one of the explicitly
+  recognized modem-control function spellings. Emit a candidate only when the
+  assigned net label matches the existing narrow supply-like or return-like
+  vocabulary.
+- **Interpretation:** Some UART bridges enable modem-control pins only when
+  requested by a host. Function and net labels are review clues; the heuristic
+  does not infer host configuration, required connections, project use,
+  electrical potential, polarity, or PCB continuity. Intentional rail straps
+  remain valid project decisions.
+- **Evidence:** Synthetic IC tests exercise all four exact roles, supported
+  UART/USART prefixes and low suffixes, neutral-net controls, and unsupported
+  vendor-specific names. Tooling-owned connector schematics exercise all four
+  native pin functions on rail-like assignments and neutral controls. The
+  native lane repeats normalized KiCad 10.0.0 and 10.0.5 exports. No project
+  source or proprietary fixture is used.
+- **Focused selection:** Run
+  `tests/test_serial_signal_named_rail.py` and
+  `tests/test_serial_connector_signal_named_rail_native_fixture_lane.py`
+  with the exact `bus.serial_signal_on_named_rail` selector. Native execution
+  uses `KICAD_RUN_NATIVE_SERIAL_TX_RX_LABEL_MISMATCH_FIXTURES=1`.
+- **Local acceptance:** The rule-scoped `scripts/ci.py` gate passed 511 tests
+  with 9,728 deselected. Both digest-pinned Docker versions exercised repeated
+  native exports; Ruff, Alphus boundaries, Rumdl, mdrepo, Linux and Windows
+  type checks, wheel/sdist builds, and installed-origin/version checks passed.
+  The separate public-template checkout rehearsal runs in hosted acceptance.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

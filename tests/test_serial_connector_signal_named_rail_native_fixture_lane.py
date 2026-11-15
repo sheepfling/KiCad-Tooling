@@ -26,14 +26,28 @@ SOURCE_HASHES = {
     "cts-fault.kicad_sch": "5019a069d0bafc353c8a48894a9053479dacc3129347984727d6682074efe6ac",
     "rts-control.kicad_sch": "32574617203027bca3e234317e74740746bdf4323ed64e86dc46ed79e182cd7f",
     "rts-fault.kicad_sch": "e65817db762a1aac10574ef55c913bdcbd648939cc246c987419895daf761b6d",
+    "modem-control.kicad_sch": "888bd9424b3d20155da4d55eafcdd21997e1fbebfbe2a57f9897d83b7114aa67",
+    "modem-fault.kicad_sch": "945d2e06455cf2616e4adb999d5a8d394a19ac0317f351b1ede2f916eb3c7645",
 }
 CASES = {
-    "fault": ("J1.1", "UART1_RX", "GND_C", "J1.1: UART1_RX on return-like net GND_C"),
-    "control": ("J1.1", "UART1_RX", "UART_TX", None),
-    "cts-fault": ("J1.1", "UART1_CTS", "GND_C", "J1.1: UART1_CTS on return-like net GND_C"),
-    "cts-control": ("J1.1", "UART1_CTS", "UART_TX", None),
-    "rts-fault": ("J1.2", "UART1_RTS", "+3V3", "J1.2: UART1_RTS on supply-like net +3V3"),
-    "rts-control": ("J1.2", "UART1_RTS", "UART_RX", None),
+    "fault": (("J1.1", "UART1_RX", "GND_C", "J1.1: UART1_RX on return-like net GND_C"),),
+    "control": (("J1.1", "UART1_RX", "UART_TX", None),),
+    "cts-fault": (("J1.1", "UART1_CTS", "GND_C", "J1.1: UART1_CTS on return-like net GND_C"),),
+    "cts-control": (("J1.1", "UART1_CTS", "UART_TX", None),),
+    "rts-fault": (("J1.2", "UART1_RTS", "+3V3", "J1.2: UART1_RTS on supply-like net +3V3"),),
+    "rts-control": (("J1.2", "UART1_RTS", "UART_RX", None),),
+    "modem-fault": (
+        ("J1.1", "DTR", "GND_MODEM_DTR", "J1.1: DTR on return-like net GND_MODEM_DTR"),
+        ("J1.2", "DSR", "+3V3", "J1.2: DSR on supply-like net +3V3"),
+        ("J1.3", "DCD", "GND_MODEM_DCD", "J1.3: DCD on return-like net GND_MODEM_DCD"),
+        ("J1.4", "RI", "+5V", "J1.4: RI on supply-like net +5V"),
+    ),
+    "modem-control": (
+        ("J1.1", "DTR", "MODEM_DTR", None),
+        ("J1.2", "DSR", "MODEM_DSR", None),
+        ("J1.3", "DCD", "MODEM_DCD", None),
+        ("J1.4", "RI", "MODEM_RI", None),
+    ),
 }
 
 pytestmark = [
@@ -107,10 +121,11 @@ def test_native_connector_serial_named_rail_fault_and_control_repeat(
         assert first[0] == repeated[0]
         assert first[2] == repeated[2]
         observed, netlist_sha256, _normalized_sha256 = first
-        pin, function, expected_net, expected_subject = CASES[case]
-        assert observed.pin_functions[pin] == function
-        assigned_net = next(net for net, pins in observed.nets.items() if pin in pins)
-        assert assigned_net == expected_net
+        expected_cases = CASES[case]
+        for pin, function, expected_net, _expected_subject in expected_cases:
+            assert observed.pin_functions[pin] == function
+            assigned_net = next(net for net, pins in observed.nets.items() if pin in pins)
+            assert assigned_net == expected_net
 
         project_id = f"synthetic-serial-connector-named-rail-{case}-{version}"
         report: DesignLintReport = evaluate(
@@ -124,12 +139,20 @@ def test_native_connector_serial_named_rail_fault_and_control_repeat(
             DesignLintPolicy(),
         )
         findings = tuple(item for item in report.findings if item.rule_id == RULE_ID)
-        if expected_subject is not None:
-            assert tuple(item.subject for item in findings) == (expected_subject,)
-            assert findings[0].evidence["pin"] == (pin,)
-            assert findings[0].evidence["pin_function"] == (function,)
-            assert findings[0].evidence["assigned_net"] == (expected_net,)
-            assert findings[0].evidence["component_pin_inventory"] == ("1", "2", "3", "4")
+        expected_findings = {
+            pin: (function, expected_net, subject)
+            for pin, function, expected_net, subject in expected_cases
+            if subject is not None
+        }
+        actual_findings = {item.evidence["pin"][0]: item for item in findings}
+        assert actual_findings.keys() == expected_findings.keys()
+        for pin, (function, expected_net, expected_subject) in expected_findings.items():
+            finding = actual_findings[pin]
+            assert finding.subject == expected_subject
+            assert finding.evidence["pin_function"] == (function,)
+            assert finding.evidence["assigned_net"] == (expected_net,)
+            assert finding.evidence["component_pin_inventory"] == ("1", "2", "3", "4")
+        if expected_findings:
             assert report.status == "REVIEW"
         else:
             assert not findings

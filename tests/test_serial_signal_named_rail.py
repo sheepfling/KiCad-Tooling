@@ -51,7 +51,7 @@ def _connector_netlist(*, signal_net: str = "GND") -> NetlistContract:
     )
 
 
-def _flow_control_netlist(*, function: str, pin: str, rail_name: str) -> NetlistContract:
+def _signal_netlist(*, function: str, pin: str, rail_name: str) -> NetlistContract:
     source = serial_signal_on_named_rail_netlist()
     other_pin = "U1.2" if pin == "U1.1" else "U1.1"
     other_net = "USART1_RX" if other_pin == "U1.2" else "USART1_TX"
@@ -116,7 +116,7 @@ def test_explicit_flow_control_pin_on_named_rail_requests_review(
     channel: str,
     role_clue: str,
 ) -> None:
-    report = _report(_flow_control_netlist(function=function, pin=pin, rail_name=rail_name))
+    report = _report(_signal_netlist(function=function, pin=pin, rail_name=rail_name))
     finding = next(item for item in report.findings if item.rule_id == RULE_ID)
 
     assert report.status == "REVIEW"
@@ -130,7 +130,7 @@ def test_explicit_flow_control_pin_on_named_rail_requests_review(
 
 @pytest.mark.parametrize("function", ("CTS", "RTS", "UART1_CTS#", "USART2_RTS_N"))
 def test_flow_control_pin_on_neutral_serial_net_is_control(function: str) -> None:
-    source = _flow_control_netlist(function=function, pin="U1.1", rail_name="UART1_CTS")
+    source = _signal_netlist(function=function, pin="U1.1", rail_name="UART1_CTS")
 
     assert not any(item.rule_id == RULE_ID for item in _report(source).findings)
 
@@ -142,7 +142,7 @@ def test_neutral_labels_and_unsupported_pin_functions_are_controls() -> None:
     )
     incomplete_inventory = source.model_copy(update={"component_pin_numbers": {"U1": ("2",)}})
     connector_neutral = _connector_netlist(signal_net="UART_TX")
-    unsupported_flow_control = _flow_control_netlist(
+    unsupported_flow_control = _signal_netlist(
         function="UART1_CTS_INPUT",
         pin="U1.1",
         rail_name="GND",
@@ -153,6 +153,54 @@ def test_neutral_labels_and_unsupported_pin_functions_are_controls() -> None:
     assert not any(item.rule_id == RULE_ID for item in _report(unsupported_flow_control).findings)
     assert not any(item.rule_id == RULE_ID for item in _report(incomplete_inventory).findings)
     assert not any(item.rule_id == RULE_ID for item in _report(connector_neutral).findings)
+
+
+@pytest.mark.parametrize(
+    ("function", "role", "channel", "rail_name", "role_clue"),
+    (
+        ("DTR", "dtr", "default", "GND", "return-like"),
+        ("DSR", "dsr", "default", "+3V3", "supply-like"),
+        ("DCD", "dcd", "default", "GND", "return-like"),
+        ("RI", "ri", "default", "+3V3", "supply-like"),
+        ("UART_DTR#", "dtr", "uart", "GND", "return-like"),
+        ("USART1_DSR_N", "dsr", "usart1", "+3V3", "supply-like"),
+        ("UART2_DCD", "dcd", "uart2", "GND", "return-like"),
+        ("USART3_RI#", "ri", "usart3", "+3V3", "supply-like"),
+    ),
+)
+def test_modem_control_pin_on_named_rail_requests_review(
+    function: str,
+    role: str,
+    channel: str,
+    rail_name: str,
+    role_clue: str,
+) -> None:
+    report = _report(_signal_netlist(function=function, pin="U1.1", rail_name=rail_name))
+    finding = next(item for item in report.findings if item.rule_id == RULE_ID)
+
+    assert report.status == "REVIEW"
+    assert finding.subject == f"U1.1: {function} on {role_clue} net {rail_name}"
+    assert finding.evidence["pin_role"] == (role,)
+    assert finding.evidence["serial_channel"] == (channel,)
+    assert finding.evidence["pin_function"] == (function,)
+    assert "Modem-control signals may be optional" in finding.message
+    assert "not proof of electrical potential" in finding.message
+
+
+@pytest.mark.parametrize("function", ("DTR", "DSR", "DCD", "RI", "UART1_RI#"))
+def test_modem_control_pin_on_neutral_serial_net_is_control(function: str) -> None:
+    source = _signal_netlist(function=function, pin="U1.1", rail_name="MODEM_CONTROL")
+
+    assert not any(item.rule_id == RULE_ID for item in _report(source).findings)
+
+
+@pytest.mark.parametrize(
+    "function", ("UART1_DTR_OUTPUT", "DTR_ENABLE", "RI_INPUT", "USART2_DSR_GPIO")
+)
+def test_unsupported_modem_control_function_spelling_stays_unclassified(function: str) -> None:
+    source = _signal_netlist(function=function, pin="U1.1", rail_name="GND")
+
+    assert not any(item.rule_id == RULE_ID for item in _report(source).findings)
 
 
 def test_connector_only_serial_pin_on_named_rail_requests_review() -> None:

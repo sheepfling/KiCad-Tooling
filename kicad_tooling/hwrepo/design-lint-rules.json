@@ -12045,19 +12045,21 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For each fitted U/IC or bounded connector pin with one recognized UART/USART TX/TXD, RX/RXD, CTS, or RTS native function, require the pin number in the complete component pin inventory and exactly one native net assignment. Emit a REVIEW candidate when the net label matches the narrow supply-like or return-like vocabulary.",
+      "predicate": "For each fitted U/IC or bounded connector pin with one recognized UART/USART TX/TXD, RX/RXD, CTS, RTS, DTR, DSR, DCD, or RI native function, require the pin number in the complete component pin inventory and exactly one native net assignment. Emit a REVIEW candidate when the net label matches the narrow supply-like or return-like vocabulary.",
       "supported_kicad_versions": [
         "KiCad 10.0.0 and 10.0.5 digest-pinned native fixture exports; the selected project version is checked before export"
       ],
       "limitations": [
         "The native serial pin function and rail-like label are review clues, not proof of an electrical defect, required endpoint, or net potential. Intentional rail straps remain valid project decisions.",
-        "Only fitted U/IC references or bounded connector candidates, exact TX/RX aliases accepted by serial_function_role_and_channel or CTS/RTS aliases accepted by serial_flow_control_role_and_channel, a complete native pin-number inventory, and one unambiguous assignment are considered. Vendor-specific aliases, DNP, open, multiply assigned, and incomplete-inventory cases are skipped. Connector identity is a bounded candidate, not an approved pinout.",
+        "Only fitted U/IC references or bounded connector candidates, exact TX/RX aliases accepted by serial_function_role_and_channel, CTS/RTS aliases accepted by serial_flow_control_role_and_channel, or DTR/DSR/DCD/RI aliases accepted by serial_modem_control_role_and_channel, a complete native pin-number inventory, and one unambiguous assignment are considered. Vendor-specific aliases, DNP, open, multiply assigned, and incomplete-inventory cases are skipped. Connector identity is a bounded candidate, not an approved pinout.",
         "CTS/RTS rail assignments can be intentional when hardware flow control is unused. This rule does not infer that flow control is required or determine signal polarity.",
+        "Some UART bridges expose modem-control pins that are enabled only when requested. This rule does not infer host configuration, project use, required connections, or modem-signal polarity.",
         "This schematic-netlist prompt does not establish serial topology, protocol use, PCB copper continuity, external wiring, or physical connectivity."
       ],
       "fault_fixtures": [
         "tests.test_serial_signal_named_rail.test_explicit_serial_pin_on_named_rail_requests_review_with_exact_evidence",
         "tests.test_serial_signal_named_rail.test_explicit_flow_control_pin_on_named_rail_requests_review",
+        "tests.test_serial_signal_named_rail.test_modem_control_pin_on_named_rail_requests_review",
         "tests.test_serial_signal_named_rail.test_connector_only_serial_pin_on_named_rail_requests_review",
         "tests.test_serial_signal_named_rail.test_pin_level_clue_adds_localization_to_existing_peer_coverage",
         "tests.test_serial_tx_rx_label_mismatch_native_fixture_lane.test_native_serial_tx_rx_label_fault_and_control_repeat",
@@ -12066,6 +12068,8 @@
       "valid_control_fixtures": [
         "tests.test_serial_signal_named_rail.test_neutral_labels_and_unsupported_pin_functions_are_controls",
         "tests.test_serial_signal_named_rail.test_flow_control_pin_on_neutral_serial_net_is_control",
+        "tests.test_serial_signal_named_rail.test_modem_control_pin_on_neutral_serial_net_is_control",
+        "tests.test_serial_signal_named_rail.test_unsupported_modem_control_function_spelling_stays_unclassified",
         "tests.test_serial_signal_named_rail.test_dnp_open_and_ambiguous_assignments_stay_outside_the_predicate",
         "tests.test_serial_tx_rx_label_mismatch_native_fixture_lane.test_native_serial_tx_rx_label_fault_and_control_repeat",
         "tests.test_serial_connector_signal_named_rail_native_fixture_lane.test_native_connector_serial_named_rail_fault_and_control_repeat"
@@ -12087,6 +12091,7 @@
         "kicad_tooling/hwrepo/named_rail_roles.py#named_rail_role_clue",
         "kicad_tooling/hwrepo/serial_participants.py#serial_function_role_and_channel",
         "kicad_tooling/hwrepo/serial_participants.py#serial_flow_control_role_and_channel",
+        "kicad_tooling/hwrepo/serial_participants.py#serial_modem_control_role_and_channel",
         "kicad_tooling/hwrepo/casefold_mapping_lookup.py#lookup_unique_casefold",
         "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"

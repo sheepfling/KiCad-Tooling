@@ -29,6 +29,7 @@ from .rs485_data_functions import explicit_rs485_transceiver_identity, rs485_dat
 from .serial_participants import (
     serial_flow_control_role_and_channel,
     serial_function_role_and_channel,
+    serial_modem_control_role_and_channel,
 )
 from .spi_participants import spi_signal_role_and_channel
 from .swd_endpoint_inventory import SwdEndpointInventory, swd_function_role
@@ -214,6 +215,8 @@ class SerialSignalNamedRailEvidence:
         identity = serial_function_role_and_channel(function)
         if identity is None:
             identity = serial_flow_control_role_and_channel(function)
+        if identity is None:
+            identity = serial_modem_control_role_and_channel(function)
         if identity != (self.role, self.channel):
             raise ValueError("Serial named-rail evidence must match its current pin function")
 
