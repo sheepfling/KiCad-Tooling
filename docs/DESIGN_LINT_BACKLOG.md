@@ -28555,7 +28555,13 @@ acceptance threads while new lint features proceed:
   Rumdl, mdrepo, Linux/Windows type checks, wheel/sdist builds, installed-wheel
   checks, and the separate KiCad-Test checkout playtest passed. Tag-scope
   preflight also confirmed the fixture switch is enabled by full acceptance.
-- **Hosted acceptance:** Pending tag-scoped GitHub Actions acceptance.
+- **Hosted acceptance:** Annotated tag `v0.5.3rc825` passed GitHub Actions
+  run `43725475865`: 483 passed and 9,701 deselected. Digest-pinned Docker
+  fixtures passed on KiCad 10.0.0 and 10.0.5. Tag-scope resolution, Ruff,
+  Alphus boundaries, Rumdl, mdrepo, Linux/Windows type checks, wheel/sdist
+  builds, installed-wheel checks, and the separate KiCad-Test checkout
+  playtest passed. Package publishing and preview jobs were skipped under
+  prerelease policy.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
