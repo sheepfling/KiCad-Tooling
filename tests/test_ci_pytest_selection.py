@@ -64,7 +64,8 @@ def test_ci_driver_uses_marker_selection_and_reports_durations(
 
 
 @pytest.mark.architecture
-def test_ci_driver_prefers_existing_test_modules_over_marker_selection(
+@pytest.mark.ci_lint
+def test_ci_driver_combines_marker_and_explicit_test_module_selection(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     selected = "tests/test_ci_pytest_selection.py"
@@ -92,6 +93,8 @@ def test_ci_driver_prefers_existing_test_modules_over_marker_selection(
         "-q",
         "--durations=10",
         selected,
+        "-m",
+        "design_lint and interface_lint",
     )
 
 

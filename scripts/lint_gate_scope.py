@@ -8,10 +8,14 @@ import os
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 
 from kicad_tooling.ci_typecheck import validate_typecheck_paths
 from kicad_tooling.git import run_git_text
+from kicad_tooling.lint_gate_typecheck import (
+    typecheck_paths_for_area,
+    typecheck_paths_for_rule,
+)
 from kicad_tooling.pytest_scope import (
     pytest_collection_patterns,
     pytest_name_matches,
@@ -22,6 +26,7 @@ from kicad_tooling.pytest_scope import (
 LINT_AREAS = frozenset(
     {
         "design_lint",
+        "ci_lint",
         "catalog_lint",
         "architecture",
         "schematic_lint",
@@ -45,11 +50,6 @@ _NATIVE_FIXTURE_PATTERN = re.compile(
 _PACKAGE_JOB_PATTERN = re.compile(
     r"^  package:\n(?P<body>.*?)(?=^  [^ \n]+:\n|\Z)", re.MULTILINE | re.DOTALL
 )
-_RULE_GATE_TYPECHECK_PATHS = (
-    "kicad_tooling/ci_typecheck.py",
-    "scripts/ci.py",
-    "scripts/lint_gate_scope.py",
-)
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,7 +69,7 @@ class LintGateScope:
             )
         if self.area is None:
             raise ValueError("lint gate scope has no selector")
-        if self.area in {"design_lint", "architecture"}:
+        if self.area in {"design_lint", "architecture", "ci_lint"}:
             return self.area
         return f"design_lint and {self.area}"
 
@@ -97,45 +97,6 @@ def required_native_fixtures_by_rule() -> dict[str, tuple[str, ...]]:
         for rule in rule_catalog().rules
         if rule.status == "active"
     }
-
-
-def implementation_paths_by_rule() -> dict[str, tuple[str, ...]]:
-    """Return deterministic Python targets from active rules' cataloged references."""
-    from kicad_tooling.hwrepo.design_lint_catalog import rule_catalog
-
-    result: dict[str, tuple[str, ...]] = {}
-    for rule in rule_catalog().rules:
-        if rule.status != "active":
-            continue
-        references = (*rule.implementation_refs, rule.implementation_owner)
-        paths: set[str] = set()
-        owner_path: str | None = None
-        for reference in references:
-            module, separator, function = str(reference).partition("#")
-            path = (
-                module.replace(".", "/") + ".py" if module.startswith("kicad_tooling.") else module
-            )
-            parsed = PurePosixPath(path)
-            if parsed.suffix != ".py" or not path.startswith("kicad_tooling/"):
-                continue
-            if (
-                not separator
-                or not function
-                or parsed.is_absolute()
-                or ".." in parsed.parts
-                or path != parsed.as_posix()
-            ):
-                raise ValueError(
-                    f"Active rule {rule.rule_id!s} has an invalid implementation reference: "
-                    f"{reference!r}"
-                )
-            paths.add(path)
-            if str(reference) == rule.implementation_owner:
-                owner_path = path
-        if not paths or owner_path not in paths:
-            raise ValueError(f"Active rule {rule.rule_id!s} has no Python implementation owner")
-        result[str(rule.rule_id)] = tuple(sorted(paths))
-    return result
 
 
 def parse_tag_message(
@@ -224,17 +185,41 @@ def read_message_scope(message: str, repository: Path) -> LintGateScope:
         native_fixtures_by_rule,
     )
     if scope.rule_id is not None:
-        paths = implementation_paths_by_rule().get(scope.rule_id, ())
-        if not paths:
-            raise ValueError(f"Lint-Rule {scope.rule_id!r} has no cataloged implementation paths")
         scope = replace(
             scope,
-            typecheck_paths=tuple(sorted(set(paths) | set(_RULE_GATE_TYPECHECK_PATHS))),
+            typecheck_paths=typecheck_paths_for_rule(scope.rule_id),
         )
+    elif scope.area is not None:
+        scope = replace(scope, typecheck_paths=typecheck_paths_for_area(scope.area))
     validate_test_module_files(scope.test_paths, repository)
+    _validate_test_path_area_markers(scope, repository)
     validate_typecheck_paths(scope.typecheck_paths, repository)
     _validate_native_fixture_test_paths(scope, repository)
     return scope
+
+
+def _validate_test_path_area_markers(scope: LintGateScope, repository: Path) -> None:
+    """Require explicit area paths to include a test selected by all area markers."""
+    if not scope.test_paths or scope.area is None:
+        return
+    required_markers = frozenset(scope.pytest_markexpr.split(" and "))
+    _, class_patterns, function_patterns = pytest_collection_patterns(repository)
+    for relative in scope.test_paths:
+        tree = ast.parse((repository / relative).read_text(encoding="utf-8"))
+        module_markers = tuple(_pytestmark_values(tree.body))
+        tests = _collected_test_markers(
+            tree.body, module_markers, class_patterns, function_patterns
+        )
+        if not any(
+            required_markers.issubset(
+                {name for marker in markers if (name := _pytest_marker_name(marker)) is not None}
+            )
+            for markers in tests
+        ):
+            raise ValueError(
+                f"Test-Path {relative!r} has no test carrying all Lint-Area "
+                f"{scope.area!r} markers: {sorted(required_markers)}"
+            )
 
 
 def _validate_native_fixture_test_paths(scope: LintGateScope, repository: Path) -> None:

@@ -73,6 +73,7 @@ addopts = ["--strict-markers"]
 python_classes = ["Test*", "*Tests", "*Test"]
 python_functions = ["test_*"]
 markers = [
+  "ci_lint: CI gate selection, pytest scope, and typecheck target behavior",
   "design_lint: deterministic design-lint rule, catalog, and parity behavior",
   "design_lint_rule(rule_id): tests named by an active rule's catalog fixture references",
   "rule_gate_integrity: cross-rule source-owner and catalog-selector invariants included in single-rule gates",

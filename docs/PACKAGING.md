@@ -97,18 +97,20 @@ Native-Fixture: KICAD_RUN_NATIVE_CAN_PEER_REFERENCE_FIXTURES
 ```
 
 An area tag may instead list explicit test modules with repeated `Test-Path` lines.
-Those paths replace the area marker expression for pytest collection, so use them
-only when the listed modules contain the complete fault/control lane being gated.
-Each path must name an existing `tests/test_*.py` file in this repository. A
+Those paths narrow file collection while the area marker expression still
+applies, so each listed module must contain a test selected by all area markers
+and the complete fault/control lane being gated. Each path must name an existing `tests/test_*.py`
+file in this repository. A
 `Lint-Rule` tag cannot use `Test-Path`; rule tags keep their complete catalog-derived
 fixture selection.
 
-Rule-scoped tags also send each active rule's cataloged Python owner and
-implementation modules, plus the prerelease selector and runner modules, to both
-Linux and Windows Pyright stages. Non-Python fixture references are excluded.
-Area-scoped prerelease tags and full acceptance events keep package-wide Pyright
-checks, so the narrower type-check scope applies only when the tag selects one
-active rule.
+Rule-scoped tags send each active rule's cataloged Python owner and
+implementation modules, plus the prerelease selector and runner modules, to
+both Linux and Windows Pyright stages. Theme-specific area tags derive the same
+targets from every active rule in that theme. The `ci_lint` area selects the
+gate-scope implementation modules directly. Non-Python fixture references are
+excluded. Cross-cutting areas (`architecture`, `evidence_lint`, and
+`parity_lint`) and full acceptance events keep package-wide Pyright checks.
 
 ```text
 Lint-Area: pcb_lint

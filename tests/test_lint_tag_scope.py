@@ -8,16 +8,22 @@ from pathlib import Path
 
 import pytest
 
+from kicad_tooling.lint_gate_typecheck import (
+    implementation_paths_by_rule,
+    typecheck_paths_for_area,
+    typecheck_paths_for_rule,
+)
 from scripts.lint_gate_scope import (
     LINT_AREAS,
     active_design_lint_rule_ids,
     configured_native_fixtures,
-    implementation_paths_by_rule,
     parse_tag_message,
     read_tag_scope,
     required_native_fixtures_by_rule,
     write_github_scope,
 )
+
+pytestmark = pytest.mark.ci_lint
 
 
 def test_lint_tag_declares_one_area_and_only_configured_native_fixtures() -> None:
@@ -103,9 +109,7 @@ def test_annotated_area_and_rule_tags_resolve_scope_and_write_github_action_file
     )
     (repository / "source.txt").write_text("synthetic\n", encoding="utf-8")
     typecheck_paths = {
-        "kicad_tooling/ci_typecheck.py",
-        "scripts/ci.py",
-        "scripts/lint_gate_scope.py",
+        *typecheck_paths_for_area("interface_lint"),
         *implementation_paths_by_rule()["power.mapped_sequence_dependency_mismatch"],
         *implementation_paths_by_rule()["bus.serial_peer_reference_review"],
     }
@@ -141,7 +145,11 @@ def test_annotated_area_and_rule_tags_resolve_scope_and_write_github_action_file
     monkeypatch.setenv("GITHUB_ENV", str(environment))
     write_github_scope(scope)
 
-    assert output.read_text(encoding="utf-8") == "markexpr=design_lint and interface_lint\n"
+    expected_area_paths = typecheck_paths_for_area("interface_lint")
+    assert scope.typecheck_paths == expected_area_paths
+    assert output.read_text(encoding="utf-8") == (
+        f"markexpr=design_lint and interface_lint\ntypecheckpaths={','.join(expected_area_paths)}\n"
+    )
     assert environment.read_text(encoding="utf-8") == (
         "KICAD_RUN_NATIVE_CAN_PEER_REFERENCE_FIXTURES=1\n"
     )
@@ -170,13 +178,7 @@ def test_annotated_area_and_rule_tags_resolve_scope_and_write_github_action_file
     )
     assert rule_scope.pytest_markexpr == expected_rule_markexpr
     assert rule_scope.native_fixtures == ("KICAD_RUN_NATIVE_POWER_SEQUENCE_FIXTURES",)
-    expected_typecheck_paths = (
-        "kicad_tooling/ci_typecheck.py",
-        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py",
-        "kicad_tooling/hwrepo/power_sequences.py",
-        "scripts/ci.py",
-        "scripts/lint_gate_scope.py",
-    )
+    expected_typecheck_paths = typecheck_paths_for_rule(rule_id)
     assert rule_scope.typecheck_paths == expected_typecheck_paths
     output.write_text("", encoding="utf-8")
     environment.write_text("", encoding="utf-8")

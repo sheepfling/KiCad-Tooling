@@ -14,6 +14,7 @@ pytestmark = [
     pytest.mark.catalog_lint,
     pytest.mark.architecture,
     pytest.mark.rule_gate_integrity,
+    pytest.mark.ci_lint,
 ]
 
 
