@@ -4271,25 +4271,32 @@ exactly one SWDIO plus one SWCLK/SWDCLK pin on separate assigned nets. Either
 pin is reported when its net label matches the existing supply-like or
 return-like clue vocabulary. Composite function names such as
 `SYS_JTMS-SWDIO` and `SYS_JTCK-SWCLK` are supported. `JTMS` and `JTCK` alone do
-not identify SWD.
+not identify SWD. When the complete pair is present, one additional uniquely
+assigned `SWO` pin on a third net is also reviewed if its own assigned net has
+a supply-like or return-like label. A function that explicitly names `SWO`,
+including a combined `JTDO-SWO` label, is recognized; `JTDO` alone is not.
 
 This is an endpoint-identity and label heuristic. It does not establish that
 SWD is enabled, that the label is the electrical potential, or that an
 assignment is wrong. The predicate checks the signal pin's direct net
 assignment; normal SWDIO pull-up and SWCLK pull-down resistor paths are outside
 its scope. Duplicate or ambiguous roles, open or multiply assigned pair pins,
-same-net pairs, DNP endpoints, and incomplete inventories stay quiet. The
-check does not assess optional SWO/reset signals, PCB copper, or continuity.
+same-net pairs, DNP endpoints, and incomplete inventories stay quiet. SWO is
+optional and is never required by this check; ambiguous, open, multiply
+assigned, or pair-shared SWO pins are ignored. The check does not assess reset,
+PCB copper, or continuity.
 Projects can promote the cue to `block`, turn it `off`, or ignore one exact
 fingerprint.
 
-The SWDIO/SWCLK role pair follows Arm's [Debug Interface v5 specification][arm-swd-signals].
-Synthetic regressions cover direct rail assignments, a resistor-bias control,
-explicit connector functions, JTMS/JTCK-only and incomplete-pair controls,
-policy, source-bound evidence, stable ordering, CLI/MCP parity, and
-three-process hash-seed stability. The tooling-owned fault/control schematics
-are exported twice with digest-pinned KiCad 10.0.0 and 10.0.5 Docker images; see
-the [fixture record](../tests/fixtures/design_lint/swd-signal-named-rail/README.md).
+The SWDIO/SWCLK role pair follows Arm's [Debug Interface v5 specification][arm-swd-signals];
+the optional SWO trace output follows the [CoreSight Architecture Specification][arm-coresight-swo].
+Synthetic regressions cover direct rail assignments on SWDIO, SWCLK, and SWO,
+a resistor-bias control, explicit connector functions, JTMS/JTCK/TDO-only and
+incomplete-pair controls, optional/ambiguous/open SWO boundaries, policy,
+source-bound evidence, stable ordering, CLI/MCP parity, and three-process
+hash-seed stability. The tooling-owned fault/control schematics are exported
+twice with digest-pinned KiCad 10.0.0 and 10.0.5 Docker images; see the
+[fixture record](../tests/fixtures/design_lint/swd-signal-named-rail/README.md).
 
 ```sh
 .venv/bin/python -I -m pytest -q tests/test_swd_signal_named_rail.py \
@@ -11339,3 +11346,4 @@ Review the actual board and assembly requirements before approving a build.
   ../tests/fixtures/design_lint/serial-connector-signal-named-rail-native/README.md
 [arm-jtag-signals]: https://documentation-service.arm.com/static/5f900a61f86e16515cdc0610
 [arm-swd-signals]: https://documentation-service.arm.com/static/5f900abff86e16515cdc063b
+[arm-coresight-swo]: https://documentation-service.arm.com/static/63a03a981d698c4dc521ca77

@@ -57,8 +57,9 @@ def test_native_swd_signal_named_rail_fault_and_control_repeat(
     }
     native_export = results["swd-signal-named-rail-fixture/native-export"]
     assert_native_fixture_mounts(tmp_path, native_export["command_receipt"])
-    assert results["swd-signal-named-rail-fixture/fault"]["subjects"] == (
-        "U1.1: SYS_JTMS-SWDIO on return-like net GND"
+    assert tuple(results["swd-signal-named-rail-fixture/fault"]["subjects"].split(";")) == (
+        "U1.1: SYS_JTMS-SWDIO on return-like net GND",
+        "U1.3: SWO on supply-like net +3V3",
     )
     assert results["swd-signal-named-rail-fixture/control"]["subjects"] == "none"
     for case in ("fault", "control"):

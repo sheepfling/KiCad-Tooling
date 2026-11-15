@@ -18,19 +18,21 @@ _FUNCTION_TOKENS = re.compile(r"[A-Z0-9]+", re.IGNORECASE)
 
 
 def swd_function_role(function: str) -> str | None:
-    """Return one bounded native SWD role, including the historical SWDCLK alias."""
+    """Return one bounded SWD role, including an explicit SWO function token."""
     tokens = {token.casefold() for token in _FUNCTION_TOKENS.findall(function)}
     roles: set[str] = set()
     if "swdio" in tokens:
         roles.add("swdio")
     if tokens & {"swclk", "swdclk"}:
         roles.add("swclk")
+    if "swo" in tokens:
+        roles.add("swo")
     return next(iter(roles)) if len(roles) == 1 else None
 
 
 @dataclass(frozen=True, slots=True)
 class SwdNamedRailSignalPin:
-    """One uniquely identified SWDIO or SWCLK pin on a complete endpoint."""
+    """One uniquely identified SWDIO, SWCLK, or explicit SWO pin."""
 
     pin: str
     function: str
@@ -104,7 +106,7 @@ class SwdEndpointInventory:
                 pin = f"{reference}.{number}"
                 function = self.functions[f"{reference_key}.{number.casefold()}"]
                 role = swd_function_role(function)
-                if role is not None:
+                if role in by_role:
                     by_role[role].append(
                         (
                             pin,
@@ -140,7 +142,7 @@ class SwdEndpointInventory:
         return tuple(endpoints)
 
     def named_rail_signal_pins(self, reference: str) -> tuple[SwdNamedRailSignalPin, ...]:
-        """Return a complete, unique, separately assigned SWDIO/SWCLK pair."""
+        """Return required SWDIO/SWCLK and any unambiguous optional SWO pin."""
         key = reference.casefold()
         native_reference = self.reference_spellings.get(key)
         numbers = self.inventories.get(key)
@@ -159,6 +161,7 @@ class SwdEndpointInventory:
         pins_by_role: dict[str, list[tuple[str, str, AbstractSet[str]]]] = {
             "swdio": [],
             "swclk": [],
+            "swo": [],
         }
         for number in numbers:
             pin_key = f"{key}.{number.casefold()}"
@@ -170,7 +173,7 @@ class SwdEndpointInventory:
             assignments = self.assignments.get(pin.casefold(), frozenset())
             pins_by_role[role].append((pin, function, assignments))
 
-        if any(len(pins_by_role[role]) != 1 for role in pins_by_role):
+        if any(len(pins_by_role[role]) != 1 for role in ("swdio", "swclk")):
             return ()
         swdio, swclk = pins_by_role["swdio"][0], pins_by_role["swclk"][0]
         if len(swdio[2]) != 1 or len(swclk[2]) != 1:
@@ -181,7 +184,7 @@ class SwdEndpointInventory:
             return ()
 
         identity_basis = "unique assigned native SWDIO/SWCLK pair"
-        return tuple(
+        signals = [
             SwdNamedRailSignalPin(
                 pin=pin,
                 function=function,
@@ -192,4 +195,18 @@ class SwdEndpointInventory:
                 (swdio, "swdio"),
                 (swclk, "swclk"),
             )
-        )
+        ]
+        if len(pins_by_role["swo"]) == 1:
+            swo = pins_by_role["swo"][0]
+            if len(swo[2]) == 1:
+                swo_net = next(iter(swo[2]))
+                if swo_net.casefold() not in {swdio_net.casefold(), swclk_net.casefold()}:
+                    signals.append(
+                        SwdNamedRailSignalPin(
+                            pin=swo[0],
+                            function=swo[1],
+                            role="swo",
+                            identity_basis="unique assigned native SWDIO/SWCLK pair with one explicit SWO function",
+                        )
+                    )
+        return tuple(signals)

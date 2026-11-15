@@ -13,7 +13,7 @@ from kicad_tooling.hwrepo.design_lint_finding_models import (
 from kicad_tooling.hwrepo.design_lint_policy_models import DesignLintPolicy
 from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.models import ComponentContract, ContractCoachReport, NetlistContract
-from kicad_tooling.hwrepo.swd_endpoint_inventory import swd_function_role
+from kicad_tooling.hwrepo.swd_endpoint_inventory import SwdEndpointInventory, swd_function_role
 from kicad_tooling.hwrepo.swd_signal_named_rail import swd_signal_on_named_rail_candidates
 from tests.design_lint_fixtures.swd_signal_named_rail import swd_signal_named_rail_netlist
 
@@ -79,6 +79,71 @@ def test_explicit_connector_pair_is_reviewed_but_neutral_signal_nets_are_quiet()
     )
     assert not swd_signal_on_named_rail_candidates(connector_control)
     assert not _findings(_report(connector_control))
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_explicit_swo_pin_on_a_named_rail_is_reviewed_for_ic_and_connector() -> None:
+    ic_fault = swd_signal_named_rail_netlist(rail_pins={"3": "GND"})
+    connector_fault = swd_signal_named_rail_netlist(reference="J1", rail_pins={"3": "+3V3"})
+    ic_findings = _findings(_report(ic_fault))
+    connector_findings = _findings(_report(connector_fault))
+
+    assert tuple(item.subject for item in ic_findings) == ("U1.3: SWO on return-like net GND",)
+    assert ic_findings[0].evidence["swd_role"] == ("swo",)
+    assert ic_findings[0].evidence["swd_identity_basis"] == (
+        "unique assigned native SWDIO/SWCLK pair with one explicit SWO function",
+    )
+    assert tuple(item.subject for item in connector_findings) == (
+        "J1.3: SWO on supply-like net +3V3",
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_swo_is_optional_and_requires_one_explicit_unique_distinct_assignment() -> None:
+    source = swd_signal_named_rail_netlist(rail_pins={"1": "GND", "2": "+3V3", "3": "+1V8"})
+    open_nets = {
+        name: tuple(pin for pin in pins if pin != "U1.3") for name, pins in source.nets.items()
+    }
+    open_swo = source.model_copy(
+        update={"nets": {name: pins for name, pins in open_nets.items() if pins}}
+    )
+    multiple_swo_nets = source.model_copy(update={"nets": {**source.nets, "ALT": ("U1.3",)}})
+    duplicate_swo = swd_signal_named_rail_netlist(
+        functions=("SYS_JTMS-SWDIO", "SYS_JTCK-SWCLK", "SWO", "JTDO-SWO"),
+        rail_pins={"1": "GND", "2": "+3V3"},
+    )
+    tdo_without_swo = swd_signal_named_rail_netlist(
+        functions=("SYS_JTMS-SWDIO", "SYS_JTCK-SWCLK", "JTDO", "GPIO"),
+        rail_pins={"1": "GND", "2": "+3V3"},
+    )
+    swo_on_swdio_net = swd_signal_named_rail_netlist(rail_pins={"1": "GND"})
+    same_net_nets = {
+        name: (*pins, "U1.3") if name == "GND" else pins
+        for name, pins in swo_on_swdio_net.nets.items()
+        if name != "SWD_SIGNAL_3"
+    }
+    same_net_swo = swo_on_swdio_net.model_copy(update={"nets": same_net_nets})
+
+    assert swd_function_role("SWO") == "swo"
+    assert swd_function_role("JTDO-SWO") == "swo"
+    assert swd_function_role("JTDO") is None
+    assert swd_function_role("SWO-SWDIO") is None
+    endpoints = SwdEndpointInventory.from_netlist(source).endpoint_pairs()
+    assert len(endpoints) == 1
+    assert (endpoints[0].swdio_pin, endpoints[0].swclk_pin) == ("U1.1", "U1.2")
+    assert tuple(item.subject for item in _findings(_report(same_net_swo))) == (
+        "U1.1: SYS_JTMS-SWDIO on return-like net GND",
+    )
+    expected_pair_findings = (
+        "U1.1: SYS_JTMS-SWDIO on return-like net GND",
+        "U1.2: SYS_JTCK-SWCLK on supply-like net +3V3",
+    )
+    for case in (open_swo, multiple_swo_nets, duplicate_swo, tdo_without_swo):
+        assert (
+            tuple(item.subject for item in swd_signal_on_named_rail_candidates(case))
+            == expected_pair_findings
+        )
+        assert tuple(item.subject for item in _findings(_report(case))) == expected_pair_findings
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

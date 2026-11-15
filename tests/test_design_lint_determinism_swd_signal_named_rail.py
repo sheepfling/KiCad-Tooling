@@ -25,5 +25,6 @@ def test_swd_signal_named_rail_reports_are_hashseed_deterministic() -> None:
     assert tuple(item["subject"] for item in fault_findings) == (
         "U1.1: SYS_JTMS-SWDIO on return-like net GND",
         "U1.2: SYS_JTCK-SWCLK on supply-like net +3V3",
+        "U1.3: SWO on supply-like net +1V8",
     )
     assert not any(item["rule_id"] == RULE_ID for item in control["findings"])

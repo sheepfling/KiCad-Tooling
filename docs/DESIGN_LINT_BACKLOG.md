@@ -28645,7 +28645,10 @@ acceptance threads while new lint features proceed:
   pull-up or pull-down paths through resistors. It does not establish that SWD
   is enabled, that a rail-like name reflects electrical potential, that a pin
   assignment is faulty, or that optional SWO/reset pins are part of the
-  interface. Same-net SWDIO/SWCLK pairs remain with the separate same-net rule.
+  interface. At initial LINT-501 acceptance, SWO was outside the predicate;
+  LINT-502 below extends this same configurable rule with an explicitly named
+  optional SWO clue. Same-net SWDIO/SWCLK pairs remain with the separate
+  same-net rule.
   PCB copper, external wiring, and physical continuity are outside scope.
 - **Evidence:** Synthetic faults and controls cover both pair roles, explicit
   connector roles, the historical SWDCLK alias, resistor-mediated bias paths,
@@ -28676,6 +28679,44 @@ acceptance threads while new lint features proceed:
   type checks, wheel/sdist builds, installed-wheel checks, and the external
   KiCad-Test checkout playtest passed. Package and preview jobs were skipped
   under prerelease policy.
+
+#### LINT-502 — Review explicit SWO output pins on named rails
+
+- **Priority:** P2 extension to the SWD named-rail review. Arm defines SWO as
+  an optional serial trace output, and notes that shared JTAG/SWD connectors
+  can reuse TDO for SWO. An explicitly identified SWO pin on a rail-like net
+  is a deterministic review clue; its presence does not make trace necessary.
+- **Status:** Extends `bus.swd_signal_on_named_rail` without adding another
+  rule ID or changing its default `review` policy. SWO is considered only when
+  the fitted endpoint also has one complete, unique, separately assigned
+  SWDIO/SWCLK pair.
+- **Predicate:** Recognize a unique pin function containing the exact `SWO`
+  token, including a composite such as `JTDO-SWO`. Require one assigned net
+  distinct from both required pair nets. Review it only when its own net label
+  matches the existing bounded supply-like or return-like vocabulary. `JTDO`
+  alone does not identify SWO. Duplicate, open, multiply assigned, pair-shared,
+  or ambiguous optional SWO pins are ignored without suppressing valid
+  SWDIO/SWCLK findings.
+- **Source basis:** Arm's [CoreSight Architecture Specification][arm-coresight-swo]
+  describes SWO as a serial trace output and identifies TDO/SWO sharing on
+  connectors supporting both interfaces. This establishes the signal role,
+  not project intent or a requirement to enable trace.
+- **Limitations:** Function labels and net names remain review clues. The
+  check does not infer SWO from `TDO`, determine whether trace is enabled,
+  inspect signal integrity or PCB copper, or require an SWO pin. Intentional
+  test, mux, and debug configurations remain project decisions.
+- **Evidence:** Synthetic IC and connector faults place explicit SWO functions
+  on return-like and supply-like nets. Controls cover neutral SWO nets,
+  no-SWO endpoints, TDO-only functions, duplicate roles, open and multiply
+  assigned SWO pins, SWO sharing a pair net, and preserving the existing
+  SWDIO/SWCLK endpoint-pair recognition. Updated tooling-owned native
+  fault/control schematics run twice against digest-pinned KiCad 10.0.0 and
+  10.0.5 images with ERC clear.
+- **Selection:** Use the existing
+  `bus.swd_signal_on_named_rail` selector, focused SWD interface tests,
+  endpoint-architecture checks, native fixture lane, and catalog reachability.
+- **Local acceptance:** Pending the LINT-502 scoped release gate.
+- **Hosted acceptance:** Pending the LINT-502 annotated prerelease tag.
 
 ## Completion and release gate
 
@@ -28744,6 +28785,7 @@ quality, or first-article continuity.
 [kicad-10-cli-drc]: https://docs.kicad.org/10.0/en/cli/cli.html
 [arm-jtag-signals]: https://documentation-service.arm.com/static/5f900a61f86e16515cdc0610
 [arm-swd-signals]: https://documentation-service.arm.com/static/5f900abff86e16515cdc063b
+[arm-coresight-swo]: https://documentation-service.arm.com/static/63a03a981d698c4dc521ca77
 [kicad-10-5-marker-serializer]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/pcb_marker.cpp
 [kicad-pcb-parser-zone-id-100]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/pcb_io/kicad_sexpr/pcb_io_kicad_sexpr_parser.cpp
 [kicad-pcb-parser-zone-id-105]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/pcb_io/kicad_sexpr/pcb_io_kicad_sexpr_parser.cpp

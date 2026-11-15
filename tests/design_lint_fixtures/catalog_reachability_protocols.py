@@ -130,7 +130,8 @@ def protocol_rule_ids() -> set[str]:
         item.rule_id for item in candidates(jtag_signal_named_rail_netlist(rail_pins={"1": "GND"}))
     )
     emitted.update(
-        item.rule_id for item in candidates(swd_signal_named_rail_netlist(rail_pins={"1": "GND"}))
+        item.rule_id
+        for item in candidates(swd_signal_named_rail_netlist(rail_pins={"1": "GND", "3": "+3V3"}))
     )
     i3c_source = i3c_same_net_netlist()
     emitted.update(item.rule_id for item in candidates(i3c_source))

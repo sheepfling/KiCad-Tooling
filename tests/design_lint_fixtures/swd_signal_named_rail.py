@@ -9,7 +9,7 @@ from kicad_tooling.hwrepo.models import ComponentContract, NetlistContract
 DEFAULT_FUNCTIONS = (
     "SYS_JTMS-SWDIO",
     "SYS_JTCK-SWCLK",
-    "GPIO_AUX",
+    "SWO",
     "GPIO_OTHER",
 )
 
