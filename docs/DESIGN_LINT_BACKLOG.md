@@ -847,7 +847,17 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc821):** LINT-496 extends
+- **Latest published lint-gate checkpoint (v0.5.3rc823):** LINT-497 extends
+  RS-485 named-rail review to explicitly identified module connectors with
+  bounded DI/RO pin functions. Hosted acceptance passed in GitHub Actions run
+  `43718798860`: 483 selected tests passed and 9,681 were deselected, including
+  repeatable Docker fixtures on KiCad 10.0.0 and 10.0.5. Tag-scope resolution,
+  the scoped gate, type checks, packaging, and installed-wheel verification
+  against a separate project passed. Package and preview jobs were skipped
+  under prerelease policy. The earlier `v0.5.3rc822` tag omitted required
+  selector metadata and stopped before tests; `v0.5.3rc823` supplied the rule
+  and native-fixture declarations.
+- **Previous published lint-gate checkpoint (v0.5.3rc821):** LINT-496 extends
   I3C named-rail review to recognized connector pins with exact SDA/SCL
   functions. Hosted acceptance passed in GitHub Actions run `43716561821`: 479
   selected tests passed and 9,683 were deselected, including repeatable Docker
@@ -28442,7 +28452,14 @@ acceptance threads while new lint features proceed:
   fixtures passed on KiCad 10.0.0 and 10.0.5. Ruff, Alphus boundaries,
   Rumdl, mdrepo, Linux/Windows Pyright, wheel/sdist builds, isolated install,
   and the external KiCad-Test checkout playtest passed.
-- **Hosted acceptance:** Pending the tagged workflow.
+- **Hosted acceptance:** Passed tag `v0.5.3rc823` in GitHub Actions run
+  `43718798860`: 483 passed and 9,681 deselected. Docker fixtures passed on
+  KiCad 10.0.0 and 10.0.5. Tag-scope resolution, Linux/Windows type checking,
+  wheel/sdist builds, installed-wheel checks, and the separate-project
+  KiCad-Test playtest passed. Package and preview jobs were skipped under
+  prerelease policy. The initial `v0.5.3rc822` tag lacked selector metadata and
+  failed in tag resolution before the lint tests ran; `v0.5.3rc823` carries the
+  required `Lint-Rule` and `Native-Fixture` declarations.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
