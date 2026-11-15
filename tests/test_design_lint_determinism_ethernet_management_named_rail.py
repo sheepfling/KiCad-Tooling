@@ -20,7 +20,17 @@ def test_ethernet_management_named_rail_reports_are_hashseed_deterministic() -> 
     reports = hashseed_probe_reports(families=("ethernet_management_named_rail",))
     fault = reports["ethernet_management_named_rail_fault"]
     control = reports["ethernet_management_named_rail_control"]
+    connector_fault = reports["ethernet_management_named_rail_connector_fault"]
+    connector_control = reports["ethernet_management_named_rail_connector_control"]
     findings = tuple(item for item in fault["findings"] if item["rule_id"] == RULE_ID)
+    connector_findings = tuple(
+        item for item in connector_fault["findings"] if item["rule_id"] == RULE_ID
+    )
 
     assert tuple(item["subject"] for item in findings) == ("U1.5: MDC on return-like net GND",)
     assert not any(item["rule_id"] == RULE_ID for item in control["findings"])
+    assert tuple(item["subject"] for item in connector_findings) == (
+        "J1.1: MDC on return-like net GND",
+        "J1.2: MDIO on supply-like net +3V3",
+    )
+    assert not any(item["rule_id"] == RULE_ID for item in connector_control["findings"])

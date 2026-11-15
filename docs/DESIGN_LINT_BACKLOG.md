@@ -28289,6 +28289,37 @@ acceptance threads while new lint features proceed:
   wheel verification against the separate public project passed. Package and
   preview jobs were skipped under prerelease policy.
 
+#### LINT-494 — Review Ethernet management connector pins assigned to named rails
+
+- **Priority:** P2 configurable interface heuristic. A management header can
+  expose the same suspicious MDC/MDIO rail assignment as the PHY pins.
+- **Status:** Extends `bus.ethernet_management_signal_on_named_rail`; retains
+  its rule ID, REVIEW default, policy controls, and exact MDC/MDIO recognition.
+- **Predicate:** Apply the current fitted-state, complete-inventory, exact
+  function, and named-rail checks to recognized connector candidates as well
+  as U/IC pins. Connector identity alone is insufficient.
+- **Interpretation:** Exact MDC/MDIO function names and rail-like net labels
+  are review clues, not an approved connector pinout or defect verdict. The
+  check does not establish electrical potential, management-bus intent, PCB
+  copper, or physical continuity.
+- **Evidence:** Synthetic tests cover connector MDC and MDIO findings, neutral
+  labels, generic function names, DNP, open, ambiguous, incomplete-inventory,
+  non-connector, policy, ordering, and hash-seed controls. Digest-pinned native
+  fault/control schematics contain both a two-pin management header and PHY;
+  the control keeps both on the named management nets and the fault assigns
+  both MDC pins to `GND`. Native results are repeatable on KiCad 10.0.0 and
+  10.0.5. Fixtures are synthetic and tooling-owned.
+- **Selection:** Use the exact `bus.ethernet_management_signal_on_named_rail`
+  selector for the lint and native fixture suites. Also run catalog
+  reachability, architecture, and rule-gate integrity. Native export uses
+  `KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_NAMED_RAIL_FIXTURES=1`.
+- **Local acceptance:** Passed `scripts/ci.py` scoped to this rule and rule-gate
+  integrity: 480 passed, 9,680 deselected. Ruff, Alphus, rumdl, mdrepo, Pyright,
+  Windows type checking, wheel/sdist builds, isolated installs, and the external
+  KiCad-Test checkout playtest passed. Pinned Docker KiCad 10.0.0 and 10.0.5
+  fault/control fixture runs passed.
+- **Hosted acceptance:** Pending tagged workflow acceptance.
+
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
 ## Completion and release gate

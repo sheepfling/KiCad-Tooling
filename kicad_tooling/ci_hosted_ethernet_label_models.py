@@ -88,7 +88,7 @@ class EthernetLabelFixtureExpectation(StrictModel):
         return self
 
 
-ETHERNET_LABEL_FIXTURES: Mapping[EthernetLabelFeature, EthernetLabelFixtureExpectation] = (
+ETHERNET_LABEL_BASE_FIXTURES: Mapping[EthernetLabelFeature, EthernetLabelFixtureExpectation] = (
     MappingProxyType(
         {
             "data": EthernetLabelFixtureExpectation(
@@ -163,33 +163,6 @@ ETHERNET_LABEL_FIXTURES: Mapping[EthernetLabelFeature, EthernetLabelFixtureExpec
                         ),
                         EthernetLabelPinExpectation(
                             reference="U1.6", function="MDIO", net="ETH_MDC"
-                        ),
-                    ),
-                ),
-            ),
-            "management_named_rail": EthernetLabelFixtureExpectation(
-                directory="ethernet-management-named-rail",
-                rule_id="bus.ethernet_management_signal_on_named_rail",
-                stage_prefix="ethernet-management-named-rail-fixture",
-                control=EthernetLabelCaseExpectation(
-                    source_sha256="3ddd8d2919eade8a6bb8f7a8c059dafbe9b348aacbb5a6bb8398b0c62944d31b",
-                    subjects=(),
-                    pins=(
-                        EthernetLabelPinExpectation(
-                            reference="U1.5", function="MDC", net="ETH_MDC"
-                        ),
-                        EthernetLabelPinExpectation(
-                            reference="U1.6", function="MDIO", net="ETH_MDIO"
-                        ),
-                    ),
-                ),
-                fault=EthernetLabelCaseExpectation(
-                    source_sha256="6ab770da2bd563b08152d89a12f10f1eb872550233815e3f1b398c4e290fc86a",
-                    subjects=("U1.5: MDC on return-like net GND",),
-                    pins=(
-                        EthernetLabelPinExpectation(reference="U1.5", function="MDC", net="GND"),
-                        EthernetLabelPinExpectation(
-                            reference="U1.6", function="MDIO", net="ETH_MDIO"
                         ),
                     ),
                 ),

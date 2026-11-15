@@ -9,11 +9,15 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
+from types import MappingProxyType
 
 from .ci_hosted_ethernet_label_models import (
-    ETHERNET_LABEL_FIXTURES,
+    ETHERNET_LABEL_BASE_FIXTURES,
     EthernetLabelFeature,
     EthernetLabelFixtureExpectation,
+)
+from .ci_hosted_ethernet_management_named_rail_fixture import (
+    ETHERNET_MANAGEMENT_NAMED_RAIL_FIXTURE,
 )
 from .ci_hosted_support import HostedLog, tooling_checkout_root
 from .hwrepo.contract_coach import pinned_image, run_command
@@ -26,6 +30,15 @@ from .hwrepo.evidence import digest
 from .hwrepo.models import DesignLintPolicy
 from .hwrepo.native_report_parsing import read_netlist
 from .hwrepo.netlist_contract_models import NetlistContract
+
+ETHERNET_LABEL_FIXTURES: MappingProxyType[EthernetLabelFeature, EthernetLabelFixtureExpectation] = (
+    MappingProxyType(
+        {
+            **ETHERNET_LABEL_BASE_FIXTURES,
+            "management_named_rail": ETHERNET_MANAGEMENT_NAMED_RAIL_FIXTURE,
+        }
+    )
+)
 
 ETHERNET_LABEL_NATIVE_TOOLCHAINS = (
     (

@@ -45,6 +45,8 @@ REPORT_ORDER = (
     "ethernet_signal_named_rail_control",
     "ethernet_management_named_rail_fault",
     "ethernet_management_named_rail_control",
+    "ethernet_management_named_rail_connector_fault",
+    "ethernet_management_named_rail_connector_control",
     "usb_signal_named_rail_fault",
     "usb_signal_named_rail_control",
     "usb_c_cc_named_rail_fault",

@@ -328,6 +328,10 @@ def catalog_reachability_rule_ids() -> set[str]:
     )
     result.update(item.rule_id for item in candidates(ethernet_management_netlist()))
     result.update(
+        item.rule_id
+        for item in candidates(ethernet_management_netlist(reference="J1", labels=("GND", "+3V3")))
+    )
+    result.update(
         item.rule_id for item in candidates(ethernet_management_netlist(open_functions=("MDC",)))
     )
     result.update(

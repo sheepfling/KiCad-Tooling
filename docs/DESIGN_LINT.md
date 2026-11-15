@@ -2199,12 +2199,13 @@ KICAD_RUN_NATIVE_ETHERNET_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m py
 
 ### Ethernet MDC/MDIO pins assigned directly to named rails
 
-`bus.ethernet_management_signal_on_named_rail` reviews fitted IC pins with
-exact MDC or MDIO functions when their sole assigned net has a recognized
-supply-like or return-like name. The default is `review`: an unused management
-pin or intentional strap may be valid. The heuristic does not establish pinout
-intent, electrical potential, routing, or physical continuity. Its synthetic
-fault/control schematics are listed in the
+`bus.ethernet_management_signal_on_named_rail` reviews fitted IC or recognized
+connector-candidate pins with exact MDC or MDIO functions when their complete
+native inventory includes the pin and each pin has one unambiguous net
+assignment. A supply-like or return-like label prompts review. The default is
+`review`: an unused management pin or intentional strap may be valid. The
+heuristic does not establish pinout intent, electrical potential, routing, or
+physical continuity. Its synthetic fault/control schematics are listed in the
 [fixture record](../tests/fixtures/design_lint/ethernet-management-named-rail/README.md).
 
 ```sh

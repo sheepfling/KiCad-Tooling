@@ -20,7 +20,21 @@ def report_cases() -> JsonObject:
         coach(ethernet_management_netlist()),
         DesignLintPolicy(),
     )
+    connector_fault = evaluate(
+        "synthetic-ethernet-management-connector-named-rail-fault",
+        coach(ethernet_management_netlist(reference="J1", labels=("GND", "+3V3"))),
+        DesignLintPolicy(),
+    )
+    connector_control = evaluate(
+        "synthetic-ethernet-management-connector-named-rail-control",
+        coach(ethernet_management_netlist(reference="J1")),
+        DesignLintPolicy(),
+    )
     return {
         "ethernet_management_named_rail_fault": fault.model_dump(mode="json"),
         "ethernet_management_named_rail_control": control.model_dump(mode="json"),
+        "ethernet_management_named_rail_connector_fault": connector_fault.model_dump(mode="json"),
+        "ethernet_management_named_rail_connector_control": connector_control.model_dump(
+            mode="json"
+        ),
     }

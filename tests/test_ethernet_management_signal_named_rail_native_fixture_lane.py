@@ -63,7 +63,9 @@ def test_native_ethernet_management_named_rail_fault_and_control_repeat(
     }
     fault = results["ethernet-management-named-rail-fixture/fault"]
     control = results["ethernet-management-named-rail-fixture/control"]
-    assert fault["findings"] == "U1.5: MDC on return-like net GND"
+    assert fault["findings"] == (
+        "J2.1: MDC on return-like net GND;U1.5: MDC on return-like net GND"
+    )
     assert control["findings"] == "none"
     native_export = results["ethernet-management-named-rail-fixture/native-export"]
     assert_native_fixture_mounts(root, native_export["command_receipt"])
