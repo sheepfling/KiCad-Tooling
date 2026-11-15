@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 395 rules are implemented with synthetic regression coverage.
+The following 398 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 395 active rules.
+The catalog currently contains 398 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -4533,7 +4533,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 395 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 398 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -28615,6 +28615,50 @@ acceptance threads while new lint features proceed:
   KiCad-Test checkout playtest passed. Package and preview jobs were skipped
   under prerelease policy.
 
+#### LINT-501 — Review SWD signals assigned directly to named rails
+
+- **Priority:** P2 configurable interface heuristic. Native SWDIO/SWCLK pins
+  assigned to a supply-like or return-like named net may deserve review, but
+  function text and net labels do not specify board intent.
+- **Status:** Implemented as `bus.swd_signal_on_named_rail`, default `review`,
+  with per-project mode and exact-fingerprint ignore controls. The predicate
+  owns its endpoint candidate scan; the SWD endpoint inventory supplies the
+  complete native pair evidence.
+- **Predicate:** Inspect fitted IC and recognized connector candidates only
+  when the native pin inventory and function/electrical metadata are complete.
+  Require exactly one SWDIO and one SWCLK/SWDCLK role on distinct, singly
+  assigned nets. Composite public symbol functions such as
+  `SYS_JTMS-SWDIO`/`SYS_JTCK-SWCLK` are supported; JTMS/JTCK alone do not
+  identify SWD. Review either pair pin only when its own assigned label matches
+  the existing named-rail vocabulary.
+- **Source basis:** Arm's [Debug Interface v5 Architecture Specification][arm-swd-signals]
+  identifies SWDIO as the bidirectional data signal and SWCLK as the clock.
+  This supports the bounded role pair, not a board-specific requirement.
+- **Interpretation:** The check detects direct native net assignments, not
+  pull-up or pull-down paths through resistors. It does not establish that SWD
+  is enabled, that a rail-like name reflects electrical potential, that a pin
+  assignment is faulty, or that optional SWO/reset pins are part of the
+  interface. Same-net SWDIO/SWCLK pairs remain with the separate same-net rule.
+  PCB copper, external wiring, and physical continuity are outside scope.
+- **Evidence:** Synthetic faults and controls cover both pair roles, explicit
+  connector roles, the historical SWDCLK alias, resistor-mediated bias paths,
+  JTMS/JTCK-only and incomplete/ambiguous/open/DNP endpoints, same-net pairs,
+  project policy, source-bound evidence, mapping stability, hash-seed
+  determinism, CLI/MCP parity, and exact-version native exports. Tooling-owned
+  schematics are stored under
+  `tests/fixtures/design_lint/swd-signal-named-rail/`; no project or cohort
+  design source is used.
+- **Selection:** Run `tests/test_swd_signal_named_rail.py`,
+  `tests/test_design_lint_mcp_parity_swd_signal_named_rail.py`, and
+  `tests/test_design_lint_determinism_swd_signal_named_rail.py` with the
+  `bus.swd_signal_on_named_rail` selector, plus named-rail architecture and
+  catalog reachability. The Docker lane is
+  `tests/test_swd_signal_named_rail_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_SWD_SIGNAL_NAMED_RAIL_FIXTURES=1`.
+- **Local acceptance:** Pending the exact prerelease tag-scope run.
+- **Hosted acceptance:** Pending the annotated prerelease tag and GitHub
+  Actions result.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -28681,6 +28725,7 @@ quality, or first-article continuity.
 [kicad-10-drc-exclusions]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#design-rule-checking
 [kicad-10-cli-drc]: https://docs.kicad.org/10.0/en/cli/cli.html
 [arm-jtag-signals]: https://documentation-service.arm.com/static/5f900a61f86e16515cdc0610
+[arm-swd-signals]: https://documentation-service.arm.com/static/5f900abff86e16515cdc063b
 [kicad-10-5-marker-serializer]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/pcb_marker.cpp
 [kicad-pcb-parser-zone-id-100]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/pcb_io/kicad_sexpr/pcb_io_kicad_sexpr_parser.cpp
 [kicad-pcb-parser-zone-id-105]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/pcb_io/kicad_sexpr/pcb_io_kicad_sexpr_parser.cpp

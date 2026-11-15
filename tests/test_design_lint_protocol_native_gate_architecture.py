@@ -385,6 +385,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="spi-signal-named-rail",
     ),
     pytest.param(
+        "bus.swd_signal_on_named_rail",
+        "KICAD_RUN_NATIVE_SWD_SIGNAL_NAMED_RAIL_FIXTURES",
+        "tests.test_swd_signal_named_rail_native_fixture_lane."
+        "test_native_swd_signal_named_rail_fault_and_control_repeat",
+        id="swd-signal-named-rail",
+    ),
+    pytest.param(
         "bus.can_signal_on_named_rail",
         "KICAD_RUN_NATIVE_CAN_SIGNAL_NAMED_RAIL_FIXTURES",
         "tests.test_can_signal_named_rail_native_fixture_lane."

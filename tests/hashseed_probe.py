@@ -35,6 +35,8 @@ REPORT_ORDER = (
     "jtag_signal_named_rail_control",
     "jtag_signal_named_rail_connector_fault",
     "jtag_signal_named_rail_connector_control",
+    "swd_signal_named_rail_fault",
+    "swd_signal_named_rail_control",
     "swd_signal_same_net_fault",
     "swd_signal_same_net_control",
     "i3c_unconnected_pin_fault",

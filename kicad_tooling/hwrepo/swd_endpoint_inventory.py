@@ -29,6 +29,16 @@ def swd_function_role(function: str) -> str | None:
 
 
 @dataclass(frozen=True, slots=True)
+class SwdNamedRailSignalPin:
+    """One uniquely identified SWDIO or SWCLK pin on a complete endpoint."""
+
+    pin: str
+    function: str
+    role: str
+    identity_basis: str
+
+
+@dataclass(frozen=True, slots=True)
 class SwdEndpointInventory:
     """Native pin assignments needed to recognize one complete fitted SWD pair."""
 
@@ -128,3 +138,58 @@ class SwdEndpointInventory:
                 )
             )
         return tuple(endpoints)
+
+    def named_rail_signal_pins(self, reference: str) -> tuple[SwdNamedRailSignalPin, ...]:
+        """Return a complete, unique, separately assigned SWDIO/SWCLK pair."""
+        key = reference.casefold()
+        native_reference = self.reference_spellings.get(key)
+        numbers = self.inventories.get(key)
+        if (
+            native_reference is None
+            or key not in self.components
+            or key in self.dnp_references
+            or not numbers
+            or len({number.casefold() for number in numbers}) != len(numbers)
+            or not connector_pin_metadata_matches_inventory(
+                key, numbers, self.functions, self.electrical_types
+            )
+        ):
+            return ()
+
+        pins_by_role: dict[str, list[tuple[str, str, AbstractSet[str]]]] = {
+            "swdio": [],
+            "swclk": [],
+        }
+        for number in numbers:
+            pin_key = f"{key}.{number.casefold()}"
+            function = self.functions[pin_key]
+            role = swd_function_role(function)
+            if role is None:
+                continue
+            pin = f"{native_reference}.{number}"
+            assignments = self.assignments.get(pin.casefold(), frozenset())
+            pins_by_role[role].append((pin, function, assignments))
+
+        if any(len(pins_by_role[role]) != 1 for role in pins_by_role):
+            return ()
+        swdio, swclk = pins_by_role["swdio"][0], pins_by_role["swclk"][0]
+        if len(swdio[2]) != 1 or len(swclk[2]) != 1:
+            return ()
+        swdio_net = next(iter(swdio[2]))
+        swclk_net = next(iter(swclk[2]))
+        if swdio_net.casefold() == swclk_net.casefold():
+            return ()
+
+        identity_basis = "unique assigned native SWDIO/SWCLK pair"
+        return tuple(
+            SwdNamedRailSignalPin(
+                pin=pin,
+                function=function,
+                role=role,
+                identity_basis=identity_basis,
+            )
+            for (pin, function, _assignments), role in (
+                (swdio, "swdio"),
+                (swclk, "swclk"),
+            )
+        )

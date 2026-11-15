@@ -1094,7 +1094,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 397 active rules.
+The catalog currently contains 398 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -4261,6 +4261,45 @@ checked with digest-pinned KiCad 10.0.0 and 10.0.5 Docker images; see the
 KICAD_RUN_NATIVE_JTAG_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest -q \
   tests/test_jtag_signal_named_rail_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.jtag_signal_on_named_rail")'
+```
+
+## Review SWD signal pins assigned to named rails
+
+`bus.swd_signal_on_named_rail` emits a default `review` finding when a fitted
+IC or recognized connector has a complete, unique native pin inventory and
+exactly one SWDIO plus one SWCLK/SWDCLK pin on separate assigned nets. Either
+pin is reported when its net label matches the existing supply-like or
+return-like clue vocabulary. Composite function names such as
+`SYS_JTMS-SWDIO` and `SYS_JTCK-SWCLK` are supported. `JTMS` and `JTCK` alone do
+not identify SWD.
+
+This is an endpoint-identity and label heuristic. It does not establish that
+SWD is enabled, that the label is the electrical potential, or that an
+assignment is wrong. The predicate checks the signal pin's direct net
+assignment; normal SWDIO pull-up and SWCLK pull-down resistor paths are outside
+its scope. Duplicate or ambiguous roles, open or multiply assigned pair pins,
+same-net pairs, DNP endpoints, and incomplete inventories stay quiet. The
+check does not assess optional SWO/reset signals, PCB copper, or continuity.
+Projects can promote the cue to `block`, turn it `off`, or ignore one exact
+fingerprint.
+
+The SWDIO/SWCLK role pair follows Arm's [Debug Interface v5 specification][arm-swd-signals].
+Synthetic regressions cover direct rail assignments, a resistor-bias control,
+explicit connector functions, JTMS/JTCK-only and incomplete-pair controls,
+policy, source-bound evidence, stable ordering, CLI/MCP parity, and
+three-process hash-seed stability. The tooling-owned fault/control schematics
+are exported twice with digest-pinned KiCad 10.0.0 and 10.0.5 Docker images; see
+the [fixture record](../tests/fixtures/design_lint/swd-signal-named-rail/README.md).
+
+```sh
+.venv/bin/python -I -m pytest -q tests/test_swd_signal_named_rail.py \
+  tests/test_design_lint_mcp_parity_swd_signal_named_rail.py \
+  tests/test_design_lint_determinism_swd_signal_named_rail.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.swd_signal_on_named_rail")'
+
+KICAD_RUN_NATIVE_SWD_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest -q \
+  tests/test_swd_signal_named_rail_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.swd_signal_on_named_rail")'
 ```
 
 ## Review an SWD connector without an identified return
@@ -11299,3 +11338,4 @@ Review the actual board and assembly requirements before approving a build.
 [serial-connector-rail-fixture]:
   ../tests/fixtures/design_lint/serial-connector-signal-named-rail-native/README.md
 [arm-jtag-signals]: https://documentation-service.arm.com/static/5f900a61f86e16515cdc0610
+[arm-swd-signals]: https://documentation-service.arm.com/static/5f900abff86e16515cdc063b

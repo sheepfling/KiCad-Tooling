@@ -18,6 +18,7 @@ TYPED_SIGNAL_RULES = frozenset(
         "bus.i2c_signal_on_named_rail",
         "bus.i2s_signal_on_named_rail",
         "bus.jtag_signal_on_named_rail",
+        "bus.swd_signal_on_named_rail",
         "bus.i3c_signal_on_named_rail",
         "bus.spi_signal_on_named_rail",
         "bus.serial_signal_on_named_rail",
@@ -59,6 +60,10 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
         "bus.jtag_signal_on_named_rail": (
             "jtag_signal_inventory.py",
             "kicad_tooling/hwrepo/jtag_signal_inventory.py#jtag_named_rail_signal_pins",
+        ),
+        "bus.swd_signal_on_named_rail": (
+            "swd_signal_named_rail.py",
+            "kicad_tooling/hwrepo/swd_signal_named_rail.py#swd_signal_on_named_rail_candidates",
         ),
         "bus.serial_signal_on_named_rail": (
             "serial_signal_named_rail.py",
@@ -118,6 +123,8 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
     assert line_count(HWREPO / "can_signal_functions.py") < IMPLEMENTATION_MAX_LINES
     assert line_count(HWREPO / "i2s_endpoint_inventory.py") < IMPLEMENTATION_MAX_LINES
     assert line_count(HWREPO / "jtag_signal_inventory.py") < IMPLEMENTATION_MAX_LINES
+    assert line_count(HWREPO / "swd_endpoint_inventory.py") < IMPLEMENTATION_MAX_LINES
+    assert line_count(HWREPO / "swd_signal_named_rail.py") < IMPLEMENTATION_MAX_LINES
     assert line_count(HWREPO / "design_lint_named_rail_line_candidate_evidence.py") < (
         IMPLEMENTATION_MAX_LINES
     )
@@ -148,6 +155,15 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
     assert "kicad_tooling/hwrepo/jtag_signal_inventory.py#jtag_signal_roles" in jtag_refs
     assert CONNECTOR_PIN_EVIDENCE in jtag_refs
     assert CONNECTOR_CANDIDATE_REFERENCES in jtag_refs
+
+    swd_refs = catalog["bus.swd_signal_on_named_rail"].implementation_refs
+    assert (
+        "kicad_tooling/hwrepo/swd_endpoint_inventory.py#SwdEndpointInventory.named_rail_signal_pins"
+        in swd_refs
+    )
+    assert "kicad_tooling/hwrepo/swd_endpoint_inventory.py#swd_function_role" in swd_refs
+    assert CONNECTOR_PIN_EVIDENCE in swd_refs
+    assert CONNECTOR_CANDIDATE_REFERENCES in swd_refs
 
     assert CONNECTOR_PIN_EVIDENCE in catalog["bus.i2c_signal_on_named_rail"].implementation_refs
     assert (

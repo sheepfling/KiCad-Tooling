@@ -14,6 +14,7 @@ from tests.design_lint_fixture_ref_support import _refs
 from tests.design_lint_footprint_peer_fixture_refs import (
     FOOTPRINT_PEER_PARITY_FIXTURES,
 )
+from tests.design_lint_named_rail_parity_fixtures import NAMED_RAIL_PARITY_FIXTURES
 from tests.design_lint_pcb_differential_pair_fixture_refs import (
     PCB_DIFFERENTIAL_PAIR_PARITY_FIXTURES,
 )
@@ -59,14 +60,7 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
         **ETHERNET_CONNECTOR_PARITY_FIXTURES,
         **SWD_GENERIC_CONNECTOR_PARITY_FIXTURES,
         **SWD_SIGNAL_SAME_NET_PARITY_FIXTURES,
-        "bus.jtag_signal_on_named_rail": MappingProxyType(
-            {
-                "fault_fixtures": _refs(
-                    "tests.test_design_lint_mcp_parity_jtag_signal_named_rail",
-                    "test_jtag_signal_named_rail_cli_mcp_parity",
-                ),
-            }
-        ),
+        **NAMED_RAIL_PARITY_FIXTURES,
         **PCB_NETCLASS_PARITY_FIXTURES,
         **PCB_REFERENCE_PARITY_FIXTURES,
         **PCB_DIFFERENTIAL_PAIR_PARITY_FIXTURES,

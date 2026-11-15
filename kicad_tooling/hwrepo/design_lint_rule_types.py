@@ -267,6 +267,7 @@ DesignLintRuleId = Literal[
     "bus.i2s_clock_frame_same_net",
     "bus.i2s_signal_on_named_rail",
     "bus.jtag_signal_on_named_rail",
+    "bus.swd_signal_on_named_rail",
     "bus.jtag_generic_connector_pair_review",
     "bus.ethernet_management_signal_on_named_rail",
     "bus.ethernet_signal_on_named_rail",

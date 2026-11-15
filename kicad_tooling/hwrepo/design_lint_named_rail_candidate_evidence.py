@@ -28,6 +28,7 @@ from .named_rail_pin_evidence import (
 from .rs485_data_functions import explicit_rs485_transceiver_identity, rs485_data_pin_role
 from .serial_participants import serial_function_role_and_channel
 from .spi_participants import spi_signal_role_and_channel
+from .swd_endpoint_inventory import SwdEndpointInventory, swd_function_role
 
 CAN_SIGNAL_NAMED_RAIL_RULE_ID: DesignLintRuleId = "bus.can_signal_on_named_rail"
 I2C_SIGNAL_NAMED_RAIL_RULE_ID: DesignLintRuleId = "bus.i2c_signal_on_named_rail"
@@ -42,6 +43,7 @@ USB_SIGNAL_NAMED_RAIL_RULE_ID: DesignLintRuleId = "bus.usb_signal_on_named_rail"
 RS485_SIGNAL_NAMED_RAIL_RULE_ID: DesignLintRuleId = "bus.rs485_signal_on_named_rail"
 I2S_SIGNAL_NAMED_RAIL_RULE_ID: DesignLintRuleId = "bus.i2s_signal_on_named_rail"
 JTAG_SIGNAL_NAMED_RAIL_RULE_ID: DesignLintRuleId = "bus.jtag_signal_on_named_rail"
+SWD_SIGNAL_NAMED_RAIL_RULE_ID: DesignLintRuleId = "bus.swd_signal_on_named_rail"
 USB_C_SBU_SIGNAL_NAMED_RAIL_RULE_ID: DesignLintRuleId = "bus.usb_c_sbu_signal_on_named_rail"
 
 
@@ -138,6 +140,32 @@ class JtagSignalNamedRailEvidence:
             self.identity_basis,
         ):
             raise ValueError("JTAG named-rail evidence must match its complete native endpoint")
+
+
+@dataclass(frozen=True, slots=True)
+class SwdSignalNamedRailEvidence:
+    """One SWDIO or SWCLK pin on a named rail in a complete native endpoint."""
+
+    pin: NamedRailPinSource
+    role: str
+    identity_basis: str
+
+    def __post_init__(self) -> None:
+        reference = self.pin.evidence.reference
+        pins = SwdEndpointInventory.from_netlist(self.pin.observed).named_rail_signal_pins(
+            reference
+        )
+        current = next(
+            (item for item in pins if item.pin.casefold() == self.pin.evidence.pin.casefold()),
+            None,
+        )
+        if current is None or (current.role, current.identity_basis) != (
+            self.role,
+            self.identity_basis,
+        ):
+            raise ValueError("SWD named-rail evidence must match its complete native endpoint")
+        if swd_function_role(_current_pin_function(self.pin)) != self.role:
+            raise ValueError("SWD named-rail evidence must match its current native role")
 
 
 @dataclass(frozen=True, slots=True)
@@ -290,6 +318,7 @@ NamedRailSignalEvidence: TypeAlias = (
     | I2cSignalNamedRailEvidence
     | I2sSignalNamedRailEvidence
     | JtagSignalNamedRailEvidence
+    | SwdSignalNamedRailEvidence
     | I3cSignalNamedRailEvidence
     | SpiSignalNamedRailEvidence
     | SerialSignalNamedRailEvidence
@@ -345,6 +374,14 @@ def project_named_rail_signal_evidence(
             {
                 "jtag_role": (source.role,),
                 "jtag_identity_basis": (source.identity_basis,),
+            }
+        )
+    elif isinstance(source, SwdSignalNamedRailEvidence):
+        rule_id = SWD_SIGNAL_NAMED_RAIL_RULE_ID
+        evidence.update(
+            {
+                "swd_role": (source.role,),
+                "swd_identity_basis": (source.identity_basis,),
             }
         )
     elif isinstance(source, I3cSignalNamedRailEvidence):
