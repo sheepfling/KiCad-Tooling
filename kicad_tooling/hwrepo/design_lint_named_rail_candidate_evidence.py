@@ -11,7 +11,12 @@ from .bus_signal_pairs import (
     usb_signal_family_and_side,
 )
 from .bus_signal_roles import i2c_signal_role, i3c_signal_identity, usb_c_sbu_role
-from .can_signal_functions import can_signal_role_and_channel
+from .can_signal_functions import (
+    CAN_MODULE_CHANNEL,
+    can_module_data_role,
+    can_signal_role_and_channel,
+    explicit_can_module_identity,
+)
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .named_rail_pin_evidence import (
@@ -44,18 +49,31 @@ def _current_pin_function(source: NamedRailPinSource) -> str:
 
 @dataclass(frozen=True, slots=True)
 class CanSignalNamedRailEvidence:
-    """One CAN/FDCAN controller TX/RX signal pin on a named rail."""
+    """One native CAN controller or identified module signal pin on a named rail."""
 
     pin: NamedRailPinSource
     role: str
     channel: str
+    identity_basis: str | None = None
 
     def __post_init__(self) -> None:
-        if can_signal_role_and_channel(_current_pin_function(self.pin)) != (
-            self.role,
-            self.channel,
+        function = _current_pin_function(self.pin)
+        if can_signal_role_and_channel(function) == (self.role, self.channel):
+            if self.identity_basis is None:
+                return
+            raise ValueError("Explicit CAN signal evidence cannot claim module identity")
+
+        current_identity = explicit_can_module_identity(
+            self.pin.observed, self.pin.evidence.reference
+        )
+        if (
+            self.pin.evidence.reference_kind != "connector"
+            or self.identity_basis is None
+            or current_identity != self.identity_basis
+            or can_module_data_role(function) != self.role
+            or self.channel != CAN_MODULE_CHANNEL
         ):
-            raise ValueError("CAN named-rail evidence must match its current pin function")
+            raise ValueError("CAN module evidence must match current native identity and function")
 
 
 @dataclass(frozen=True, slots=True)
@@ -254,6 +272,8 @@ def project_named_rail_signal_evidence(
                 "can_channel": (source.channel,),
             }
         )
+        if source.identity_basis is not None:
+            evidence["can_module_identity"] = (source.identity_basis,)
     elif isinstance(source, I2cSignalNamedRailEvidence):
         rule_id = I2C_SIGNAL_NAMED_RAIL_RULE_ID
         evidence["pin_role"] = (source.role,)

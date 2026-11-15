@@ -1,8 +1,13 @@
-"""Review CAN signal pins assigned directly to named rails."""
+"""Review CAN controller and identified module data pins on named rails."""
 
 from __future__ import annotations
 
-from .can_signal_functions import can_signal_role_and_channel
+from .can_signal_functions import (
+    CAN_MODULE_CHANNEL,
+    can_module_data_role,
+    can_signal_role_and_channel,
+    explicit_can_module_identity,
+)
 from .design_lint_named_rail_candidate_evidence import (
     CanSignalNamedRailEvidence,
     NamedRailSignalCandidate,
@@ -33,6 +38,13 @@ def can_signal_on_named_rail_candidates(
     )
     for item in pin_evidence:
         role_channel = can_signal_role_and_channel(item.function)
+        identity_basis: str | None = None
+        if role_channel is None and item.reference_kind == "connector":
+            identity_basis = explicit_can_module_identity(observed, item.reference)
+            module_role = can_module_data_role(item.function)
+            if identity_basis is None or module_role is None:
+                continue
+            role_channel = (module_role, CAN_MODULE_CHANNEL)
         if role_channel is None:
             continue
         role, channel = role_channel
@@ -42,17 +54,38 @@ def can_signal_on_named_rail_candidates(
                     pin=NamedRailPinSource(observed=observed, evidence=item),
                     role=role,
                     channel=channel,
+                    identity_basis=identity_basis,
                 ),
                 subject=f"{item.pin}: {item.function} on {item.rail_role} net {item.net_name}",
                 message=(
-                    f"The native CAN/FDCAN pin function indicates {role.upper()} on channel "
-                    f"{channel!r}, while its single assigned net label ({item.net_name!r}) is "
-                    f"recognized as {item.rail_role}. Review whether this is an intentional "
-                    "rail strap or a pin-assignment issue. The function and label are review "
-                    "clues, not proof of electrical potential, required CAN connectivity, or "
-                    "a defect; this check does not assess PCB copper or physical continuity."
+                    _can_named_rail_message(
+                        role=role,
+                        channel=channel,
+                        identity_basis=identity_basis,
+                        net_name=item.net_name,
+                        rail_role=item.rail_role,
+                    )
                 ),
             )
         )
 
     return tuple(sorted(candidates, key=lambda item: (item.subject.casefold(), item.subject)))
+
+
+def _can_named_rail_message(
+    *, role: str, channel: str, identity_basis: str | None, net_name: str, rail_role: str
+) -> str:
+    if identity_basis is None:
+        endpoint = f"native CAN/FDCAN {role.upper()} function on channel {channel!r}"
+    else:
+        endpoint = (
+            f"generic {role.upper()} function on an explicitly identified CAN module "
+            f"({identity_basis})"
+        )
+    return (
+        f"The {endpoint} is assigned to a net whose label ({net_name!r}) is recognized "
+        f"as {rail_role}. Review whether this is an intentional rail strap or a pin-assignment "
+        f"issue. Identity, "
+        "function, and label are review clues, not proof of electrical potential, required "
+        "operating mode, a defect, PCB copper, or physical continuity."
+    )

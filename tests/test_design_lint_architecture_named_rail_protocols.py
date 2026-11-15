@@ -36,6 +36,8 @@ CONNECTOR_PIN_EVIDENCE = (
 CONNECTOR_CANDIDATE_REFERENCES = (
     "kicad_tooling/hwrepo/connector_identity.py#connector_candidate_references"
 )
+CAN_MODULE_DATA_ROLE = "kicad_tooling/hwrepo/can_signal_functions.py#can_module_data_role"
+CAN_MODULE_IDENTITY = "kicad_tooling/hwrepo/can_signal_functions.py#explicit_can_module_identity"
 TYPED_LINE_RULES = frozenset({"bus.can_line_on_named_rail", "bus.rs485_line_on_named_rail"})
 TYPED_LINE_OWNER = (
     "kicad_tooling/hwrepo/design_lint_named_rail_line_candidate_evidence.py#NamedRailLineCandidate"
@@ -103,6 +105,7 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
     assert line_count(HWREPO / "design_lint_named_rail_candidate_evidence.py") < (
         IMPLEMENTATION_MAX_LINES
     )
+    assert line_count(HWREPO / "can_signal_functions.py") < IMPLEMENTATION_MAX_LINES
     assert line_count(HWREPO / "design_lint_named_rail_line_candidate_evidence.py") < (
         IMPLEMENTATION_MAX_LINES
     )
@@ -132,6 +135,8 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
         CONNECTOR_CANDIDATE_REFERENCES
         in catalog["bus.can_signal_on_named_rail"].implementation_refs
     )
+    assert CAN_MODULE_DATA_ROLE in catalog["bus.can_signal_on_named_rail"].implementation_refs
+    assert CAN_MODULE_IDENTITY in catalog["bus.can_signal_on_named_rail"].implementation_refs
     assert (
         CONNECTOR_PIN_EVIDENCE
         in catalog["bus.ethernet_management_signal_on_named_rail"].implementation_refs

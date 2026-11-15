@@ -51,3 +51,22 @@ def can_connector_signal_on_named_rail_netlist(
         pin_functions=pin_functions,
         component_pin_numbers={"J1": ("1", "2")},
     )
+
+
+def can_module_connector_named_rail_netlist(
+    *,
+    value: str = "CAN transceiver module",
+    functions: tuple[str, str] = ("TXD", "RXD"),
+    rails: tuple[str, str] = ("GND", "+3V3"),
+    dnp: bool = False,
+    inventory: tuple[str, ...] = ("1", "2"),
+) -> NetlistContract:
+    """Assign generic module TXD/RXD functions to independently named rails."""
+    return NetlistContract(
+        components={"J1": ComponentContract(value=value, footprint="Synthetic:Conn_01x02")},
+        nets={rails[0]: ("J1.1",), rails[1]: ("J1.2",)},
+        component_symbols={"J1": "Connector_Generic:Conn_01x02"},
+        pin_functions={"J1.1": functions[0], "J1.2": functions[1]},
+        component_pin_numbers={"J1": inventory},
+        dnp_components=("J1",) if dnp else (),
+    )

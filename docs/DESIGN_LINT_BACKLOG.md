@@ -28461,6 +28461,51 @@ acceptance threads while new lint features proceed:
   failed in tag resolution before the lint tests ran; `v0.5.3rc823` carries the
   required `Lint-Rule` and `Native-Fixture` declarations.
 
+#### LINT-498 — Review generic data pins on identified CAN module connectors
+
+- **Priority:** P2 configurable interface heuristic. Some CAN transceiver
+  module connectors expose plain `TXD`/`RXD` functions, which the existing
+  CAN named-rail check correctly skipped without protocol identity.
+- **Status:** Extends `bus.can_signal_on_named_rail`; preserves its REVIEW
+  default, rule policy, and source-bound report.
+- **Predicate:** Inspect fitted connector candidates with generic `TX`, `TXD`,
+  `RX`, or `RXD` functions only when the connector's own native symbol or value
+  explicitly includes a bounded `CAN/FDCAN transceiver` or `CAN/FDCAN module`
+  identity. Keep the complete native component inventory and unique net
+  assignment checks. Emit REVIEW only when the assigned net label is in the
+  existing supply/return clue vocabulary. The generic aliases remain ignored
+  on ordinary serial connectors and on connectors without that identity text.
+- **Source basis:** The TI
+  [SN65HVD23x datasheet](https://www.ti.com/lit/ds/symlink/sn65hvd230.pdf)
+  identifies the CAN transceiver data input as TXD and its receiver output as
+  RXD. The module's symbol/value identity remains a user-authored clue; it does
+  not prove the connector's actual contents or pinout.
+- **Interpretation:** Generic data functions plus explicit CAN module text and
+  a rail-like net label prompt review. They do not prove electrical potential,
+  an incorrect strap, module contents, required wiring, PCB copper, or physical
+  continuity. Valid intentional straps remain possible.
+- **Evidence:** Synthetic cases cover `TXD`/`RXD` rail findings, neutral signal
+  controls, generic UART connector exclusion, missing CAN module identity,
+  incomplete inventory, DNP, ambiguous or open assignment, mapping order,
+  repair, project policy, CLI/MCP parity, and exact-version native fault/control
+  fixtures. The source hashes and native fixture boundaries are recorded in the
+  [tooling-owned fixture record](../tests/fixtures/design_lint/can-module-signal-named-rail/README.md).
+  Native fixtures are ERC-clean on KiCad 10.0.0 and 10.0.5.
+- **Selection:** Use
+  `tests/test_can_signal_named_rail.py`,
+  `tests/test_design_lint_mcp_parity_can_module_named_rail.py`, and
+  `tests/test_can_signal_named_rail_native_fixture_lane.py` with
+  `design_lint and interface_lint` and the exact
+  `bus.can_signal_on_named_rail` rule selector. Run the named-rail source and
+  evidence architecture checks plus rule-gate integrity. The native lane uses
+  `KICAD_RUN_NATIVE_CAN_SIGNAL_NAMED_RAIL_FIXTURES=1`.
+- **Local acceptance:** Passed `scripts/ci.py` on 2026-11-15 at
+  `build/ci/run-sdxvtwvh`: 487 passed and 9,683 deselected. Digest-pinned Docker
+  fixtures passed on KiCad 10.0.0 and 10.0.5; Ruff, Alphus boundaries,
+  Rumdl, mdrepo, Linux and Windows type checks, wheel/sdist builds, isolated
+  install, and external KiCad-Test checkout playtest passed.
+- **Hosted acceptance:** Pending.
+
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
 ## Completion and release gate

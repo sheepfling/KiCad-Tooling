@@ -38,6 +38,12 @@ _LINE_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
         "control": "9f4fa5661ffbc0552ecd89657663b14f9377dbcbf4e3bca2370958763b9f7ce8",
     }
 )
+_MODULE_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
+    {
+        "fault": "ac85d23bf274c93411a8960c81b7abeee3d8df3c4438b5a992431e4b7d229532",
+        "control": "36851f1d1b838183e758a734e65565c89994a075574784b3280e028b27080a4c",
+    }
+)
 
 
 def can_signal_named_rail_fixture_lane(
@@ -54,13 +60,20 @@ def can_line_named_rail_fixture_lane(
     _can_named_rail_fixture_lane(root, version=version, image=image, log=log, feature="line")
 
 
+def can_module_signal_named_rail_fixture_lane(
+    root: Path, *, version: str, image: str, log: HostedLog
+) -> None:
+    """Repeat exports for generic TXD/RXD pins on an identified CAN module."""
+    _can_named_rail_fixture_lane(root, version=version, image=image, log=log, feature="module")
+
+
 def _can_named_rail_fixture_lane(
     root: Path,
     *,
     version: str,
     image: str,
     log: HostedLog,
-    feature: Literal["signal", "line"],
+    feature: Literal["signal", "line", "module"],
 ) -> None:
     """Share exact-version native export and lint checks across CAN rail heuristics."""
     root = root.resolve()
@@ -92,7 +105,7 @@ def _can_named_rail_fixture_lane(
             "control": "none",
         }
         expected_inventories = {"U1": ("1", "2"), "J1": ("1", "2")}
-    else:
+    elif feature == "line":
         rule_id = _LINE_RULE_ID
         fixture_directory = "can-line-named-rail"
         stage_prefix = "can-line-named-rail-fixture"
@@ -115,6 +128,36 @@ def _can_named_rail_fixture_lane(
                 "J1.1: CANH on return-like net GND;J1.2: CANL on supply-like net +3V3;"
                 "U1.1: CANH on return-like net GND;U1.2: CANL on supply-like net +3V3"
             ),
+            "control": "none",
+        }
+        expected_inventories = {"U1": ("1", "2"), "J1": ("1", "2")}
+    else:
+        rule_id = _SIGNAL_RULE_ID
+        fixture_directory = "can-module-signal-named-rail"
+        stage_prefix = "can-module-signal-named-rail-fixture"
+        reviewed_hashes = _MODULE_SOURCE_HASHES
+        expected_functions = {
+            "U1.1": "CAN1_TX",
+            "U1.2": "CAN1_RX",
+            "J1.1": "TXD",
+            "J1.2": "RXD",
+        }
+        expected_nets = {
+            "fault": {
+                "CAN1_RX": {"U1.2"},
+                "CAN1_TX": {"U1.1"},
+                "GND": {"J1.1"},
+                "+3V3": {"J1.2"},
+            },
+            "control": {
+                "CAN1_RX": {"U1.2"},
+                "CAN1_TX": {"U1.1"},
+                "CAN_RXD": {"J1.2"},
+                "CAN_TXD": {"J1.1"},
+            },
+        }
+        expected_subjects = {
+            "fault": ("J1.1: TXD on return-like net GND;J1.2: RXD on supply-like net +3V3"),
             "control": "none",
         }
         expected_inventories = {"U1": ("1", "2"), "J1": ("1", "2")}
@@ -200,6 +243,8 @@ def _can_named_rail_fixture_lane(
             if not netlist_path.is_file() or not erc_path.is_file():
                 raise ValueError(f"Native KiCad omitted CAN {feature} named-rail {case} evidence")
             observed = read_netlist(netlist_path)
+            if feature == "module" and observed.components["J1"].value != "CAN transceiver module":
+                raise ValueError(f"Native CAN module {case} identity evidence changed")
             if any(
                 observed.component_pin_numbers.get(reference) != pins
                 for reference, pins in expected_inventories.items()

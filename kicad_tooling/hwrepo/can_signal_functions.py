@@ -5,8 +5,38 @@ from __future__ import annotations
 import re
 from typing import Literal
 
+from .casefold_mapping_lookup import lookup_unique_casefold
+from .netlist_contract_models import NetlistContract
+
 _CAN_PREFIX = re.compile(r"^(can|fdcan)([0-9]*)(txd?|rxd?)$")
 _CAN_SUFFIX = re.compile(r"^(txd?|rxd?)(can|fdcan)([0-9]*)$")
+_CAN_MODULE_MARKER = re.compile(
+    r"(?<![a-z0-9])(?:can|fdcan)[\s_-]+(?:bus[\s_-]+)?(?:transceiver|module)(?![a-z0-9])",
+    re.IGNORECASE,
+)
+_CAN_MODULE_DATA_ROLES: dict[str, Literal["tx", "rx"]] = {
+    "tx": "tx",
+    "txd": "tx",
+    "rx": "rx",
+    "rxd": "rx",
+}
+CAN_MODULE_CHANNEL = "can:module"
+
+
+def can_module_data_role(value: str) -> Literal["tx", "rx"] | None:
+    """Recognize generic data labels only when another clue identifies CAN."""
+    function = re.sub(r"[^a-z0-9]", "", value.casefold())
+    return _CAN_MODULE_DATA_ROLES.get(function)
+
+
+def explicit_can_module_identity(observed: NetlistContract, reference: str) -> str | None:
+    """Return explicit native CAN module text from one component's value/symbol."""
+    component = lookup_unique_casefold(observed.components, reference)
+    if component is None:
+        return None
+    symbol = lookup_unique_casefold(observed.component_symbols, reference)
+    identity = " ".join(value for value in (symbol, component.value) if value)
+    return identity if _CAN_MODULE_MARKER.search(identity) is not None else None
 
 
 def can_signal_role_and_channel(value: str) -> tuple[Literal["tx", "rx"], str] | None:

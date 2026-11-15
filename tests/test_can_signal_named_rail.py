@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from kicad_tooling.hwrepo.can_signal_functions import can_signal_role_and_channel
+from kicad_tooling.hwrepo.can_signal_functions import (
+    can_module_data_role,
+    can_signal_role_and_channel,
+)
 from kicad_tooling.hwrepo.design_lint import evaluate
 from kicad_tooling.hwrepo.design_lint_finding_models import DesignLintIgnore
 from kicad_tooling.hwrepo.design_lint_policy_models import DesignLintPolicy
@@ -16,6 +19,7 @@ from kicad_tooling.hwrepo.models import (
 from tests.design_lint_fixtures import coach
 from tests.design_lint_fixtures.can_signal_named_rail import (
     can_connector_signal_on_named_rail_netlist,
+    can_module_connector_named_rail_netlist,
     can_signal_on_named_rail_netlist,
 )
 
@@ -102,6 +106,60 @@ def test_bounded_can_aliases_and_non_can_or_bus_line_aliases() -> None:
     assert can_signal_role_and_channel("CANH") is None
     assert can_signal_role_and_channel("TXD") is None
     assert can_signal_role_and_channel("UART1_TX") is None
+    assert can_module_data_role("TXD") == "tx"
+    assert can_module_data_role("RX") == "rx"
+    assert can_module_data_role("CAN1_TX") is None
+    assert can_module_data_role("CANH") is None
+
+
+def test_identified_can_module_generic_txd_rxd_pins_on_rails_request_review() -> None:
+    source = can_module_connector_named_rail_netlist()
+    findings = tuple(item for item in _report(source).findings if item.rule_id == RULE_ID)
+
+    assert tuple(item.subject for item in findings) == (
+        "J1.1: TXD on return-like net GND",
+        "J1.2: RXD on supply-like net +3V3",
+    )
+    assert findings[0].evidence == {
+        "pin": ("J1.1",),
+        "pin_function": ("TXD",),
+        "pin_role": ("tx",),
+        "can_channel": ("can:module",),
+        "assigned_net": ("GND",),
+        "net_label_role_clue": ("return-like",),
+        "component_pin_inventory": ("1", "2"),
+        "can_module_identity": ("Connector_Generic:Conn_01x02 CAN transceiver module",),
+    }
+    assert all("explicitly identified CAN module" in item.message for item in findings)
+
+
+def test_generic_serial_connectors_and_unidentified_modules_are_quiet() -> None:
+    controls = (
+        can_module_connector_named_rail_netlist(value="Serial connector"),
+        can_module_connector_named_rail_netlist(value="CAN controller"),
+        can_module_connector_named_rail_netlist(functions=("TXD", "RXD"), value="Module"),
+    )
+    for source in controls:
+        assert not any(item.rule_id == RULE_ID for item in _report(source).findings)
+
+
+def test_incomplete_or_ambiguous_can_module_pins_are_quiet() -> None:
+    source = can_module_connector_named_rail_netlist()
+    controls = (
+        can_module_connector_named_rail_netlist(dnp=True),
+        source.model_copy(update={"component_pin_numbers": {"J1": ("3", "4")}}),
+        source.model_copy(update={"nets": {"GND": ("J1.1",), "+3V3": ("J1.1",)}}),
+    )
+    for control in controls:
+        assert not any(item.rule_id == RULE_ID for item in _report(control).findings)
+
+    one_unsupported_function = source.model_copy(
+        update={"pin_functions": {"J1.1": "CANH", "J1.2": "RXD"}}
+    )
+    findings = tuple(
+        item for item in _report(one_unsupported_function).findings if item.rule_id == RULE_ID
+    )
+    assert tuple(item.subject for item in findings) == ("J1.2: RXD on supply-like net +3V3",)
 
 
 def test_neutral_labels_and_unsupported_functions_are_quiet() -> None:
@@ -217,3 +275,24 @@ def test_mapping_order_is_stable_and_repaired_assignment_clears_review() -> None
         item.model_dump() for item in connector_reordered_findings
     )
     assert not any(item.rule_id == RULE_ID for item in _report(connector_repaired).findings)
+
+    module_fault = can_module_connector_named_rail_netlist()
+    module_reordered = module_fault.model_copy(
+        update={
+            "nets": dict(reversed(tuple(module_fault.nets.items()))),
+            "pin_functions": dict(reversed(tuple(module_fault.pin_functions.items()))),
+        }
+    )
+    module_repaired = module_fault.model_copy(
+        update={"nets": {"CAN_TXD": ("J1.1",), "CAN_RXD": ("J1.2",)}}
+    )
+    module_findings = tuple(
+        item for item in _report(module_fault).findings if item.rule_id == RULE_ID
+    )
+    module_reordered_findings = tuple(
+        item for item in _report(module_reordered).findings if item.rule_id == RULE_ID
+    )
+    assert tuple(item.model_dump() for item in module_findings) == tuple(
+        item.model_dump() for item in module_reordered_findings
+    )
+    assert not any(item.rule_id == RULE_ID for item in _report(module_repaired).findings)

@@ -9179,31 +9179,38 @@
     },
     {
       "rule_id": "bus.can_signal_on_named_rail",
-      "title": "CAN/FDCAN signal pin is assigned directly to a named rail",
+      "title": "CAN/FDCAN data pin is assigned directly to a named rail",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
-      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including bounded CAN/FDCAN pin functions, complete component pin inventories, fitted state, and exact net assignments",
-      "predicate": "For each fitted U/IC or bounded connector pin with an exact function recognized by can_signal_role_and_channel as CAN/FDCAN TX or RX, require the pin number in the native inventory and exactly one net assignment. Emit REVIEW when the assigned net label matches the bounded supply-like or return-like vocabulary.",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including bounded CAN/FDCAN pin functions or explicit CAN module identity with generic data functions, complete component pin inventories, fitted state, and exact net assignments",
+      "predicate": "For each fitted U/IC or bounded connector pin with an exact CAN/FDCAN TX/RX function, require the pin number in the native inventory and exactly one net assignment. Also recognize generic TX/TXD/RX/RXD connector functions only when that connector's native symbol or value explicitly identifies a CAN/FDCAN transceiver or module and the same inventory and assignment checks pass. Emit REVIEW when the assigned net label matches the bounded supply-like or return-like vocabulary.",
       "supported_kicad_versions": [
         "KiCad 10.0.0 and 10.0.5 digest-pinned native fixture exports; the selected project version is checked before export"
       ],
       "limitations": [
         "The native function and rail-like label are review clues, not proof of an electrical defect, required endpoint, or net potential. Direct straps can be intentional for a particular transceiver or operating mode.",
-        "Recognition is limited to fitted U/IC or bounded connector references, bounded CAN/FDCAN TX/RX aliases, a pin number in the native inventory, and one unambiguous assignment. Generic TX/RX, vendor-specific aliases, DNP, open, multiply assigned, and pins absent from the inventory are skipped.",
+        "Recognition is limited to fitted U/IC or bounded connector references, bounded CAN/FDCAN TX/RX aliases, or generic TX/TXD/RX/RXD aliases on a connector whose own native symbol or value explicitly identifies a CAN/FDCAN transceiver or module. A pin number in the native inventory and one unambiguous assignment are required. Generic TX/RX without that identity, other vendor-specific aliases, DNP, open, multiply assigned, and pins absent from the inventory are skipped.",
         "The schematic netlist does not establish CAN participation, transceiver behavior, firmware mode, required topology, PCB copper continuity, or off-board wiring."
       ],
       "fault_fixtures": [
         "tests.test_can_signal_named_rail.test_can_controller_signal_on_named_rail_requests_review",
         "tests.test_can_signal_named_rail.test_can_connector_signal_on_named_rail_requests_review",
-        "tests.test_can_signal_named_rail_native_fixture_lane.test_native_can_signal_named_rail_fault_and_control_repeat"
+        "tests.test_can_signal_named_rail.test_identified_can_module_generic_txd_rxd_pins_on_rails_request_review",
+        "tests.test_design_lint_mcp_parity_can_module_named_rail.test_can_module_named_rail_cli_mcp_parity",
+        "tests.test_can_signal_named_rail_native_fixture_lane.test_native_can_signal_named_rail_fault_and_control_repeat",
+        "tests.test_can_signal_named_rail_native_fixture_lane.test_native_can_module_generic_data_fault_and_control_repeat"
       ],
       "valid_control_fixtures": [
         "tests.test_can_signal_named_rail.test_neutral_labels_and_unsupported_functions_are_quiet",
         "tests.test_can_signal_named_rail.test_dnp_open_ambiguous_duplicate_and_incomplete_connector_cases_are_skipped",
+        "tests.test_can_signal_named_rail.test_generic_serial_connectors_and_unidentified_modules_are_quiet",
+        "tests.test_can_signal_named_rail.test_incomplete_or_ambiguous_can_module_pins_are_quiet",
+        "tests.test_design_lint_mcp_parity_can_module_named_rail.test_can_module_named_rail_cli_mcp_parity",
         "tests.test_can_signal_named_rail.test_project_policy_can_block_disable_or_ignore_an_intentional_strap",
-        "tests.test_can_signal_named_rail_native_fixture_lane.test_native_can_signal_named_rail_fault_and_control_repeat"
+        "tests.test_can_signal_named_rail_native_fixture_lane.test_native_can_signal_named_rail_fault_and_control_repeat",
+        "tests.test_can_signal_named_rail_native_fixture_lane.test_native_can_module_generic_data_fault_and_control_repeat"
       ],
       "metamorphic_fixtures": [
         "tests.test_can_signal_named_rail.test_mapping_order_is_stable_and_repaired_assignment_clears_review",
@@ -9220,6 +9227,8 @@
         "kicad_tooling/hwrepo/connector_identity.py#connector_candidate_references",
         "kicad_tooling/hwrepo/named_rail_pin_evidence.py#named_rail_pin_evidence_matches_source",
         "kicad_tooling/hwrepo/can_signal_functions.py#can_signal_role_and_channel",
+        "kicad_tooling/hwrepo/can_signal_functions.py#can_module_data_role",
+        "kicad_tooling/hwrepo/can_signal_functions.py#explicit_can_module_identity",
         "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_candidates"
       ],
       "theme": "interfaces",
