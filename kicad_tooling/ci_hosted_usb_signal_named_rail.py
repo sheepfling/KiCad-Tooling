@@ -17,7 +17,7 @@ _SIGNAL_RULE_ID = "bus.usb_signal_on_named_rail"
 _SIGNAL_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
     {
         "control": "30270e674ad045a2ebc238b6f632ed455c04f549d6c53061f74151c77d160002",
-        "fault": "9330de44f6600afd92d2aa7199eced1ca6e892ed74fb5765f20a1832eef97148",
+        "fault": "925d15f60fec2cc898bfbc6fc2700db4c12c4df65ece03aae1cc9b7b39697197",
     }
 )
 _CC_RULE_ID = "bus.usb_c_cc_signal_on_named_rail"
@@ -126,9 +126,8 @@ def _usb_named_rail_fixture_lane(
         expected_pin_functions = None
         expected_nets = {
             "fault": {
-                "GND": ("U1.1",),
+                "GND": ("J1.1", "U1.1"),
                 "USB_D-": ("J1.2", "U1.2"),
-                "USB_D+": ("J1.1",),
             },
             "control": {
                 "USB_D+": ("J1.1", "U1.1"),
@@ -136,7 +135,10 @@ def _usb_named_rail_fixture_lane(
             },
         }
         expected_subjects = {
-            "fault": ("U1.1: USB_DP on return-like net GND",),
+            "fault": (
+                "J1.1: D+ on return-like net GND",
+                "U1.1: USB_DP on return-like net GND",
+            ),
             "control": (),
         }
     elif feature == "cc":

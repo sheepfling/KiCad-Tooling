@@ -15,7 +15,11 @@ from kicad_tooling.hwrepo.models import (
 from tests.design_lint_fixtures.usb_signal_named_rail import usb_signal_on_named_rail_netlist
 
 RULE_ID = "bus.usb_signal_on_named_rail"
-pytestmark = [pytest.mark.design_lint, pytest.mark.interface_lint]
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.interface_lint,
+    pytest.mark.design_lint_rule(rule_id=RULE_ID),
+]
 
 
 def _report(observed: NetlistContract, policy: DesignLintPolicy | None = None):
@@ -56,6 +60,31 @@ def test_supported_usb_data_functions_on_named_rails_request_review(
     assert findings[0].evidence["usb_pair_side"] == (side,)
 
 
+@pytest.mark.parametrize(
+    ("function", "pin", "rail", "family", "side"),
+    (
+        ("USB_DP", "J1.1", "GND", "USB 2.0 data", "positive"),
+        ("USB_DM", "J1.2", "+3V3", "USB 2.0 data", "negative"),
+        ("DP1", "J1.1", "GND", "USB 2.0 data port 1", "positive"),
+        ("SSTX+", "J1.1", "+5V", "USB SuperSpeed TX", "positive"),
+        ("SSRX-", "J1.2", "GND", "USB SuperSpeed RX", "negative"),
+    ),
+)
+def test_supported_usb_connector_data_functions_on_named_rails_request_review(
+    function: str, pin: str, rail: str, family: str, side: str
+) -> None:
+    report = _report(usb_signal_on_named_rail_netlist(function=function, pin=pin, rail_name=rail))
+    findings = tuple(item for item in report.findings if item.rule_id == RULE_ID)
+
+    assert report.status == "REVIEW"
+    assert len(findings) == 1
+    assert findings[0].subject == (
+        f"{pin}: {function} on {'return-like' if rail == 'GND' else 'supply-like'} net {rail}"
+    )
+    assert findings[0].evidence["usb_signal_family"] == (family,)
+    assert findings[0].evidence["usb_pair_side"] == (side,)
+
+
 @pytest.mark.parametrize("function", ("VBUS", "CC1", "SBU1", "TXD", "USB_D0"))
 def test_power_control_and_unrecognized_functions_are_quiet(function: str) -> None:
     report = _report(usb_signal_on_named_rail_netlist(function=function))
@@ -71,18 +100,24 @@ def test_neutral_net_labels_do_not_request_review() -> None:
 
 def test_dnp_open_ambiguous_duplicate_connector_and_incomplete_cases_are_skipped() -> None:
     source = usb_signal_on_named_rail_netlist()
+    connector = usb_signal_on_named_rail_netlist(pin="J1.1")
     controls = (
         source.model_copy(update={"dnp_components": ("U1",)}),
         source.model_copy(update={"nets": {"USB_DM_NET": ("U1.2",)}}),
         source.model_copy(update={"nets": {"GND": ("U1.1",), "+3V3": ("U1.1",)}}),
         source.model_copy(update={"pin_functions": {"U1.1": "USB_DP", "u1.1": "USB_DM"}}),
         source.model_copy(update={"component_pin_numbers": {"U1": ("2",)}}),
+        usb_signal_on_named_rail_netlist(pin="J1.1", function="SIG_A", rail_name="GND"),
+        connector.model_copy(update={"dnp_components": ("J1",)}),
+        connector.model_copy(update={"nets": {"USB_DM_NET": ("J1.2",)}}),
+        connector.model_copy(update={"nets": {"GND": ("J1.1",), "+3V3": ("J1.1",)}}),
+        connector.model_copy(update={"component_pin_numbers": {"J1": ("2",)}}),
         source.model_copy(
             update={
                 "components": {"J1": source.components["U1"]},
                 "nets": {"GND": ("J1.1",), "USB_DM_NET": ("J1.2",)},
                 "component_symbols": {"J1": "Connector:USB_A"},
-                "pin_functions": {"J1.1": "USB_DP", "J1.2": "USB_DM"},
+                "pin_functions": {"J1.1": "SIG_A", "J1.2": "SIG_B"},
                 "component_pin_numbers": {"J1": ("1", "2")},
             }
         ),

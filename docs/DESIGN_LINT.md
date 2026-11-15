@@ -2499,16 +2499,18 @@ KICAD_RUN_NATIVE_SPI_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest 
 
 ### USB data pins assigned directly to named rails
 
-`bus.usb_signal_on_named_rail` reviews a fitted IC pin with a bounded USB 2.0
-D+/D- or SuperSpeed TX/RX function when its single assigned net label looks
-like a supply or return. Numbered USB 2.0 port aliases retain their channel.
-The default is `review`: intentional straps remain possible, and names do not
-establish USB topology, electrical potential, signal integrity, PCB copper,
-or physical continuity. DNP, connector, open, multiply assigned, duplicate,
-and incomplete-inventory pins are skipped. The synthetic suite covers both
-USB2 polarities, numbered ports, SuperSpeed directions and sides, policy
-overrides, ambiguous evidence, ordering, and repair. Digest-pinned native
-KiCad 10.0.0 and 10.0.5 fault/control exports exercise USB2 D+/D-.
+`bus.usb_signal_on_named_rail` reviews a fitted IC or recognized connector pin
+with a bounded USB 2.0 D+/D- or SuperSpeed TX/RX function when its single
+assigned net label looks like a supply or return. Numbered USB 2.0 port aliases
+retain their channel. Connector identity alone does not produce a finding;
+the native pin function must match a supported USB data alias. The default is
+`review`: intentional straps remain possible, and names do not establish USB
+topology, electrical potential, signal integrity, PCB copper, or physical
+continuity. DNP, open, multiply assigned, and incomplete-inventory pins are
+skipped. The synthetic suite covers IC and connector USB2 polarities, numbered
+ports, SuperSpeed directions and sides, policy overrides, ambiguous evidence,
+ordering, and repair. Digest-pinned native KiCad 10.0.0 and 10.0.5 fault/control
+exports exercise USB2 D+/D- on both a connector and an IC.
 The synthetic source hashes and fixture limits are recorded in the
 [fixture notes](../tests/fixtures/design_lint/usb-signal-named-rail/README.md).
 

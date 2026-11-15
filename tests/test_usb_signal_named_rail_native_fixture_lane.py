@@ -58,7 +58,9 @@ def test_native_usb_signal_named_rail_fault_and_control_repeat(
     }
     fault = results["usb-signal-named-rail-fixture/fault"]
     control = results["usb-signal-named-rail-fixture/control"]
-    assert fault["subjects"] == "U1.1: USB_DP on return-like net GND"
+    assert fault["subjects"] == (
+        "J1.1: D+ on return-like net GND;U1.1: USB_DP on return-like net GND"
+    )
     assert control["subjects"] == "none"
     assert fault["erc_errors"] == control["erc_errors"] == "none"
     native_export = results["usb-signal-named-rail-fixture/native-export"]

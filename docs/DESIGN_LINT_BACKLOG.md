@@ -28161,6 +28161,39 @@ acceptance threads while new lint features proceed:
   tests because it omitted the required `Lint-Rule` declaration; the corrected
   forward-only `rc815` tag includes the selector and native fixture declaration.
 
+#### LINT-491 — Review USB connector data pins assigned to named rails
+
+- **Priority:** P2 configurable interface heuristic. USB connectors carry
+  explicit native D+/D- functions; assigning one of those pins to a rail-like
+  net deserves the same review prompt as an IC data pin.
+- **Status:** Extends `bus.usb_signal_on_named_rail`; keeps its rule ID, REVIEW
+  default, policy controls, and typed source evidence.
+- **Predicate:** Apply the existing bounded USB 2.0 and SuperSpeed function and
+  named-rail checks to fitted IC pins and recognized connector candidates.
+  Connector identity alone is insufficient; an exact supported USB data
+  function and one native assignment are required.
+- **Interpretation:** The function and net label are clues, not an approved
+  connector pinout or defect verdict. This does not establish electrical
+  potential, USB topology, signal integrity, PCB copper, or physical
+  continuity.
+- **Evidence:** Synthetic tests cover connector USB2 D+/D- polarities, numbered
+  USB2 ports, SuperSpeed TX/RX sides, generic functions, DNP, open, ambiguous,
+  incomplete inventory, policy, ordering, and source freshness. The native
+  fault/control pair includes a USB-A connector and an IC: both D+ pins use
+  `GND` only in the fault, while the control joins connector and IC pins on
+  neutral USB_D+/USB_D- nets. Hash-bound exports repeat with clean ERC on
+  digest-pinned KiCad 10.0.0 and 10.0.5. Fixtures are synthetic and tooling-owned.
+- **Selection:** Use the exact `bus.usb_signal_on_named_rail` selector for the
+  lint and native fixture suites. Also run source-evidence, architecture,
+  catalog-reachability, and determinism suites. Native export uses
+  `KICAD_RUN_NATIVE_USB_SIGNAL_NAMED_RAIL_FIXTURES=1`.
+- **Local acceptance:** Passed tag-resolved `scripts/ci.py` scope on 2026-11-15:
+  494 passed, 9657 deselected; exact native fixtures ran with the approved
+  digest-pinned KiCad 10.0.0 and 10.0.5 Docker images. Ruff, Alphus, Rumdl,
+  mdrepo, Pyright, Windows type checks, wheel/sdist/install, and external
+  KiCad-Test checkout inventory/surface/verify/adapted playtest all passed.
+- **Hosted acceptance:** Pending tagged workflow acceptance.
+
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
 ## Completion and release gate

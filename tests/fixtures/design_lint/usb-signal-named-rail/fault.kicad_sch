@@ -60,7 +60,7 @@
     (instances (project "synthetic-usb-signal-named-rail-fault" (path "/49000000-0000-4000-8000-000000000201" (reference "U1") (unit 1)))))
   (wire (pts (xy 58.42 63.50) (xy 50.80 63.50))
     (stroke (width 0) (type default)) (uuid "49000000-0000-4000-8000-000000000230"))
-  (label "USB_D+" (at 50.80 63.50 0)
+  (label "GND" (at 50.80 63.50 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid "49000000-0000-4000-8000-000000000231"))
   (wire (pts (xy 68.58 63.50) (xy 76.20 63.50))

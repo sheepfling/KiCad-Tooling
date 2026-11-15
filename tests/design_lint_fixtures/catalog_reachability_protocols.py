@@ -39,6 +39,7 @@ from tests.design_lint_fixtures.usb_c_superspeed_lanes import usb_c_superspeed_l
 from tests.design_lint_fixtures.usb_data_pair_resistive_bridge import (
     usb_data_pair_bridge_netlist,
 )
+from tests.design_lint_fixtures.usb_signal_named_rail import usb_signal_on_named_rail_netlist
 from tests.rs485_peer_reference_support import rs485_peer_reference_fixture
 from tests.serial_participant_support import serial_netlist
 from tests.test_open_drain_heuristics import signal_netlist
@@ -73,6 +74,9 @@ def protocol_rule_ids() -> set[str]:
     )
     emitted.update(item.rule_id for item in candidates(rs485_line_named_rail_netlist()))
     emitted.update(item.rule_id for item in candidates(rs485_line_named_rail_netlist(pin="J1.1")))
+    emitted.update(
+        item.rule_id for item in candidates(usb_signal_on_named_rail_netlist(pin="J1.1"))
+    )
     emitted.update(item.rule_id for item in candidates(can_line_named_rail_netlist()))
     emitted.update(item.rule_id for item in candidates(can_line_named_rail_netlist(reference="J1")))
     emitted.update(

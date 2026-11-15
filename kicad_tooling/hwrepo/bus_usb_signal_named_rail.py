@@ -8,7 +8,11 @@ from .design_lint_named_rail_candidate_evidence import (
     UsbSignalNamedRailEvidence,
 )
 from .design_lint_rule_types import DesignLintRuleId
-from .named_rail_pin_evidence import NamedRailPinSource, assigned_named_rail_ic_pins
+from .named_rail_pin_evidence import (
+    NamedRailPinSource,
+    assigned_named_rail_connector_pins,
+    assigned_named_rail_ic_pins,
+)
 from .netlist_contract_models import NetlistContract
 
 RULE_ID: DesignLintRuleId = "bus.usb_signal_on_named_rail"
@@ -17,14 +21,17 @@ RULE_ID: DesignLintRuleId = "bus.usb_signal_on_named_rail"
 def usb_signal_on_named_rail_candidates(
     observed: NetlistContract,
 ) -> tuple[NamedRailSignalCandidate, ...]:
-    """Review fitted IC USB data pins assigned to one named supply or return rail.
+    """Review fitted IC and connector USB data pins assigned to named rails.
 
     Pin-function and net-label vocabularies are bounded clues. A rail-looking
     assignment can also be an intentional strap, so this predicate requests
     review instead of asserting a required connection or electrical defect.
     """
     candidates: list[NamedRailSignalCandidate] = []
-    for item in assigned_named_rail_ic_pins(observed):
+    for item in (
+        *assigned_named_rail_ic_pins(observed),
+        *assigned_named_rail_connector_pins(observed),
+    ):
         identity = usb_signal_family_and_side(item.function)
         if identity is None:
             continue
