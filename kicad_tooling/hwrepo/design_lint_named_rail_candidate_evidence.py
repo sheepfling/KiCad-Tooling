@@ -26,7 +26,10 @@ from .named_rail_pin_evidence import (
     named_rail_pin_evidence_matches_source,
 )
 from .rs485_data_functions import explicit_rs485_transceiver_identity, rs485_data_pin_role
-from .serial_participants import serial_function_role_and_channel
+from .serial_participants import (
+    serial_flow_control_role_and_channel,
+    serial_function_role_and_channel,
+)
 from .spi_participants import spi_signal_role_and_channel
 from .swd_endpoint_inventory import SwdEndpointInventory, swd_function_role
 
@@ -200,17 +203,18 @@ class SpiSignalNamedRailEvidence:
 
 @dataclass(frozen=True, slots=True)
 class SerialSignalNamedRailEvidence:
-    """One channel-specific UART/USART TX/RX pin on a named rail."""
+    """One channel-specific UART/USART signal pin on a named rail."""
 
     pin: NamedRailPinSource
     role: str
     channel: str
 
     def __post_init__(self) -> None:
-        if serial_function_role_and_channel(_current_pin_function(self.pin)) != (
-            self.role,
-            self.channel,
-        ):
+        function = _current_pin_function(self.pin)
+        identity = serial_function_role_and_channel(function)
+        if identity is None:
+            identity = serial_flow_control_role_and_channel(function)
+        if identity != (self.role, self.channel):
             raise ValueError("Serial named-rail evidence must match its current pin function")
 
 

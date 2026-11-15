@@ -47,6 +47,7 @@ REPORT_ORDER = (
     "usb_dp_dm_same_net_control",
     "serial_signal_named_rail_fault",
     "serial_signal_named_rail_control",
+    "serial_flow_control_named_rail_fault",
     "spi_signal_named_rail_fault",
     "spi_signal_named_rail_control",
     "can_signal_named_rail_fault",

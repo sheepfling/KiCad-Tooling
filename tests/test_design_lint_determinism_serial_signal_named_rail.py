@@ -20,9 +20,16 @@ def test_serial_signal_named_rail_reports_are_hashseed_deterministic() -> None:
     reports = hashseed_probe_reports(families=("serial_signal_named_rail",))
     fault = reports["serial_signal_named_rail_fault"]
     control = reports["serial_signal_named_rail_control"]
+    flow_control_fault = reports["serial_flow_control_named_rail_fault"]
     fault_findings = tuple(item for item in fault["findings"] if item["rule_id"] == RULE_ID)
 
     assert tuple(item["subject"] for item in fault_findings) == (
         "U1.1: USART1_TX on return-like net GND",
     )
     assert not any(item["rule_id"] == RULE_ID for item in control["findings"])
+    flow_control_findings = tuple(
+        item for item in flow_control_fault["findings"] if item["rule_id"] == RULE_ID
+    )
+    assert tuple(item["subject"] for item in flow_control_findings) == (
+        "U1.1: USART1_CTS on return-like net 0V PWM 2",
+    )

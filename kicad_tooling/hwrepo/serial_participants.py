@@ -58,6 +58,9 @@ class SerialNativePeerLink:
 _SAFE_FUNCTION = re.compile(r"^[a-zA-Z0-9_ ]+$")
 _PREFIXED_FUNCTION = re.compile(r"^(uart|usart)[_ ]*([0-9]*)[_ ]*(txd?|rxd?)$")
 _UNPREFIXED_FUNCTION = re.compile(r"^(txd?|rxd?)[_ ]*([0-9]*)$")
+_SAFE_FLOW_CONTROL_FUNCTION = re.compile(r"^[a-zA-Z0-9_ #]+$")
+_PREFIXED_FLOW_CONTROL_FUNCTION = re.compile(r"^(uart|usart)[_ ]*([0-9]*)[_ ]*(cts|rts)(?:#|_n)?$")
+_UNPREFIXED_FLOW_CONTROL_FUNCTION = re.compile(r"^(cts|rts)(?:#|_n)?$")
 _SERIAL_OUTPUT_TYPES = frozenset({"output", "tri_state", "bidirectional"})
 _SERIAL_INPUT_TYPES = frozenset({"input", "bidirectional"})
 
@@ -75,6 +78,22 @@ def serial_function_role_and_channel(value: str) -> tuple[str, str] | None:
     if match is not None:
         role, number = match.groups()
         return ("tx" if role.startswith("tx") else "rx", f"index{number}" if number else "default")
+    return None
+
+
+def serial_flow_control_role_and_channel(value: str) -> tuple[str, str] | None:
+    """Recognize exact CTS/RTS functions and their supported prefixes and suffix tokens."""
+    if not _SAFE_FLOW_CONTROL_FUNCTION.fullmatch(value):
+        return None
+    function = value.strip().casefold()
+    match = _PREFIXED_FLOW_CONTROL_FUNCTION.fullmatch(function)
+    if match is not None:
+        prefix, number, role = match.groups()
+        return role, f"{prefix}{number}"
+    match = _UNPREFIXED_FLOW_CONTROL_FUNCTION.fullmatch(function)
+    if match is not None:
+        role = match.group(1)
+        return role, "default"
     return None
 
 

@@ -605,6 +605,7 @@ skipped under prerelease policy.
 - `bus.i3c_unconnected_pin`
 - `bus.i3c_generic_connector_pair_review`
 - `bus.i2c_sda_scl_same_net`
+- `bus.i2s_signal_on_named_rail`
 - `bus.serial_endpoint_role_collision`
 - `bus.spi_unmapped_participant`
 - `bus.serial_unmapped_peer`
@@ -687,6 +688,8 @@ skipped under prerelease policy.
 - `bus.i2s_clock_data_same_net`
 - `bus.i2s_clock_frame_same_net`
 - `bus.jtag_generic_connector_pair_review`
+- `bus.jtag_signal_on_named_rail`
+- `bus.swd_signal_on_named_rail`
 - `bus.can_tx_rx_same_net`
 - `bus.can_tx_rx_label_mismatch`
 - `bus.can_tx_outputs_share_net`
@@ -28792,6 +28795,43 @@ acceptance threads while new lint features proceed:
   wheel/sdist builds, installed-wheel checks, and external template playtest
   passed. Package and preview jobs were skipped under prerelease policy.
 
+#### LINT-504 — Review UART flow-control pins assigned directly to named rails
+
+- **Priority:** P2 review heuristic. UART/USART CTS and RTS pin functions on a
+  supply-like or return-like named net may deserve an explicit schematic
+  review, especially when an interface is expected to use hardware flow
+  control. The [CP2102N data sheet][cp2102n-data-sheet] documents CTS/RTS as
+  hardware-handshaking signals; it is one public example, not a universal
+  requirement.
+- **Status:** Added exact CTS/RTS role recognition to the existing
+  `bus.serial_signal_on_named_rail` review. The rule ID, default `review`
+  mode, project overrides, and exact-fingerprint ignore behavior are unchanged.
+- **Predicate:** Apply only to fitted U/IC or bounded connector pins with a
+  complete native pin inventory, one assignment, and an exact CTS/RTS or
+  UART/USART-prefixed function. Accept optional UART/USART channel digits and
+  `#`/`_N` low suffixes; keep other vendor-specific names unrecognized.
+- **Interpretation:** Hardware flow control is optional, and both CTS and RTS
+  may be intentionally strapped when unused. A rail label and function name
+  are candidate clues only. The rule does not infer enabled flow control,
+  polarity, electrical potential, approved pinout, or PCB continuity.
+- **Evidence:** Synthetic IC faults cover CTS-to-ground and RTS-to-supply,
+  prefixed and unprefixed functions, neutral controls, unsupported spellings,
+  policy, and deterministic report ordering. Tooling-owned native connector
+  fixtures cover CTS and RTS faults plus controls and repeat normalized
+  KiCad 10.0.0 and 10.0.5 netlist exports. No project-specific schematic or
+  board fixture is used.
+- **Focused selection:** Run `tests/test_serial_signal_named_rail.py` and
+  `tests/test_design_lint_determinism_serial_signal_named_rail.py` with
+  `design_lint`, `interface_lint`, and the exact
+  `bus.serial_signal_on_named_rail` selector. The existing connector native
+  lane uses `KICAD_RUN_NATIVE_SERIAL_TX_RX_LABEL_MISMATCH_FIXTURES=1`.
+- **Local acceptance:** The scoped `scripts/ci.py` gate passed 494 selected
+  tests with 9,728 deselected, including repeated Docker fixtures on
+  digest-pinned KiCad 10.0.0 and 10.0.5. Ruff, Alphus boundaries, Rumdl,
+  mdrepo, Linux and Windows-target type checks, wheel/sdist builds, and
+  installed-origin/version checks passed.
+- **Hosted acceptance:** Pending tagged GitHub Actions validation.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -28867,6 +28907,7 @@ quality, or first-article continuity.
 [kicad-10-project-drc-exclusions]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.7/pcbnew/board_design_settings.cpp
 [kicad-file-doctor-missing-symbol]: https://github.com/94xhn/kicad-file-doctor/blob/45133533e05aeabb7ef150d3a95084c318f16c9d/kicad_file_doctor/checks.py
 [kicad-file-doctor-license]: https://github.com/94xhn/kicad-file-doctor/blob/45133533e05aeabb7ef150d3a95084c318f16c9d/LICENSE
+[cp2102n-data-sheet]: https://www.silabs.com/documents/public/data-sheets/cp2102n-datasheet.pdf
 [cohort-lint-444]: https://github.com/94xhn/kicad-board-lint/tree/3296d71
 [lint086-cp2102]: https://github.com/MAATHES-THILAK-K/USB_TO_UART-CP2102
 [lint086-fusb302]: https://github.com/bentwire/USB-C-FUSB302-PI/tree/7d95292262b42767bbeefebadb6bafe055923d50

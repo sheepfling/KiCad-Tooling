@@ -51,6 +51,20 @@ def _connector_netlist(*, signal_net: str = "GND") -> NetlistContract:
     )
 
 
+def _flow_control_netlist(*, function: str, pin: str, rail_name: str) -> NetlistContract:
+    source = serial_signal_on_named_rail_netlist()
+    other_pin = "U1.2" if pin == "U1.1" else "U1.1"
+    other_net = "USART1_RX" if other_pin == "U1.2" else "USART1_TX"
+    functions = dict(source.pin_functions)
+    functions[pin] = function
+    return source.model_copy(
+        update={
+            "pin_functions": functions,
+            "nets": {rail_name: (pin,), other_net: (other_pin,)},
+        }
+    )
+
+
 @pytest.mark.parametrize(
     ("rail_name", "pin", "function", "role_clue", "pin_role", "channel"),
     (
@@ -85,6 +99,42 @@ def test_explicit_serial_pin_on_named_rail_requests_review_with_exact_evidence(
     assert "intentional rail strap" in finding.message
 
 
+@pytest.mark.parametrize(
+    ("function", "pin", "rail_name", "role", "channel", "role_clue"),
+    (
+        ("CTS", "U1.1", "GND", "cts", "default", "return-like"),
+        ("RTS", "U1.2", "0V PWM 2", "rts", "default", "return-like"),
+        ("UART_CTS#", "U1.1", "+3V3", "cts", "uart", "supply-like"),
+        ("USART1_RTS_N", "U1.2", "GND", "rts", "usart1", "return-like"),
+    ),
+)
+def test_explicit_flow_control_pin_on_named_rail_requests_review(
+    function: str,
+    pin: str,
+    rail_name: str,
+    role: str,
+    channel: str,
+    role_clue: str,
+) -> None:
+    report = _report(_flow_control_netlist(function=function, pin=pin, rail_name=rail_name))
+    finding = next(item for item in report.findings if item.rule_id == RULE_ID)
+
+    assert report.status == "REVIEW"
+    assert finding.subject == f"{pin}: {function} on {role_clue} net {rail_name}"
+    assert finding.evidence["pin_role"] == (role,)
+    assert finding.evidence["serial_channel"] == (channel,)
+    assert finding.evidence["pin_function"] == (function,)
+    assert "hardware flow control is unused" in finding.message
+    assert "not proof of electrical potential" in finding.message
+
+
+@pytest.mark.parametrize("function", ("CTS", "RTS", "UART1_CTS#", "USART2_RTS_N"))
+def test_flow_control_pin_on_neutral_serial_net_is_control(function: str) -> None:
+    source = _flow_control_netlist(function=function, pin="U1.1", rail_name="UART1_CTS")
+
+    assert not any(item.rule_id == RULE_ID for item in _report(source).findings)
+
+
 def test_neutral_labels_and_unsupported_pin_functions_are_controls() -> None:
     source = serial_signal_on_named_rail_netlist(rail_name="POWER_SENSE")
     unsupported_function = source.model_copy(
@@ -92,9 +142,15 @@ def test_neutral_labels_and_unsupported_pin_functions_are_controls() -> None:
     )
     incomplete_inventory = source.model_copy(update={"component_pin_numbers": {"U1": ("2",)}})
     connector_neutral = _connector_netlist(signal_net="UART_TX")
+    unsupported_flow_control = _flow_control_netlist(
+        function="UART1_CTS_INPUT",
+        pin="U1.1",
+        rail_name="GND",
+    )
 
     assert not any(item.rule_id == RULE_ID for item in _report(source).findings)
     assert not any(item.rule_id == RULE_ID for item in _report(unsupported_function).findings)
+    assert not any(item.rule_id == RULE_ID for item in _report(unsupported_flow_control).findings)
     assert not any(item.rule_id == RULE_ID for item in _report(incomplete_inventory).findings)
     assert not any(item.rule_id == RULE_ID for item in _report(connector_neutral).findings)
 

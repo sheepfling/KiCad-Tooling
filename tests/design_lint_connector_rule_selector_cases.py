@@ -69,7 +69,7 @@ CONNECTOR_RULE_NODE_CASES = (
     ),
     (
         "connector.footprint_peer_pin_function_metadata_incomplete",
-        "tests/test_connector_footprint_peer_pin_function_metadata.py::test_report_is_order_stable_and_common_named_function_clears_review",
+        "tests/test_connector_footprint_peer_pin_function_metadata.py::test_report_is_order_stable_and_common_function_clears_review[generic-function]",
     ),
     (
         "connector.footprint_peer_pin_function_metadata_incomplete",
@@ -81,7 +81,7 @@ CONNECTOR_RULE_NODE_CASES = (
     ),
     (
         "connector.footprint_peer_pin_function_metadata_incomplete",
-        "tests/test_connector_footprint_peer_pin_function_metadata_native.py::test_native_generic_function_peer_metadata_review_and_control_repeat",
+        "tests/test_connector_footprint_peer_pin_function_metadata_native.py::test_native_generic_or_missing_function_peer_metadata_review_and_control_repeat[10.0.0]",
     ),
     (
         "connector.footprint_peer_pin_electrical_type_disagreement",

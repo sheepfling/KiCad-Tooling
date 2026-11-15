@@ -321,7 +321,7 @@ RULE_NODE_CASES = (
     ),
     (
         "bus.rs485_line_on_named_rail",
-        "tests/test_rs485_line_named_rail.py::test_explicit_rs485_line_pins_on_named_rails_request_review[U1.1-GND-A-a-U1.2]",
+        "tests/test_rs485_line_named_rail.py::test_explicit_rs485_line_pins_on_named_rails_request_review[U1.1-GND-A-a-U1.2-Synthetic:Rs485Transceiver RS-485 transceiver]",
     ),
     (
         "bus.rs485_line_label_mismatch",

@@ -972,22 +972,29 @@ KICAD_RUN_NATIVE_SERIAL_TX_RX_LABEL_MISMATCH_FIXTURES=1 .venv/bin/python -I -m p
 ### Serial signal pins assigned directly to named rails
 
 `bus.serial_signal_on_named_rail` reviews a fitted U/IC or bounded connector
-UART/USART TX/TXD or RX/RXD pin when its single native net assignment has a
-recognized supply-like or return-like label. It requires a unique bounded
-function, complete native pin inventory, fitted state, and one assignment.
+UART/USART TX/TXD, RX/RXD, CTS, or RTS pin when its single native net
+assignment has a recognized supply-like or return-like label. It requires a
+unique bounded function, complete native pin inventory, fitted state, and one
+assignment.
 Connector identity is a candidate clue, not an approved pinout. The default is
 `review`; intentional rail straps can be ignored exactly or configured per
 project.
 
 Pin function and net label are clues, not an authored connection requirement
-or proof of an electrical defect or potential. The check skips unrecognized
-connectors, DNP parts, open and ambiguous assignments, incomplete inventories,
-indexed or vendor-specific function names, and does not assess PCB copper or
-physical continuity. Synthetic IC and connector GND faults with matching
-controls export repeatedly on digest-pinned KiCad 10.0.0 and 10.0.5 images;
-the connector control retains a separate reference net and changes only the
-signal label. See the [connector fixture note][serial-connector-rail-fixture]
-and the [IC fixture note](../tests/fixtures/design_lint/serial-tx-rx-label-mismatch/README.md).
+or proof of an electrical defect or potential. CTS/RTS may be intentionally
+strapped when hardware flow control is unused; the heuristic does not infer
+that flow control is required or determine signal polarity. The rule skips
+unrecognized connectors, DNP parts, open and ambiguous assignments, incomplete
+inventories, and unsupported vendor-specific functions. It does not assess PCB
+copper or physical continuity. The synthetic CTS/RTS connector faults and
+neutral controls, along with the existing TX/RX cases, export repeatedly on
+digest-pinned KiCad 10.0.0 and 10.0.5 images. The CP2102N data sheet documents
+CTS/RTS hardware handshaking as one example of these UART pin functions
+([Silicon Labs CP2102N data sheet][cp2102n-data-sheet]).
+See the [connector fixture note][serial-connector-rail-fixture] and the
+[IC fixture note](../tests/fixtures/design_lint/serial-tx-rx-label-mismatch/README.md).
+
+[cp2102n-data-sheet]: https://www.silabs.com/documents/public/data-sheets/cp2102n-datasheet.pdf
 
 ```sh
 .venv/bin/python -I -m pytest tests/test_serial_signal_named_rail.py \
