@@ -27862,8 +27862,13 @@ acceptance threads while new lint features proceed:
   formatting, Ruff, module-boundary and shared-utility checks, Rumdl, mdrepo,
   scoped Linux and Windows Pyright, wheel, sdist, and sdist-wheel builds. Its
   clean-environment wheel install could not finish because sandbox DNS could
-  not resolve PyPI for pinned dependencies. Hosted annotated-tag acceptance is
-  pending.
+  not resolve PyPI for pinned dependencies. The hosted equivalent passed on
+  annotated tag `v0.5.3rc801` in
+  [GitHub Actions run 43669646827](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43669646827):
+  459 selected tests passed with 9,629 deselected; Linux and Windows-target
+  Pyright, wheel/sdist builds, installed-wheel origin/version checks, external
+  inventory/surface/verification, adapted-checkout checks, and the external
+  playtest all passed.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
