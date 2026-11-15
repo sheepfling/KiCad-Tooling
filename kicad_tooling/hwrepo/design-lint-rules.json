@@ -8802,6 +8802,58 @@
       "implementation_owner": "kicad_tooling/hwrepo/i2s_signal_named_rail.py#i2s_signal_on_named_rail_candidates"
     },
     {
+      "rule_id": "bus.jtag_signal_on_named_rail",
+      "title": "JTAG signal pin is assigned directly to a named rail",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining complete fitted IC or connector pin inventory, native pin functions, exact assignments, and net labels",
+      "predicate": "For each fitted IC or recognized connector candidate with a complete unique native pin inventory, identify JTAG TCK, TMS, TDI, TDO, TRST, or RTCK functions. A bounded JTAG token in pin-function metadata identifies the endpoint directly; otherwise require exactly one uniquely assigned TCK and TMS pin on that same endpoint. Require one direct assignment for the examined pin and emit REVIEW when its net label matches the bounded supply-like or return-like vocabulary.",
+      "supported_kicad_versions": [
+        "Digest-pinned KiCad 10.0.0 and 10.0.5 native fixture exports; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Native pin function text and a rail-like label are review clues, not proof that the endpoint uses JTAG, that the label reflects electrical potential, or that the assignment is wrong. Intentional direct assignments remain project decisions.",
+        "Only fitted IC references or recognized connector candidates with complete unique pin metadata are considered. DNP endpoints, duplicate or ambiguous role functions, open or multiply assigned examined pins, incomplete inventories, and generic TCK/TMS aliases without one complete assigned pair are skipped. JTCK/JTMS alone do not establish JTAG because those names can also describe SWD signals.",
+        "The schematic-netlist prompt does not establish endpoint intent, active debug use, PCB copper, external wiring, or physical continuity."
+      ],
+      "fault_fixtures": [
+        "tests.test_jtag_signal_named_rail.test_explicit_jtag_functions_on_named_rails_request_review",
+        "tests.test_jtag_signal_named_rail.test_generic_tck_tms_pair_identifies_connector_but_not_swd_or_spi",
+        "tests.test_design_lint_mcp_parity_jtag_signal_named_rail.test_jtag_signal_named_rail_cli_mcp_parity",
+        "tests.test_jtag_signal_named_rail_native_fixture_lane.test_native_jtag_signal_named_rail_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_jtag_signal_named_rail.test_incomplete_ambiguous_open_and_dnp_endpoints_are_controls",
+        "tests.test_jtag_signal_named_rail.test_generic_tck_tms_pair_identifies_connector_but_not_swd_or_spi",
+        "tests.test_jtag_generic_connector_pair_review.test_native_jtag_role_tokens_do_not_reinterpret_swd_aliases",
+        "tests.test_jtag_signal_named_rail_native_fixture_lane.test_native_jtag_signal_named_rail_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_jtag_signal_named_rail.test_mapping_order_is_stable_and_repair_clears_findings",
+        "tests.test_design_lint_determinism_jtag_signal_named_rail.test_jtag_signal_named_rail_reports_are_hashseed_deterministic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_JTAG_SIGNAL_NAMED_RAIL_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/jtag_signal_named_rail.py#jtag_signal_on_named_rail_candidates",
+        "kicad_tooling/hwrepo/jtag_signal_inventory.py#jtag_named_rail_signal_pins",
+        "kicad_tooling/hwrepo/jtag_signal_inventory.py#JtagEndpointInventory.named_rail_signal_pins",
+        "kicad_tooling/hwrepo/jtag_signal_inventory.py#jtag_signal_roles",
+        "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#JtagSignalNamedRailEvidence",
+        "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#NamedRailSignalCandidate",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_connector_pins",
+        "kicad_tooling/hwrepo/connector_identity.py#connector_candidate_references",
+        "kicad_tooling/hwrepo/named_rail_roles.py#named_rail_role_clue",
+        "kicad_tooling/hwrepo/design_lint_bus_named_rail_candidates.py#bus_named_rail_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/jtag_signal_inventory.py#jtag_named_rail_signal_pins"
+    },
+    {
       "rule_id": "bus.jtag_generic_connector_pair_review",
       "title": "Generic connector contacts match native JTAG TCK/TMS nets",
       "status": "active",

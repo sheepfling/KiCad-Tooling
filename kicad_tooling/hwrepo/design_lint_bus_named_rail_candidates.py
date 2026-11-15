@@ -9,6 +9,7 @@ from .bus_ethernet_signal_named_rail import ethernet_signal_on_named_rail_candid
 from .bus_usb_signal_named_rail import usb_signal_on_named_rail_candidates
 from .design_lint_types import Candidate
 from .i2s_signal_named_rail import i2s_signal_on_named_rail_candidates
+from .jtag_signal_named_rail import jtag_signal_on_named_rail_candidates
 from .netlist_contract_models import NetlistContract
 from .usb_c_cc_named_rail import usb_c_cc_signal_on_named_rail_candidates
 from .usb_c_sbu_named_rail import usb_c_sbu_signal_on_named_rail_candidates
@@ -23,4 +24,5 @@ def bus_named_rail_candidates(observed: NetlistContract) -> tuple[Candidate, ...
         *usb_c_cc_signal_on_named_rail_candidates(observed),
         *usb_c_sbu_signal_on_named_rail_candidates(observed),
         *i2s_signal_on_named_rail_candidates(observed),
+        *jtag_signal_on_named_rail_candidates(observed),
     )

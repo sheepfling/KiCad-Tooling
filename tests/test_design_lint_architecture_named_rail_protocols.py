@@ -17,6 +17,7 @@ TYPED_SIGNAL_RULES = frozenset(
     {
         "bus.i2c_signal_on_named_rail",
         "bus.i2s_signal_on_named_rail",
+        "bus.jtag_signal_on_named_rail",
         "bus.i3c_signal_on_named_rail",
         "bus.spi_signal_on_named_rail",
         "bus.serial_signal_on_named_rail",
@@ -54,6 +55,10 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
         "bus.i2s_signal_on_named_rail": (
             "i2s_signal_named_rail.py",
             "kicad_tooling/hwrepo/i2s_signal_named_rail.py#i2s_signal_on_named_rail_candidates",
+        ),
+        "bus.jtag_signal_on_named_rail": (
+            "jtag_signal_inventory.py",
+            "kicad_tooling/hwrepo/jtag_signal_inventory.py#jtag_named_rail_signal_pins",
         ),
         "bus.serial_signal_on_named_rail": (
             "serial_signal_named_rail.py",
@@ -112,6 +117,7 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
     )
     assert line_count(HWREPO / "can_signal_functions.py") < IMPLEMENTATION_MAX_LINES
     assert line_count(HWREPO / "i2s_endpoint_inventory.py") < IMPLEMENTATION_MAX_LINES
+    assert line_count(HWREPO / "jtag_signal_inventory.py") < IMPLEMENTATION_MAX_LINES
     assert line_count(HWREPO / "design_lint_named_rail_line_candidate_evidence.py") < (
         IMPLEMENTATION_MAX_LINES
     )
@@ -133,6 +139,15 @@ def test_named_rail_protocol_rules_use_focused_predicate_owners() -> None:
     )
     assert CONNECTOR_PIN_EVIDENCE in i2s_refs
     assert CONNECTOR_CANDIDATE_REFERENCES in i2s_refs
+
+    jtag_refs = catalog["bus.jtag_signal_on_named_rail"].implementation_refs
+    assert (
+        "kicad_tooling/hwrepo/jtag_signal_inventory.py#JtagEndpointInventory.named_rail_signal_pins"
+        in jtag_refs
+    )
+    assert "kicad_tooling/hwrepo/jtag_signal_inventory.py#jtag_signal_roles" in jtag_refs
+    assert CONNECTOR_PIN_EVIDENCE in jtag_refs
+    assert CONNECTOR_CANDIDATE_REFERENCES in jtag_refs
 
     assert CONNECTOR_PIN_EVIDENCE in catalog["bus.i2c_signal_on_named_rail"].implementation_refs
     assert (

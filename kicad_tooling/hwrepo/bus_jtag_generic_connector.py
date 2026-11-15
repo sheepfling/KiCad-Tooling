@@ -12,18 +12,21 @@ from .connector_coverage_models import ConnectorCoverageReport, ConnectorMappedP
 from .connector_identity import connector_candidate_references, pin_function_is_generic
 from .connector_pin_metadata import connector_pin_metadata_matches_inventory
 from .jtag_generic_connector_models import JtagDebugEndpoint, JtagGenericConnector
+from .jtag_signal_inventory import jtag_signal_roles
 from .netlist_contract_models import ComponentContract, NetlistContract
 from .netlist_pin_assignments import netlist_pin_net_index
 
 _IC_REFERENCE = re.compile(r"^(?:U|IC)[0-9]+$", re.IGNORECASE)
-_FUNCTION_TOKENS = re.compile(r"[A-Z0-9]+", re.IGNORECASE)
 
 
 def jtag_function_role(function: str) -> str | None:
     """Recognize only explicit TCK/TMS tokens; JTCK/JTMS can also describe SWD."""
-    tokens = {token.casefold() for token in _FUNCTION_TOKENS.findall(function)}
-    roles = {role for role in ("tck", "tms") if role in tokens}
-    return next(iter(roles)) if len(roles) == 1 else None
+    roles = jtag_signal_roles(function)
+    if roles == frozenset({"test_clock"}):
+        return "tck"
+    if roles == frozenset({"test_mode_select"}):
+        return "tms"
+    return None
 
 
 def generic_jtag_connector_pairs(

@@ -20,6 +20,7 @@ from .can_signal_functions import (
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .i2s_endpoint_inventory import I2sEndpointInventory
+from .jtag_signal_inventory import JtagEndpointInventory
 from .named_rail_pin_evidence import (
     NamedRailPinSource,
     named_rail_pin_evidence_matches_source,
@@ -40,6 +41,7 @@ ETHERNET_MANAGEMENT_SIGNAL_NAMED_RAIL_RULE_ID: DesignLintRuleId = (
 USB_SIGNAL_NAMED_RAIL_RULE_ID: DesignLintRuleId = "bus.usb_signal_on_named_rail"
 RS485_SIGNAL_NAMED_RAIL_RULE_ID: DesignLintRuleId = "bus.rs485_signal_on_named_rail"
 I2S_SIGNAL_NAMED_RAIL_RULE_ID: DesignLintRuleId = "bus.i2s_signal_on_named_rail"
+JTAG_SIGNAL_NAMED_RAIL_RULE_ID: DesignLintRuleId = "bus.jtag_signal_on_named_rail"
 USB_C_SBU_SIGNAL_NAMED_RAIL_RULE_ID: DesignLintRuleId = "bus.usb_c_sbu_signal_on_named_rail"
 
 
@@ -112,6 +114,30 @@ class I2sSignalNamedRailEvidence:
             self.identity_basis,
         ):
             raise ValueError("I2S named-rail evidence must match its complete native endpoint")
+
+
+@dataclass(frozen=True, slots=True)
+class JtagSignalNamedRailEvidence:
+    """One recognized JTAG signal pin on a named rail."""
+
+    pin: NamedRailPinSource
+    role: str
+    identity_basis: str
+
+    def __post_init__(self) -> None:
+        reference = self.pin.evidence.reference
+        pins = JtagEndpointInventory.from_netlist(self.pin.observed).named_rail_signal_pins(
+            reference
+        )
+        current = next(
+            (item for item in pins if item.pin.casefold() == self.pin.evidence.pin.casefold()),
+            None,
+        )
+        if current is None or (current.role, current.identity_basis) != (
+            self.role,
+            self.identity_basis,
+        ):
+            raise ValueError("JTAG named-rail evidence must match its complete native endpoint")
 
 
 @dataclass(frozen=True, slots=True)
@@ -263,6 +289,7 @@ NamedRailSignalEvidence: TypeAlias = (
     CanSignalNamedRailEvidence
     | I2cSignalNamedRailEvidence
     | I2sSignalNamedRailEvidence
+    | JtagSignalNamedRailEvidence
     | I3cSignalNamedRailEvidence
     | SpiSignalNamedRailEvidence
     | SerialSignalNamedRailEvidence
@@ -310,6 +337,14 @@ def project_named_rail_signal_evidence(
             {
                 "i2s_role": (source.role,),
                 "i2s_identity_basis": (source.identity_basis,),
+            }
+        )
+    elif isinstance(source, JtagSignalNamedRailEvidence):
+        rule_id = JTAG_SIGNAL_NAMED_RAIL_RULE_ID
+        evidence.update(
+            {
+                "jtag_role": (source.role,),
+                "jtag_identity_basis": (source.identity_basis,),
             }
         )
     elif isinstance(source, I3cSignalNamedRailEvidence):

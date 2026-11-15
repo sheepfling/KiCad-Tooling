@@ -59,6 +59,14 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
         **ETHERNET_CONNECTOR_PARITY_FIXTURES,
         **SWD_GENERIC_CONNECTOR_PARITY_FIXTURES,
         **SWD_SIGNAL_SAME_NET_PARITY_FIXTURES,
+        "bus.jtag_signal_on_named_rail": MappingProxyType(
+            {
+                "fault_fixtures": _refs(
+                    "tests.test_design_lint_mcp_parity_jtag_signal_named_rail",
+                    "test_jtag_signal_named_rail_cli_mcp_parity",
+                ),
+            }
+        ),
         **PCB_NETCLASS_PARITY_FIXTURES,
         **PCB_REFERENCE_PARITY_FIXTURES,
         **PCB_DIFFERENTIAL_PAIR_PARITY_FIXTURES,

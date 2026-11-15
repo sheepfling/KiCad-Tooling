@@ -1094,7 +1094,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 396 active rules.
+The catalog currently contains 397 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -4221,6 +4221,46 @@ checked with digest-pinned KiCad 10.0.0 and 10.0.5 Docker images; see the
 KICAD_RUN_NATIVE_I2S_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest -q \
   tests/test_i2s_signal_named_rail_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2s_signal_on_named_rail")'
+```
+
+## Review JTAG signal pins assigned to named rails
+
+`bus.jtag_signal_on_named_rail` emits a default `review` finding when a fitted
+IC or connector has a complete, unique native pin inventory and an identified
+JTAG TCK, TMS, TDI, TDO, TRST, or RTCK pin is assigned to a net whose label
+matches the existing supply-like or return-like clue vocabulary. A bounded
+`JTAG` token in a pin-function identifies the endpoint directly. Generic
+`TCK` and `TMS` aliases require exactly one uniquely assigned pin of each role
+on that same endpoint. `JTCK` and `JTMS` alone remain excluded because those
+names can describe SWD signals. ARM documents the signal roles and its optional
+RTCK extension in the [Debug Interface v5 specification][arm-jtag-signals].
+
+This is an endpoint-identity and label heuristic. It does not establish that
+JTAG is active, that the label is the electrical potential, that the pin
+assignment is wrong, or that the signals must be isolated from rails. A
+deliberate strap or unusual pin mux can be valid. Duplicate or ambiguous role
+functions, open or multiply assigned examined pins, DNP endpoints, and
+incomplete inventories stay quiet. Project policy can promote the cue to
+`block`, turn it `off`, or ignore one exact fingerprint. The check covers
+schematic net assignments; it does not prove PCB copper continuity or external
+wiring.
+
+Synthetic regressions cover explicit JTAG roles, contextual generic connector
+aliases, SWD and SPI controls, DNP/incomplete/ambiguous/open cases, policy,
+repair, stable ordering, CLI/MCP parity, and three-process hash-seed report
+stability. The tooling-owned fault/control schematics are exported twice and
+checked with digest-pinned KiCad 10.0.0 and 10.0.5 Docker images; see the
+[fixture record](../tests/fixtures/design_lint/jtag-signal-named-rail/README.md).
+
+```sh
+.venv/bin/python -I -m pytest -q tests/test_jtag_signal_named_rail.py \
+  tests/test_design_lint_mcp_parity_jtag_signal_named_rail.py \
+  tests/test_design_lint_determinism_jtag_signal_named_rail.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.jtag_signal_on_named_rail")'
+
+KICAD_RUN_NATIVE_JTAG_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest -q \
+  tests/test_jtag_signal_named_rail_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.jtag_signal_on_named_rail")'
 ```
 
 ## Review an SWD connector without an identified return
@@ -11258,3 +11298,4 @@ Review the actual board and assembly requirements before approving a build.
 
 [serial-connector-rail-fixture]:
   ../tests/fixtures/design_lint/serial-connector-signal-named-rail-native/README.md
+[arm-jtag-signals]: https://documentation-service.arm.com/static/5f900a61f86e16515cdc0610

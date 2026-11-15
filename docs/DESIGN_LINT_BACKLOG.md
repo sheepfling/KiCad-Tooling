@@ -847,16 +847,13 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc823):** LINT-497 extends
-  RS-485 named-rail review to explicitly identified module connectors with
-  bounded DI/RO pin functions. Hosted acceptance passed in GitHub Actions run
-  `43718798860`: 483 selected tests passed and 9,681 were deselected, including
-  repeatable Docker fixtures on KiCad 10.0.0 and 10.0.5. Tag-scope resolution,
-  the scoped gate, type checks, packaging, and installed-wheel verification
-  against a separate project passed. Package and preview jobs were skipped
-  under prerelease policy. The earlier `v0.5.3rc822` tag omitted required
-  selector metadata and stopped before tests; `v0.5.3rc823` supplied the rule
-  and native-fixture declarations.
+- **Latest published lint-gate checkpoint (v0.5.3rc825):** LINT-499 adds
+  I2S signal-on-named-rail review. Hosted acceptance passed in GitHub Actions
+  run `43725475865`: 483 selected tests passed and 9,701 were deselected,
+  including repeatable Docker fixtures on KiCad 10.0.0 and 10.0.5. Tag-scope
+  resolution, the scoped gate, type checks, packaging, and installed-wheel
+  verification against a separate project passed. Package and preview jobs
+  were skipped under prerelease policy.
 - **Previous published lint-gate checkpoint (v0.5.3rc821):** LINT-496 extends
   I3C named-rail review to recognized connector pins with exact SDA/SCL
   functions. Hosted acceptance passed in GitHub Actions run `43716561821`: 479
@@ -28565,6 +28562,54 @@ acceptance threads while new lint features proceed:
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
+#### LINT-500 — Review identified JTAG signals assigned to named rails
+
+- **Priority:** P2 configurable interface heuristic. Native JTAG signal pins
+  on a supply-like or return-like named net may indicate an unexpected pin
+  assignment, but native function names and net labels are incomplete design
+  intent.
+- **Status:** Implemented as `bus.jtag_signal_on_named_rail`, default
+  `review`, with per-project mode and exact-fingerprint ignore controls. The
+  catalog owner points to the focused JTAG inventory predicate.
+- **Predicate:** Inspect fitted IC and recognized connector candidates only
+  when their native component inventory, pin functions, electrical types, and
+  direct net assignments are complete. A bounded `JTAG` token plus a bounded
+  JTAG role identifies the endpoint directly. Generic TCK/TMS names require
+  exactly one assigned pin of each role on the same endpoint. Review unique
+  TCK, TMS, TDI, TDO, TRST, or RTCK roles assigned to the existing named-rail
+  label vocabulary. Exclude `JTCK`/`JTMS` without JTAG context because they can
+  describe SWD signals.
+- **Source basis:** Arm's [Debug Interface v5 Architecture Specification][arm-jtag-signals]
+  defines TCK, TMS, TDI, TDO, and TRST and describes RTCK as an extension.
+  This supports the bounded role vocabulary only; it does not assert a board's
+  intended interface or connection.
+- **Interpretation:** Function text and net labels do not prove active JTAG
+  use, electrical potential, a fault, or a required signal topology. Intentional
+  test straps and muxed pins remain valid possibilities. The check does not
+  inspect PCB copper or continuity.
+- **Evidence:** Tooling-owned synthetic fault/control sources cover direct
+  JTAG functions on rail-like labels, generic TCK/TMS contextual identity,
+  SWD/SPI controls, incomplete and ambiguous metadata, DNP, open/multiply
+  assigned pins, policy, source-bound evidence, deterministic repair, hash-seed
+  stability, CLI/MCP parity, and exact-version native exports. No project or
+  cohort design source is used.
+- **Selection:** Run `tests/test_jtag_signal_named_rail.py`,
+  `tests/test_design_lint_mcp_parity_jtag_signal_named_rail.py`, and
+  `tests/test_design_lint_determinism_jtag_signal_named_rail.py` with the
+  `bus.jtag_signal_on_named_rail` selector, plus named-rail architecture and
+  rule-catalog integrity. The Docker lane is
+  `tests/test_jtag_signal_named_rail_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_JTAG_SIGNAL_NAMED_RAIL_FIXTURES=1`.
+- **Local acceptance:** Exact prerelease tag-scope `scripts/ci.py` passed on
+  2026-11-15 at `build/ci/run-fd_xyxgh`: 486 passed, 9,713 deselected,
+  including native Docker fault/control fixtures on KiCad 10.0.0 and 10.0.5.
+  Ruff, Alphus module boundaries and shared-utility checks, Rumdl, mdrepo,
+  Linux and Windows Pyright, wheel/sdist builds, clean installed-wheel checks,
+  and the separate KiCad-Test checkout inventory, verification, and playtest
+  all passed.
+- **Hosted acceptance:** Pending the annotated prerelease tag and GitHub
+  Actions result.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -28630,6 +28675,7 @@ quality, or first-article continuity.
 [kicad-10.0.5-drc-items]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/drc/drc_item.cpp
 [kicad-10-drc-exclusions]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#design-rule-checking
 [kicad-10-cli-drc]: https://docs.kicad.org/10.0/en/cli/cli.html
+[arm-jtag-signals]: https://documentation-service.arm.com/static/5f900a61f86e16515cdc0610
 [kicad-10-5-marker-serializer]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/pcb_marker.cpp
 [kicad-pcb-parser-zone-id-100]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/pcb_io/kicad_sexpr/pcb_io_kicad_sexpr_parser.cpp
 [kicad-pcb-parser-zone-id-105]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/pcb_io/kicad_sexpr/pcb_io_kicad_sexpr_parser.cpp
