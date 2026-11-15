@@ -406,6 +406,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="serial-signal-named-rail",
     ),
     pytest.param(
+        "bus.serial_signal_on_named_rail",
+        "KICAD_RUN_NATIVE_SERIAL_TX_RX_LABEL_MISMATCH_FIXTURES",
+        "tests.test_serial_connector_signal_named_rail_native_fixture_lane."
+        "test_native_connector_serial_named_rail_fault_and_control_repeat",
+        id="serial-connector-signal-named-rail",
+    ),
+    pytest.param(
         "bus.serial_tx_rx_label_mismatch",
         "KICAD_RUN_NATIVE_SERIAL_TX_RX_LABEL_MISMATCH_FIXTURES",
         "tests.test_serial_tx_rx_label_mismatch_native_fixture_lane."

@@ -7,7 +7,11 @@ from .design_lint_named_rail_candidate_evidence import (
     SerialSignalNamedRailEvidence,
 )
 from .design_lint_rule_types import DesignLintRuleId
-from .named_rail_pin_evidence import NamedRailPinSource, assigned_named_rail_ic_pins
+from .named_rail_pin_evidence import (
+    NamedRailPinSource,
+    assigned_named_rail_connector_pins,
+    assigned_named_rail_ic_pins,
+)
 from .netlist_contract_models import NetlistContract
 from .serial_participants import serial_function_role_and_channel
 
@@ -17,13 +21,17 @@ RULE_ID: DesignLintRuleId = "bus.serial_signal_on_named_rail"
 def serial_signal_on_named_rail_candidates(
     observed: NetlistContract,
 ) -> tuple[NamedRailSignalCandidate, ...]:
-    """Review a fitted IC's explicit UART/USART TX or RX pin on a named rail.
+    """Review fitted IC or connector UART/USART signal pins on a named rail.
 
     Pin functions and net labels are clues for review. The candidate does not
     establish a required serial endpoint or prove an electrical defect.
     """
     candidates: list[NamedRailSignalCandidate] = []
-    for item in assigned_named_rail_ic_pins(observed):
+    pin_evidence = (
+        *assigned_named_rail_ic_pins(observed),
+        *assigned_named_rail_connector_pins(observed),
+    )
+    for item in pin_evidence:
         pin_role = serial_function_role_and_channel(item.function)
         if pin_role is None:
             continue

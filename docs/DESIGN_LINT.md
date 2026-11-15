@@ -971,19 +971,33 @@ KICAD_RUN_NATIVE_SERIAL_TX_RX_LABEL_MISMATCH_FIXTURES=1 .venv/bin/python -I -m p
 
 ### Serial signal pins assigned directly to named rails
 
-`bus.serial_signal_on_named_rail` reviews a fitted U/IC UART/USART TX/TXD or
-RX/RXD pin when its single native net assignment has a recognized supply-like
-or return-like label. It requires a unique bounded function, complete native
-pin inventory, fitted state, and one assignment. The default is `review`;
-intentional rail straps can be ignored exactly or configured per project.
+`bus.serial_signal_on_named_rail` reviews a fitted U/IC or bounded connector
+UART/USART TX/TXD or RX/RXD pin when its single native net assignment has a
+recognized supply-like or return-like label. It requires a unique bounded
+function, complete native pin inventory, fitted state, and one assignment.
+Connector identity is a candidate clue, not an approved pinout. The default is
+`review`; intentional rail straps can be ignored exactly or configured per
+project.
 
 Pin function and net label are clues, not an authored connection requirement
-or proof of an electrical defect or potential. The check skips connectors,
-DNP parts, open and ambiguous assignments, incomplete inventories, indexed or
-vendor-specific function names, and does not assess PCB copper or physical
-continuity. A synthetic GND fault and matching-label control export twice with
-clean ERC on digest-pinned KiCad 10.0.0 and 10.0.5 images; see the
-[fixture note](../tests/fixtures/design_lint/serial-tx-rx-label-mismatch/README.md).
+or proof of an electrical defect or potential. The check skips unrecognized
+connectors, DNP parts, open and ambiguous assignments, incomplete inventories,
+indexed or vendor-specific function names, and does not assess PCB copper or
+physical continuity. Synthetic IC and connector GND faults with matching
+controls export repeatedly on digest-pinned KiCad 10.0.0 and 10.0.5 images;
+the connector control retains a separate reference net and changes only the
+signal label. See the [connector fixture note][serial-connector-rail-fixture]
+and the [IC fixture note](../tests/fixtures/design_lint/serial-tx-rx-label-mismatch/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_serial_signal_named_rail.py \
+  tests/test_serial_connector_signal_named_rail_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.serial_signal_on_named_rail")'
+
+KICAD_RUN_NATIVE_SERIAL_TX_RX_LABEL_MISMATCH_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_serial_connector_signal_named_rail_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.serial_signal_on_named_rail")'
+```
 
 `bus.serial_tx_outputs_share_net` adds a separate opt-in review when TX/TXD
 functions on two fitted ICs share one net but native pin types do not already
@@ -11182,3 +11196,6 @@ Review the actual board and assembly requirements before approving a build.
 [duplicate-pad-conflict-fixture]: ../tests/fixtures/design_lint/pcb-duplicate-pad-net-conflict/README.md
 [lint448-track-angle]: DESIGN_LINT_BACKLOG.md#lint-448--review-project-authored-per-net-track-angle-drc-coverage
 [track-angle-fixture]: ../tests/fixtures/design_lint/pcb-track-angle/README.md
+
+[serial-connector-rail-fixture]:
+  ../tests/fixtures/design_lint/serial-connector-signal-named-rail-native/README.md

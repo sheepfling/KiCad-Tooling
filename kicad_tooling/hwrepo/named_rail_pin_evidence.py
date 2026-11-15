@@ -1,18 +1,20 @@
-"""Shared source evidence for fitted IC pins assigned to named rails."""
+"""Shared source evidence for fitted IC and connector pins on named rails."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Literal
 
 from .casefold_mapping_lookup import lookup_unique_casefold
 from .component_references import is_integrated_circuit_reference
+from .connector_identity import connector_candidate_references
 from .named_rail_roles import named_rail_role_clue
 from .netlist_contract_models import NetlistContract
 
 
 @dataclass(frozen=True, slots=True)
 class NamedRailPinEvidence:
-    """One fitted IC pin with a complete inventory and unambiguous rail assignment."""
+    """One fitted IC or connector pin assigned unambiguously to a named rail."""
 
     pin: str
     reference: str
@@ -21,6 +23,7 @@ class NamedRailPinEvidence:
     net_name: str
     rail_role: str
     inventory: tuple[str, ...]
+    reference_kind: Literal["ic", "connector"] = "ic"
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,11 +44,20 @@ def named_rail_pin_evidence_matches_source(
 ) -> bool:
     """Check one extracted rail pin against the current fitted native source."""
     reference, separator, number = evidence.pin.rpartition(".")
+    if evidence.reference_kind == "ic":
+        reference_is_supported = is_integrated_circuit_reference(reference)
+    elif evidence.reference_kind == "connector":
+        connector_references = {
+            item.casefold() for item in connector_candidate_references(observed)
+        }
+        reference_is_supported = reference.casefold() in connector_references
+    else:
+        return False
     if (
         not separator
         or reference.casefold() != evidence.reference.casefold()
         or number != evidence.number
-        or not is_integrated_circuit_reference(reference)
+        or not reference_is_supported
         or lookup_unique_casefold(observed.components, evidence.reference) is None
         or evidence.reference.casefold() in {item.casefold() for item in observed.dnp_components}
         or lookup_unique_casefold(observed.pin_functions, evidence.pin) != evidence.function
@@ -88,8 +100,12 @@ def named_rail_pin_evidence_matches_source(
     )
 
 
-def assigned_named_rail_ic_pins(observed: NetlistContract) -> tuple[NamedRailPinEvidence, ...]:
-    """Collect fitted IC pins with exactly one native assignment to a named rail."""
+def _assigned_named_rail_pins(
+    observed: NetlistContract,
+    *,
+    eligible_references: frozenset[str],
+    reference_kind: Literal["ic", "connector"],
+) -> tuple[NamedRailPinEvidence, ...]:
     nets_by_pin: dict[str, set[str]] = {}
     for net, pins in observed.nets.items():
         for pin in pins:
@@ -109,10 +125,11 @@ def assigned_named_rail_ic_pins(observed: NetlistContract) -> tuple[NamedRailPin
         reference_key = reference.casefold()
         if (
             not separator
-            or not is_integrated_circuit_reference(reference)
+            or reference_key not in eligible_references
             or reference_key in dnp_references
-            or lookup_unique_casefold(observed.components, reference) is None
         ):
+            continue
+        if lookup_unique_casefold(observed.components, reference) is None:
             continue
 
         inventory = lookup_unique_casefold(observed.component_pin_numbers, reference)
@@ -139,7 +156,36 @@ def assigned_named_rail_ic_pins(observed: NetlistContract) -> tuple[NamedRailPin
                 net_name=net_name,
                 rail_role=rail_role,
                 inventory=tuple(sorted(inventory_keys)),
+                reference_kind=reference_kind,
             )
         )
 
     return tuple(sorted(evidence, key=lambda item: (item.pin.casefold(), item.pin)))
+
+
+def assigned_named_rail_ic_pins(observed: NetlistContract) -> tuple[NamedRailPinEvidence, ...]:
+    """Collect fitted IC pins with exactly one native assignment to a named rail."""
+    references = frozenset(
+        reference.casefold()
+        for reference in observed.components
+        if is_integrated_circuit_reference(reference)
+    )
+    return _assigned_named_rail_pins(
+        observed,
+        eligible_references=references,
+        reference_kind="ic",
+    )
+
+
+def assigned_named_rail_connector_pins(
+    observed: NetlistContract,
+) -> tuple[NamedRailPinEvidence, ...]:
+    """Collect fitted connector pins with one assignment to a named rail."""
+    references = frozenset(
+        reference.casefold() for reference in connector_candidate_references(observed)
+    )
+    return _assigned_named_rail_pins(
+        observed,
+        eligible_references=references,
+        reference_kind="connector",
+    )

@@ -733,6 +733,7 @@ skipped under prerelease policy.
 - `pcb.differential_pair_rule_coverage`
 - `pcb.differential_pair_unmapped_native_rule`
 - `pcb.differential_pair_reference_plane_scope_missing`
+- `pcb.differential_pair_route_skew_scope_missing`
 - `pcb.signal_path_rule_coverage`
 - `pcb.signal_path_unmapped_native_rule`
 - `pcb.signal_path_unmapped_edge_clearance_rule`
@@ -6522,8 +6523,9 @@ control are documented in the
 #### LINT-240 — Review fitted serial signal pins assigned to named rails
 
 - **Status:** Implemented as the default-`review` `bus.serial_signal_on_named_rail`
-  heuristic, with project overrides for `review`, `block`, `off`, and exact
-  finding ignores.
+  heuristic for fitted U/IC pins, with project overrides for `review`, `block`,
+  `off`, and exact finding ignores. LINT-485 extends this predicate to bounded
+  connector candidates.
 - **Gap:** ERC can accept a fitted IC UART/USART signal pin assigned directly
   to a named supply or return net. Existing peer coverage can identify an
   unmapped connection without localizing this pin-to-rail clue.
@@ -6532,10 +6534,11 @@ control are documented in the
   exactly one native net assignment. Emit REVIEW when that net label matches
   the bounded supply-like or return-like vocabulary.
 - **Boundary:** Function and label are review clues, not proof of voltage,
-  electrical fault, intended endpoint, or a required connection. Connectors,
-  DNP parts, open or ambiguous assignments, incomplete inventories, indexed
-  aliases, and vendor-specific names remain outside the predicate. The
-  schematic netlist does not establish routed copper or physical continuity.
+  electrical fault, intended endpoint, or a required connection. The original
+  IC-only scope was extended to bounded connector candidates by LINT-485. DNP
+  parts, open or ambiguous assignments, incomplete inventories, indexed aliases,
+  and vendor-specific names remain outside the predicate. The schematic
+  netlist does not establish routed copper or physical continuity.
 - **Fixtures and quality gate:** Synthetic GND, +3V3, and 0V PWM faults;
   neutral-label, connector, DNP, open, ambiguous, and incomplete-inventory
   controls; configurable mode and exact-ignore cases; stable ordering and
@@ -27903,6 +27906,40 @@ acceptance threads while new lint features proceed:
   Pyright, wheel/sdist builds, installed-wheel origin/version checks, external
   inventory/surface/verification, adapted-checkout checks, and the external
   playtest all passed.
+
+#### LINT-485 — Review connector-only serial signal pins assigned to named rails
+
+- **Priority:** P2 configurable review heuristic. A fitted connector pin may
+  carry a recognized UART/USART TX or RX function while its only assigned
+  schematic net label looks like a supply or return rail.
+- **Status:** Added connector candidates to the existing
+  `bus.serial_signal_on_named_rail` predicate; default mode remains REVIEW.
+- **Predicate:** Reuse the bounded connector identity, native pin function,
+  complete pin inventory, fitted state, unique assignment, and named-rail
+  vocabulary already used for IC pins. The rule emits a clue for connector
+  pins without requiring a project connector map.
+- **Interpretation:** Connector identity and native signal names are clues;
+  neither establishes the approved pinout or required circuit. A real pinout
+  can intentionally use a rail label. Project policy can promote, disable, or
+  exactly ignore this review. The check does not assess PCB copper or
+  continuity.
+- **Evidence:** Synthetic source-bound tests cover IC and connector faults,
+  neutral connector control, DNP/open/ambiguous/incomplete controls, policy
+  behavior, deterministic ordering, and native connector fault/control
+  exports. CLI and MCP continue to use the same typed evaluator; this change
+  adds no surface operation. The native control keeps a distinct `GND_B`
+  reference assignment constant and changes only J1's signal label. Fixture
+  source hashes and exact KiCad 10.0.0/10.0.5 image boundaries are recorded
+  alongside the tooling-owned schematics.
+- **Focused selection:** Run `tests/test_serial_signal_named_rail.py` and
+  `tests/test_serial_connector_signal_named_rail_native_fixture_lane.py` with
+  `design_lint`, `interface_lint`, and the exact
+  `bus.serial_signal_on_named_rail` selector. Native execution uses
+  `KICAD_RUN_NATIVE_SERIAL_TX_RX_LABEL_MISMATCH_FIXTURES=1`.
+- **Acceptance:** Focused lint, catalog, architecture, deterministic, and
+  exact-version native Docker results are recorded after completion. This gate
+  adds a conservative review signal; it does not certify the intended
+  connector design or physical continuity.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 

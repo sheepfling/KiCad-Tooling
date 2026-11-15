@@ -1,0 +1,128 @@
+"""Exact-version native exports for connector-only serial rail review."""
+
+from __future__ import annotations
+
+import hashlib
+import os
+from pathlib import Path
+
+import pytest
+
+from kicad_tooling.ci_hosted_support import normalized_netlist_bytes
+from kicad_tooling.hwrepo.contract_coach_models import ContractCoachReport
+from kicad_tooling.hwrepo.design_lint import evaluate
+from kicad_tooling.hwrepo.design_lint_policy_models import DesignLintPolicy
+from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
+from kicad_tooling.validate import read_netlist
+from tests.native_kicad_support import execute_kicad_cli
+from tests.synthetic_design_lint_project import PINNED_NATIVE_KICAD_IMAGES
+
+RULE_ID = "bus.serial_signal_on_named_rail"
+FIXTURES = Path(__file__).parent / "fixtures/design_lint/serial-connector-signal-named-rail-native"
+SOURCE_HASHES = {
+    "control.kicad_sch": "a02c6e00f6721090b998eb0d4d38d049580e6f71246353cef054435950a4c746",
+    "fault.kicad_sch": "5c4ec3e6844ca51f105dba9a5e3b422fdbecf0a7846cdfbd89ed328f6b99b0ad",
+}
+
+pytestmark = [
+    pytest.mark.design_lint,
+    pytest.mark.interface_lint,
+    pytest.mark.native_kicad,
+    pytest.mark.slow,
+    pytest.mark.skipif(
+        os.environ.get("KICAD_RUN_NATIVE_SERIAL_TX_RX_LABEL_MISMATCH_FIXTURES") != "1",
+        reason="native serial named-rail fixtures run in the digest-pinned interface lane",
+    ),
+]
+
+
+@pytest.mark.parametrize(("version", "image"), tuple(PINNED_NATIVE_KICAD_IMAGES.items()))
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_native_connector_serial_named_rail_fault_and_control_repeat(
+    tmp_path: Path,
+    version: str,
+    image: str,
+) -> None:
+    work = tmp_path / version.replace(".", "-")
+    outputs = work / "outputs"
+    outputs.mkdir(parents=True)
+    version_command = execute_kicad_cli(
+        image,
+        ("kicad-cli", "version"),
+        work,
+        home_directory=f"serial-connector-named-rail-version-{version}",
+    )
+    assert version_command.returncode == 0
+    assert version_command.stdout.strip() == version
+
+    for case in ("fault", "control"):
+        filename = f"{case}.kicad_sch"
+        source = FIXTURES / filename
+        assert hashlib.sha256(source.read_bytes()).hexdigest() == SOURCE_HASHES[filename]
+        exports = []
+        for repeat in ("first", "repeat"):
+            output = outputs / f"{case}-{repeat}.netlist.xml"
+            command = execute_kicad_cli(
+                image,
+                (
+                    "kicad-cli",
+                    "sch",
+                    "export",
+                    "netlist",
+                    "--format",
+                    "kicadxml",
+                    "--output",
+                    str(output),
+                    str(source),
+                ),
+                work,
+                home_directory=f"serial-connector-named-rail-{version}-{case}-{repeat}",
+                fixture_directory=FIXTURES,
+                output_directory=outputs,
+            )
+            assert command.returncode == 0, command.model_dump_json(indent=2)
+            assert output.is_file()
+            observed = read_netlist(output)
+            exports.append(
+                (
+                    observed,
+                    hashlib.sha256(output.read_bytes()).hexdigest(),
+                    hashlib.sha256(normalized_netlist_bytes(observed)).hexdigest(),
+                )
+            )
+
+        first, repeated = exports
+        assert first[0] == repeated[0]
+        assert first[2] == repeated[2]
+        observed, netlist_sha256, _normalized_sha256 = first
+        assert observed.pin_functions["J1.1"] == "UART1_RX"
+        assigned_net = next(net for net, pins in observed.nets.items() if "J1.1" in pins)
+        assert assigned_net == ("GND_C" if case == "fault" else "UART_TX")
+
+        project_id = f"synthetic-serial-connector-named-rail-{case}-{version}"
+        report: DesignLintReport = evaluate(
+            project_id,
+            ContractCoachReport(
+                status="READY_FOR_REVIEW",
+                project_id=project_id,
+                observed=observed,
+                netlist_sha256=netlist_sha256,
+            ),
+            DesignLintPolicy(),
+        )
+        findings = tuple(item for item in report.findings if item.rule_id == RULE_ID)
+        if case == "fault":
+            assert len(findings) == 1
+            assert findings[0].subject == "J1.1: UART1_RX on return-like net GND_C"
+            assert findings[0].evidence["pin"] == ("J1.1",)
+            assert findings[0].evidence["pin_function"] == ("UART1_RX",)
+            assert findings[0].evidence["assigned_net"] == ("GND_C",)
+            assert findings[0].evidence["component_pin_inventory"] == (
+                "1",
+                "2",
+                "3",
+                "4",
+            )
+            assert report.status == "REVIEW"
+        else:
+            assert not findings

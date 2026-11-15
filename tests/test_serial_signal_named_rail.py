@@ -38,6 +38,19 @@ def _report(
     )
 
 
+def _connector_netlist(*, signal_net: str = "GND") -> NetlistContract:
+    source = serial_signal_on_named_rail_netlist()
+    return source.model_copy(
+        update={
+            "components": {"J1": source.components["U1"]},
+            "nets": {signal_net: ("J1.1",), "USART1_RX": ("J1.2",)},
+            "component_symbols": {"J1": "Connector_Generic:Conn_01x02"},
+            "pin_functions": {"J1.1": "USART1_TX", "J1.2": "USART1_RX"},
+            "component_pin_numbers": {"J1": ("1", "2")},
+        }
+    )
+
+
 @pytest.mark.parametrize(
     ("rail_name", "pin", "function", "role_clue", "pin_role", "channel"),
     (
@@ -78,24 +91,28 @@ def test_neutral_labels_and_unsupported_pin_functions_are_controls() -> None:
         update={"pin_functions": {"U1.1": "UART1_TX_P", "U1.2": "USART1_RX"}}
     )
     incomplete_inventory = source.model_copy(update={"component_pin_numbers": {"U1": ("2",)}})
-    connector = source.model_copy(
-        update={
-            "components": {"J1": source.components["U1"]},
-            "nets": {"GND": ("J1.1",), "USART1_RX": ("J1.2",)},
-            "component_symbols": {"J1": "Connector_Generic:Conn_01x02"},
-            "pin_functions": {"J1.1": "USART1_TX", "J1.2": "USART1_RX"},
-            "component_pin_numbers": {"J1": ("1", "2")},
-        }
-    )
+    connector_neutral = _connector_netlist(signal_net="UART_TX")
 
     assert not any(item.rule_id == RULE_ID for item in _report(source).findings)
     assert not any(item.rule_id == RULE_ID for item in _report(unsupported_function).findings)
     assert not any(item.rule_id == RULE_ID for item in _report(incomplete_inventory).findings)
-    assert not any(item.rule_id == RULE_ID for item in _report(connector).findings)
+    assert not any(item.rule_id == RULE_ID for item in _report(connector_neutral).findings)
+
+
+def test_connector_only_serial_pin_on_named_rail_requests_review() -> None:
+    report = _report(_connector_netlist())
+    findings = tuple(item for item in report.findings if item.rule_id == RULE_ID)
+
+    assert report.status == "REVIEW"
+    assert len(findings) == 1
+    assert findings[0].subject == "J1.1: USART1_TX on return-like net GND"
+    assert findings[0].evidence["pin"] == ("J1.1",)
+    assert findings[0].evidence["component_pin_inventory"] == ("1", "2")
 
 
 def test_dnp_open_and_ambiguous_assignments_stay_outside_the_predicate() -> None:
     source = serial_signal_on_named_rail_netlist()
+    connector = _connector_netlist()
     dnp = source.model_copy(update={"dnp_components": ("U1",)})
     open_pin = source.model_copy(update={"nets": {"USART1_RX": ("U1.2",)}})
     ambiguous = source.model_copy(
@@ -107,8 +124,28 @@ def test_dnp_open_and_ambiguous_assignments_stay_outside_the_predicate() -> None
             }
         }
     )
+    connector_dnp = connector.model_copy(update={"dnp_components": ("J1",)})
+    connector_open = connector.model_copy(update={"nets": {"USART1_RX": ("J1.2",)}})
+    connector_ambiguous = connector.model_copy(
+        update={
+            "nets": {
+                "GND": ("J1.1",),
+                "0V": ("J1.1",),
+                "USART1_RX": ("J1.2",),
+            }
+        }
+    )
+    connector_incomplete = connector.model_copy(update={"component_pin_numbers": {"J1": ("2",)}})
 
-    for control in (dnp, open_pin, ambiguous):
+    for control in (
+        dnp,
+        open_pin,
+        ambiguous,
+        connector_dnp,
+        connector_open,
+        connector_ambiguous,
+        connector_incomplete,
+    ):
         assert not any(item.rule_id == RULE_ID for item in _report(control).findings)
 
 
