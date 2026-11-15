@@ -28060,7 +28060,11 @@ acceptance threads while new lint features proceed:
   module-boundary and shared-utility checks, Rumdl, mdrepo, Linux and
   Windows-target Pyright, wheel/sdist builds, and installed-origin/version
   checks passed. The five direct CAN/evidence/architecture/catalog/determinism
-  suites passed 18 tests. Hosted tagged acceptance follows publication.
+  suites passed 18 tests.
+- **Hosted acceptance:** Annotated tag `v0.5.3rc812` passed GitHub Actions run
+  `43700921798`. Tag-scope resolution selected this rule, and the scoped lint
+  gate plus installed-wheel check against a separate project completed
+  successfully.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
