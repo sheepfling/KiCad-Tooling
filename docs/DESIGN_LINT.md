@@ -2724,18 +2724,19 @@ KICAD_RUN_NATIVE_USB_C_SBU_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
 
 ### I3C SDA/SCL pins assigned directly to named rails
 
-`bus.i3c_signal_on_named_rail` reviews an assigned pin on a fitted U/IC only
-when its complete native inventory contains one explicitly named I3C SDA/SCL
-pair with the same optional channel. A supply-like or return-like net label
-prompts review of the assignment. Function text and the net name are clues;
-they do not prove I3C use, required bus membership, electrical potential, or a
-defect. Generic or I2C-only names, mismatched or repeated roles, connectors,
-DNP parts, open or ambiguous pins, and incomplete inventories are skipped.
+`bus.i3c_signal_on_named_rail` reviews an assigned pin on a fitted U/IC or a
+recognized connector candidate when its complete native inventory contains
+one explicitly named I3C SDA/SCL pair with the same optional channel. A
+supply-like or return-like net label prompts review of the assignment. Function
+text and the net name are clues; they do not prove I3C use, required bus
+membership, electrical potential, or a defect. Generic or I2C-only names,
+mismatched or repeated roles, unrecognized connector references, DNP parts,
+open or ambiguous examined pins, and incomplete inventories are skipped.
 Projects can use the normal `review`, `block`, or `off` policy and exact
 fingerprint ignores. The check does not trace passive paths or establish PCB
 or physical continuity. Synthetic fault/control, policy, boundary, ordering,
 repair, and hash-seed tests accompany digest-pinned KiCad 10.0.0 and 10.0.5
-native exports. See the
+native exports for both connector and IC pins. See the
 [fixture notes](../tests/fixtures/design_lint/i3c-signal-named-rail/README.md).
 
 ```sh

@@ -62,6 +62,17 @@ def test_explicit_i3c_pin_on_named_rail_requests_review(
     assert "passive paths and PCB copper are not traced" in finding.message
 
 
+def test_explicit_connector_i3c_pair_on_named_rails_requests_review() -> None:
+    report = _report(i3c_signal_named_rail_netlist(reference="J1"))
+    findings = tuple(item for item in report.findings if item.rule_id == RULE_ID)
+
+    assert report.status == "REVIEW"
+    assert tuple(item.subject for item in findings) == (
+        "J1.1: I3C SDA on return-like net GND",
+        "J1.2: I3C SCL on supply-like net +3V3",
+    )
+
+
 def test_i3c_function_aliases_are_bounded_and_channel_aware() -> None:
     unindexed = i3c_signal_identity("I3C_SDA")
     zero_indexed = i3c_signal_identity("I3C0_SDA")
@@ -84,6 +95,7 @@ def test_i3c_function_aliases_are_bounded_and_channel_aware() -> None:
 
 def test_neutral_labels_mismatched_channels_and_unsupported_functions_are_controls() -> None:
     source = i3c_signal_named_rail_netlist()
+    connector_source = i3c_signal_named_rail_netlist(reference="J1")
     controls = (
         i3c_signal_named_rail_netlist(sda_net="I3C_SDA_BUS", scl_net="I3C_SCL_BUS"),
         i3c_signal_named_rail_netlist(sda_function="I3C1_SDA", scl_function="I3C2_SCL"),
@@ -92,14 +104,25 @@ def test_neutral_labels_mismatched_channels_and_unsupported_functions_are_contro
         source.model_copy(update={"nets": {"I3C1_SCL_BUS": ("U1.2",)}}),
         source.model_copy(update={"nets": {"GND": ("U1.1", "U1.2"), "+3V3": ("U1.1", "U1.2")}}),
         source.model_copy(update={"component_pin_numbers": {"U1": ("2",)}}),
-        source.model_copy(
+        i3c_signal_named_rail_netlist(
+            reference="J1", sda_net="I3C1_SDA_BUS", scl_net="I3C1_SCL_BUS"
+        ),
+        i3c_signal_named_rail_netlist(reference="J1", dnp=True),
+        i3c_signal_named_rail_netlist(
+            reference="J1", sda_function="I3C1_SDA", scl_function="I3C2_SCL"
+        ),
+        i3c_signal_named_rail_netlist(reference="J1", sda_function="SDA", scl_function="SCL"),
+        connector_source.model_copy(
             update={
-                "components": {"J1": source.components["U1"]},
-                "nets": {"GND": ("J1.1",), "+3V3": ("J1.2",)},
-                "component_symbols": {"J1": "Connector_Generic:Conn_01x02"},
-                "pin_functions": {"J1.1": "I3C1_SDA", "J1.2": "I3C1_SCL"},
-                "component_pin_numbers": {"J1": ("1", "2")},
+                "nets": {
+                    "GND": ("J1.1", "J1.2"),
+                    "+3V3": ("J1.1", "J1.2"),
+                }
             }
+        ),
+        connector_source.model_copy(update={"component_pin_numbers": {"J1": ("2",)}}),
+        connector_source.model_copy(
+            update={"pin_functions": {"J1.1": "I3C1_SDA", "J1.2": "I3C1_SDA"}}
         ),
     )
 
@@ -113,6 +136,11 @@ def test_neutral_labels_mismatched_channels_and_unsupported_functions_are_contro
     assert tuple(
         item.subject for item in _report(partial_i3c).findings if item.rule_id == RULE_ID
     ) == ("U1.2: I3C SCL on supply-like net +3V3",)
+
+    partial_connector = i3c_signal_named_rail_netlist(reference="J1", sda_net=None)
+    assert tuple(
+        item.subject for item in _report(partial_connector).findings if item.rule_id == RULE_ID
+    ) == ("J1.2: I3C SCL on supply-like net +3V3",)
 
 
 def test_project_policy_can_block_disable_or_ignore_a_review() -> None:

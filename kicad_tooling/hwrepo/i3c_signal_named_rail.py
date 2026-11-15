@@ -8,7 +8,11 @@ from .design_lint_named_rail_candidate_evidence import (
     NamedRailSignalCandidate,
 )
 from .design_lint_rule_types import DesignLintRuleId
-from .named_rail_pin_evidence import NamedRailPinSource, assigned_named_rail_ic_pins
+from .named_rail_pin_evidence import (
+    NamedRailPinSource,
+    assigned_named_rail_connector_pins,
+    assigned_named_rail_ic_pins,
+)
 from .netlist_contract_models import NetlistContract
 
 RULE_ID: DesignLintRuleId = "bus.i3c_signal_on_named_rail"
@@ -32,7 +36,11 @@ def i3c_signal_on_named_rail_candidates(
         roles.setdefault((identity.channel, identity.role), []).append(pin)
 
     candidates: list[NamedRailSignalCandidate] = []
-    for item in assigned_named_rail_ic_pins(observed):
+    pin_evidence = (
+        *assigned_named_rail_ic_pins(observed),
+        *assigned_named_rail_connector_pins(observed),
+    )
+    for item in pin_evidence:
         identity = i3c_signal_identity(item.function)
         if identity is None:
             continue
@@ -47,6 +55,7 @@ def i3c_signal_on_named_rail_candidates(
         ):
             continue
 
+        endpoint_kind = "connector" if item.reference_kind == "connector" else "IC"
         candidates.append(
             NamedRailSignalCandidate.from_source_evidence(
                 I3cSignalNamedRailEvidence(
@@ -58,7 +67,8 @@ def i3c_signal_on_named_rail_candidates(
                     f"{item.pin}: I3C {identity.role} on {item.rail_role} net {item.net_name}"
                 ),
                 message=(
-                    f"The fitted IC I3C {identity.role} function is assigned directly to a net "
+                    f"The fitted {endpoint_kind} I3C {identity.role} function is assigned "
+                    "directly to a net "
                     f"whose label ({item.net_name!r}) is recognized as {item.rail_role}. Review "
                     "whether this assignment is intentional. The function and label are review "
                     "clues, not proof of I3C use, electrical potential, required bus membership, "

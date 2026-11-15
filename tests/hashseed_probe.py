@@ -19,6 +19,8 @@ REPORT_ORDER = (
     "i2c_signal_named_rail_control",
     "i3c_signal_named_rail_fault",
     "i3c_signal_named_rail_control",
+    "i3c_signal_named_rail_connector_fault",
+    "i3c_signal_named_rail_connector_control",
     "i3c_same_net_fault",
     "i3c_same_net_control",
     "i2s_clock_data_same_net_fault",

@@ -5,8 +5,8 @@ They contain no project or product board data. Both include a generic
 two-contact connector and a fitted IC with explicit `I3C1_SDA` and `I3C1_SCL`
 native pin functions.
 
-- `fault.kicad_sch`: the IC-side SDA pin is assigned to `GND` and SCL to
-  `+3V3`; both assignments request review.
+- `fault.kicad_sch`: connector and IC SDA pins are assigned to `GND`, and their
+  SCL pins to `+3V3`; all four assignments request review.
 - `control.kicad_sch`: SDA and SCL use separate neutral bus labels; the
   heuristic stays quiet.
 

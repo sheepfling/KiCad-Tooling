@@ -43,6 +43,8 @@ def i3c_signal_named_rail_fixture_lane(
         },
         expected_subjects={
             "fault": (
+                "J1.1: I3C SDA on return-like net GND",
+                "J1.2: I3C SCL on supply-like net +3V3",
                 "U1.1: I3C SDA on return-like net GND",
                 "U1.2: I3C SCL on supply-like net +3V3",
             ),

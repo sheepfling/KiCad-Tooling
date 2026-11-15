@@ -28368,6 +28368,37 @@ acceptance threads while new lint features proceed:
   Windows types, wheel/sdist, installation, and external checkout/playtest
   stages passed. Package and preview jobs were skipped under prerelease policy.
 
+#### LINT-496 — Review I3C connector SDA/SCL pins assigned to named rails
+
+- **Priority:** P2 configurable interface heuristic. The I3C named-rail rule
+  already recognized a complete SDA/SCL pair on fitted ICs but skipped the
+  matching exact-function pins on connector candidates.
+- **Status:** Extends `bus.i3c_signal_on_named_rail`; keeps its rule ID, REVIEW
+  default, project policy controls, and source-evidence shape.
+- **Predicate:** Apply the existing channel-paired SDA/SCL functions, complete
+  native pin inventory, fitted-state, unique assignment, and bounded named-rail
+  checks to recognized connector candidates as well as IC pins.
+- **Interpretation:** Exact I3C function names and rail-like labels prompt
+  review; they do not prove I3C use, required bus connectivity, electrical
+  potential, or a defect. Valid projects may assign a line directly to a rail.
+- **Evidence:** Synthetic fault/control tests cover connector SDA on `GND` and
+  SCL on `+3V3`, neutral labels, generic functions, DNP, partial and ambiguous
+  assignments, duplicate or mismatched roles, incomplete inventory, policy,
+  ordering, repair, and hash-seed stability. Existing digest-pinned native
+  fault/control schematics already contain a generic connector and fitted IC;
+  the fault assigns both endpoints' SDA pins to `GND` and SCL pins to `+3V3`,
+  while the control uses separate neutral I3C nets. Native results repeat on
+  KiCad 10.0.0 and 10.0.5. Fixtures are synthetic and tooling-owned.
+- **Selection:** Use the exact `bus.i3c_signal_on_named_rail` selector for the
+  lint and native fixture suites, plus architecture, catalog reachability, and
+  rule-gate integrity. Native export uses
+  `KICAD_RUN_NATIVE_I3C_SIGNAL_NAMED_RAIL_FIXTURES=1`.
+- **Local acceptance:** Passed scoped `scripts/ci.py`: 479 passed, 9,683
+  deselected. Exact-version Docker fixtures passed on KiCad 10.0.0 and 10.0.5;
+  Ruff, Alphus boundaries, rumdl, mdrepo, Linux/Windows Pyright, wheel/sdist,
+  isolated install checks, and the separate KiCad-Test checkout playtest passed.
+- **Hosted acceptance:** Pending tagged workflow acceptance.
+
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
 ## Completion and release gate

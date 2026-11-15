@@ -20,7 +20,23 @@ def report_cases() -> JsonObject:
         coach(i3c_signal_named_rail_netlist(sda_net="I3C1_SDA_BUS", scl_net="I3C1_SCL_BUS")),
         DesignLintPolicy(),
     )
+    connector_fault = evaluate(
+        "synthetic-i3c-signal-named-rail-connector-fault",
+        coach(i3c_signal_named_rail_netlist(reference="J1")),
+        DesignLintPolicy(),
+    )
+    connector_control = evaluate(
+        "synthetic-i3c-signal-named-rail-connector-control",
+        coach(
+            i3c_signal_named_rail_netlist(
+                reference="J1", sda_net="I3C1_SDA_BUS", scl_net="I3C1_SCL_BUS"
+            )
+        ),
+        DesignLintPolicy(),
+    )
     return {
         "i3c_signal_named_rail_fault": fault.model_dump(mode="json"),
         "i3c_signal_named_rail_control": control.model_dump(mode="json"),
+        "i3c_signal_named_rail_connector_fault": connector_fault.model_dump(mode="json"),
+        "i3c_signal_named_rail_connector_control": connector_control.model_dump(mode="json"),
     }

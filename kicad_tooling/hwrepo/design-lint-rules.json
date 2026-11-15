@@ -11565,17 +11565,18 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For each fitted U/IC with exactly one explicitly named I3C SDA and SCL function in the same optional channel, require both function pins to appear in the complete native pin inventory and require one direct native net assignment for the examined pin. Emit a REVIEW candidate when that pin's net label matches the bounded supply-like or return-like vocabulary.",
+      "predicate": "For each fitted U/IC or recognized connector candidate with exactly one explicitly named I3C SDA and SCL function in the same optional channel, require both function pins to appear in the complete native pin inventory and require one direct native net assignment for the examined pin. Emit a REVIEW candidate when that pin's net label matches the bounded supply-like or return-like vocabulary.",
       "supported_kicad_versions": [
         "Digest-pinned KiCad 10.0.0 and 10.0.5 native fixtures; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "I3C function text and a rail-like label are review clues, not proof of I3C use, required bus membership, the net's electrical potential, or a defect. Intentional direct assignments remain project decisions.",
-        "Only fitted U/IC references, one bounded SDA/SCL pair with matching optional channel, complete native pin-number inventory, and one unambiguous assignment for the examined pin are considered. I2C-only names, connector-only endpoints, duplicate or mismatched roles, DNP, an open or multiply assigned examined pin, and incomplete inventory cases are skipped.",
+        "Only fitted U/IC references or recognized connector candidates, one bounded SDA/SCL pair with matching optional channel, complete native pin-number inventory, and one unambiguous assignment for the examined pin are considered. I2C-only names, unrecognized connector references, duplicate or mismatched roles, DNP, an open or multiply assigned examined pin, and incomplete inventory cases are skipped.",
         "This schematic-netlist prompt does not establish endpoint intent, bus behavior, passive paths, PCB copper continuity, external wiring, or physical connectivity."
       ],
       "fault_fixtures": [
         "tests.test_i3c_signal_named_rail.test_explicit_i3c_pin_on_named_rail_requests_review",
+        "tests.test_i3c_signal_named_rail.test_explicit_connector_i3c_pair_on_named_rails_requests_review",
         "tests.test_i3c_signal_named_rail.test_project_policy_can_block_disable_or_ignore_a_review",
         "tests.test_i3c_signal_named_rail_native_fixture_lane.test_native_i3c_signal_named_rail_fault_and_control_repeat"
       ],
@@ -11595,6 +11596,8 @@
         "kicad_tooling/hwrepo/i3c_signal_named_rail.py#i3c_signal_on_named_rail_candidates",
         "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#NamedRailSignalCandidate",
         "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_connector_pins",
+        "kicad_tooling/hwrepo/connector_identity.py#connector_candidate_references",
         "kicad_tooling/hwrepo/named_rail_pin_evidence.py#named_rail_pin_evidence_matches_source",
         "kicad_tooling/hwrepo/named_rail_roles.py#named_rail_role_clue",
         "kicad_tooling/hwrepo/bus_signal_roles.py#i3c_signal_identity",
