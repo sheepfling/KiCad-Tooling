@@ -847,13 +847,13 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc825):** LINT-499 adds
-  I2S signal-on-named-rail review. Hosted acceptance passed in GitHub Actions
-  run `43725475865`: 483 selected tests passed and 9,701 were deselected,
+- **Latest published lint-gate checkpoint (v0.5.3rc826):** LINT-500 adds
+  JTAG signal-on-named-rail review. Hosted acceptance passed in GitHub Actions
+  run `43730614913`: 486 selected tests passed and 9,713 were deselected,
   including repeatable Docker fixtures on KiCad 10.0.0 and 10.0.5. Tag-scope
-  resolution, the scoped gate, type checks, packaging, and installed-wheel
-  verification against a separate project passed. Package and preview jobs
-  were skipped under prerelease policy.
+  resolution, Ruff, Alphus, Rumdl, mdrepo, Linux and Windows type checks,
+  packaging, and installed-wheel verification against a separate project
+  passed. Package and preview jobs were skipped under prerelease policy.
 - **Previous published lint-gate checkpoint (v0.5.3rc821):** LINT-496 extends
   I3C named-rail review to recognized connector pins with exact SDA/SCL
   functions. Hosted acceptance passed in GitHub Actions run `43716561821`: 479
@@ -28607,8 +28607,13 @@ acceptance threads while new lint features proceed:
   Linux and Windows Pyright, wheel/sdist builds, clean installed-wheel checks,
   and the separate KiCad-Test checkout inventory, verification, and playtest
   all passed.
-- **Hosted acceptance:** Pending the annotated prerelease tag and GitHub
-  Actions result.
+- **Hosted acceptance:** Annotated tag `v0.5.3rc826` passed GitHub Actions
+  run `43730614913`: 486 selected tests passed and 9,713 were deselected,
+  including repeatable native Docker fault/control fixtures on KiCad 10.0.0
+  and 10.0.5. Ruff, Alphus boundaries, Rumdl, mdrepo, Linux and Windows
+  type checks, wheel/sdist builds, installed-wheel checks, and the external
+  KiCad-Test checkout playtest passed. Package and preview jobs were skipped
+  under prerelease policy.
 
 ## Completion and release gate
 
