@@ -27980,8 +27980,11 @@ acceptance threads while new lint features proceed:
   unrelated tests deselected, including the KiCad 10.0.0 and 10.0.5 Docker
   fixtures. Ruff, module boundaries, shared-utility checks, Rumdl, mdrepo,
   Linux and Windows-target Pyright, wheel/sdist builds, and installed-origin
-  and version checks passed. Hosted external-template verification is pending
-  on the scoped prerelease tag.
+  and version checks passed. Hosted tag `v0.5.3rc810` passed run
+  `43697499227`: the same 481-test scope, both native versions, Linux and
+  Windows-target Pyright, wheel/sdist builds, installed-origin/version checks,
+  external-template inventory/surface/verification, adapted-checkout checks,
+  and the external playtest all passed.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
