@@ -31,6 +31,8 @@ For the product architecture, feature-development path, and staged reorganizatio
 [architecture backlog](docs/ARCHITECTURE_BACKLOG.md).
 For proposed user-facing workflows and visualization priorities, see the
 [product feature backlog](docs/FEATURE_BACKLOG.md).
+Attribution and license terms for adapted third-party code are recorded in
+[third-party notices](THIRD_PARTY_NOTICES.md).
 
 ## Try the separate package
 
