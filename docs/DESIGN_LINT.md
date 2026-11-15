@@ -2377,18 +2377,19 @@ KICAD_RUN_NATIVE_CAN_TX_OUTPUT_SHARING_FIXTURES=1 .venv/bin/python -I -m pytest 
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_tx_outputs_share_net")'
 ```
 
-### CAN controller signal pins assigned directly to named rails
+### CAN/FDCAN signal pins assigned directly to named rails
 
-`bus.can_signal_on_named_rail` reviews a fitted U/IC CAN/FDCAN TX or RX pin
-when its exact exported function alias has one native assignment to a label
-recognized as supply-like or return-like. It requires a complete native pin
-inventory and skips connectors, DNP parts, open or ambiguous assignments,
-generic TX/RX functions, and unsupported aliases. The default is `review`:
-the pin-function and net-label names are clues, and a direct strap can be an
-intentional transceiver or operating-mode choice. This check does not establish
-CAN participation, transceiver behavior, electrical potential, required
-topology, PCB copper, or off-board wiring. Tooling-authored fault/control
-exports repeat with clean ERC on digest-pinned KiCad 10.0.0 and 10.0.5; see the
+`bus.can_signal_on_named_rail` reviews fitted U/IC or bounded connector pins
+with a recognized CAN/FDCAN TX or RX function and one native assignment to a
+label recognized as supply-like or return-like. It requires the pin number in
+the native inventory and skips DNP parts, open or ambiguous assignments, pins
+absent from the inventory, generic TX/RX functions, and unsupported aliases.
+The default is `review`: pin-function and net-label names are clues, and a
+direct strap can be an intentional transceiver or operating-mode choice. This
+check does not establish CAN participation, transceiver behavior, electrical
+potential, required topology, PCB copper, or off-board wiring. Tooling-authored
+IC and connector fault/control exports repeat with clean ERC on digest-pinned
+KiCad 10.0.0 and 10.0.5; see the
 [fixture record](../tests/fixtures/design_lint/can-signal-named-rail/README.md).
 
 ```sh

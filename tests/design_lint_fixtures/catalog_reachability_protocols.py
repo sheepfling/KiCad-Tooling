@@ -7,6 +7,9 @@ from kicad_tooling.hwrepo.rs485_peer_reference_scan import scan_rs485_peer_refer
 from kicad_tooling.hwrepo.serial_participants import SerialPeerRosterContext
 from kicad_tooling.hwrepo.usb_c_ports import UsbCPortRosterContext
 from tests.design_lint_fixtures.can_line_named_rail import can_line_named_rail_netlist
+from tests.design_lint_fixtures.can_signal_named_rail import (
+    can_connector_signal_on_named_rail_netlist,
+)
 from tests.design_lint_fixtures.catalog_reachability import (
     usb_c_vbus_and_connector_return_review_rule_ids,
 )
@@ -70,6 +73,9 @@ def protocol_rule_ids() -> set[str]:
     )
     emitted.update(item.rule_id for item in candidates(rs485_line_named_rail_netlist()))
     emitted.update(item.rule_id for item in candidates(can_line_named_rail_netlist()))
+    emitted.update(
+        item.rule_id for item in candidates(can_connector_signal_on_named_rail_netlist())
+    )
     emitted.update(item.rule_id for item in candidates(usb_c_cc_named_rail_netlist()))
     emitted.update(usb_c_vbus_and_connector_return_review_rule_ids())
     emitted.update(item.rule_id for item in candidates(usb_c_cc_same_net_netlist()))

@@ -1,4 +1,4 @@
-"""Focused regressions for CAN controller pins assigned to named rails."""
+"""Focused regressions for CAN signal pins assigned to named rails."""
 
 from __future__ import annotations
 
@@ -14,7 +14,10 @@ from kicad_tooling.hwrepo.models import (
     NetlistContract,
 )
 from tests.design_lint_fixtures import coach
-from tests.design_lint_fixtures.can_signal_named_rail import can_signal_on_named_rail_netlist
+from tests.design_lint_fixtures.can_signal_named_rail import (
+    can_connector_signal_on_named_rail_netlist,
+    can_signal_on_named_rail_netlist,
+)
 
 RULE_ID = "bus.can_signal_on_named_rail"
 
@@ -64,6 +67,34 @@ def test_can_controller_signal_on_named_rail_requests_review(
     assert "intentional rail strap" in finding.message
 
 
+@pytest.mark.parametrize(
+    ("pin", "rail", "function", "role", "rail_role"),
+    (
+        ("J1.1", "GND", "CAN2_TX", "tx", "return-like"),
+        ("J1.2", "+3V3", "CAN2_RX", "rx", "supply-like"),
+    ),
+)
+def test_can_connector_signal_on_named_rail_requests_review(
+    pin: str, rail: str, function: str, role: str, rail_role: str
+) -> None:
+    report = _report(can_connector_signal_on_named_rail_netlist(rail_name=rail, pin=pin))
+    finding = next(item for item in report.findings if item.rule_id == RULE_ID)
+
+    assert report.status == "REVIEW"
+    assert finding.subject == f"{pin}: {function} on {rail_role} net {rail}"
+    assert finding.evidence == {
+        "pin": (pin,),
+        "pin_function": (function,),
+        "pin_role": (role,),
+        "can_channel": ("can:index2",),
+        "assigned_net": (rail,),
+        "net_label_role_clue": (rail_role,),
+        "component_pin_inventory": ("1", "2"),
+    }
+    assert "not proof of electrical potential" in finding.message
+    assert "intentional rail strap" in finding.message
+
+
 def test_bounded_can_aliases_and_non_can_or_bus_line_aliases() -> None:
     assert can_signal_role_and_channel("CAN1_TX") == ("tx", "can:index1")
     assert can_signal_role_and_channel("FDCAN2_RXD") == ("rx", "fdcan:index2")
@@ -77,29 +108,37 @@ def test_neutral_labels_and_unsupported_functions_are_quiet() -> None:
     source = can_signal_on_named_rail_netlist(rail_name="CAN_TX")
     unsupported = source.model_copy(update={"pin_functions": {"U1.1": "CANH", "U1.2": "CANL"}})
     incomplete = source.model_copy(update={"component_pin_numbers": {"U1": ("2",)}})
+    connector = can_connector_signal_on_named_rail_netlist(rail_name="CAN2_TX")
+    connector_unsupported = connector.model_copy(
+        update={"pin_functions": {**connector.pin_functions, "J1.1": "CANH"}}
+    )
 
-    for control in (source, unsupported, incomplete):
+    for control in (source, unsupported, incomplete, connector, connector_unsupported):
         assert not any(item.rule_id == RULE_ID for item in _report(control).findings)
 
 
-def test_dnp_open_ambiguous_duplicate_and_connector_pins_are_skipped() -> None:
+def test_dnp_open_ambiguous_duplicate_and_incomplete_connector_cases_are_skipped() -> None:
     source = can_signal_on_named_rail_netlist()
     controls = (
         source.model_copy(update={"dnp_components": ("U1",)}),
         source.model_copy(update={"nets": {"CAN1_RX": ("U1.2",)}}),
         source.model_copy(update={"nets": {**source.nets, "0V": ("U1.1",)}}),
         source.model_copy(update={"pin_functions": {"U1.1": "CAN1_TX", "u1.1": "CAN1_RX"}}),
-        source.model_copy(
-            update={
-                "components": {"J1": source.components["U1"]},
-                "nets": {"GND": ("J1.1",), "CAN1_RX": ("J1.2",)},
-                "component_symbols": {"J1": "Connector:Conn_01x02"},
-                "pin_functions": {"J1.1": "CAN1_TX", "J1.2": "CAN1_RX"},
-                "component_pin_numbers": {"J1": ("1", "2")},
-            }
-        ),
+        can_connector_signal_on_named_rail_netlist(rail_name="CAN2_TX"),
     )
     for control in controls:
+        assert not any(item.rule_id == RULE_ID for item in _report(control).findings)
+
+    connector = can_connector_signal_on_named_rail_netlist()
+    connector_controls = (
+        connector.model_copy(update={"dnp_components": ("J1",)}),
+        connector.model_copy(update={"nets": {"CAN2_RX": ("J1.2",)}}),
+        connector.model_copy(update={"nets": {"GND": ("J1.1",), "0V": ("J1.1",)}}),
+        can_connector_signal_on_named_rail_netlist(pin="J1.2").model_copy(
+            update={"component_pin_numbers": {"J1": ("1",)}}
+        ),
+    )
+    for control in connector_controls:
         assert not any(item.rule_id == RULE_ID for item in _report(control).findings)
 
 
@@ -159,3 +198,22 @@ def test_mapping_order_is_stable_and_repaired_assignment_clears_review() -> None
         item.model_dump() for item in reordered_findings
     )
     assert not any(item.rule_id == RULE_ID for item in _report(repaired).findings)
+
+    connector_fault = can_connector_signal_on_named_rail_netlist()
+    connector_reordered = connector_fault.model_copy(
+        update={
+            "nets": dict(reversed(tuple(connector_fault.nets.items()))),
+            "pin_functions": dict(reversed(tuple(connector_fault.pin_functions.items()))),
+        }
+    )
+    connector_repaired = can_connector_signal_on_named_rail_netlist(rail_name="CAN2_TX")
+    connector_findings = tuple(
+        item for item in _report(connector_fault).findings if item.rule_id == RULE_ID
+    )
+    connector_reordered_findings = tuple(
+        item for item in _report(connector_reordered).findings if item.rule_id == RULE_ID
+    )
+    assert tuple(item.model_dump() for item in connector_findings) == tuple(
+        item.model_dump() for item in connector_reordered_findings
+    )
+    assert not any(item.rule_id == RULE_ID for item in _report(connector_repaired).findings)

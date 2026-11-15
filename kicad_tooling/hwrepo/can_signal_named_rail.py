@@ -1,4 +1,4 @@
-"""Review CAN controller pins assigned directly to named rails."""
+"""Review CAN signal pins assigned directly to named rails."""
 
 from __future__ import annotations
 
@@ -8,7 +8,11 @@ from .design_lint_named_rail_candidate_evidence import (
     NamedRailSignalCandidate,
 )
 from .design_lint_rule_types import DesignLintRuleId
-from .named_rail_pin_evidence import NamedRailPinSource, assigned_named_rail_ic_pins
+from .named_rail_pin_evidence import (
+    NamedRailPinSource,
+    assigned_named_rail_connector_pins,
+    assigned_named_rail_ic_pins,
+)
 from .netlist_contract_models import NetlistContract
 
 RULE_ID: DesignLintRuleId = "bus.can_signal_on_named_rail"
@@ -17,13 +21,17 @@ RULE_ID: DesignLintRuleId = "bus.can_signal_on_named_rail"
 def can_signal_on_named_rail_candidates(
     observed: NetlistContract,
 ) -> tuple[NamedRailSignalCandidate, ...]:
-    """Review fitted CAN/FDCAN TX/RX IC pins assigned to a rail-like net label.
+    """Review fitted IC or connector CAN/FDCAN TX/RX pins on named rails.
 
     Native pin-function names and rail-like net labels are clues only. A direct
     strap may be intentional for a particular transceiver or operating mode.
     """
     candidates: list[NamedRailSignalCandidate] = []
-    for item in assigned_named_rail_ic_pins(observed):
+    pin_evidence = (
+        *assigned_named_rail_ic_pins(observed),
+        *assigned_named_rail_connector_pins(observed),
+    )
+    for item in pin_evidence:
         role_channel = can_signal_role_and_channel(item.function)
         if role_channel is None:
             continue

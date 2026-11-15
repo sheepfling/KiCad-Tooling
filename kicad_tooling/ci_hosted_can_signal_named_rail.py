@@ -27,8 +27,8 @@ CAN_SIGNAL_NAMED_RAIL_TOOLCHAINS = CAN_TX_RX_NATIVE_TOOLCHAINS
 _SIGNAL_RULE_ID = "bus.can_signal_on_named_rail"
 _SIGNAL_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
     {
-        "fault": "8780151a3e20f7ae3d784870cf5eb146c9ab2816f21a561a72e15bd59e9e284a",
-        "control": "f443a372c06d1862c7250d3797269fd29ced89d0a8def43c184d8762c00a865e",
+        "fault": "bd3ab9e52d76f8a0befdc186c3e61d56faf8ea46b066cd0be5fc8703a436cc6c",
+        "control": "d3c57cce862e757ba2473486fdbcfd88f2faf9cb583f1b9a9ea897a53b36fb86",
     }
 )
 _LINE_RULE_ID = "bus.can_line_on_named_rail"
@@ -43,7 +43,7 @@ _LINE_SOURCE_HASHES: Mapping[str, str] = MappingProxyType(
 def can_signal_named_rail_fixture_lane(
     root: Path, *, version: str, image: str, log: HostedLog
 ) -> None:
-    """Repeat source-bound exports for controller TX/RX named-rail fixtures."""
+    """Repeat source-bound exports for CAN signal named-rail fixtures."""
     _can_named_rail_fixture_lane(root, version=version, image=image, log=log, feature="signal")
 
 
@@ -72,15 +72,26 @@ def _can_named_rail_fixture_lane(
         fixture_directory = "can-signal-named-rail"
         stage_prefix = "can-signal-named-rail-fixture"
         reviewed_hashes = _SIGNAL_SOURCE_HASHES
-        expected_functions = {"U1.1": "CAN1_TX", "U1.2": "CAN1_RX"}
+        expected_functions = {
+            "U1.1": "CAN1_TX",
+            "U1.2": "CAN1_RX",
+            "J1.1": "CAN2_TX",
+            "J1.2": "GND_B",
+        }
         expected_nets = {
-            "fault": {"GND": ("U1.1",), "CAN1_RX": ("U1.2",)},
-            "control": {"CAN1_TX": ("U1.1",), "CAN1_RX": ("U1.2",)},
+            "fault": {"GND": {"U1.1", "J1.1"}, "CAN1_RX": {"U1.2"}, "GND_B": {"J1.2"}},
+            "control": {
+                "CAN1_TX": {"U1.1"},
+                "CAN1_RX": {"U1.2"},
+                "CAN2_TX": {"J1.1"},
+                "GND_B": {"J1.2"},
+            },
         }
         expected_subjects = {
-            "fault": "U1.1: CAN1_TX on return-like net GND",
+            "fault": ("J1.1: CAN2_TX on return-like net GND;U1.1: CAN1_TX on return-like net GND"),
             "control": "none",
         }
+        expected_inventories = {"U1": ("1", "2"), "J1": ("1", "2")}
     else:
         rule_id = _LINE_RULE_ID
         fixture_directory = "can-line-named-rail"
@@ -95,6 +106,7 @@ def _can_named_rail_fixture_lane(
             "fault": ("U1.1: CANH on return-like net GND;U1.2: CANL on supply-like net +3V3"),
             "control": "none",
         }
+        expected_inventories = {"U1": ("1", "2")}
     fixture_root = tooling_checkout_root() / "tests/fixtures/design_lint" / fixture_directory
     sources = {case: fixture_root / f"{case}.kicad_sch" for case in ("fault", "control")}
     source_hashes = {case: digest(source) for case, source in sources.items()}
@@ -177,11 +189,16 @@ def _can_named_rail_fixture_lane(
             if not netlist_path.is_file() or not erc_path.is_file():
                 raise ValueError(f"Native KiCad omitted CAN {feature} named-rail {case} evidence")
             observed = read_netlist(netlist_path)
-            if observed.component_pin_numbers.get("U1") != ("1", "2"):
+            if any(
+                observed.component_pin_numbers.get(reference) != pins
+                for reference, pins in expected_inventories.items()
+            ):
                 raise ValueError(f"Native CAN {feature} {case} pin inventory changed")
             if observed.pin_functions != expected_functions:
                 raise ValueError(f"Native CAN {feature} {case} pin functions changed")
-            if any(observed.nets.get(net) != pins for net, pins in expected_nets[case].items()):
+            if any(
+                set(observed.nets.get(net, ())) != pins for net, pins in expected_nets[case].items()
+            ):
                 raise ValueError(f"Native CAN {feature} named-rail {case} net assignments changed")
             normalized = json.dumps(
                 observed.model_dump(mode="json"),

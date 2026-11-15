@@ -1,12 +1,12 @@
 # CAN signal assigned to a named rail
 
-These are Tooling-authored schematic fixtures containing one synthetic CAN
-controller. They are not derived from a product design.
+These are Tooling-authored schematic fixtures containing a synthetic CAN
+controller and connector. They are not derived from a product design.
 
-| Case                | SHA-256                                                            | Expected result                                                 |
-| ------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------- |
-| `fault.kicad_sch`   | `8780151a3e20f7ae3d784870cf5eb146c9ab2816f21a561a72e15bd59e9e284a` | `U1.1` function `CAN1_TX` is assigned to `GND`; emit REVIEW.    |
-| `control.kicad_sch` | `f443a372c06d1862c7250d3797269fd29ced89d0a8def43c184d8762c00a865e` | `CAN1_TX` stays on a neutral signal net; no named-rail finding. |
+| Case                | SHA-256                                                            | Expected result                                                         |
+| ------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| `fault.kicad_sch`   | `bd3ab9e52d76f8a0befdc186c3e61d56faf8ea46b066cd0be5fc8703a436cc6c` | `U1.1` and `J1.1` CAN TX functions share `GND`; emit REVIEW for both.   |
+| `control.kicad_sch` | `d3c57cce862e757ba2473486fdbcfd88f2faf9cb583f1b9a9ea897a53b36fb86` | IC and connector TX use neutral signal nets; `J1.2` remains on `GND_B`. |
 
 The digest-pinned native lane exports each source twice with KiCad 10.0.0 and
 10.0.5, checks the normalized netlist hashes repeat, and requires clean ERC.

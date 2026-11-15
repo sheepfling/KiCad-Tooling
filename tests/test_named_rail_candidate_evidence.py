@@ -34,7 +34,10 @@ from kicad_tooling.hwrepo.rs485_signal_named_rail import rs485_signal_on_named_r
 from kicad_tooling.hwrepo.serial_signal_named_rail import serial_signal_on_named_rail_candidates
 from kicad_tooling.hwrepo.spi_signal_named_rail import spi_signal_on_named_rail_candidates
 from kicad_tooling.hwrepo.usb_c_sbu_named_rail import usb_c_sbu_signal_on_named_rail_candidates
-from tests.design_lint_fixtures.can_signal_named_rail import can_signal_on_named_rail_netlist
+from tests.design_lint_fixtures.can_signal_named_rail import (
+    can_connector_signal_on_named_rail_netlist,
+    can_signal_on_named_rail_netlist,
+)
 from tests.design_lint_fixtures.ethernet_management_labels import ethernet_management_netlist
 from tests.design_lint_fixtures.ethernet_signal_named_rail import (
     ethernet_signal_on_named_rail_netlist,
@@ -106,6 +109,16 @@ def test_i2c_connector_named_rail_source_revalidates_current_assignment() -> Non
     assert source.evidence.reference_kind == "connector"
 
     stale_netlist = source.observed.model_copy(update={"nets": {"I2C_SCL": ("J1.2",)}})
+    with pytest.raises(ValueError, match="current native netlist"):
+        replace(source, observed=stale_netlist)
+
+
+def test_can_connector_named_rail_source_revalidates_current_assignment() -> None:
+    candidate = can_signal_on_named_rail_candidates(can_connector_signal_on_named_rail_netlist())[0]
+    source = candidate.source_evidence.pin
+    assert source.evidence.reference_kind == "connector"
+
+    stale_netlist = source.observed.model_copy(update={"nets": {"CAN2_RX": ("J1.2",)}})
     with pytest.raises(ValueError, match="current native netlist"):
         replace(source, observed=stale_netlist)
 

@@ -59,7 +59,9 @@ def test_native_can_signal_named_rail_fault_and_control_repeat(
     }
     fault = results["can-signal-named-rail-fixture/fault"]
     control = results["can-signal-named-rail-fixture/control"]
-    assert fault["subjects"] == "U1.1: CAN1_TX on return-like net GND"
+    assert fault["subjects"] == (
+        "J1.1: CAN2_TX on return-like net GND;U1.1: CAN1_TX on return-like net GND"
+    )
     assert control["subjects"] == "none"
     assert fault["lint_status"] == "REVIEW"
     native_export = results["can-signal-named-rail-fixture/native-export"]

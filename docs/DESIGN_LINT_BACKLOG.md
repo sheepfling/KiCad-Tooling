@@ -28026,6 +28026,42 @@ acceptance threads while new lint features proceed:
   gate plus installed-wheel check against a separate project completed
   successfully.
 
+#### LINT-488 — Review connector CAN/FDCAN TX/RX pins assigned to named rails
+
+- **Priority:** P2 configurable interface heuristic. External CAN interfaces
+  can expose controller TX/RX pins on connectors, where a native signal
+  function assigned to a rail-like net deserves explicit review.
+- **Status:** Extends `bus.can_signal_on_named_rail`; its existing default
+  REVIEW mode, rule ID, block/off controls, and exact-fingerprint ignores stay
+  in place.
+- **Predicate:** Apply the bounded CAN/FDCAN TX/RX function aliases and named-
+  rail vocabulary to fitted U/IC pins and bounded connector pins. Require the
+  target pin in the native inventory and exactly one net assignment.
+- **Interpretation:** A connector's pin-function name and net label are review
+  clues, not an approved pinout or proof of a defect. Direct rail straps can be
+  intentional. The check does not infer CAN participation, electrical
+  potential, board copper, or off-board continuity.
+- **Evidence:** Synthetic tests cover connector TX and RX candidates on return-
+  and supply-like labels, neutral and unsupported connector controls, DNP, open,
+  ambiguous, absent-inventory, source-freshness, policy, and mapping-order
+  cases. The native pair keeps `J1.2` on a distinct `GND_B` in both schematics;
+  the fault adds the CAN2_TX connector pin to the existing GND fault, while the
+  control assigns it to `CAN2_TX`. Both hash-bound schematics repeat on
+  digest-pinned KiCad 10.0.0 and 10.0.5 with clean ERC. No project source is
+  used.
+- **Selection:** Apply the exact `bus.can_signal_on_named_rail` selector to
+  `tests/test_can_signal_named_rail.py` and
+  `tests/test_can_signal_named_rail_native_fixture_lane.py`. Also run the
+  shared named-rail evidence, architecture, and protocol catalog-reachability
+  suites directly. Native export uses
+  `KICAD_RUN_NATIVE_CAN_SIGNAL_NAMED_RAIL_FIXTURES=1`.
+- **Local acceptance:** The focused CI run passed all 11 selected tests,
+  including repeatable Docker exports on KiCad 10.0.0 and 10.0.5. Ruff,
+  module-boundary and shared-utility checks, Rumdl, mdrepo, Linux and
+  Windows-target Pyright, wheel/sdist builds, and installed-origin/version
+  checks passed. The five direct CAN/evidence/architecture/catalog/determinism
+  suites passed 18 tests. Hosted tagged acceptance follows publication.
+
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
 ## Completion and release gate

@@ -9160,28 +9160,29 @@
     },
     {
       "rule_id": "bus.can_signal_on_named_rail",
-      "title": "CAN/FDCAN controller signal pin is assigned directly to a named rail",
+      "title": "CAN/FDCAN signal pin is assigned directly to a named rail",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including bounded CAN/FDCAN pin functions, complete component pin inventories, fitted state, and exact net assignments",
-      "predicate": "For each fitted U/IC pin with an exact function recognized by can_signal_role_and_channel as CAN/FDCAN TX or RX, require the pin number in the complete native pin inventory and exactly one net assignment. Emit REVIEW when the assigned net label matches the bounded supply-like or return-like vocabulary.",
+      "predicate": "For each fitted U/IC or bounded connector pin with an exact function recognized by can_signal_role_and_channel as CAN/FDCAN TX or RX, require the pin number in the native inventory and exactly one net assignment. Emit REVIEW when the assigned net label matches the bounded supply-like or return-like vocabulary.",
       "supported_kicad_versions": [
         "KiCad 10.0.0 and 10.0.5 digest-pinned native fixture exports; the selected project version is checked before export"
       ],
       "limitations": [
         "The native function and rail-like label are review clues, not proof of an electrical defect, required endpoint, or net potential. Direct straps can be intentional for a particular transceiver or operating mode.",
-        "Recognition is limited to fitted U/IC references, bounded CAN/FDCAN TX/RX aliases, complete pin-number inventories, and one unambiguous assignment. Connector-only endpoints, generic TX/RX, vendor-specific aliases, DNP, open, multiply assigned, and incomplete-inventory cases are skipped.",
+        "Recognition is limited to fitted U/IC or bounded connector references, bounded CAN/FDCAN TX/RX aliases, a pin number in the native inventory, and one unambiguous assignment. Generic TX/RX, vendor-specific aliases, DNP, open, multiply assigned, and pins absent from the inventory are skipped.",
         "The schematic netlist does not establish CAN participation, transceiver behavior, firmware mode, required topology, PCB copper continuity, or off-board wiring."
       ],
       "fault_fixtures": [
         "tests.test_can_signal_named_rail.test_can_controller_signal_on_named_rail_requests_review",
+        "tests.test_can_signal_named_rail.test_can_connector_signal_on_named_rail_requests_review",
         "tests.test_can_signal_named_rail_native_fixture_lane.test_native_can_signal_named_rail_fault_and_control_repeat"
       ],
       "valid_control_fixtures": [
         "tests.test_can_signal_named_rail.test_neutral_labels_and_unsupported_functions_are_quiet",
-        "tests.test_can_signal_named_rail.test_dnp_open_ambiguous_duplicate_and_connector_pins_are_skipped",
+        "tests.test_can_signal_named_rail.test_dnp_open_ambiguous_duplicate_and_incomplete_connector_cases_are_skipped",
         "tests.test_can_signal_named_rail.test_project_policy_can_block_disable_or_ignore_an_intentional_strap",
         "tests.test_can_signal_named_rail_native_fixture_lane.test_native_can_signal_named_rail_fault_and_control_repeat"
       ],
@@ -9196,6 +9197,8 @@
         "kicad_tooling/hwrepo/can_signal_named_rail.py#can_signal_on_named_rail_candidates",
         "kicad_tooling/hwrepo/design_lint_named_rail_candidate_evidence.py#NamedRailSignalCandidate",
         "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_ic_pins",
+        "kicad_tooling/hwrepo/named_rail_pin_evidence.py#assigned_named_rail_connector_pins",
+        "kicad_tooling/hwrepo/connector_identity.py#connector_candidate_references",
         "kicad_tooling/hwrepo/named_rail_pin_evidence.py#named_rail_pin_evidence_matches_source",
         "kicad_tooling/hwrepo/can_signal_functions.py#can_signal_role_and_channel",
         "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_candidates"

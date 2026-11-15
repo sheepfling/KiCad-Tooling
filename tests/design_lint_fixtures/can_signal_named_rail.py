@@ -28,3 +28,26 @@ def can_signal_on_named_rail_netlist(
         pin_functions=pin_functions,
         component_pin_numbers={"U1": ("1", "2")},
     )
+
+
+def can_connector_signal_on_named_rail_netlist(
+    *, rail_name: str = "GND", pin: str = "J1.1"
+) -> NetlistContract:
+    """Assign one exact CAN/FDCAN connector function to a named rail."""
+    pin_functions = {"J1.1": "CAN2_TX", "J1.2": "CAN2_RX"}
+    if pin not in pin_functions:
+        raise ValueError(f"Unsupported synthetic CAN connector pin: {pin}")
+    signal_net = pin_functions[pin]
+    nets = {name: (other_pin,) for other_pin, name in pin_functions.items() if name != signal_net}
+    nets[rail_name] = (pin,)
+    return NetlistContract(
+        components={
+            "J1": ComponentContract(
+                value="Synthetic CAN connector", footprint="Synthetic:Conn_01x02"
+            )
+        },
+        nets=nets,
+        component_symbols={"J1": "Connector_Generic:Conn_01x02"},
+        pin_functions=pin_functions,
+        component_pin_numbers={"J1": ("1", "2")},
+    )
