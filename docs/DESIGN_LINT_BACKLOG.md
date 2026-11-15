@@ -847,7 +847,15 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc815):** LINT-490 extends
+- **Latest published lint-gate checkpoint (v0.5.3rc816):** LINT-491 extends
+  USB named-rail review to recognized connector pins with explicit USB 2.0 or
+  SuperSpeed data functions. Hosted acceptance passed in GitHub Actions run
+  `43706655463`: 494 selected tests passed and 9,657 were deselected, including
+  repeatable Docker native fixtures on KiCad 10.0.0 and 10.0.5. Tag-scope
+  resolution, the scoped lint gate, and installed-wheel verification against a
+  separate project passed. Package and preview jobs were skipped under
+  prerelease policy.
+- **Previous published lint-gate checkpoint (v0.5.3rc815):** LINT-490 extends
   RS-485 A/B named-rail review to connectors whose own symbol or value
   explicitly identifies RS-485. Hosted acceptance passed in GitHub Actions run
   `43705076684`: 484 selected tests passed and 9,661 were deselected, including
@@ -856,7 +864,7 @@ standalone parity work when it closes a demonstrated feature regression.
   separate project passed. Package and preview jobs were skipped under
   prerelease policy. Initial tag `v0.5.3rc814` lacked the required rule selector
   and failed before tests; the forward-only corrected tag is `v0.5.3rc815`.
-- **Previous published lint-gate checkpoint (v0.5.3rc813):** LINT-489 extends
+- **Earlier published lint-gate checkpoint (v0.5.3rc813):** LINT-489 extends
   CANH/CANL named-rail review to bounded connector pins while preserving the
   unique-pair requirement. Hosted acceptance passed in GitHub Actions run
   `43702804376`; tag-scope resolution selected the rule, and the scoped lint
@@ -28192,7 +28200,12 @@ acceptance threads while new lint features proceed:
   digest-pinned KiCad 10.0.0 and 10.0.5 Docker images. Ruff, Alphus, Rumdl,
   mdrepo, Pyright, Windows type checks, wheel/sdist/install, and external
   KiCad-Test checkout inventory/surface/verify/adapted playtest all passed.
-- **Hosted acceptance:** Pending tagged workflow acceptance.
+- **Hosted acceptance:** Annotated tag `v0.5.3rc816` passed GitHub Actions
+  run `43706655463`: 494 selected tests passed and 9,657 were deselected; the
+  exact-version Docker fixtures passed on KiCad 10.0.0 and 10.0.5. Scope
+  resolution, the scoped lint gate, and installed-wheel verification against a
+  separate project passed. Package and preview jobs were skipped under
+  prerelease policy.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
