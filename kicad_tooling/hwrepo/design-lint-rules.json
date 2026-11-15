@@ -872,35 +872,36 @@
     },
     {
       "rule_id": "connector.footprint_peer_pin_function_metadata_incomplete",
-      "title": "Connector peers have generic and named function metadata for a shared pin",
+      "title": "Connector peers have incomplete function metadata for a shared pin",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Among fitted connector instances with distinct native symbols and matching nonempty trimmed, case-folded PART_ID, value, and footprint, require complete identical native pin inventories, complete function/electrical-type metadata, matching electrical types across every pin, exactly one pin number with one generic function and one meaningful function, one exact common net assignment for the target pin, and at least one separate matching meaningful-function pin with one exact common net assignment. Emit one REVIEW candidate describing the metadata asymmetry. These conditions identify a review candidate only; they do not infer pinout intent or require connectivity.",
+      "predicate": "Among fitted connector instances with distinct native symbols and matching nonempty trimmed, case-folded PART_ID, value, and footprint, require complete identical native pin inventories, complete electrical-type metadata, matching electrical types across every pin, exactly one target pin number with either one generic function or missing/blank/unnamed function metadata on one or more peers and one meaningful function shared by the remaining peers, one exact common net assignment for the target pin, and at least one separate matching meaningful-function pin with one exact common net assignment. Missing function metadata on other pins, mixed missing and generic target metadata, and multiple function mismatches stay quiet. Emit one REVIEW candidate describing the metadata asymmetry. These conditions identify a review candidate only; they do not infer pinout intent or require connectivity.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact configured tool version is checked before native netlist export, with fault and control fixtures verified on pinned KiCad 10.0.0 and 10.0.5 images"
       ],
       "limitations": [
-        "The predicate requires a shared nonempty PART_ID, matching value and footprint, distinct native symbol identifiers, complete identical pin inventory and metadata, one generic-versus-named function mismatch, matching electrical types, a common target assignment, and a separate meaningful-function/common-net anchor. Missing identity or metadata, DNP peers, multiple mismatches, split or open assignments, missing anchors, and type disagreement stay outside scope.",
+        "The predicate requires a shared nonempty PART_ID, matching value and footprint, distinct native symbol identifiers, complete identical pin inventory and electrical-type metadata, one generic-or-missing-versus-meaningful function mismatch, matching electrical types, a common target assignment, and a separate meaningful-function/common-net anchor. Missing identity, missing function metadata outside the target, mixed missing and generic target metadata, DNP peers, multiple mismatches, split or open assignments, missing anchors, and type disagreement stay outside scope.",
         "Project metadata does not prove that symbols describe the same approved part, which function is correct, whether the pin should be connected, or whether PCB copper is continuous. This is a heuristic review prompt, not a pinout oracle or connectivity assertion.",
         "The default is REVIEW. Project policy may promote the rule to block, turn it off, or ignore an exact finding fingerprint."
       ],
       "fault_fixtures": [
         "tests.test_connector_footprint_peer_pin_function_metadata.test_generic_function_peer_is_localized_with_exact_assignment_and_anchor",
         "tests.test_connector_footprint_peer_pin_function_metadata.test_generic_function_peer_is_detected_on_either_connector",
+        "tests.test_connector_footprint_peer_pin_function_metadata.test_missing_peer_function_is_reviewed_on_a_common_assignment",
         "tests.test_design_lint_mcp_parity_connector_peer_pin_function_metadata.test_connector_peer_function_metadata_matches_between_cli_and_mcp",
-        "tests.test_connector_footprint_peer_pin_function_metadata_native.test_native_generic_function_peer_metadata_review_and_control_repeat"
+        "tests.test_connector_footprint_peer_pin_function_metadata_native.test_native_generic_or_missing_function_peer_metadata_review_and_control_repeat"
       ],
       "valid_control_fixtures": [
         "tests.test_connector_footprint_peer_pin_function_metadata.test_incomplete_or_ambiguous_peer_evidence_stays_quiet",
         "tests.test_connector_footprint_peer_pin_function_metadata.test_project_can_block_disable_or_exactly_ignore_the_finding",
         "tests.test_design_lint_mcp_parity_connector_peer_pin_function_metadata.test_connector_peer_function_metadata_matches_between_cli_and_mcp",
-        "tests.test_connector_footprint_peer_pin_function_metadata_native.test_native_generic_function_peer_metadata_review_and_control_repeat"
+        "tests.test_connector_footprint_peer_pin_function_metadata_native.test_native_generic_or_missing_function_peer_metadata_review_and_control_repeat"
       ],
       "metamorphic_fixtures": [
-        "tests.test_connector_footprint_peer_pin_function_metadata.test_report_is_order_stable_and_common_named_function_clears_review",
+        "tests.test_connector_footprint_peer_pin_function_metadata.test_report_is_order_stable_and_common_function_clears_review",
         "tests.test_design_lint_determinism_connector_peer_pin_function_metadata.test_fault_and_control_reports_are_stable_across_hash_seed_processes"
       ],
       "implementation_refs": [
@@ -911,6 +912,9 @@
         "kicad_tooling/hwrepo/connector_footprint_peer_pin_function_support.py#connector_footprint_peer_pin_function_rows",
         "kicad_tooling/hwrepo/connector_footprint_peer_groups.py#connector_footprint_peer_candidate_groups",
         "kicad_tooling/hwrepo/connector_footprint_peer_groups.py#complete_connector_footprint_peer_pin_inventory",
+        "kicad_tooling/hwrepo/connector_identity.py#has_meaningful_pin_function",
+        "kicad_tooling/hwrepo/connector_identity.py#native_pin_metadata_is_missing",
+        "kicad_tooling/hwrepo/connector_identity.py#pin_function_is_generic",
         "kicad_tooling/hwrepo/netlist_pin_assignments.py#netlist_pin_net_index",
         "kicad_tooling/hwrepo/design_lint_connector_footprint_candidates.py#connector_footprint_peer_pin_candidates",
         "kicad_tooling/hwrepo/design_lint_rule_types.py#DesignLintRuleId"

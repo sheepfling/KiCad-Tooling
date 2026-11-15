@@ -44,3 +44,16 @@ def test_fault_and_control_reports_are_stable_across_hash_seed_processes() -> No
     assert len(fault_findings) == 1
     assert control.get("status") == "PASS"
     assert control_findings == []
+
+    missing_fault = _report_object(reports["connector_peer_pin_function_missing_fault"])
+    missing_control = _report_object(reports["connector_peer_pin_function_missing_control"])
+    missing_fault_findings = [
+        item for item in _findings(missing_fault) if item.get("rule_id") == RULE_ID
+    ]
+    missing_control_findings = [
+        item for item in _findings(missing_control) if item.get("rule_id") == RULE_ID
+    ]
+    assert missing_fault.get("status") == "REVIEW"
+    assert len(missing_fault_findings) == 1
+    assert missing_control.get("status") == "PASS"
+    assert missing_control_findings == []

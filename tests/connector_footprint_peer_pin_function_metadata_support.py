@@ -21,9 +21,10 @@ def metadata_peer_netlist(
     dnp: tuple[str, ...] = (),
     incomplete_inventory: bool = False,
     missing_metadata_pin: str | None = None,
+    missing_function_pins: tuple[str, ...] = (),
     same_symbol: bool = False,
 ) -> NetlistContract:
-    """Create exact-part peers with one controllable generic function label."""
+    """Create exact-part peers with controllable native function labels."""
     observed = peer_netlist(
         assignments=assignments,
         functions=(anchor_functions[0], named_functions[0]),
@@ -42,6 +43,8 @@ def metadata_peer_netlist(
     if missing_metadata_pin is not None:
         functions.pop(missing_metadata_pin, None)
         electrical_types.pop(missing_metadata_pin, None)
+    for pin in missing_function_pins:
+        functions.pop(pin, None)
     components = dict(observed.components)
     components["J1"] = components["J1"].model_copy(update={"part_id": part_ids[0]})
     components["J2"] = components["J2"].model_copy(update={"part_id": part_ids[1]})

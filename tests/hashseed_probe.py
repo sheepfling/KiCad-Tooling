@@ -352,6 +352,8 @@ REPORT_ORDER = (
     "connector_peer_pin_inventory_control",
     "connector_peer_pin_function_metadata_fault",
     "connector_peer_pin_function_metadata_control",
+    "connector_peer_pin_function_missing_fault",
+    "connector_peer_pin_function_missing_control",
     "connector_generic_peer_pin_all_open_fault",
     "connector_generic_peer_pin_all_open_control",
     "schematic_uuid_cross_file_fault",

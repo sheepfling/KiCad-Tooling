@@ -34,8 +34,10 @@ PeerPinFunctionRows: TypeAlias = tuple[
 def connector_footprint_peer_pin_function_rows(
     observed: NetlistContract,
     group: ConnectorFootprintPeerGroup,
+    *,
+    allow_missing_functions: bool = False,
 ) -> PeerPinFunctionRows | None:
-    """Collect a complete, deterministically ordered native pin view for peers."""
+    """Collect ordered native pin evidence, optionally retaining absent names."""
     inventory = complete_connector_footprint_peer_pin_inventory(observed, group.references)
     if inventory is None:
         return None
@@ -56,17 +58,17 @@ def connector_footprint_peer_pin_function_rows(
             electrical_type = electrical_types.get(pin.casefold())
             symbol = symbols.get(reference.casefold())
             if (
-                native_pin_metadata_is_missing(function)
+                (native_pin_metadata_is_missing(function) and not allow_missing_functions)
                 or native_pin_metadata_is_missing(electrical_type)
                 or symbol is None
             ):
                 return None
-            assert function is not None and electrical_type is not None
+            assert electrical_type is not None
             peer_rows.append(
                 ConnectorFootprintPeerPinFunctionObservation(
                     reference=reference,
                     pin=pin,
-                    function=str(function),
+                    function="" if function is None else str(function),
                     electrical_type=str(electrical_type),
                     nets=tuple(
                         sorted(

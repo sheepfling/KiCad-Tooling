@@ -14,7 +14,11 @@ from .connector_footprint_peer_pin_function_support import (
     connector_footprint_peer_pin_function_rows,
     peer_pin_rows_share_one_common_assignment,
 )
-from .connector_identity import pin_function_is_generic
+from .connector_identity import (
+    has_meaningful_pin_function,
+    native_pin_metadata_is_missing,
+    pin_function_is_generic,
+)
 from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .netlist_contract_models import NetlistContract
@@ -24,7 +28,7 @@ RULE_ID: DesignLintRuleId = "connector.footprint_peer_pin_function_metadata_inco
 
 @dataclass(frozen=True, slots=True)
 class ConnectorFootprintPeerPinFunctionMetadataEvidence:
-    """Validated source evidence for one generic-versus-named peer pin."""
+    """Validated source evidence for one incomplete peer pin-function label."""
 
     observed: NetlistContract
     group: ConnectorFootprintPeerGroup
@@ -44,10 +48,12 @@ class ConnectorFootprintPeerPinFunctionMetadataEvidence:
         """Project stable review fields from validated native peer metadata."""
         assert self.group.part_id is not None
         named_functions = tuple(
-            item.function
+            item.function.strip()
             for item in self.observations
-            if not pin_function_is_generic(item.function)
+            if has_meaningful_pin_function(item.function)
         )
+        if len({function.casefold() for function in named_functions}) != 1:
+            raise ValueError("Connector peer metadata evidence needs one meaningful function")
         return CandidateEvidenceProjection(
             rule_id=RULE_ID,
             evidence={
@@ -57,14 +63,21 @@ class ConnectorFootprintPeerPinFunctionMetadataEvidence:
                 "peer_identity_basis": ("part_id",),
                 "pin_number": (self.pin_number,),
                 "peer_pin_functions": tuple(
-                    f"{item.pin}={item.function}" for item in self.observations
+                    f"{item.pin}={_function_evidence_value(item.function)}"
+                    for item in self.observations
                 ),
                 "generic_function_peers": tuple(
                     item.reference
                     for item in self.observations
-                    if pin_function_is_generic(item.function)
+                    if not native_pin_metadata_is_missing(item.function)
+                    and pin_function_is_generic(item.function)
                 ),
-                "named_function": (named_functions[0],),
+                "missing_function_peers": tuple(
+                    item.reference
+                    for item in self.observations
+                    if native_pin_metadata_is_missing(item.function)
+                ),
+                "named_function": (named_functions[0].strip(),),
                 "peer_pin_electrical_types": tuple(
                     f"{item.pin}={item.electrical_type}" for item in self.observations
                 ),
@@ -93,7 +106,7 @@ class ConnectorFootprintPeerPinFunctionMetadataCandidate(Candidate):
                 f"{source_evidence.group.value} [{source_evidence.group.footprint}] "
                 f"pin {source_evidence.pin_number}"
             ),
-            message=_candidate_message(),
+            message=_candidate_message(source_evidence),
             evidence=projection.evidence,
             source_evidence=source_evidence,
         )
@@ -108,7 +121,7 @@ class ConnectorFootprintPeerPinFunctionMetadataCandidate(Candidate):
         if (
             self.rule_id != projection.rule_id
             or self.subject != expected_subject
-            or self.message != _candidate_message()
+            or self.message != _candidate_message(self.source_evidence)
             or self.evidence != projection.evidence
         ):
             raise ValueError("Connector peer metadata finding must match its native source rows")
@@ -118,13 +131,13 @@ def connector_footprint_peer_pin_function_metadata_gaps(
     observed: NetlistContract,
     declared_references: tuple[str, ...] = (),
 ) -> tuple[Candidate, ...]:
-    """Review one generic function label beside an anchored exact-part peer role.
+    """Review incomplete pin functions beside an anchored exact-part peer role.
 
     Require a shared nonempty PART_ID, matching value and footprint, complete
-    identical pin inventory and metadata, matching electrical types, one
-    generic-versus-named function mismatch, a common target assignment, and a
-    separate meaningful-function/common-net anchor. This does not prove which
-    function is correct or that the target pin must be connected.
+    identical pin inventory, complete electrical-type metadata, matching peer
+    types, one generic-or-missing-versus-named function mismatch, a common target
+    assignment, and a separate meaningful-function/common-net anchor. This does
+    not prove which function is correct or that the target pin must be connected.
     """
     candidates: list[Candidate] = []
     groups = connector_footprint_peer_candidate_groups(
@@ -165,29 +178,47 @@ def _eligible_metadata_gap(
     observed: NetlistContract,
     group: ConnectorFootprintPeerGroup,
 ) -> tuple[str, tuple[ConnectorFootprintPeerPinFunctionObservation, ...], tuple[str, ...]] | None:
-    """Return one source-supported generic-to-named pin metadata gap, if present."""
+    """Return one anchored generic-or-missing-to-named metadata gap, if present."""
     if group.part_id is None or not group.part_id.strip():
         return None
     pin_rows: PeerPinFunctionRows | None = connector_footprint_peer_pin_function_rows(
-        observed, group
+        observed,
+        group,
+        allow_missing_functions=True,
     )
     if pin_rows is None:
         return None
     mismatches = tuple(
         (number, rows)
         for number, rows in pin_rows
-        if len({item.function.strip().casefold() for item in rows}) > 1
+        if len({_function_key(item.function) for item in rows}) > 1
     )
     if len(mismatches) != 1:
         return None
     pin_number, target_rows = mismatches[0]
-    generic_rows = tuple(item for item in target_rows if pin_function_is_generic(item.function))
+    missing_rows = tuple(
+        item for item in target_rows if native_pin_metadata_is_missing(item.function)
+    )
+    generic_rows = tuple(
+        item
+        for item in target_rows
+        if not native_pin_metadata_is_missing(item.function)
+        and pin_function_is_generic(item.function)
+    )
     named_functions = {
         item.function.strip().casefold()
         for item in target_rows
-        if not pin_function_is_generic(item.function)
+        if has_meaningful_pin_function(item.function)
     }
-    if not generic_rows or len(named_functions) != 1:
+    if len(named_functions) != 1 or (not missing_rows and not generic_rows):
+        return None
+    if missing_rows and generic_rows:
+        return None
+    if any(
+        number.casefold() != pin_number.casefold()
+        and any(native_pin_metadata_is_missing(item.function) for item in rows)
+        for number, rows in pin_rows
+    ):
         return None
     if any(
         len({item.electrical_type.strip().casefold() for item in rows}) != 1 for _, rows in pin_rows
@@ -201,8 +232,8 @@ def _eligible_metadata_gap(
                 number
                 for number, rows in pin_rows
                 if number.casefold() != pin_number.casefold()
-                and not any(pin_function_is_generic(item.function) for item in rows)
-                and len({item.function.strip().casefold() for item in rows}) == 1
+                and all(has_meaningful_pin_function(item.function) for item in rows)
+                and len({_function_key(item.function) for item in rows}) == 1
                 and peer_pin_rows_share_one_common_assignment(rows)
             ),
             key=lambda number: (number.casefold(), number),
@@ -211,15 +242,34 @@ def _eligible_metadata_gap(
     return (pin_number, target_rows, anchors) if anchors else None
 
 
-def _candidate_message() -> str:
-    """Explain the metadata asymmetry without inferring pinout or connectivity intent."""
+def _candidate_message(
+    evidence: ConnectorFootprintPeerPinFunctionMetadataEvidence,
+) -> str:
+    """Explain the metadata gap without inferring pinout or connectivity intent."""
+    missing_function = any(
+        native_pin_metadata_is_missing(item.function) for item in evidence.observations
+    )
+    discrepancy = (
+        "one peer omits its native function name while another supplies a meaningful name"
+        if missing_function
+        else "one peer uses a generic function while another supplies a meaningful name"
+    )
     return (
         "Fitted connector symbols with the same exact PART_ID, value, footprint, and complete "
-        "pin inventory assign this pin to one common net, but one peer uses a generic function "
-        "while another names its function. Review the approved part pinout and symbol metadata; "
+        "pin inventory assign this pin to one common net, but "
+        + discrepancy
+        + ". Review the approved part pinout and symbol metadata; "
         "the similarity and assignment clues do not establish which function is correct or that "
         "the pin must be connected."
     )
+
+
+def _function_evidence_value(function: str) -> str:
+    return "<missing>" if native_pin_metadata_is_missing(function) else function
+
+
+def _function_key(function: str) -> str | None:
+    return None if native_pin_metadata_is_missing(function) else function.strip().casefold()
 
 
 def _validate_metadata_evidence(
@@ -235,7 +285,9 @@ def _validate_metadata_evidence(
         raise ValueError("Connector peer metadata evidence requires a current exact PART_ID group")
     mismatch = _eligible_metadata_gap(evidence.observed, evidence.group)
     if mismatch is None:
-        raise ValueError("Connector peer metadata evidence requires one anchored generic mismatch")
+        raise ValueError(
+            "Connector peer metadata evidence requires one anchored generic-or-missing mismatch"
+        )
     pin_number, observations, anchors = mismatch
     if (
         evidence.pin_number != pin_number

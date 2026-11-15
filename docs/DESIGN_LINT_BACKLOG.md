@@ -4650,7 +4650,7 @@ Current catalog audit: 393 covered, 0 not applicable, 0 unreviewed.
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
 - **Status:** Implemented v96. The cross-process probe supports themed report
-  selectors and retains the complete 345-report inventory gate. Fault/control
+  selectors and retains the complete 347-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -27737,6 +27737,52 @@ acceptance threads while new lint features proceed:
   rehearsal did not complete locally: pip spent 10m28s retrying interrupted
   downloads and reported DNS resolution failures for
   `files.pythonhosted.org`.
+
+#### LINT-482 — Review missing connector peer pin-function metadata
+
+- **Priority:** P2 heuristic coverage. This extends LINT-481's existing
+  `connector.footprint_peer_pin_function_metadata_incomplete` rule to review a
+  blank, absent, or KiCad-unnamed function name on one or more exact-part peer
+  symbols when another peer names the same assigned pin meaningfully.
+- **Status:** Implemented in the current worktree; targeted validation and
+  publication are in progress. This is an extension of the existing rule ID,
+  not a new electrical requirement or a separate rule count.
+- **Predicate:** Retain the existing fitted-peer, distinct-native-symbol,
+  exact nonempty `PART_ID`, value, footprint, complete identical inventory,
+  complete electrical-type metadata, matching types, one target mismatch,
+  common exact target assignment, and separate meaningful-function/common-net
+  anchor requirements. Permit missing function metadata only on the single
+  target pin; require at least one other peer to provide one shared meaningful
+  name. Missing names elsewhere, mixed missing and generic target names, no
+  meaningful name on any peer, multiple mismatches, DNP peers, split/open assignments,
+  incompatible electrical types, and absent anchors stay quiet.
+- **Interpretation:** A REVIEW cue for symbol metadata consistency. It does
+  not determine the approved part pinout, require the target pins to connect,
+  or prove PCB copper continuity. Project policy can promote, disable, or
+  exactly ignore the finding.
+- **Evidence plan:** Synthetic fault/control tests cover the missing name on
+  either peer, the prior generic-name case, quiet ambiguity controls, policy,
+  source binding, ordering, CLI/MCP parity, and cross-process hash-seed
+  stability. A tooling-owned schematic leaves one library pin name blank and
+  is checked through repeatable exports on digest-pinned KiCad 10.0.0 and
+  10.0.5 Docker images. No cohort or proprietary project sources are used.
+- **Selection:** Run the focused connector metadata unit and CLI/MCP suites
+  with `design_lint and connector_lint and interface_lint` and the exact rule
+  selector. Run the hash-seed suite with `slow` and the same selector. The
+  native fixture suite additionally requires Docker,
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`, `native_kicad`, and the same rule
+  selector.
+- **Acceptance:** The scoped local `scripts/ci.py` gate passed 53 selected
+  tests with 2 native cases skipped in the non-Docker invocation, including the
+  347-report hash-seed inventory, active-rule reachability, catalog integrity,
+  and three-process determinism. Ruff format/check, Alphus module-role and
+  shared-utility checks, Rumdl, mdrepo, Linux and Windows Pyright, wheel, sdist,
+  and sdist-wheel builds passed. Separately, the exact native fixture selector
+  passed 2 tests with repeated exports on digest-pinned KiCad 10.0.0 and 10.0.5
+  Docker images. Local installed-wheel verification could not finish because
+  pip could not resolve PyPI while installing the wheel's pinned dependencies;
+  hosted installed-wheel verification remains required. Hosted publication
+  evidence is pending.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 

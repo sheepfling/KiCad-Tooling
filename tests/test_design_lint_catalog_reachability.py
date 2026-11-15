@@ -123,6 +123,10 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _tests_design_lint_fixtures.peer_connector_pin_assignments(),
         _peer_pin_function_consistency._source(),
         _peer_pin_function_metadata.metadata_peer_netlist(),
+        _peer_pin_function_metadata.metadata_peer_netlist(
+            generic_peer="none",
+            missing_function_pins=("J1.2",),
+        ),
         connector_peer_pin_inventory_netlist(),
         *_connector_footprint_peer_support.peer_pin_reachability_netlists(),
         _connector_named_power_aliases.named_connector_power_alias_netlist(),

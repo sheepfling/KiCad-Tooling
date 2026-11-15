@@ -682,20 +682,22 @@ KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1 .venv/bin/python -I -m pytest \
 
 `connector.footprint_peer_pin_function_metadata_incomplete` adds a separate
 REVIEW cue when fitted connector symbols with the same nonempty `PART_ID`,
-value, footprint, and complete pin inventory assign different function text
-to exactly one shared pin, and one peer labels that pin generically while
-another gives it a meaningful function. Electrical types must match across
-the full inventory. The target pin must share one exact net assignment and a
-different meaningful-function pin must provide a common-net anchor. This can
-surface incomplete symbol metadata even where the function-difference rule
-stays quiet because one peer uses a generic name.
+value, footprint, and complete pin inventory assign one common net to exactly
+one target pin, and one or more peers either omit that pin's function name or
+use a generic name while another peer gives it a meaningful function.
+Electrical types must match across the full inventory. A different
+meaningful-function pin must provide a common-net anchor. Missing function
+metadata elsewhere, a mixture of missing and generic target names, or multiple
+function mismatches stay quiet. This can surface incomplete symbol metadata
+even where the function-difference rule stays quiet.
 
 The signal is heuristic: `PART_ID` and matching assignments do not prove
 approved part identity or pinout intent. It does not choose the correct
 function, require the pin to connect, or establish PCB copper continuity.
-Incomplete identity or metadata, identical native symbols, DNP peers, multiple
-mismatches, split/open assignments, electrical-type disagreement, and missing
-anchors stay quiet.
+Incomplete identity or electrical-type metadata, identical native symbols,
+DNP peers, missing functions outside the target, mixed missing and generic
+target names, multiple mismatches, split/open assignments,
+electrical-type disagreement, and missing anchors stay quiet.
 Project policy may promote, disable, or exactly ignore the finding. Synthetic
 and exact-version native fixtures are recorded in the
 [fixture README](../tests/fixtures/design_lint/connector-peer-pin-function-metadata-native/README.md).

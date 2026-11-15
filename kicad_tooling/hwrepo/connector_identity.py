@@ -170,7 +170,11 @@ def is_shield_function(function: str) -> bool:
 
 def has_meaningful_pin_function(function: str | None) -> bool:
     """Treat absent roles and KiCad's generic Pin_N labels as unknown metadata."""
-    return function is not None and _GENERIC_PIN_FUNCTION.fullmatch(function.strip()) is None
+    return (
+        function is not None
+        and not native_pin_metadata_is_missing(function)
+        and _GENERIC_PIN_FUNCTION.fullmatch(function.strip()) is None
+    )
 
 
 def native_pin_metadata_is_missing(value: str | None) -> bool:
