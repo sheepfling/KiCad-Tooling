@@ -63,6 +63,84 @@ def test_direct_resistor_across_separate_i2c_signal_nets_is_reviewed() -> None:
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_direct_resistor_on_explicit_connector_sda_scl_nets_is_reviewed() -> None:
+    source = i2c_sda_scl_resistive_bridge_netlist(endpoint="connector")
+    (candidate,) = i2c_sda_scl_resistive_bridge_candidates(source)
+    finding = next(item for item in _report(source).findings if item.rule_id == RULE_ID)
+
+    assert candidate.subject == ("J1: I2C SDA/SCL nets I2C_SDA and I2C_SCL are bridged by R1")
+    assert candidate.evidence["component"] == ("J1",)
+    assert candidate.evidence["SDA_pin"] == ("J1.1",)
+    assert candidate.evidence["SCL_pin"] == ("J1.2",)
+    assert finding.mode == "review"
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_connector_endpoint_does_not_duplicate_an_identical_ic_bridge_finding() -> None:
+    source = i2c_sda_scl_resistive_bridge_netlist(endpoint="connector")
+    source = source.model_copy(
+        update={
+            "components": {
+                **source.components,
+                "U1": source.components["J1"].model_copy(
+                    update={"value": "Synthetic I2C controller", "footprint": "Synthetic:QFN"}
+                ),
+            },
+            "component_symbols": {
+                **source.component_symbols,
+                "U1": "Synthetic:I2cController",
+            },
+            "component_pin_numbers": {**source.component_pin_numbers, "U1": ("1", "2")},
+            "pin_functions": {
+                **source.pin_functions,
+                "U1.1": "SDA",
+                "U1.2": "SCL",
+            },
+            "pin_electrical_types": {
+                **source.pin_electrical_types,
+                "U1.1": "bidirectional",
+                "U1.2": "bidirectional",
+            },
+            "nets": {
+                "I2C_SDA": ("J1.1", "R1.1", "U1.1"),
+                "I2C_SCL": ("J1.2", "R1.2", "U1.2"),
+            },
+        }
+    )
+
+    (candidate,) = i2c_sda_scl_resistive_bridge_candidates(source)
+    assert candidate.subject.startswith("U1:")
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_connector_peers_on_one_bus_pair_produce_one_bridge_finding() -> None:
+    source = i2c_sda_scl_resistive_bridge_netlist(endpoint="connector")
+    source = source.model_copy(
+        update={
+            "components": {
+                **source.components,
+                "J2": source.components["J1"],
+            },
+            "component_symbols": {**source.component_symbols, "J2": "Connector_Generic:Conn_01x02"},
+            "component_pin_numbers": {**source.component_pin_numbers, "J2": ("1", "2")},
+            "pin_functions": {**source.pin_functions, "J2.1": "SDA", "J2.2": "SCL"},
+            "pin_electrical_types": {
+                **source.pin_electrical_types,
+                "J2.1": "passive",
+                "J2.2": "passive",
+            },
+            "nets": {
+                "I2C_SDA": ("J1.1", "J2.1", "R1.1"),
+                "I2C_SCL": ("J1.2", "J2.2", "R1.2"),
+            },
+        }
+    )
+
+    (candidate,) = i2c_sda_scl_resistive_bridge_candidates(source)
+    assert candidate.subject.startswith("J1:")
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_absent_or_inapplicable_resistors_are_controls() -> None:
     cases = (
         i2c_sda_scl_resistive_bridge_netlist(bridge="none"),
@@ -77,6 +155,28 @@ def test_absent_or_inapplicable_resistors_are_controls() -> None:
         i2c_sda_scl_resistive_bridge_netlist(value="0R")
     )
     assert zero_ohm.evidence["resistance_ohms"] == ("0Ω",)
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_connector_endpoint_needs_complete_unique_fitted_metadata() -> None:
+    source = i2c_sda_scl_resistive_bridge_netlist(endpoint="connector")
+    incomplete = source.model_copy(
+        update={
+            "pin_electrical_types": {"J1.1": "passive"},
+        }
+    )
+    duplicate_role = source.model_copy(
+        update={
+            "component_pin_numbers": {**source.component_pin_numbers, "J1": ("1", "2", "3")},
+            "pin_functions": {**source.pin_functions, "J1.3": "SDA"},
+            "pin_electrical_types": {**source.pin_electrical_types, "J1.3": "passive"},
+        }
+    )
+    dnp = i2c_sda_scl_resistive_bridge_netlist(endpoint="connector", endpoint_dnp=True)
+
+    assert not i2c_sda_scl_resistive_bridge_candidates(incomplete)
+    assert not i2c_sda_scl_resistive_bridge_candidates(duplicate_role)
+    assert not i2c_sda_scl_resistive_bridge_candidates(dnp)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
@@ -117,6 +217,12 @@ def test_incomplete_or_ambiguous_endpoint_and_resistor_evidence_stays_quiet() ->
         ),
     )
     assert all(not i2c_sda_scl_resistive_bridge_candidates(item) for item in controls)
+
+    connector = i2c_sda_scl_resistive_bridge_netlist(endpoint="connector")
+    ambiguous_connector = connector.model_copy(
+        update={"nets": {**connector.nets, "EXTRA": ("J1.1",)}}
+    )
+    assert not i2c_sda_scl_resistive_bridge_candidates(ambiguous_connector)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

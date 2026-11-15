@@ -410,6 +410,14 @@ RULE_NODE_CASES = (
         "tests/test_i2c_sda_scl_resistive_bridge.py::test_direct_resistor_across_separate_i2c_signal_nets_is_reviewed",
     ),
     (
+        "bus.i2c_sda_scl_resistive_bridge",
+        "tests/test_i2c_sda_scl_resistive_bridge.py::test_direct_resistor_on_explicit_connector_sda_scl_nets_is_reviewed",
+    ),
+    (
+        "bus.i2c_sda_scl_resistive_bridge",
+        "tests/test_i2c_sda_scl_resistive_bridge.py::test_connector_peers_on_one_bus_pair_produce_one_bridge_finding",
+    ),
+    (
         "bus.usb_c_superspeed_lane_label_mismatch",
         "tests/test_usb_c_superspeed_lane_labels.py::test_cross_lane_labels_are_localized_against_native_connector_functions",
     ),

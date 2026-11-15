@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .design_lint_types import Candidate
+from .i2c_connector_signal_endpoints import i2c_connector_signal_endpoints
 from .i2c_signal_endpoints import i2c_signal_endpoints
 from .netlist_contract_models import NetlistContract
 from .resistor_paths import direct_resistors
@@ -24,7 +25,20 @@ def i2c_sda_scl_resistive_bridge_candidates(
         include_device_r_symbol=True,
     )
     findings: list[Candidate] = []
-    for endpoint in i2c_signal_endpoints(observed):
+    ic_endpoints = i2c_signal_endpoints(observed)
+    ic_net_pairs = {
+        frozenset((endpoint.sda_net.casefold(), endpoint.scl_net.casefold()))
+        for endpoint in ic_endpoints
+    }
+    endpoints = [*ic_endpoints]
+    reviewed_connector_pairs: set[frozenset[str]] = set()
+    for endpoint in i2c_connector_signal_endpoints(observed):
+        net_pair = frozenset((endpoint.sda_net.casefold(), endpoint.scl_net.casefold()))
+        if net_pair in ic_net_pairs or net_pair in reviewed_connector_pairs:
+            continue
+        reviewed_connector_pairs.add(net_pair)
+        endpoints.append(endpoint)
+    for endpoint in endpoints:
         if endpoint.sda_net.casefold() == endpoint.scl_net.casefold():
             continue
         signal_nets = {endpoint.sda_net.casefold(), endpoint.scl_net.casefold()}

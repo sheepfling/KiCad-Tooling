@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from kicad_tooling.hwrepo import i2c_sda_scl_resistive_bridge, i2c_signal_endpoints
+from kicad_tooling.hwrepo import (
+    i2c_connector_signal_endpoints,
+    i2c_sda_scl_resistive_bridge,
+    i2c_signal_endpoints,
+)
 from kicad_tooling.hwrepo.design_lint import rule_catalog
 from tests.lint_architecture_support import HWREPO, IMPLEMENTATION_MAX_LINES, line_count
 
@@ -27,10 +31,14 @@ def test_resistor_bridge_rule_reuses_the_bounded_i2c_endpoint_owner() -> None:
 
     assert line_count(HWREPO / "i2c_sda_scl_resistive_bridge.py") < IMPLEMENTATION_MAX_LINES
     assert line_count(HWREPO / "i2c_signal_endpoints.py") < IMPLEMENTATION_MAX_LINES
+    assert line_count(HWREPO / "i2c_connector_signal_endpoints.py") < IMPLEMENTATION_MAX_LINES
     assert rule.theme == "interfaces"
     assert rule.default_mode == "review"
     assert rule.implementation_owner == owner
     assert owner in rule.implementation_refs
     assert i2c_sda_scl_resistive_bridge.i2c_signal_endpoints is (
         i2c_signal_endpoints.i2c_signal_endpoints
+    )
+    assert i2c_sda_scl_resistive_bridge.i2c_connector_signal_endpoints is (
+        i2c_connector_signal_endpoints.i2c_connector_signal_endpoints
     )

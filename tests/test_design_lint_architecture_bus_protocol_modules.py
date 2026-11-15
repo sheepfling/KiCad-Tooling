@@ -29,6 +29,8 @@ BUS_ANALYSIS_MODULES = (
     "design_lint_serial_signal_candidates.py",
     "design_lint_spi_signal_candidates.py",
     "i2c_unconnected_pins.py",
+    "i2c_connector_signal_endpoints.py",
+    "i2c_signal_endpoints.py",
     "can_unconnected_direction_pins.py",
     "bus_signal_pairs.py",
     "can_line_polarity.py",

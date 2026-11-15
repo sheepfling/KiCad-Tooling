@@ -11956,35 +11956,43 @@
       "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "For a fitted U/IC reference with a complete native pin inventory, use bounded i2c_signal_role aliases to identify exactly one SDA pin and one SCL pin; require each to have one unambiguous assignment to distinct exact native nets, then emit a REVIEW candidate when a fitted two-terminal resistor with a known value directly bridges those nets.",
+      "predicate": "For a fitted U/IC, or a bounded connector candidate with complete native pin-function and electrical-type metadata, use bounded i2c_signal_role aliases to identify exactly one SDA pin and one SCL pin; require each to have one unambiguous assignment to distinct exact native nets, then emit a REVIEW candidate when a fitted two-terminal resistor with a known value directly bridges those nets. Emit at most one connector finding per unordered pair of native nets, and suppress connector findings when a fitted U/IC endpoint already identifies that pair.",
       "supported_kicad_versions": [
         "Digest-pinned KiCad 10.0.0 and 10.0.5 native fixtures; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
-        "Only bounded SDA, I2C_SDA, SCL, and I2C_SCL aliases on fitted U/IC references are considered. Connector-only endpoints, vendor-specific names, duplicate role pins, open or multiply assigned pins, DNP components, and incomplete or inconsistent pin inventories are skipped.",
+        "Only bounded SDA, I2C_SDA, SCL, and I2C_SCL aliases are considered. Connector-only endpoints require bounded native or standard-library connector identity and complete per-pin function/electrical-type metadata. Vendor-specific names, duplicate role pins, open or multiply assigned pins, DNP components, and incomplete or inconsistent inventories are skipped.",
         "The passive-path recognizer covers one fitted two-terminal resistor directly between the two native nets, including zero-ohm values. It does not traverse resistor chains, filters, protection devices, connector paths, PCB routes, or off-board wiring.",
         "A resistor bridge may be intentional. Function names are recognition clues only; the default is review and project policy may block, turn off, or exact-ignore a finding.",
         "This schematic-net review does not prove I2C use, required topology, component behavior, physical routing, firmware configuration, or electrical approval."
       ],
       "fault_fixtures": [
         "tests.test_i2c_sda_scl_resistive_bridge.test_direct_resistor_across_separate_i2c_signal_nets_is_reviewed",
+        "tests.test_i2c_sda_scl_resistive_bridge.test_direct_resistor_on_explicit_connector_sda_scl_nets_is_reviewed",
         "tests.test_i2c_sda_scl_resistive_bridge_native_fixture_lane.test_native_i2c_sda_scl_resistor_bridge_fault_and_control_repeat"
       ],
       "valid_control_fixtures": [
         "tests.test_i2c_sda_scl_resistive_bridge.test_absent_or_inapplicable_resistors_are_controls",
         "tests.test_i2c_sda_scl_resistive_bridge.test_incomplete_or_ambiguous_endpoint_and_resistor_evidence_stays_quiet",
+        "tests.test_i2c_sda_scl_resistive_bridge.test_connector_endpoint_needs_complete_unique_fitted_metadata",
         "tests.test_i2c_sda_scl_resistive_bridge_native_fixture_lane.test_native_i2c_sda_scl_resistor_bridge_fault_and_control_repeat"
       ],
       "metamorphic_fixtures": [
-        "tests.test_i2c_sda_scl_resistive_bridge.test_result_order_is_stable_and_policy_remains_configurable"
+        "tests.test_i2c_sda_scl_resistive_bridge.test_result_order_is_stable_and_policy_remains_configurable",
+        "tests.test_i2c_sda_scl_resistive_bridge.test_connector_endpoint_does_not_duplicate_an_identical_ic_bridge_finding",
+        "tests.test_i2c_sda_scl_resistive_bridge.test_connector_peers_on_one_bus_pair_produce_one_bridge_finding"
       ],
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_I2C_SDA_SCL_RESISTIVE_BRIDGE_FIXTURES"
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/i2c_sda_scl_resistive_bridge.py#i2c_sda_scl_resistive_bridge_candidates",
+        "kicad_tooling/hwrepo/i2c_connector_signal_endpoints.py#i2c_connector_signal_endpoints",
+        "kicad_tooling/hwrepo/casefold_mapping_lookup.py#casefolded_unique_index",
         "kicad_tooling/hwrepo/i2c_signal_endpoints.py#i2c_signal_endpoints",
-        "kicad_tooling/hwrepo/bus_signal_roles.py#i2c_signal_role",
+        "kicad_tooling/hwrepo/i2c_addressing.py#i2c_signal_role",
+        "kicad_tooling/hwrepo/connector_identity.py#connector_candidate_references",
+        "kicad_tooling/hwrepo/connector_pin_metadata.py#connector_pin_metadata_matches_inventory",
         "kicad_tooling/hwrepo/resistor_paths.py#direct_resistors",
         "kicad_tooling/hwrepo/design_lint_two_wire_signal_candidates.py#two_wire_signal_candidates"
       ],

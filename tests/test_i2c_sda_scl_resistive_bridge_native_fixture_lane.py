@@ -17,6 +17,10 @@ from kicad_tooling.ci_hosted_support import HostedLog
 from tests.native_fixture_support import assert_native_fixture_mounts
 
 RULE_ID = "bus.i2c_sda_scl_resistive_bridge"
+FIXTURE_PREFIXES = (
+    "i2c-sda-scl-resistive-bridge-fixture/",
+    "i2c-sda-scl-connector-resistive-bridge-fixture/",
+)
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -47,27 +51,37 @@ def test_native_i2c_sda_scl_resistor_bridge_fault_and_control_repeat(
         for item in (
             json.loads(line) for line in log.events.read_text(encoding="utf-8").splitlines()
         )
-        if item.get("stage", "").startswith("i2c-sda-scl-resistive-bridge-fixture/")
+        if item.get("stage", "").startswith(FIXTURE_PREFIXES)
     }
 
-    assert set(results) == {
-        "i2c-sda-scl-resistive-bridge-fixture/native-export",
-        "i2c-sda-scl-resistive-bridge-fixture/control",
-        "i2c-sda-scl-resistive-bridge-fixture/fault",
-    }
-    native_export = results["i2c-sda-scl-resistive-bridge-fixture/native-export"]
-    assert_native_fixture_mounts(tmp_path, native_export["command_receipt"])
-    assert results["i2c-sda-scl-resistive-bridge-fixture/fault"]["subjects"] == (
-        "U1: I2C SDA/SCL nets I2C_SDA and I2C_SCL are bridged by R1"
+    fixture_expectations = (
+        (
+            "i2c-sda-scl-resistive-bridge-fixture",
+            "U1: I2C SDA/SCL nets I2C_SDA and I2C_SCL are bridged by R1",
+        ),
+        (
+            "i2c-sda-scl-connector-resistive-bridge-fixture",
+            "J1: I2C SDA/SCL nets I2C_SDA and I2C_SCL are bridged by R1",
+        ),
     )
-    assert results["i2c-sda-scl-resistive-bridge-fixture/control"]["subjects"] == "none"
-    for case in ("fault", "control"):
-        result = results[f"i2c-sda-scl-resistive-bridge-fixture/{case}"]
-        assert result["status"] == "PASS"
-        assert result["kicad_version"] == version
-        assert result["image"] == image
-        assert result["erc_errors"] == "none"
-        assert result["repeatable"] == "true"
-        assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
-        assert re.fullmatch(r"[0-9a-f]{64}", result["source_sha256"])
-        assert re.fullmatch(r"[0-9a-f]{64}", result["normalized_netlist_sha256"])
+    expected_stages = {
+        f"{prefix}/{stage}"
+        for prefix, _fault_subject in fixture_expectations
+        for stage in ("native-export", "control", "fault")
+    }
+    assert set(results) == expected_stages
+    for prefix, fault_subject in fixture_expectations:
+        native_export = results[f"{prefix}/native-export"]
+        assert_native_fixture_mounts(tmp_path, native_export["command_receipt"])
+        assert results[f"{prefix}/fault"]["subjects"] == fault_subject
+        assert results[f"{prefix}/control"]["subjects"] == "none"
+        for case in ("fault", "control"):
+            result = results[f"{prefix}/{case}"]
+            assert result["status"] == "PASS"
+            assert result["kicad_version"] == version
+            assert result["image"] == image
+            assert result["erc_errors"] == "none"
+            assert result["repeatable"] == "true"
+            assert result["normalized_netlist_sha256"] == result["repeat_normalized_netlist_sha256"]
+            assert re.fullmatch(r"[0-9a-f]{64}", result["source_sha256"])
+            assert re.fullmatch(r"[0-9a-f]{64}", result["normalized_netlist_sha256"])

@@ -28949,6 +28949,55 @@ acceptance threads while new lint features proceed:
   installed-wheel rehearsal against the separate public template checkout
   passed. Package and preview jobs were skipped under prerelease policy.
 
+#### LINT-507 — Extend I2C resistor-bridge review to explicit connector endpoints
+
+- **Priority:** P1 coverage closure. LINT-506 detected an SDA/SCL resistor
+  bridge only when an on-board U/IC exposed the pair. A board with a connector
+  as its only visible I2C endpoint left the same separately assigned line
+  bridge outside the predicate.
+- **Rule:** Extends the active, configurable
+  `bus.i2c_sda_scl_resistive_bridge` review; it does not add a rule identifier,
+  repeat findings for connector peers on one pair, or report a connector
+  finding when an IC already identifies the same unordered pair of nets.
+- **Status:** Implemented as a connector-endpoint extension to the existing
+  default-`review` rule, retaining project mode and exact-fingerprint ignore
+  controls.
+- **Predicate:** For a fitted bounded connector candidate, require an exact
+  native SDA and SCL role, a complete pin-number inventory, complete native
+  function and electrical-type metadata, and exactly one assignment per role
+  to distinct nets. Emit the existing resistor-bridge candidate only for a
+  fitted two-terminal known-value resistor directly spanning those nets.
+  Zero-ohm values remain included. Skip DNP, incomplete, duplicate-role, open,
+  multiply assigned, and inventory-inconsistent cases.
+- **Interpretation:** Native connector identity and function fields are clues,
+  not a reviewed pinout. A resistor may be intentional. The finding does not
+  prove I2C use, external endpoint wiring, PCB continuity, or a defect. A
+  project-authored pinout and connectivity requirement remain the route to a
+  blocking regression.
+- **Evidence:** Synthetic cases cover the connector-only bridge, a valid
+  unrelated-resistor control, DNP, missing metadata, duplicate roles, and an
+  ambiguous assignment. Peer connectors on one bus pair produce a single
+  finding, while a complete IC endpoint retains its existing finding in place
+  of duplicate connector findings. A source-hashed native connector-only
+  fault/control pair runs alongside the existing controller pair, with
+  repeated ERC and normalized-netlist checks in digest-pinned KiCad 10.0.0 and
+  10.0.5 Docker images. No external project or proprietary source is retained.
+  See the
+  [connector-only fixture record](../tests/fixtures/design_lint/i2c-sda-scl-connector-resistive-bridge/README.md).
+- **Selection:** Run `tests/test_i2c_sda_scl_resistive_bridge.py` and
+  `tests/test_i2c_sda_scl_resistive_bridge_native_fixture_lane.py` with
+  `design_lint and interface_lint` and the exact
+  `bus.i2c_sda_scl_resistive_bridge` selector. The native lane is enabled by
+  `KICAD_RUN_NATIVE_I2C_SDA_SCL_RESISTIVE_BRIDGE_FIXTURES=1`.
+- **Local acceptance:** The rule-scoped `scripts/ci.py` gate passed on
+  2026-11-15 at `build/ci/run-2tcybuqr`: 484 passed and 9,768 were deselected.
+  Both controller and connector-only fault/control fixtures passed repeated
+  digest-pinned Docker exports on KiCad 10.0.0 and 10.0.5 with no ERC errors.
+  Ruff, Alphus module boundaries, Rumdl, mdrepo, Linux and Windows Pyright,
+  wheel/sdist builds, and installed-origin/version checks passed. The separate
+  public-template checkout rehearsal is part of hosted acceptance.
+- **Hosted acceptance:** Pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

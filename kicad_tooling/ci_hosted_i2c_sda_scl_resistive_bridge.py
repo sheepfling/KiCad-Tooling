@@ -45,6 +45,36 @@ I2C_SDA_SCL_RESISTIVE_BRIDGE_EXPECTATION = BusSignalPairFixtureExpectation(
         subjects=(),
     ),
 )
+I2C_SDA_SCL_CONNECTOR_RESISTIVE_BRIDGE_EXPECTATION = BusSignalPairFixtureExpectation(
+    protocol="i2c",
+    pair_name="sda-scl-connector-resistive-bridge",
+    rule_id="bus.i2c_sda_scl_resistive_bridge",
+    fixture_directory="i2c-sda-scl-connector-resistive-bridge",
+    pin_functions=(
+        ExpectedPinFunction(reference="J1.1", function="SDA"),
+        ExpectedPinFunction(reference="J1.2", function="SCL"),
+        ExpectedPinFunction(reference="R1.1", function="1"),
+        ExpectedPinFunction(reference="R1.2", function="2"),
+    ),
+    fault=SameNetCaseExpectation(
+        source_sha256="aefbc5b660faa3cd9ae88fb8cfda90cea53a0164f26664508fd7a34e78629bcc",
+        net_assignments=(
+            ExpectedNetAssignment(name="I2C_SDA", pins=("J1.1", "R1.1")),
+            ExpectedNetAssignment(name="I2C_SCL", pins=("J1.2", "R1.2")),
+        ),
+        subjects=("J1: I2C SDA/SCL nets I2C_SDA and I2C_SCL are bridged by R1",),
+    ),
+    control=SameNetCaseExpectation(
+        source_sha256="46438f802cc997bdfc4b26d7e86be9d502a95cf5635bc4def21e089ab0045571",
+        net_assignments=(
+            ExpectedNetAssignment(name="AUX_A", pins=("R1.1",)),
+            ExpectedNetAssignment(name="AUX_B", pins=("R1.2",)),
+            ExpectedNetAssignment(name="I2C_SCL", pins=("J1.2",)),
+            ExpectedNetAssignment(name="I2C_SDA", pins=("J1.1",)),
+        ),
+        subjects=(),
+    ),
+)
 
 
 def i2c_sda_scl_resistive_bridge_fixture_lane(
@@ -60,4 +90,13 @@ def i2c_sda_scl_resistive_bridge_fixture_lane(
         log=log,
         fixture=I2C_SDA_SCL_RESISTIVE_BRIDGE_EXPECTATION,
         event_prefix="i2c-sda-scl-resistive-bridge-fixture",
+        finish=False,
+    )
+    bus_signal_pair_topology_fixture_lane(
+        root,
+        version=version,
+        image=image,
+        log=log,
+        fixture=I2C_SDA_SCL_CONNECTOR_RESISTIVE_BRIDGE_EXPECTATION,
+        event_prefix="i2c-sda-scl-connector-resistive-bridge-fixture",
     )

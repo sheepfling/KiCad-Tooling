@@ -2826,19 +2826,23 @@ KICAD_RUN_NATIVE_I2C_SDA_SCL_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
 
 ### I2C SDA/SCL resistor bridge review
 
-`bus.i2c_sda_scl_resistive_bridge` prompts when one fitted U/IC has exactly
-one bounded SDA pin and one SCL pin, each present in its complete native
-inventory and assigned to a distinct net, and a fitted two-terminal resistor
-with a known value directly joins those nets. Zero-ohm resistors are included.
-The function names only identify a review candidate: a resistor network can
-be intentional, so the default is `review` with project overrides and exact
-fingerprint ignores. This rule does not traverse multi-part paths, infer
-firmware configuration, prove I2C use, or establish PCB or off-board
-connectivity. NXP's [UM10204 specification][i2c-spec] treats SDA and SCL as
-distinct bus lines with their own pull-up behavior; this heuristic does not
-claim that every resistor bridge is prohibited.
-The [tooling-owned fixtures](../tests/fixtures/design_lint/i2c-sda-scl-resistive-bridge/README.md)
-exercise repeated digest-pinned KiCad 10.0.0 and 10.0.5 fault/control exports.
+`bus.i2c_sda_scl_resistive_bridge` prompts when one fitted U/IC, or a bounded
+connector with complete pin metadata, has exactly one bounded SDA pin and one
+SCL pin assigned to distinct nets, and a fitted two-terminal resistor with a
+known value directly joins those nets. Zero-ohm resistors are included.
+Connector functions and identity remain review clues, not an approved pinout.
+The rule emits one connector finding per distinct net pair; when a U/IC
+identifies the same pair, its finding supplies the review location and the
+connector finding is suppressed. A resistor network can be intentional, so
+the default is `review` with project
+overrides and exact fingerprint ignores. This rule does not traverse
+multi-part paths, infer firmware configuration, prove I2C use, or establish
+PCB or off-board connectivity. NXP's [UM10204 specification][i2c-spec] treats
+SDA and SCL as distinct bus lines with their own pull-up behavior; this
+heuristic does not claim that every resistor bridge is prohibited. The
+[controller fixtures](../tests/fixtures/design_lint/i2c-sda-scl-resistive-bridge/README.md)
+and [connector-only fixtures][i2c-connector-bridge-fixture] exercise repeated
+digest-pinned KiCad 10.0.0 and 10.0.5 fault/control exports.
 
 ```sh
 .venv/bin/python -I -m pytest tests/test_i2c_sda_scl_resistive_bridge.py \
@@ -11390,3 +11394,5 @@ Review the actual board and assembly requirements before approving a build.
 [arm-coresight-swo]: https://documentation-service.arm.com/static/63a03a981d698c4dc521ca77
 [arm-cortex-debug-connector]: https://documentation-service.arm.com/static/5fce6c49e167456a35b36af1
 [i2c-spec]: https://www.nxp.com/docs/en/user-guide/UM10204.pdf
+[i2c-connector-bridge-fixture]:
+  ../tests/fixtures/design_lint/i2c-sda-scl-connector-resistive-bridge/README.md
