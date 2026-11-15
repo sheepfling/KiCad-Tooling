@@ -7,7 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.hwrepo import models, release_operation_models
+from kicad_tooling.hwrepo import (
+    mcp_release_workflow,
+    mcp_workflow,
+    models,
+    release_operation_models,
+)
 
 pytestmark = pytest.mark.architecture
 
@@ -40,6 +45,15 @@ def test_release_preparation_request_has_one_operation_model_owner() -> None:
     assert release_operation_models.ReleasePreparationRequest.model_config.get("frozen") is True
     assert release_operation_models.ReleasePreparationRequest.model_config.get("extra") == "forbid"
     assert not hasattr(models, "ReleasePreparationRequest")
+
+
+def test_mcp_release_workflow_keeps_compatibility_exports() -> None:
+    owner = Path(mcp_release_workflow.__file__)
+    assert len(owner.read_text(encoding="utf-8").splitlines()) < 500
+    assert mcp_workflow.check_release is mcp_release_workflow.check_release
+    assert mcp_workflow.package_release is mcp_release_workflow.package_release
+    assert mcp_workflow.verify_package is mcp_release_workflow.verify_package
+    assert mcp_workflow.restore_package is mcp_release_workflow.restore_package
 
 
 def test_release_prepare_is_a_compatibility_adapter_to_the_typed_operation() -> None:

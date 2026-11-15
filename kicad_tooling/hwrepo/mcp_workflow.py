@@ -11,12 +11,12 @@ from . import (
     contract_coach,
     design_lint,
     diagnostics,
-    packaging,
     releasing,
     rescue,
 )
 from . import mcp_3d_workflow as _mcp_3d_workflow
 from . import mcp_generation_workflow as _mcp_generation_workflow
+from . import mcp_release_workflow as _mcp_release_workflow
 from . import mcp_workflow_paths as _mcp_workflow_paths
 from . import model_population as _model_population
 from .contract_coach_models import ContractCoachReport
@@ -44,7 +44,6 @@ from .models import (
 from .native_toolchain import cli_executable
 from .portable_evidence import verify_release_portable
 from .project_models import ProjectManifest
-from .release import check as release_check
 from .release_contract_models import (
     ReleaseManifest,
     ReleaseStatus,
@@ -53,8 +52,6 @@ from .release_model_types import ReleaseClass
 from .release_operation_models import ReleasePreparationRequest
 from .release_report_models import (
     ReleaseExportReport,
-    ReleasePackageReport,
-    ReleaseReadinessReport,
 )
 from .release_variants import resolve_variants
 from .selection import ProjectSelector, resolve_project_ids
@@ -68,6 +65,10 @@ export_3d = _mcp_3d_workflow.export_3d
 inspect_3d_models = _mcp_3d_workflow.inspect_3d_models
 pcb_config = _mcp_3d_workflow.pcb_config
 preview_model_population = _mcp_3d_workflow.preview_model_population
+check_release = _mcp_release_workflow.check_release
+package_release = _mcp_release_workflow.package_release
+verify_package = _mcp_release_workflow.verify_package
+restore_package = _mcp_release_workflow.restore_package
 artifact_file = _mcp_workflow_paths.artifact_file
 fresh_output = _mcp_workflow_paths.fresh_output
 identifier = _mcp_workflow_paths.identifier
@@ -478,24 +479,3 @@ def prepare_review(
 ) -> ReleaseManifest:
     """Prepare one engineering-review candidate without approval or production authority."""
     return prepare_review_scope(root, release_id, (project_id,), runner=runner)
-
-
-def check_release(root: Path, manifest: str) -> ReleaseReadinessReport:
-    return release_check(root, read_model(artifact_file(root, manifest), ReleaseManifest))
-
-
-def package_release(root: Path, manifest: str, package_id: str) -> ReleasePackageReport:
-    path = artifact_file(root, manifest)
-    output = fresh_output(root, "packages", package_id, ".zip")
-    return packaging.package(root, path.relative_to(root).as_posix(), output)
-
-
-def verify_package(root: Path, archive: str) -> ReleasePackageReport:
-    return packaging.verify(artifact_file(root, archive))
-
-
-def restore_package(root: Path, archive: str, restore_id: str) -> ReleasePackageReport:
-    path = artifact_file(root, archive)
-    output = fresh_output(root, "restores", restore_id)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    return packaging.restore(path, output)
