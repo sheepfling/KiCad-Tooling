@@ -29045,7 +29045,12 @@ acceptance threads while new lint features proceed:
   incomplete CLI/MCP parity harness: it declared a PCB without supplying one.
   That synthetic case now uses a schematic project with source-bound KiCad
   settings and schematic inputs; both parity cases pass.
-- **Hosted acceptance:** Pending.
+- **Hosted acceptance:** Tag `v0.5.3rc834` passed GitHub Actions run
+  [`43756562298`](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43756562298):
+  552 selected tests passed and 9,705 were deselected. The digest-pinned
+  connector-only native fault/control ran on KiCad 10.0.0 and 10.0.5; the
+  scoped type checks, package build/install, and external-template playtest
+  passed. Package and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
