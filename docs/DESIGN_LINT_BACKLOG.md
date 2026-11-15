@@ -847,7 +847,14 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc819):** LINT-494 extends
+- **Latest published lint-gate checkpoint (v0.5.3rc820):** LINT-495 extends
+  USB-C SBU named-rail review to recognized connector pins with exact SBU1/SBU2
+  functions. Hosted acceptance passed in GitHub Actions run `43714675351`: 480
+  selected tests passed and 9,681 were deselected, including repeatable Docker
+  native fixtures on KiCad 10.0.0 and 10.0.5. Tag-scope resolution, the scoped
+  lint gate, and installed-wheel verification against a separate project passed.
+  Package and preview jobs were skipped under prerelease policy.
+- **Previous published lint-gate checkpoint (v0.5.3rc819):** LINT-494 extends
   Ethernet management named-rail review to recognized connector pins with
   exact MDC/MDIO functions. Hosted acceptance passed in GitHub Actions run
   `43712666837`: 480 selected tests passed and 9,680 were deselected, including
@@ -855,7 +862,7 @@ standalone parity work when it closes a demonstrated feature regression.
   resolution, the scoped lint gate, and installed-wheel verification against a
   separate project passed. Package and preview jobs were skipped under
   prerelease policy.
-- **Previous published lint-gate checkpoint (v0.5.3rc816):** LINT-491 extends
+- **Earlier published lint-gate checkpoint (v0.5.3rc816):** LINT-491 extends
   USB named-rail review to recognized connector pins with explicit USB 2.0 or
   SuperSpeed data functions. Hosted acceptance passed in GitHub Actions run
   `43706655463`: 494 selected tests passed and 9,657 were deselected, including
@@ -28356,7 +28363,10 @@ acceptance threads while new lint features proceed:
   mdrepo, Pyright, Windows type checking, wheel/sdist builds, isolated installs,
   and the external KiCad-Test checkout playtest passed. Pinned Docker KiCad
   10.0.0 and 10.0.5 fault/control fixture runs passed.
-- **Hosted acceptance:** Pending tagged workflow acceptance.
+- **Hosted acceptance:** Passed tagged workflow run `43714675351`: 480 passed,
+  9,681 deselected. Docker fixtures passed on KiCad 10.0.0 and 10.0.5; Pyright,
+  Windows types, wheel/sdist, installation, and external checkout/playtest
+  stages passed. Package and preview jobs were skipped under prerelease policy.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
