@@ -78,6 +78,52 @@ def test_i2c_pullup_hint_detects_missing_or_invalid_local_resistors() -> None:
 
 
 @pytest.mark.design_lint_rule(rule_id="bus.i2c_missing_pullup")
+def test_connector_only_i2c_missing_pullups_have_a_fitted_local_control() -> None:
+    controller_netlist = i2c_netlist(pullups=("SDA", "SCL"))
+    endpoint = controller_netlist.model_copy(
+        update={
+            "component_symbols": {
+                "J1": "Synthetic:NamedI2cConnector",
+                "R1": "Device:R",
+                "R2": "Device:R",
+            },
+            "component_pin_numbers": {
+                "J1": ("1", "2"),
+                "R1": ("1", "2"),
+                "R2": ("1", "2"),
+            },
+            "pin_functions": {
+                "J1.1": "SDA",
+                "J1.2": "SCL",
+                "R1.1": "1",
+                "R1.2": "2",
+                "R2.1": "1",
+                "R2.2": "2",
+            },
+            "nets": {
+                "I2C_SDA": ("J1.1", "R1.1"),
+                "I2C_SCL": ("J1.2", "R2.1"),
+                "+3V3": ("R1.2", "R2.2"),
+            },
+        }
+    )
+    policy = policy_without_i2c_map_prompt()
+
+    fault = evaluate(
+        "synthetic-i2c-connector-missing-pullup",
+        coach(endpoint.model_copy(update={"dnp_components": ("R1", "R2")})),
+        policy,
+    )
+    finding = next(item for item in fault.findings if item.rule_id == "bus.i2c_missing_pullup")
+    assert finding.subject == "SDA I2C_SDA / SCL I2C_SCL"
+    assert finding.evidence["pins"] == ("J1.1", "J1.2")
+    assert finding.evidence["missing_pullups"] == ("SDA", "SCL")
+
+    control = evaluate("synthetic-i2c-connector-fitted-pullups", coach(endpoint), policy)
+    assert "bus.i2c_missing_pullup" not in {item.rule_id for item in control.findings}
+
+
+@pytest.mark.design_lint_rule(rule_id="bus.i2c_missing_pullup")
 @pytest.mark.parametrize(
     ("updates", "symbol"),
     (

@@ -25,11 +25,11 @@ from kicad_tooling.hwrepo.models import (
     DesignLintReport,
     DesignLintRuleOverride,
     IgnoredChecks,
-    PcbValidationContract,
     ProjectDiscovery,
     ProjectKind,
     ProjectManifest,
     ProjectTestContract,
+    SchematicValidationContract,
     ToolchainRecord,
     ToolchainsCatalog,
     ToolSurfaceReport,
@@ -63,6 +63,16 @@ class I2cSerialParityHarness(unittest.IsolatedAsyncioTestCase):
         self.source.parent.mkdir(parents=True)
         self.native.mkdir(parents=True)
         self._write_repository_configuration()
+        (self.island / "source" / "design.kicad_pro").write_text(
+            '{"erc": {"meta": {"version": 0}, "erc_exclusions": []}}\n',
+            encoding="utf-8",
+        )
+        (self.island / "source" / "design.kicad_sch").write_text(
+            '(kicad_sch (version 20231120) (generator "eeschema") '
+            '(uuid "00000000-0000-4000-8000-000000000001") (paper "A4") '
+            '(lib_symbols) (sheet_instances (path "/" (page "1"))))\n',
+            encoding="utf-8",
+        )
         self.source.write_text(
             json.dumps({"fixture": "synthetic", "scenario": "control"}) + "\n",
             encoding="utf-8",
@@ -72,8 +82,8 @@ class I2cSerialParityHarness(unittest.IsolatedAsyncioTestCase):
 
     def _project_contract(self) -> ProjectTestContract:
         return ProjectTestContract(
-            validation=PcbValidationContract(
-                kind=ProjectKind.PCB,
+            validation=SchematicValidationContract(
+                kind=ProjectKind.SCHEMATIC,
                 components={
                     "U1": ComponentContract(value="Synthetic two-wire target", footprint=""),
                     "J1": ComponentContract(
@@ -159,13 +169,17 @@ class I2cSerialParityHarness(unittest.IsolatedAsyncioTestCase):
             self.island / "project.json",
             ProjectManifest(
                 id=PROJECT_ID,
-                kind=ProjectKind.PCB,
+                kind=ProjectKind.SCHEMATIC,
                 status="training_fixture",
                 assurance_profile="training",
                 toolchain_id="synthetic-kicad-10-0-5",
-                project="design.kicad_pro",
+                project="source/design.kicad_pro",
                 source_roots=("source",),
-                required_inputs=("source/fixture.json",),
+                required_inputs=(
+                    "source/design.kicad_pro",
+                    "source/design.kicad_sch",
+                    "source/fixture.json",
+                ),
                 component_identity=ComponentIdentity(required=False, part_ids=()),
             ),
         )
@@ -201,7 +215,7 @@ class I2cSerialParityHarness(unittest.IsolatedAsyncioTestCase):
                 timestamp_utc="2026-09-30T00:00:00+00:00",
                 checked_commit="SYNTHETIC_FIXTURE_NOT_A_RELEASE_COMMIT",
                 project_id=PROJECT_ID,
-                project_kind=ProjectKind.PCB,
+                project_kind=ProjectKind.SCHEMATIC,
                 checks={
                     "source_scope": CheckEvidence(status="PASS", source_hashes=source_hashes),
                     "source_unchanged": CheckEvidence(status="PASS", source_hashes=source_hashes),

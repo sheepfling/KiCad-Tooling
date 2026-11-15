@@ -44,6 +44,7 @@ from .ci_hosted_control_inputs import native_control_input_demo_lane
 from .ci_hosted_digital_peer_lane import digital_peer_fixture_lane as _digital_peer_fixture_lane
 from .ci_hosted_electrical_lane import electrical_lane, project_simulator
 from .ci_hosted_empty_netlist_evidence import empty_netlist_evidence_fixture_lane
+from .ci_hosted_i2c_missing_pullup_connector import i2c_missing_pullup_connector_fixture_lane
 from .ci_hosted_i2c_peer_reference_fixtures import i2c_peer_reference_native_fixture_lane
 from .ci_hosted_i2c_pullup_fixtures import i2c_pullup_native_fixture_lane
 from .ci_hosted_i2c_unconnected_pin import i2c_unconnected_pin_fixture_lane
@@ -158,6 +159,7 @@ __all__ = (
     "empty_netlist_evidence_fixture_lane",
     "gate_result",
     "generic_usb_connector_fixture_lane",
+    "i2c_missing_pullup_connector_fixture_lane",
     "i2c_peer_reference_native_fixture_lane",
     "i2c_pullup_native_fixture_lane",
     "i2c_unconnected_pin_fixture_lane",

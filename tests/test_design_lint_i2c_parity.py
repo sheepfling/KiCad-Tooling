@@ -72,7 +72,11 @@ class DesignLintI2cParityTests(I2cSerialParityHarness):
         async with Client(create_server(self.root), mode="legacy") as client:
             self._write_native_evidence(missing_array=False)
             control = await self._inspect_both_surfaces(client)
-            self.assertEqual(control.i2c_pullup_heuristic_coverage.status, "COMPLETE")
+            self.assertEqual(
+                control.i2c_pullup_heuristic_coverage.status,
+                "COMPLETE",
+                control.issues,
+            )
             self.assertEqual(
                 control.i2c_pullup_heuristic_coverage.netlist_sha256,
                 digest(self.netlist_path),

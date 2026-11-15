@@ -164,6 +164,14 @@ RULE_NODE_CASES = (
         "tests/test_design_lint_i2c_missing_pullups.py::test_connecting_one_line_leaves_only_the_other_pullup_missing",
     ),
     (
+        "bus.i2c_missing_pullup",
+        "tests/test_design_lint_i2c_missing_pullups.py::test_connector_only_i2c_missing_pullups_have_a_fitted_local_control",
+    ),
+    (
+        "bus.i2c_missing_pullup",
+        "tests/test_i2c_missing_pullup_connector_native_fixture_lane.py::test_native_connector_only_i2c_missing_pullup_fault_and_control_repeat",
+    ),
+    (
         "bus.i2c_low_equivalent_resistance",
         "tests/test_design_lint_i2c_equivalent_resistance.py::test_i2c_parallel_pullups_are_reviewed_by_nominal_equivalent_resistance",
     ),

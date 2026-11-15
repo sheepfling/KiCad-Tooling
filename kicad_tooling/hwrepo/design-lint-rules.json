@@ -6704,6 +6704,8 @@
       ],
       "fault_fixtures": [
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_pullup_hint_detects_missing_or_invalid_local_resistors",
+        "tests.test_design_lint_i2c_missing_pullups.test_connector_only_i2c_missing_pullups_have_a_fitted_local_control",
+        "tests.test_i2c_missing_pullup_connector_native_fixture_lane.test_native_connector_only_i2c_missing_pullup_fault_and_control_repeat",
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_missing_pullup_does_not_accept_unverified_symbol_resistors",
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_series_pullup_paths_are_bounded_and_unbranched",
         "tests.test_design_lint_i2c_missing_pullups.test_connecting_one_line_leaves_only_the_other_pullup_missing",
@@ -6736,6 +6738,8 @@
       ],
       "valid_control_fixtures": [
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_pullup_hint_detects_missing_or_invalid_local_resistors",
+        "tests.test_design_lint_i2c_missing_pullups.test_connector_only_i2c_missing_pullups_have_a_fitted_local_control",
+        "tests.test_i2c_missing_pullup_connector_native_fixture_lane.test_native_connector_only_i2c_missing_pullup_fault_and_control_repeat",
         "tests.test_design_lint_i2c_missing_pullups.test_explicitly_unconnected_i2c_line_does_not_form_a_pullup_bus",
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_series_pullup_paths_are_bounded_and_unbranched",
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_pullup_resistance_boundary_is_a_valid_control",
@@ -6760,6 +6764,7 @@
       "metamorphic_fixtures": [
         "tests.test_i2c_pullup_capacitance.test_capacitance_check_is_stable_when_native_maps_are_reordered",
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_missing_pullup_is_order_stable_and_tracks_each_line_path",
+        "tests.test_design_lint_i2c_missing_pullups.test_connector_only_i2c_missing_pullups_have_a_fitted_local_control",
         "tests.test_design_lint_i2c_missing_pullups.test_i2c_missing_pullup_recognizes_exact_device_r_symbol_and_is_order_stable",
         "tests.test_design_lint_determinism_interfaces.test_interface_reports_remain_deterministic"
       ],
@@ -6768,13 +6773,15 @@
         "kicad_tooling/hwrepo/i2c_pullup_heuristics.py#i2c_pullup_heuristic_coverage",
         "kicad_tooling/hwrepo/i2c_pullup_capacitance.py#i2c_pullup_capacitance_check",
         "kicad_tooling/hwrepo/design_lint_project_contexts.py#i2c_pullup_coverage_from_project",
-        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates",
+        "kicad_tooling/ci_hosted_i2c_missing_pullup_connector.py#i2c_missing_pullup_connector_fixture_lane"
       ],
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/i2c_pullup_heuristics.py#i2c_buses_without_local_pullups",
       "required_native_fixtures": [
         "KICAD_RUN_NATIVE_I2C_PULLUP_FIXTURES",
-        "KICAD_RUN_NATIVE_I2C_UNCONNECTED_PIN_FIXTURES"
+        "KICAD_RUN_NATIVE_I2C_UNCONNECTED_PIN_FIXTURES",
+        "KICAD_RUN_NATIVE_I2C_MISSING_PULLUP_CONNECTOR_FIXTURES"
       ]
     },
     {

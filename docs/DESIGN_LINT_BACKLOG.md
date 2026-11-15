@@ -29012,6 +29012,41 @@ acceptance threads while new lint features proceed:
   installed-wheel rehearsal against the separate public template checkout
   passed. Package and preview jobs were skipped under prerelease policy.
 
+#### LINT-508 — Prove connector-only I2C missing-pull-up review natively
+
+- **Priority:** P1 coverage closure. `bus.i2c_missing_pullup` already groups
+  explicit SDA/SCL function pins by assigned nets regardless of whether the
+  pins belong to an IC or connector. Its native fixtures exercised controller
+  endpoints but had no connector-only fault/control evidence.
+- **Change:** Add a connector-only native fault/control pair and a focused
+  synthetic regression. The fault has two fitted-in-schematic but DNP 4.7 kΩ
+  pull-up options and must prompt; the control fits both and must be quiet.
+  This closes a fixture gap without changing the predicate or its rule ID.
+- **Boundary:** The prompt reports no fitted 1 kΩ–100 kΩ path to a named
+  positive rail. Internal or off-board pull-ups remain invisible and may be
+  valid. A source-bound project I2C requirement records an approved alternate
+  topology and can resolve the prompt; the heuristic does not declare a defect.
+- **Fixtures:** Synthetic endpoint replacement plus hash-recorded, tooling-owned
+  connector-only schematics run on digest-pinned KiCad 10.0.0 and 10.0.5. No
+  product project or proprietary board source is retained. See the
+  [fixture record](../tests/fixtures/design_lint/i2c-missing-pullup-connector-native/README.md).
+- **Selection:** Run `tests/test_design_lint_i2c_missing_pullups.py` and
+  `tests/test_i2c_missing_pullup_connector_native_fixture_lane.py` with
+  `design_lint and interface_lint` and the exact
+  `bus.i2c_missing_pullup` selector. The dedicated native lane uses
+  `KICAD_RUN_NATIVE_I2C_MISSING_PULLUP_CONNECTOR_FIXTURES=1`.
+- **Local acceptance:** Passed the complete scoped package acceptance against the
+  separate public template checkout: 552 selected tests passed and 9,705 were
+  deselected. Digest-pinned KiCad 10.0.0 and 10.0.5 exports passed for the
+  connector-only pair, the existing pull-up-array pair, and unconnected-pin
+  controls; exports were repeatable and had no ERC errors. Ruff, Alphus,
+  Rumdl, mdrepo, Linux and Windows Pyright, wheel/sdist builds, installed-wheel
+  checks, and the external template playtest passed. The run also exposed an
+  incomplete CLI/MCP parity harness: it declared a PCB without supplying one.
+  That synthetic case now uses a schematic project with source-bound KiCad
+  settings and schematic inputs; both parity cases pass.
+- **Hosted acceptance:** Pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
