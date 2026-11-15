@@ -82,6 +82,13 @@ def test_configured_native_fixtures_only_uses_full_acceptance_job(tmp_path: Path
     assert configured_native_fixtures(repository) == frozenset({_PROBE_FIXTURE})
 
 
+@pytest.mark.pcb_lint
+def test_fabrication_connectivity_native_fixture_runs_in_full_acceptance() -> None:
+    repository = Path(__file__).resolve().parents[1]
+
+    assert "KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY" in configured_native_fixtures(repository)
+
+
 def test_explicit_test_paths_must_select_a_native_test_guarded_by_each_fixture(
     tmp_path: Path,
 ) -> None:
