@@ -847,7 +847,16 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc813):** LINT-489 extends
+- **Latest published lint-gate checkpoint (v0.5.3rc815):** LINT-490 extends
+  RS-485 A/B named-rail review to connectors whose own symbol or value
+  explicitly identifies RS-485. Hosted acceptance passed in GitHub Actions run
+  `43705076684`: 484 selected tests passed and 9,661 were deselected, including
+  repeatable Docker native fixtures on KiCad 10.0.0 and 10.0.5. Tag-scope
+  resolution, the scoped lint gate, and installed-wheel verification against a
+  separate project passed. Package and preview jobs were skipped under
+  prerelease policy. Initial tag `v0.5.3rc814` lacked the required rule selector
+  and failed before tests; the forward-only corrected tag is `v0.5.3rc815`.
+- **Previous published lint-gate checkpoint (v0.5.3rc813):** LINT-489 extends
   CANH/CANL named-rail review to bounded connector pins while preserving the
   unique-pair requirement. Hosted acceptance passed in GitHub Actions run
   `43702804376`; tag-scope resolution selected the rule, and the scoped lint
@@ -28144,7 +28153,13 @@ acceptance threads while new lint features proceed:
   passed. External inventory, CLI/MCP surface, project verification, relocated
   layout checks, and playtest passed. Supplemental source-evidence,
   architecture, catalog-reachability, and determinism suites passed.
-- **Hosted acceptance:** Pending tagged workflow acceptance.
+- **Hosted acceptance:** Annotated tag `v0.5.3rc815` passed GitHub Actions run
+  `43705076684`: 484 selected tests passed and 9,661 were deselected; the exact-
+  version Docker fixtures passed on KiCad 10.0.0 and 10.0.5. Scope resolution,
+  the scoped lint gate, and installed-wheel verification against a separate
+  project passed. The initial `v0.5.3rc814` tag failed scope resolution before
+  tests because it omitted the required `Lint-Rule` declaration; the corrected
+  forward-only `rc815` tag includes the selector and native fixture declaration.
 
 [pcb-inspector manual]: https://github.com/takzen/pcb-inspector/blob/main/MANUAL.md
 
