@@ -205,6 +205,10 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _ethernet_rx_output_fixtures.ethernet_rx_output_netlist(),
         _ethernet_rx_clock_fixtures.ethernet_rx_clock_output_netlist(),
         _ethernet_rx_status_fixtures.ethernet_rx_status_output_netlist(),
+        _ethernet_rx_status_fixtures.ethernet_rx_status_output_netlist(
+            status_functions=("CRS_DV", "CRS_DV"),
+            status_net_name="RMII_CRS_DV_SHARED",
+        ),
         _tests_test_can_excess_termination._can_netlist_with_direct_terminators(
             ("108R", "120R", "132R")
         ),

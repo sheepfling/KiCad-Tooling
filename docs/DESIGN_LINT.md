@@ -1104,7 +1104,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 406 active rules.
+The catalog currently contains 407 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -2229,6 +2229,33 @@ Select `tests/test_ethernet_rx_status_output_sharing.py`,
 and the receive-status case in
 `tests/test_design_lint_mcp_parity_ethernet_rx_output_sharing.py` with
 `design_lint_rule(rule_id="bus.ethernet_rx_status_outputs_share_net")`.
+Run the same rule marker on
+`tests/test_ethernet_rx_output_sharing_native_fixture_lane.py` with
+`KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1` for native exports.
+
+### Ethernet PHY CRS_DV outputs sharing one net
+
+`bus.ethernet_crs_dv_outputs_share_net` prompts when fitted, explicitly
+identified Ethernet PHY components expose `CRS_DV`/`CRSDV` pins on one exact
+schematic net and their native pin types are output-capable. It accepts the
+exact function names with an optional `RMII` prefix, requires complete unique
+pin inventories and one exact assignment for each counted pin, suppresses
+incomplete or ambiguous groups, and leaves two native `output` pins to ERC.
+
+This is a configurable default-`review` heuristic. A Microchip KSZ8081
+datasheet identifies `CRS_DV` as the carrier-sense/receive-data-valid signal,
+with the PHY as output and MAC as input
+([primary source](https://ww1.microchip.com/downloads/en/DeviceDoc/KSZ8081RNA-RND-10BASE-T-100-BASE-TX-PHY-with-RMII-Support-DS00002199E.pdf)).
+That device-specific reference motivates review; it does not prove that a
+project uses RMII mode, that a pin is actively driving, or that endpoints
+should be joined. A selected path may be intentional. The check does not
+establish firmware mode, PCB copper continuity, or off-board wiring.
+
+Select `tests/test_ethernet_crs_dv_output_sharing.py`,
+`tests/test_design_lint_ethernet_crs_dv_output_sharing_architecture.py`,
+and the CRS_DV case in
+`tests/test_design_lint_mcp_parity_ethernet_rx_output_sharing.py` with
+`design_lint_rule(rule_id="bus.ethernet_crs_dv_outputs_share_net")`.
 Run the same rule marker on
 `tests/test_ethernet_rx_output_sharing_native_fixture_lane.py` with
 `KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1` for native exports.

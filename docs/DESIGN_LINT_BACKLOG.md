@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 406 rules are implemented with synthetic regression coverage.
+The following 407 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 406 active rules.
+The catalog currently contains 407 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -4600,7 +4600,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 406 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 407 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -29429,6 +29429,47 @@ acceptance threads while new lint features proceed:
 - **Hosted acceptance:** GitHub Actions run `43809636970` passed for commit
   `0b834b8b` and tag `v0.5.3rc845`. The package and preview jobs were
   skipped under the prerelease policy.
+
+#### LINT-517 — Review shared Ethernet PHY RMII CRS_DV outputs
+
+- **Status:** Implemented as the default-`review`
+  `bus.ethernet_crs_dv_outputs_share_net` interface heuristic.
+- **Priority:** P1 interface coverage. Existing Ethernet RX-data and RX-status
+  rules do not classify CRS_DV pin functions; a synthetic shared-CRS_DV case
+  produced no finding in the prior catalog.
+- **Predicate:** Require fitted U/IC references with bounded explicit
+  Ethernet PHY identity, complete unique native pin inventory, one exact net
+  assignment, and a supported output-capable native type. Recognize only
+  `CRS_DV`/`CRSDV` with an optional RMII prefix. Emit one REVIEW candidate
+  when two or more distinct PHYs contribute one same-role pin each to one
+  exact non-return net; suppress incomplete or ambiguous groups and defer two
+  native output pins to ERC.
+- **Evidence basis and boundary:** The Microchip KSZ8081 datasheet identifies
+  its CRS_DV signal as a PHY output and MAC input in RMII
+  ([primary source](https://ww1.microchip.com/downloads/en/DeviceDoc/KSZ8081RNA-RND-10BASE-T-100-BASE-TX-PHY-with-RMII-Support-DS00002199E.pdf)).
+  This supports a device-specific review cue, not a universal required
+  topology. Pin function text does not establish RMII mode, active output
+  behavior, endpoint membership, firmware state, PCB copper, or off-board
+  wiring; a selected or multiplexed path may be intentional.
+- **Fixtures:** Tooling-owned synthetic cases cover CRS_DV/CRSDV aliases,
+  separate and mixed-role pins, DNP and open pins, multiply assigned pins,
+  missing pin inventory, duplicate roles, return nets, unsupported and
+  native-output types, policy modes, exact ignores, order-stable fingerprints,
+  and separation metamorphism. The existing synthetic KiCad schematic pair
+  adds a shared-CRS_DV fault and separate-CRS_DV control. The digest-pinned
+  KiCad 10.0.0 and 10.0.5 lane checks exact assignments, repeatability, and
+  no native ERC errors. CLI/MCP parity exercises the same typed service. No
+  project or cohort source is stored.
+- **Selection:** Run `tests/test_ethernet_crs_dv_output_sharing.py`,
+  `tests/test_design_lint_ethernet_crs_dv_output_sharing_architecture.py`,
+  and the CRS_DV case in
+  `tests/test_design_lint_mcp_parity_ethernet_rx_output_sharing.py` with
+  `design_lint_rule(rule_id="bus.ethernet_crs_dv_outputs_share_net")`. The
+  shared native lane is
+  `tests/test_ethernet_rx_output_sharing_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1`.
+- **Local acceptance:** Pending.
+- **Hosted acceptance:** Pending.
 
 ## Completion and release gate
 

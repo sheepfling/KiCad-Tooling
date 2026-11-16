@@ -10,6 +10,7 @@ def ethernet_rx_status_output_netlist(
     shared: bool = True,
     references: tuple[str, ...] = ("U1", "U2"),
     status_functions: tuple[str, ...] | None = None,
+    status_net_name: str = "MII_RX_DV_SHARED",
     status_type: str = "passive",
     dnp_references: tuple[str, ...] = (),
 ) -> NetlistContract:
@@ -20,7 +21,7 @@ def ethernet_rx_status_output_netlist(
     pin_types: dict[str, str] = {}
     inventory: dict[str, tuple[str, ...]] = {}
     if shared and len(references) >= 2:
-        nets["MII_RX_DV_SHARED"] = tuple(f"{reference}.1" for reference in references)
+        nets[status_net_name] = tuple(f"{reference}.1" for reference in references)
     for index, reference in enumerate(references):
         status_pin = f"{reference}.1"
         data_pin = f"{reference}.2"
