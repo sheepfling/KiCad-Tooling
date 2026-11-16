@@ -261,6 +261,7 @@ DesignLintRuleId = Literal[
     "bus.ethernet_data_label_mismatch",
     "bus.ethernet_management_label_mismatch",
     "bus.ethernet_management_same_net",
+    "bus.ethernet_rx_outputs_share_net",
     "bus.ethernet_management_unconnected_pin",
     "bus.ethernet_data_unconnected_pin",
     "bus.ethernet_generic_connector_pair_review",

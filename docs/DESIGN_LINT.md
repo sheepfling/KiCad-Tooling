@@ -1104,7 +1104,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 403 active rules.
+The catalog currently contains 404 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -2137,6 +2137,38 @@ record source hashes and exact-version evidence.
 KICAD_RUN_NATIVE_ETHERNET_MANAGEMENT_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_ethernet_management_same_net_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_management_same_net")'
+```
+
+### Ethernet PHY receive-data outputs sharing one net
+
+`bus.ethernet_rx_outputs_share_net` prompts when receive-data pins from two
+fitted, explicitly identified Ethernet PHY components share one exact
+schematic net and their native pin types are output-capable. It recognizes
+bounded `RXD`/`RXDATA` functions with bit indices 0–7 and optional MII, RMII,
+GMII, or RGMII prefixes. Identity must include explicit Ethernet/ETH PHY or
+transceiver wording, or one of the reviewed LAN87xx, DP83xx, RTL82xx, or
+KSZ80xx value families. The rule requires complete unique native pin
+inventories and one exact assignment for each counted pin. It suppresses
+ambiguous groups, leaves two native `output` pins to ERC, and skips
+return-like nets.
+
+This default-`review` heuristic does not assert a defect or required topology.
+A muxed or selected PHY path can be intentional. Pin labels and symbol text do
+not prove the component behavior, interface mode, firmware selection, routed
+copper, or off-board wiring. Project policy can keep review, promote to block,
+turn the rule off, or ignore an exact fingerprint. The tooling-owned
+[fault/control fixture record](../tests/fixtures/design_lint/ethernet-rx-output-sharing/README.md)
+documents the exact native inputs and limits.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_ethernet_rx_output_sharing.py \
+  tests/test_design_lint_ethernet_rx_output_sharing_architecture.py \
+  tests/test_design_lint_mcp_parity_ethernet_rx_output_sharing.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.ethernet_rx_outputs_share_net")'
+
+KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_ethernet_rx_output_sharing_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_rx_outputs_share_net")'
 ```
 
 ### Ethernet management one-sided open pin review

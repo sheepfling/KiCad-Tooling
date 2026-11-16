@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 403 rules are implemented with synthetic regression coverage.
+The following 404 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 403 active rules.
+The catalog currently contains 404 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -29273,6 +29273,52 @@ acceptance threads while new lint features proceed:
   project has no saved exclusions. Run `43796794770` passed for commit
   `21fb67e3` and tag `v0.5.3rc842`, including the installed-wheel rehearsal
   against the separate public project checkout.
+
+#### LINT-514 — Review Ethernet PHY receive-data outputs sharing one net
+
+- **Status:** Implemented as the default-`review`
+  `bus.ethernet_rx_outputs_share_net` interface heuristic.
+- **Priority:** P1 interface coverage. Existing Ethernet checks cover the
+  external differential pair and management pins, but did not compare
+  receive-data outputs across fitted PHY components. Passive native pin types
+  can leave a shared MII-family output net without an ERC conflict.
+- **Predicate:** Require fitted U/IC references with bounded explicit
+  Ethernet PHY identity, complete unique native pin inventory, one exact net
+  assignment, and a supported output-capable pin type. Recognize `RXD` or
+  `RXDATA` with optional bit index 0–7 and optional MII, RMII, GMII, or RGMII
+  prefix. Emit one REVIEW candidate when at least two distinct components
+  contribute one receive-data pin each to the same exact non-return net.
+  Suppress the whole group if a recognized endpoint on the net has incomplete
+  or ambiguous evidence; leave two native `output` pins to ERC.
+- **Boundary:** Identity evidence is bounded to Ethernet/ETH PHY or transceiver
+  wording and reviewed LAN87xx, DP83xx, RTL82xx, or KSZ80xx value families.
+  Other manufacturer naming conventions stay unclassified. A muxed or
+  otherwise selected path can be intentional. The rule does not infer MAC
+  membership, PHY operating mode, firmware state, output behavior, PCB copper,
+  or off-board wiring. Project policy can review, block, disable, or ignore an
+  exact fingerprint.
+- **Fixtures:** Tooling-owned synthetic passive-typed shared-output fault and
+  separate-RXD control. Tests cover MII-family aliases, unsupported function
+  boundaries, missing identity, DNP, open and multiply assigned pins,
+  incomplete inventories, duplicate per-component roles, return nets, native
+  output conflicts, unsupported types, policy modes, exact ignores, stable
+  fingerprints, and separation metamorphism. Digest-pinned native netlist/ERC
+  exports repeat on KiCad 10.0.0 and 10.0.5; CLI/MCP parity uses the separate
+  public template checkout. No external project or cohort source is used.
+- **Selection:** Run `tests/test_ethernet_rx_output_sharing.py`,
+  `tests/test_design_lint_ethernet_rx_output_sharing_architecture.py`, and
+  `tests/test_design_lint_mcp_parity_ethernet_rx_output_sharing.py` with
+  `design_lint and interface_lint and
+  design_lint_rule(rule_id="bus.ethernet_rx_outputs_share_net")`. The native
+  lane is `tests/test_ethernet_rx_output_sharing_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1`.
+- **Local acceptance:** Focused `scripts/ci.py` passed 491 tests with 9,831
+  deselected. Digest-pinned Docker fault/control fixtures passed on KiCad
+  10.0.0 and 10.0.5. Ruff, both Alphus profiles, Rumdl, mdrepo, module-size
+  preflight, Linux and Windows type checks, wheel/sdist/installed-wheel checks,
+  and the external/adapted public-template playtest passed. Logs are under
+  ignored `build/ci/run-c76jn43s/`.
+- **Hosted acceptance:** Pending tag `v0.5.3rc843`.
 
 ## Completion and release gate
 

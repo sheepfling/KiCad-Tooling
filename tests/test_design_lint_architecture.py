@@ -84,6 +84,7 @@ THEME_OWNER_PREFIXES = MappingProxyType(
             "control_input_",
             "differential_pair_",
             "digital_peer_",
+            "ethernet_",
             "external_protection",
             "i3c_",
             "i2c_",

@@ -17,4 +17,11 @@ INTERFACE_RULE_NODE_CASES = (
             "test_multiple_fitted_can_receiver_outputs_on_one_net_are_reviewed"
         ),
     ),
+    (
+        "bus.ethernet_rx_outputs_share_net",
+        (
+            "tests/test_ethernet_rx_output_sharing.py::"
+            "test_multiple_fitted_ethernet_phy_rx_data_outputs_are_reviewed"
+        ),
+    ),
 )
