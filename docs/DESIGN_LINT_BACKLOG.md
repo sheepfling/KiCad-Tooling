@@ -870,7 +870,19 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc864):** LINT-530 reviews
+- **Latest published lint-gate checkpoint (v0.5.3rc866):** LINT-531 reviews
+  conflicting direct placed-symbol `Datasheet` properties whose later value
+  silently wins in native export. Hosted acceptance passed in GitHub Actions
+  run [43917633593](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43917633593):
+  515 selected tests passed and 10,004 were deselected, including digest-pinned
+  KiCad 10.0.0, 10.0.5, and 10.0.8 fault/control exports. Tag-scope resolution,
+  Ruff, both Alphus profiles, Rumdl, mdrepo, module-size preflight, Linux and
+  Windows type checks, wheel/sdist builds, installed-wheel checks, and the
+  external/adapted template verification and playtest passed. Package and
+  preview jobs were skipped under prerelease policy. The first tag attempt
+  exposed stale catalog totals in documentation; `v0.5.3rc866` contains the
+  corrected totals and passed the complete tagged gate.
+- **Previous published lint-gate checkpoint (v0.5.3rc864):** LINT-530 reviews
   conflicting direct placed-symbol `Reference` properties that native export
   omits. Hosted acceptance passed in GitHub Actions run
   `43906038100`:
@@ -30216,8 +30228,7 @@ acceptance threads while new lint features proceed:
 - **Status:** Implemented as
   `schematic.conflicting_placed_datasheet_properties`, a source-hashed,
   default-REVIEW prompt for exact KiCad 10.0.0, 10.0.5, and 10.0.8 versions.
-  Exact tag-scoped local acceptance passed; hosted follow-up is pending after
-  correcting the catalog-total documentation.
+  Scoped local and hosted acceptance passed for `v0.5.3rc866`.
 - **Predicate:** For each direct placed symbol in the verified hierarchical
   schematic tree, collect well-formed direct `Datasheet` properties in source
   order. Report when at least two exact values differ. Preserve all values and
@@ -30255,6 +30266,16 @@ acceptance threads while new lint features proceed:
   Rumdl, mdrepo, module-size preflight, Linux and Windows type checks,
   wheel/sdist builds, installed-wheel checks, and default/adapted external
   template verification and playtest all passed.
+- **Hosted acceptance:** Tag `v0.5.3rc866` passed GitHub Actions run
+  [43917633593](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43917633593):
+  515 selected tests passed and 10,004 were deselected. Digest-pinned KiCad
+  10.0.0, 10.0.5, and 10.0.8 Docker fault/control exports, tag-scope
+  resolution, Ruff, both Alphus profiles, Rumdl, mdrepo, module-size
+  preflight, Linux and Windows type checks, wheel/sdist builds, installed-wheel
+  checks, and external/adapted template verification and playtest passed.
+  Package and preview jobs were skipped under prerelease policy. The first
+  tag attempt failed the catalog-total documentation assertion; corrected
+  counts were included in the successful follow-up tag.
 
 ## Completion and release gate
 
