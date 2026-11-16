@@ -5437,7 +5437,7 @@ Fixture source digests and interpretation are recorded in the
 ## Review partial-open generic power contacts across connector peers
 
 `connector.footprint_peer_generic_power_pin_open_outlier` is a separate
-default-off prompt for a generic `Pin_N` or numeric-only contact with native
+default-`review` prompt for a generic `Pin_N` or numeric-only contact with native
 type `power_in` or `power_out` when one fitted footprint-similar alias has an
 exact net assignment and another is open. Assigned peers must use the same
 exact net. The comparison needs a separate common-net anchor or a current

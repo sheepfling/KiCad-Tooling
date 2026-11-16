@@ -13,7 +13,7 @@ from kicad_tooling.hwrepo.contracts import read_model, write_model
 from kicad_tooling.hwrepo.design_lint_report_models import DesignLintReport
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.mcp_server import create_server
-from kicad_tooling.hwrepo.models import DesignLintPolicy, DesignLintRuleOverride, ValidationSummary
+from kicad_tooling.hwrepo.models import DesignLintPolicy, ValidationSummary
 from tests.mcp_parity_support import parity_design_lint_policy, semantic_design_lint_report
 from tests.pcb_drc_parity_support import install_source_bound_drc_receipt
 from tests.synthetic_design_lint_project import (
@@ -69,17 +69,7 @@ def test_generic_power_partial_open_cli_mcp_fault_and_control_parity(
     tmp_path: Path,
     power_type: str,
 ) -> None:
-    policy = parity_design_lint_policy(
-        DesignLintPolicy(
-            rules=(
-                DesignLintRuleOverride(
-                    rule_id=RULE_ID,
-                    mode="review",
-                    reason="Synthetic project opts into partial-open peer review.",
-                ),
-            )
-        )
-    )
+    policy = parity_design_lint_policy(DesignLintPolicy())
     root, native = synthetic_design_lint_project(tmp_path, policy)
     install_source_bound_drc_receipt(root, native)
     summary = read_model(native, ValidationSummary)

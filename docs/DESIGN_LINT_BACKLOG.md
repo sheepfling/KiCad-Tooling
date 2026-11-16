@@ -27183,8 +27183,8 @@ acceptance threads while new lint features proceed:
 
 #### LINT-467 — Review partial-open generic power contacts across connector peers
 
-- **Status:** Implemented as the default-off REVIEW heuristic
-  `connector.footprint_peer_generic_power_pin_open_outlier`.
+- **Status:** Implemented as default-off when introduced; promoted to default
+  REVIEW by LINT-524 for `connector.footprint_peer_generic_power_pin_open_outlier`.
 - **Priority:** P2 review context. The existing individual unconnected-power
   rules report the open pin, while the footprint-peer outlier rule is scoped
   to generic passive and signal contacts. Generic `power_in`/`power_out`
@@ -27201,8 +27201,10 @@ acceptance threads while new lint features proceed:
   suppresses the finding.
 - **Incremental value:** The individual power-pin rule already detects an open
   power input/output. This lint adds cohort-level context only and does not
-  claim unique defect detection. Its default remains `off` because an unused
-  or differently populated connector contact can be intentional.
+  claim unique defect detection. It was initially held off because an unused
+  or differently populated connector contact can be intentional; the later
+  default REVIEW decision preserves project `off` and exact-fingerprint ignore
+  controls.
 - **Controls and policy:** Common assigned contacts, split assigned nets,
   mismatched/incomplete metadata, missing or stale scope, separate peer groups,
   and explicitly documented anchorless opens stay quiet. The usual
@@ -29814,6 +29816,41 @@ acceptance threads while new lint features proceed:
   and successful scoped CI, native fixtures, package builds, installed-wheel
   rehearsal, and external-template checks. Package and preview jobs were
   skipped under prerelease policy.
+
+#### LINT-524 — Enable partial-open generic power peer review by default
+
+- **Status:** Promoted the existing
+  `connector.footprint_peer_generic_power_pin_open_outlier` from default `off`
+  to default `review`; no predicate or evidence scope changed.
+- **Reason:** A generic power contact assigned on one footprint-similar peer
+  and open on another is a useful production-handoff review cue, especially
+  when connector pinouts are repeated. The rule already requires matching
+  native identity clues, complete inventories and pin metadata, one exact net
+  on all assigned peers, and a common-net anchor or current reviewed peer
+  scope. It adds peer context to the individual unconnected-power warning; it
+  does not claim unique defect detection or prove the open is wrong.
+- **False-positive handling:** Unused and variant-dependent contacts remain
+  valid. The finding is non-blocking by default, and project policy can turn it
+  off, promote it to block after review, or ignore an exact fingerprint with a
+  reason. Documented anchorless opens and incomplete/stale peer evidence keep
+  their existing behavior.
+- **Evidence:** Synthetic coverage exercises both `power_in` and `power_out`,
+  the default REVIEW disposition, project `off` and `block` overrides, exact
+  ignore, and the connected/common-peer control. CLI/MCP parity now runs with
+  the default policy. Existing digest-pinned Docker native fault/control
+  fixtures exercise exact KiCad 10.0.0 and 10.0.5 exports. No product or cohort
+  project data is stored.
+- **Incremental-value limit:** This changes baseline review visibility only;
+  the underlying predicate was already present. It improves review context but
+  does not add an independently detected defect class.
+- **Selection:** Run
+  `tests/test_connector_footprint_peer_generic_power_partial_open.py`,
+  `tests/test_design_lint_mcp_parity_connector_generic_power_partial_open.py`,
+  and the connector architecture/catalog slices with
+  `design_lint and connector_lint and power_lint` plus the rule selector. The
+  exact native fixture is
+  `tests/test_connector_footprint_peer_generic_power_partial_open_native.py`
+  with Docker and `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
 
 ## Completion and release gate
 

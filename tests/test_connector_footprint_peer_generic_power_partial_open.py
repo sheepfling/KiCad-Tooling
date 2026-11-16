@@ -61,14 +61,14 @@ def _rule_findings(report):
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 @pytest.mark.parametrize("power_type", ("power_in", "power_out"))
-def test_generic_power_partial_open_peer_pattern_is_opt_in_review(power_type: str) -> None:
+def test_generic_power_partial_open_peer_pattern_defaults_to_review(power_type: str) -> None:
     source = _source(power_type=power_type)
     report = _report(source)
     (finding,) = _rule_findings(report)
 
     assert report.status == "REVIEW"
-    assert finding.mode == "off"
-    assert finding.disposition == "RULE_OFF"
+    assert finding.mode == "review"
+    assert finding.disposition == "OPEN"
     assert finding.evidence["pin_electrical_type"] == (power_type,)
     assert finding.evidence["assignments"] == (
         "J1.2=VBUS",
@@ -120,6 +120,16 @@ def test_common_assigned_and_documented_open_contacts_are_controls() -> None:
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_peer_power_open_policy_and_exact_ignore_are_project_configurable() -> None:
     source = _source()
+    default_finding = _rule_findings(_report(source))[0]
+    off_policy = DesignLintPolicy(
+        rules=(
+            DesignLintRuleOverride(
+                rule_id=RULE_ID,
+                mode="off",
+                reason="Synthetic project documents this contact as intentionally optional.",
+            ),
+        )
+    )
     review_policy = DesignLintPolicy(
         rules=(
             DesignLintRuleOverride(
@@ -156,6 +166,11 @@ def test_peer_power_open_policy_and_exact_ignore_are_project_configurable() -> N
         ),
     )
 
+    disabled = _rule_findings(_report(source, off_policy))[0]
+    assert default_finding.mode == "review"
+    assert default_finding.disposition == "OPEN"
+    assert disabled.mode == "off"
+    assert disabled.disposition == "RULE_OFF"
     assert finding.disposition == "OPEN"
     assert blocked.status == "FAIL"
     assert _rule_findings(blocked)[0].mode == "block"
