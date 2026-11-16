@@ -29134,7 +29134,11 @@ acceptance threads while new lint features proceed:
   passed; each exported the four synthetic fixtures twice. Ruff, both Alphus
   profiles, Rumdl, mdrepo, Linux and Windows Pyright, wheel/sdist builds,
   installed-wheel checks, and the separate public-template playtest passed.
-- **Hosted acceptance:** Pending.
+- **Hosted acceptance:** GitHub Actions run `43782178431` for `v0.5.3rc837`
+  exposed that adding the owner assertion pushed the existing interface
+  architecture suite over 500 lines. The assertion was moved to a focused
+  test module. The repaired gate passed on `v0.5.3rc838` in run `43782997371`
+  on 2026-11-16.
 
 #### LINT-511 — Review RS-485 receiver outputs shared across fitted endpoints
 
