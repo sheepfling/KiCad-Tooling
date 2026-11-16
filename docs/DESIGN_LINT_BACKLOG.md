@@ -872,7 +872,14 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc868):** LINT-533 reviews
+- **Latest published lint-gate checkpoint (v0.5.3rc869):** LINT-534 reviews
+  unmapped USB 2.0 D+/D− paths with a series resistor on one data line and a
+  direct path on the other. Local scoped acceptance passed 516 selected tests
+  and 10,042 deselected. Hosted acceptance passed in GitHub Actions run
+  `43939908539`, including digest-pinned native exports, external and adapted project
+  verification, and playtest. Package and preview jobs were skipped under
+  prerelease policy.
+- **Previous published lint-gate checkpoint (v0.5.3rc868):** LINT-533 reviews
   unmapped multi-stage USB 2.0 resistor paths. Local scoped acceptance passed
   512 selected tests and 10,033 deselected, including the digest-pinned KiCad
   10.0.0 native fault/control exports, source-bound fixtures, Ruff, both
@@ -30441,6 +30448,12 @@ acceptance threads while new lint features proceed:
   module-size preflight, Linux and Windows Pyright, wheel/sdist builds, and an
   installed-wheel origin/version smoke check. This local run omitted an
   external project checkout; the hosted prerelease gate supplies that fixture.
+- **Hosted acceptance:** Tag `v0.5.3rc869` passed in GitHub Actions run
+  `43939908539`:
+  516 selected tests passed and 10,042 were deselected. The separate checkout's
+  inventory, surface parity, native verification, adapted-project checks, and
+  playtest passed. Package and preview jobs were skipped under prerelease
+  policy.
 
 ## Completion and release gate
 
