@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 417 rules are implemented with synthetic regression coverage.
+The following 418 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 417 active rules.
+The catalog currently contains 418 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -832,6 +832,7 @@ skipped under prerelease policy.
 - `schematic.duplicate_embedded_symbol_definition`
 - `schematic.conflicting_placed_value_properties`
 - `schematic.conflicting_placed_footprint_properties`
+- `schematic.conflicting_placed_reference_properties`
 - `schematic.reserved_dnp_property_collision`
 - `schematic.duplicate_object_uuid`
 - `schematic.embedded_symbol_pin_number_mismatch`
@@ -4640,7 +4641,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 417 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 418 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -30146,6 +30147,50 @@ acceptance threads while new lint features proceed:
   resolution, cross-platform type checks, wheel/sdist builds, and external
   template installed-wheel verification and playtest passed. Package and
   preview jobs were skipped under prerelease policy.
+
+#### LINT-530 — Review conflicting placed-symbol Reference properties
+
+- **Priority:** P1 schematic source integrity. Multiple direct `Reference`
+  properties with different exact values create a source inconsistency that
+  the native netlist export can hide.
+- **Status:** Implemented as
+  `schematic.conflicting_placed_reference_properties`, a source-hashed,
+  default-REVIEW prompt for exact KiCad 10.0.0, 10.0.5, and 10.0.8 versions.
+- **Predicate:** For each direct placed symbol in the verified hierarchical
+  schematic tree, collect well-formed direct `Reference` properties in source
+  order. Report when at least two exact values differ. Preserve all values and
+  lines, a reference, UUID, source path, and SHA-256. Ignore embedded library
+  definitions and identical repeated values.
+- **Native evidence:** The digest-pinned KiCad 10.0.0, 10.0.5, and 10.0.8
+  exporters accept the synthetic conflicting fields, identify J1 by the
+  instance path, and omit the conflicting `Reference` values from the exported
+  component properties. This is measured only for these fixtures and images.
+- **Limitations:** The prompt identifies an inconsistent source, not which
+  annotation is intended. It does not verify references across repeated sheet
+  instances, BOM correctness, electrical behavior, or manufacturing intent.
+  Malformed fields, embedded library definitions, identical duplicate values,
+  and unmeasured KiCad versions are outside the predicate. REVIEW is the
+  default; projects can select review, block, off, or exact-fingerprint ignore.
+- **Regression coverage:** Tooling-owned fixtures cover conflicting, unique,
+  identical-duplicate, and library-only properties; source hashes, exact
+  version and project-kind scope, deterministic findings, CLI/MCP parity, and
+  repeated native exports. No proprietary project source or fixture is used.
+- **Selection:** Run
+  `tests/test_schematic_conflicting_placed_reference.py` and
+  `tests/test_design_lint_mcp_parity_schematic_conflicting_placed_reference.py`
+  with `design_lint and schematic_lint and
+  design_lint_rule(rule_id="schematic.conflicting_placed_reference_properties")`.
+  Run `tests/test_schematic_conflicting_placed_reference_native.py` with Docker,
+  `KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1`, and the same rule
+  selector plus `native_kicad`.
+- **Local acceptance:** Rule-scoped `scripts/ci.py` passed in
+  `build/ci/run-2s79a7g7`: 14 selected tests passed and 10,489 were deselected,
+  including all three digest-pinned native Docker fault/control exports. Ruff,
+  both Alphus profiles, Rumdl, mdrepo, module-size preflight, Linux and Windows
+  Pyright, wheel/sdist builds, installed-wheel origin/version checks, and the
+  separate public template's default/adapted inventory, CLI/MCP surface,
+  verification, and playtest all passed.
+- **Hosted acceptance:** Pending the annotated rule-gate tag.
 
 ## Completion and release gate
 

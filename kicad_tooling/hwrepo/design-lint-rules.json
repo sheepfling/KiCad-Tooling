@@ -19655,6 +19655,55 @@
       ]
     },
     {
+      "rule_id": "schematic.conflicting_placed_reference_properties",
+      "title": "Conflicting placed-symbol Reference properties need review",
+      "theme": "schematic",
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_conflicting_placed_reference.py#source_bound_conflicting_placed_reference_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "SHA-256 verified hierarchical schematic sources, direct placed-symbol Reference properties with source-order values and lines, symbol reference and UUID, and digest-pinned KiCad 10.0.0, 10.0.5, and 10.0.8 netlist exports",
+      "predicate": "For an exactly measured, source-hashed KiCad schematic tree, review a direct placed symbol containing at least two well-formed direct Reference properties whose exact values are not all equal. Retain every value and source line in source order. Ignore embedded library-definition properties and repeated Reference properties whose values are identical.",
+      "supported_kicad_versions": [
+        "10.0.0",
+        "10.0.5",
+        "10.0.8"
+      ],
+      "limitations": [
+        "The digest-pinned native exporters accepted the conflicting direct fields, used the instance-path reference for the netlist component, and omitted the conflicting values from the exported component properties. This behavior is measured only on KiCad 10.0.0, 10.0.5, and 10.0.8.",
+        "This is a source inconsistency review. It does not decide which annotation is intended, verify annotation across repeated sheet instances, or establish BOM, electrical, or manufacturing correctness. Identical repeated values and properties inside embedded library definitions are outside the predicate.",
+        "Malformed Reference properties, unsupported schematic structures, and other KiCad versions are outside the measured scope. REVIEW is the default; project policy may choose review, block, off, or an exact-fingerprint ignore."
+      ],
+      "fault_fixtures": [
+        "tests.test_schematic_conflicting_placed_reference.test_conflicting_placed_reference_is_localized_and_controls_are_quiet",
+        "tests.test_design_lint_mcp_parity_schematic_conflicting_placed_reference.test_conflicting_placed_reference_review_matches_between_cli_and_mcp",
+        "tests.test_schematic_conflicting_placed_reference_native.test_native_exports_hide_conflicting_reference_fields_and_controls_stay_quiet"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_schematic_conflicting_placed_reference.test_conflicting_placed_reference_is_localized_and_controls_are_quiet",
+        "tests.test_design_lint_mcp_parity_schematic_conflicting_placed_reference.test_conflicting_placed_reference_review_matches_between_cli_and_mcp",
+        "tests.test_schematic_conflicting_placed_reference.test_native_evidence_version_boundary_is_exact",
+        "tests.test_schematic_conflicting_placed_reference.test_pcb_only_projects_are_out_of_scope",
+        "tests.test_schematic_conflicting_placed_reference_native.test_native_exports_hide_conflicting_reference_fields_and_controls_stay_quiet"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_schematic_conflicting_placed_reference.test_repeated_scan_is_deterministic_and_requires_a_hash",
+        "tests.test_schematic_conflicting_placed_reference.test_source_hash_must_match_current_schematic"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/schematic_conflicting_placed_reference.py#source_bound_conflicting_placed_reference_candidates",
+        "kicad_tooling/hwrepo/schematic_source_tree.py#verified_schematic_sources",
+        "kicad_tooling/hwrepo/schematic_geometry_source.py#schematic_direct_property_value_lines",
+        "kicad_tooling/hwrepo/kicad_sexpr.py#sexpr_atoms",
+        "kicad_tooling/hwrepo/design_lint_schematic_source_candidates.py#collect_schematic_source_candidates",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
+      ]
+    },
+    {
       "rule_id": "schematic.reserved_dnp_property_collision",
       "title": "Placed symbol's dnp field collides with native population metadata",
       "theme": "schematic",

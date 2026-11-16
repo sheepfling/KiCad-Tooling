@@ -9,6 +9,9 @@ from .project_models import ProjectConfig
 from .schematic_conflicting_placed_footprint import (
     source_bound_conflicting_placed_footprint_candidates,
 )
+from .schematic_conflicting_placed_reference import (
+    source_bound_conflicting_placed_reference_candidates,
+)
 from .schematic_conflicting_placed_value import (
     source_bound_conflicting_placed_value_candidates,
 )
@@ -35,6 +38,7 @@ def collect_schematic_source_candidates(
         *source_bound_schematic_erc_candidates(root, config, source_hashes),
         *source_bound_conflicting_placed_value_candidates(root, config, source_hashes),
         *source_bound_conflicting_placed_footprint_candidates(root, config, source_hashes),
+        *source_bound_conflicting_placed_reference_candidates(root, config, source_hashes),
         *source_bound_reserved_dnp_property_candidates(root, config, source_hashes),
         *missing_embedded_library_symbol_candidates(root, config, source_hashes),
         *duplicate_embedded_library_symbol_candidates(root, config, source_hashes),

@@ -1104,7 +1104,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 417 active rules.
+The catalog currently contains 418 active rules.
 
 `schematic.reserved_dnp_property_collision` reviews a direct lowercase `dnp`
 property on placed symbols because KiCad exports that field using the same
@@ -1409,6 +1409,42 @@ KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
   .venv/bin/python -I -m pytest \
   tests/test_schematic_conflicting_placed_footprint_native.py \
   -m 'design_lint and schematic_lint and evidence_lint and native_kicad and design_lint_rule(rule_id="schematic.conflicting_placed_footprint_properties")'
+```
+
+### Conflicting Reference properties on a placed schematic symbol
+
+`schematic.conflicting_placed_reference_properties` reviews a direct placed
+symbol that contains multiple `Reference` properties with different exact
+values. It retains both values and source lines with the symbol UUID, source
+path, and source SHA-256. Identical repeated values and conflicts confined to
+embedded library definitions are quiet. The measured boundary is KiCad 10.0.0,
+10.0.5, and 10.0.8.
+
+Digest-pinned native exports accept the conflicting fields, identify the
+component from its instance path, and omit the conflicting placed values from
+the exported component properties. This is a source-inconsistency prompt; it
+does not determine the intended annotation or verify repeated-sheet reference
+mapping. The default is REVIEW, with project review, block, off, and
+exact-fingerprint ignore options.
+
+The tooling-owned sources are described in the
+[fixture README](../tests/fixtures/design_lint/conflicting-placed-reference/README.md).
+Run the source and CLI/MCP regressions with:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_schematic_conflicting_placed_reference.py \
+  tests/test_design_lint_mcp_parity_schematic_conflicting_placed_reference.py \
+  -m 'design_lint and schematic_lint and design_lint_rule(rule_id="schematic.conflicting_placed_reference_properties")'
+```
+
+Run the exact native fault/control regression with:
+
+```sh
+KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
+  .venv/bin/python -I -m pytest \
+  tests/test_schematic_conflicting_placed_reference_native.py \
+  -m 'design_lint and schematic_lint and evidence_lint and native_kicad and design_lint_rule(rule_id="schematic.conflicting_placed_reference_properties")'
 ```
 
 ### Schematic object UUID repeats across source files
