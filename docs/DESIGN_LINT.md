@@ -1104,7 +1104,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 414 active rules.
+The catalog currently contains 415 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -1321,6 +1321,48 @@ KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
   .venv/bin/python -I -m pytest \
   tests/test_schematic_duplicate_embedded_symbol_definition_native.py \
   -m 'design_lint and schematic_lint and evidence_lint and native_kicad and design_lint_rule(rule_id="schematic.duplicate_embedded_symbol_definition")'
+```
+
+### Conflicting Value properties on a placed schematic symbol
+
+`schematic.conflicting_placed_value_properties` reviews a direct placed
+symbol that contains multiple `Value` properties with different exact values.
+The finding retains the reference, UUID, source path and SHA-256, every value,
+and the source line for each property. Identical repeated values are quiet, as
+are duplicate `Value` properties inside an embedded library definition when
+the placed instance has a single value. This check covers KiCad 10.0.8 only;
+other patches are outside the measured behavior.
+
+The digest-pinned KiCad 10.0.8 export accepts a placed-symbol duplicate and
+uses its last `Value` in the exported netlist. The same test repeats unique,
+identical-value, and embedded-library duplicate controls. The result is a
+source ambiguity prompt, not a decision about the intended part, BOM, or
+electrical behavior. The default is REVIEW, with project review, block, off,
+and exact-fingerprint ignore options.
+
+KiCad documents that placed symbol fields can be edited separately from their
+library symbols in the
+[Eeschema symbol properties guide](https://docs.kicad.org/10.0/en/eeschema/eeschema.html).
+This lint limits itself to duplicate direct `Value` fields on placed symbols.
+The tooling-owned sources are described in the
+[fixture README](../tests/fixtures/design_lint/conflicting-placed-value/README.md).
+
+Run the source and CLI/MCP regressions with:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_schematic_conflicting_placed_value.py \
+  tests/test_design_lint_mcp_parity_schematic_conflicting_placed_value.py \
+  -m 'design_lint and schematic_lint and design_lint_rule(rule_id="schematic.conflicting_placed_value_properties")'
+```
+
+Run the exact native fault/control regression with:
+
+```sh
+KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
+  .venv/bin/python -I -m pytest \
+  tests/test_schematic_conflicting_placed_value_native.py \
+  -m 'design_lint and schematic_lint and evidence_lint and native_kicad and design_lint_rule(rule_id="schematic.conflicting_placed_value_properties")'
 ```
 
 ### Schematic object UUID repeats across source files

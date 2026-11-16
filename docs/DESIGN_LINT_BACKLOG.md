@@ -830,6 +830,7 @@ skipped under prerelease policy.
 - `net.return_labels_without_pin_roles`
 - `mcu.stm32_cubemx_pin_map`
 - `schematic.duplicate_embedded_symbol_definition`
+- `schematic.conflicting_placed_value_properties`
 - `schematic.duplicate_object_uuid`
 - `schematic.embedded_symbol_pin_number_mismatch`
 - `schematic.missing_embedded_symbol_definition`
@@ -29963,6 +29964,55 @@ acceptance threads while new lint features proceed:
   gate and installed-wheel check against a separate project passed. Package and
   preview jobs were skipped under prerelease policy.
 
+#### LINT-527 — Review conflicting placed-symbol Value properties
+
+- **Priority:** P1 schematic source integrity. A placed symbol can contain
+  multiple direct `Value` fields with different values. In the measured
+  KiCad 10.0.8 export, the command succeeds and selects the last value.
+- **Status:** Implemented as `schematic.conflicting_placed_value_properties`,
+  a source-hashed default-REVIEW prompt bounded to KiCad 10.0.8.
+- **Predicate:** For every direct placed symbol in the unique files of the
+  verified schematic source tree, collect well-formed direct `Value` property
+  nodes in source order. Report when there are multiple nodes and their exact
+  values are not all equal. Include every value and source line, the placed
+  symbol reference and UUID, and the source path and SHA-256. Do not inspect
+  embedded `lib_symbols` definitions or report identical repeated values.
+- **Native evidence:** The digest-pinned KiCad 10.0.8 image accepted the
+  tooling-owned fault and exported `WRONG_SECOND_VALUE` for J1, matching the
+  second direct `Value` entry. Unique-value, identical-value duplicate, and
+  conflicting embedded-library duplicate controls exported `USB_A` and
+  produced no finding. Each case repeated with identical output. This result
+  is limited to the exact source and image.
+- **Cohort context:** The [kicad-happy v3.0.2 changelog][kicad-happy-v302-changelog]
+  describes last-field semantics and a `duplicate_value_field` issue for
+  conflicting duplicate `Value` text. This implementation independently
+  checks direct placed-symbol fields against native export behavior; no cohort
+  code was imported or executed.
+- **Limitations:** The rule does not choose the intended value or establish
+  BOM identity, electrical correctness, or manufacturing approval. Other
+  KiCad versions, user-field duplicates, malformed `Value` nodes, and other
+  property contexts are outside the predicate. REVIEW is the default;
+  projects can select review, block, off, or exact-fingerprint ignore.
+- **Regression coverage:** Tooling-owned fixtures cover the conflicting fault,
+  unique-value control, identical-value duplicate control, library-definition
+  control, exact version and project-kind scope, current source hashes,
+  deterministic findings, CLI/MCP parity, and repeatable native exports.
+  No proprietary project source or fixture is included.
+- **Selection:** Run `tests/test_schematic_conflicting_placed_value.py` and
+  `tests/test_design_lint_mcp_parity_schematic_conflicting_placed_value.py`
+  with `design_lint and schematic_lint and
+  design_lint_rule(rule_id="schematic.conflicting_placed_value_properties")`.
+  Run `tests/test_schematic_conflicting_placed_value_native.py` with Docker,
+  `KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1`, and the same rule
+  selector plus `native_kicad`.
+- **Local acceptance:** Rule-scoped `scripts/ci.py` passed in
+  `build/ci/run-oz7kslk7`: 504 passed and 9,950 deselected, including the
+  digest-pinned KiCad 10.0.8 Docker fault/control run. Ruff, both Alphus
+  profiles, Rumdl, mdrepo, module-size preflight, Linux and Windows Pyright,
+  wheel/sdist builds, installed-wheel checks, and the external template
+  acceptance/playtest passed.
+- **Hosted acceptance:** Pending tag `v0.5.3rc861`.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -29983,6 +30033,7 @@ quality, or first-article continuity.
 [malformed-netclass-rule]: DESIGN_LINT.md#review-malformed-pcb-netclass-assignment-shapes
 [happy-lb001]: https://github.com/aklofas/kicad-happy/blob/a6bba1add1e18b89e3aa0824b9769ed1d9d79174/skills/kicad/scripts/signal_detectors.py#L4367-L4440
 [happy-value-syntax-v301]: https://github.com/aklofas/kicad-happy/blob/7d9d4d9fef87ac2d3eb16cfc5cdc9a0869f417f4/CHANGELOG.md
+[kicad-happy-v302-changelog]: https://github.com/aklofas/kicad-happy/blob/v3.0.2/CHANGELOG.md
 [happy-changelog]: https://github.com/aklofas/kicad-happy/blob/main/CHANGELOG.md
 [happy-analyzer]: https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/scripts/signal_detectors.py#L3633-L3673
 [i2c-spec]: https://www.nxp.com/docs/en/user-guide/UM10204.pdf

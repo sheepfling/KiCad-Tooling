@@ -8,6 +8,9 @@ from typing import cast
 
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import ProjectConfig, ProjectKind
+from kicad_tooling.hwrepo.schematic_conflicting_placed_value import (
+    source_bound_conflicting_placed_value_candidates,
+)
 from kicad_tooling.hwrepo.schematic_source_integrity import (
     duplicate_embedded_library_symbol_candidates,
     duplicate_schematic_object_uuid_candidates,
@@ -89,6 +92,24 @@ def schematic_source_integrity_rule_ids() -> frozenset[str]:
         duplicate_uuid_config,
         {duplicate_uuid_relative: digest(duplicate_uuid_source)},
     )
+    conflicting_value_relative = (
+        "tests/fixtures/design_lint/conflicting-placed-value/fault.kicad_sch"
+    )
+    conflicting_value_source = repository / conflicting_value_relative
+    conflicting_value_project = conflicting_value_relative.removesuffix(".kicad_sch") + ".kicad_pro"
+    conflicting_value_config = cast(
+        ProjectConfig,
+        SimpleNamespace(
+            kind=ProjectKind.PCB,
+            project=conflicting_value_project,
+            kicad_version="10.0.8",
+        ),
+    )
+    conflicting_value_candidates = source_bound_conflicting_placed_value_candidates(
+        repository,
+        conflicting_value_config,
+        {conflicting_value_relative: digest(conflicting_value_source)},
+    )
     return frozenset(
         item.rule_id
         for item in (
@@ -96,5 +117,6 @@ def schematic_source_integrity_rule_ids() -> frozenset[str]:
             *duplicate_candidates,
             *pin_mismatch_candidates,
             *duplicate_uuid_candidates,
+            *conflicting_value_candidates,
         )
     )

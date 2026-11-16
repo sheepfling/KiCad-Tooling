@@ -70,6 +70,9 @@ from .pcb_track_width_rule_coverage import track_width_rule_scope_candidates
 from .pcb_unassigned_copper_pad import unassigned_copper_pad_candidates
 from .project_models import ProjectManifest
 from .project_source_hashes import hash_project_sources as hashes
+from .schematic_conflicting_placed_value import (
+    source_bound_conflicting_placed_value_candidates,
+)
 from .schematic_erc_source_candidates import source_bound_schematic_erc_candidates
 from .schematic_source_integrity import (
     duplicate_embedded_library_symbol_candidates,
@@ -204,6 +207,11 @@ def inspect_design_lint_request(
         )
         schematic_source_candidates = (
             *source_bound_schematic_erc_candidates(root, config, coach.source_hashes),
+            *source_bound_conflicting_placed_value_candidates(
+                root,
+                config,
+                coach.source_hashes,
+            ),
             *missing_embedded_library_symbol_candidates(root, config, coach.source_hashes),
             *duplicate_embedded_library_symbol_candidates(root, config, coach.source_hashes),
             *duplicate_schematic_object_uuid_candidates(root, config, coach.source_hashes),
