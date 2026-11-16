@@ -868,13 +868,27 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc848):** LINT-519 adds
-  review of shared standalone MII TX_CLK outputs across identified Ethernet
-  PHYs. Hosted acceptance passed in GitHub Actions run `43818815728`:
-  497 selected tests passed and 9,879 were deselected, including repeated
-  digest-pinned KiCad 10.0.0 and 10.0.5 fixtures. Tag-scope resolution, Ruff,
-  both Alphus profiles, Rumdl, mdrepo, module-size preflight, Linux and Windows
-  type checks, wheel/sdist builds, and installed-wheel rehearsal against the
+- **Latest published lint-gate checkpoint (v0.5.3rc862):** LINT-528 reviews
+  conflicting direct placed-symbol Footprint properties. Hosted acceptance
+  passed in GitHub Actions run `43888815992`: 507 selected tests passed and
+  9,961 were deselected, including the repeated digest-pinned KiCad 10.0.8
+  exporter fault/control fixture. Tag-scope resolution, Ruff, both Alphus
+  profiles, Rumdl, mdrepo, module-size preflight, Linux and Windows type
+  checks, wheel/sdist builds, and installed-wheel acceptance against the
+  separate public template checkout passed. Package and preview jobs were
+  skipped under prerelease policy.
+- **Previous checkpoint (v0.5.3rc861):** LINT-527 reviews conflicting direct
+  placed-symbol Value properties. Hosted acceptance passed in GitHub Actions
+  run `43881279350`: 504 selected tests passed and 9,950 were deselected. The
+  prerelease lint gate and installed-wheel check against a separate project
+  passed. Package and preview jobs were skipped under prerelease policy.
+- **Earlier published checkpoint (v0.5.3rc848):** LINT-519 adds review of
+  shared standalone MII TX_CLK outputs across identified Ethernet PHYs.
+  Hosted acceptance passed in GitHub Actions run `43818815728`: 497 selected
+  tests passed and 9,879 were deselected, including repeated digest-pinned
+  KiCad 10.0.0 and 10.0.5 fixtures. Tag-scope resolution, Ruff, both Alphus
+  profiles, Rumdl, mdrepo, module-size preflight, Linux and Windows type
+  checks, wheel/sdist builds, and installed-wheel rehearsal against the
   separate public template checkout passed. Package and preview jobs were
   skipped under prerelease policy.
 - **Previous checkpoint (v0.5.3rc847):** LINT-518 adds review of shared
@@ -30062,7 +30076,12 @@ acceptance threads while new lint features proceed:
   profiles, Rumdl, mdrepo, module-size preflight, Linux and Windows Pyright,
   wheel/sdist builds, installed-wheel checks, and external/adapted template
   acceptance and playtest all passed.
-- **Hosted acceptance:** Pending tag `v0.5.3rc862`.
+- **Hosted acceptance:** Tag `v0.5.3rc862` passed GitHub Actions run
+  `43888815992`: 507 selected tests passed and 9,961 were deselected. The
+  digest-pinned KiCad 10.0.8 Docker fault/control fixture, tag-scope resolution,
+  cross-platform type checks, package build, and installed-wheel checks against
+  an external project passed. Package and preview jobs were skipped under
+  prerelease policy.
 
 ## Completion and release gate
 
