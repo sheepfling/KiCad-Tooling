@@ -29596,8 +29596,9 @@ acceptance threads while new lint features proceed:
 
 #### LINT-520 — Review shared Ethernet PHY MII collision outputs
 
-- **Status:** Implemented as the default-`review`
-  `bus.ethernet_mii_collision_outputs_share_net` interface heuristic.
+- **Status:** Scoped local and hosted acceptance passed for `v0.5.3rc849`.
+  The default-`review` rule is
+  `bus.ethernet_mii_collision_outputs_share_net`.
 - **Priority:** P1 interface coverage. The Ethernet PHY output-sharing family
   did not recognize standalone MII `COL` pins. A synthetic pair of fitted PHYs
   with passive-typed `COL` pins on one exact net produced no candidate from
@@ -29644,7 +29645,12 @@ acceptance threads while new lint features proceed:
   Linux and Windows Pyright, wheel/sdist builds, installed-wheel checks, and
   external/adapted public-template playtests passed. The 26-stage receipt is
   under `build/ci/run-g9owrcm4/`.
-- **Hosted acceptance:** Pending the annotated lint-rule tag.
+- **Hosted acceptance:** Tag `v0.5.3rc849` passed GitHub Actions run
+  [`43822447521`](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43822447521):
+  498 selected tests passed and 9,889 were deselected. Scoped lint checks,
+  native fixture execution, Linux and Windows type checks, wheel/sdist builds,
+  and installed-wheel rehearsal against the separate public template checkout
+  passed. Package and preview jobs were skipped under prerelease policy.
 - **Incremental-value limit:** This adds the exact standalone MII collision
   role to the PHY output-sharing matrix. Predicate and native compatibility
   evidence do not measure applicability or reviewer value on independent
