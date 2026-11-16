@@ -1104,7 +1104,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 419 active rules.
+The catalog currently contains 420 active rules.
 
 `schematic.reserved_dnp_property_collision` reviews a direct lowercase `dnp`
 property on placed symbols because KiCad exports that field using the same
@@ -1481,6 +1481,47 @@ KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
   .venv/bin/python -I -m pytest \
   tests/test_schematic_conflicting_placed_datasheet_native.py \
   -m 'design_lint and schematic_lint and evidence_lint and native_kicad and design_lint_rule(rule_id="schematic.conflicting_placed_datasheet_properties")'
+```
+
+### Conflicting custom fields on a placed schematic symbol
+
+`schematic.conflicting_placed_custom_properties` reviews a placed symbol with
+two or more direct user-defined fields that have the same exact name and
+different values. The finding retains each value and source line with the
+placed reference, UUID, source path, and SHA-256. Identical duplicates, fields
+with distinct names (including case-distinct names), standard fields, DNP,
+KiCad-reserved `ki_` fields, and conflicts only in embedded library symbols are
+quiet. This review is bounded to the digest-pinned KiCad 10.0.0, 10.0.5, and
+10.0.8 profiles.
+
+Native exports accept the synthetic duplicate `MFR_PN` values and retain one
+field: KiCad 10.0.0 and 10.0.5 keep the second value, while 10.0.8 keeps the
+first. This prompts review of the intended metadata; it does not select a
+manufacturer part number or establish BOM, electrical, or manufacturing
+correctness. KiCad documents the five default fields, arbitrary additional
+field names, and the reserved `ki_` prefix in the
+[Eeschema symbol fields guide](https://docs.kicad.org/10.0/en/eeschema/eeschema.html).
+The tooling-owned cases and their hashes are in the
+[fixture README](../tests/fixtures/design_lint/conflicting-placed-custom-properties/README.md).
+The default is REVIEW, with project review, block, off, and exact-fingerprint
+ignore options.
+
+Run source and CLI/MCP regressions with:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_schematic_conflicting_placed_custom_properties.py \
+  tests/test_design_lint_mcp_parity_schematic_conflicting_placed_custom_properties.py \
+  -m 'design_lint and schematic_lint and design_lint_rule(rule_id="schematic.conflicting_placed_custom_properties")'
+```
+
+Run the digest-pinned native regression with:
+
+```sh
+KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
+  .venv/bin/python -I -m pytest \
+  tests/test_schematic_conflicting_placed_custom_properties_native.py \
+  -m 'design_lint and schematic_lint and evidence_lint and native_kicad and design_lint_rule(rule_id="schematic.conflicting_placed_custom_properties")'
 ```
 
 ### Schematic object UUID repeats across source files

@@ -30,5 +30,17 @@ PLACED_REFERENCE_PARITY_FIXTURES = MappingProxyType(
                 ),
             }
         ),
+        "schematic.conflicting_placed_custom_properties": MappingProxyType(
+            {
+                "fault_fixtures": _refs(
+                    "tests.test_design_lint_mcp_parity_schematic_conflicting_placed_custom_properties",
+                    "test_conflicting_placed_custom_property_review_matches_between_cli_and_mcp",
+                ),
+                "valid_control_fixtures": _refs(
+                    "tests.test_design_lint_mcp_parity_schematic_conflicting_placed_custom_properties",
+                    "test_conflicting_placed_custom_property_review_matches_between_cli_and_mcp",
+                ),
+            }
+        ),
     }
 )

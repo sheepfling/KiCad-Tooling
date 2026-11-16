@@ -6,6 +6,9 @@ from pathlib import Path
 
 from .design_lint_types import Candidate
 from .project_models import ProjectConfig
+from .schematic_conflicting_placed_custom_properties import (
+    source_bound_conflicting_placed_custom_property_candidates,
+)
 from .schematic_conflicting_placed_datasheet import (
     source_bound_conflicting_placed_datasheet_candidates,
 )
@@ -43,6 +46,7 @@ def collect_schematic_source_candidates(
         *source_bound_conflicting_placed_footprint_candidates(root, config, source_hashes),
         *source_bound_conflicting_placed_reference_candidates(root, config, source_hashes),
         *source_bound_conflicting_placed_datasheet_candidates(root, config, source_hashes),
+        *source_bound_conflicting_placed_custom_property_candidates(root, config, source_hashes),
         *source_bound_reserved_dnp_property_candidates(root, config, source_hashes),
         *missing_embedded_library_symbol_candidates(root, config, source_hashes),
         *duplicate_embedded_library_symbol_candidates(root, config, source_hashes),

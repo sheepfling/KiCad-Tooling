@@ -28,6 +28,9 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_schematic_conflicting_placed_datasheet_native.py": frozenset(
             {"schematic_lint", "evidence_lint"}
         ),
+        "test_schematic_conflicting_placed_custom_properties_native.py": frozenset(
+            {"schematic_lint", "evidence_lint"}
+        ),
         "test_schematic_geometry_symbol_arc_body.py": frozenset({"schematic_lint"}),
         "test_schematic_erc_global_severity_native_fixture_lane.py": frozenset(
             {"schematic_lint", "evidence_lint"}

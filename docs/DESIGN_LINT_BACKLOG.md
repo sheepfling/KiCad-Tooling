@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 419 rules are implemented with synthetic regression coverage.
+The following 420 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 419 active rules.
+The catalog currently contains 420 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -833,6 +833,8 @@ skipped under prerelease policy.
 - `schematic.conflicting_placed_value_properties`
 - `schematic.conflicting_placed_footprint_properties`
 - `schematic.conflicting_placed_reference_properties`
+- `schematic.conflicting_placed_datasheet_properties`
+- `schematic.conflicting_placed_custom_properties`
 - `schematic.reserved_dnp_property_collision`
 - `schematic.duplicate_object_uuid`
 - `schematic.embedded_symbol_pin_number_mismatch`
@@ -4663,7 +4665,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 418 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 420 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -30276,6 +30278,61 @@ acceptance threads while new lint features proceed:
   Package and preview jobs were skipped under prerelease policy. The first
   tag attempt failed the catalog-total documentation assertion; corrected
   counts were included in the successful follow-up tag.
+
+#### LINT-532 — Review conflicting duplicate placed-symbol custom fields
+
+- **Priority:** P1 source metadata integrity. Custom fields such as a
+  manufacturer part number can be exported to the BOM or PCB, but duplicate
+  values with the same field name may be silently collapsed by native export.
+- **Cohort and native evidence:** The
+  [KiCad 10 symbol-fields guide](https://docs.kicad.org/10.0/en/eeschema/eeschema.html) documents
+  arbitrary user-defined symbol fields and reserves the `ki_` prefix. A tooling-owned `MFR_PN` fault
+  with `SYNTHETIC-PN-A` and `SYNTHETIC-PN-B` was accepted by digest-pinned KiCad 10.0.0, 10.0.5, and
+  10.0.8 netlist exporters. All exported one field; 10.0.0 and 10.0.5 retained the second value
+  while 10.0.8 retained the first. Unique, identical-duplicate, distinct-name, and
+  case-distinct-name controls were quiet in the source lint; native exports preserved the distinct
+  names. This is source-metadata ambiguity evidence, not an independently confirmed board defect.
+- **Status:** Implemented as
+  `schematic.conflicting_placed_custom_properties`, a source-hashed,
+  default-REVIEW prompt for exact KiCad 10.0.0, 10.0.5, and 10.0.8 versions.
+- **Rule:** `schematic.conflicting_placed_custom_properties`, default `review`.
+- **Predicate:** For each direct placed symbol in the verified hierarchical
+  schematic tree, group well-formed direct user-defined properties by exact
+  field name. Report a group with at least two entries and at least two exact
+  values. Preserve each value and source line, the field name, reference, UUID,
+  source path, and SHA-256. Exclude the five default fields, DNP, and names
+  beginning with the KiCad-reserved `ki_` prefix. Ignore embedded library
+  definitions, case-distinct names, and identical repeated values.
+- **Limitations:** The review does not determine the intended value, verify a
+  manufacturer identity, or establish BOM correctness, electrical behavior,
+  footprint propagation, or manufacturing approval. It does not inspect
+  malformed fields or unmeasured KiCad versions. Standard properties have
+  dedicated rules or remain outside this custom-field predicate. REVIEW is the
+  default; projects can select review, block, off, or exact-fingerprint ignore.
+- **Regression coverage:** Tooling-owned fixtures cover conflicting, unique,
+  identical-duplicate, distinct-name, case-distinct-name, standard-field,
+  reserved-name, and embedded-library-only cases. Tests cover current source
+  hashes, exact version and project-kind scope, deterministic findings,
+  CLI/MCP parity, and repeated native exports. No proprietary project source
+  or fixture is included.
+- **Selection:** Run
+  `tests/test_schematic_conflicting_placed_custom_properties.py` and
+  `tests/test_design_lint_mcp_parity_schematic_conflicting_placed_custom_properties.py`
+  with `design_lint and schematic_lint and
+  design_lint_rule(rule_id="schematic.conflicting_placed_custom_properties")`.
+  Run `tests/test_schematic_conflicting_placed_custom_properties_native.py`
+  with Docker, `KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1`, and
+  the same rule selector plus `native_kicad`.
+- **Native fixture evidence:** The stored tooling-owned fault and native
+  controls are digested and exported twice with the exact pinned KiCad 10.0.0,
+  10.0.5, and 10.0.8 images. Fixture sources are read-only in the network-
+  disabled container; generated XML stays under ignored `build/` or temporary
+  output directories.
+- **Local acceptance:** Scoped CI passed with 517 selected tests and 10,018
+  deselected, including all three digest-pinned native versions. Ruff, both
+  Alphus profiles, Rumdl, mdrepo, module-size preflight, Pyright, Windows type
+  checks, wheel/sdist builds, installed-package checks, and external/adapted
+  template verification and playtest passed. Receipt: `build/ci/run-r2gmu07c`.
 
 ## Completion and release gate
 

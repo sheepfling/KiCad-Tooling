@@ -8,6 +8,9 @@ from typing import cast
 
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import ProjectConfig, ProjectKind
+from kicad_tooling.hwrepo.schematic_conflicting_placed_custom_properties import (
+    source_bound_conflicting_placed_custom_property_candidates,
+)
 from kicad_tooling.hwrepo.schematic_conflicting_placed_datasheet import (
     source_bound_conflicting_placed_datasheet_candidates,
 )
@@ -200,6 +203,28 @@ def schematic_source_integrity_rule_ids() -> frozenset[str]:
         conflicting_datasheet_config,
         {conflicting_datasheet_relative: digest(conflicting_datasheet_source)},
     )
+    conflicting_custom_properties_relative = (
+        "tests/fixtures/design_lint/conflicting-placed-custom-properties/fault.kicad_sch"
+    )
+    conflicting_custom_properties_source = repository / conflicting_custom_properties_relative
+    conflicting_custom_properties_project = (
+        conflicting_custom_properties_relative.removesuffix(".kicad_sch") + ".kicad_pro"
+    )
+    conflicting_custom_properties_config = cast(
+        ProjectConfig,
+        SimpleNamespace(
+            kind=ProjectKind.PCB,
+            project=conflicting_custom_properties_project,
+            kicad_version="10.0.8",
+        ),
+    )
+    conflicting_custom_properties_candidates = (
+        source_bound_conflicting_placed_custom_property_candidates(
+            repository,
+            conflicting_custom_properties_config,
+            {conflicting_custom_properties_relative: digest(conflicting_custom_properties_source)},
+        )
+    )
     return frozenset(
         item.rule_id
         for item in (
@@ -212,5 +237,6 @@ def schematic_source_integrity_rule_ids() -> frozenset[str]:
             *reserved_dnp_candidates,
             *conflicting_reference_candidates,
             *conflicting_datasheet_candidates,
+            *conflicting_custom_properties_candidates,
         )
     )
