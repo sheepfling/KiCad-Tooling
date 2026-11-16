@@ -29952,12 +29952,16 @@ acceptance threads while new lint features proceed:
   `tests/test_usb_data_path_native_fixture_lane.py` with Docker and
   `KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1`.
 - **Local acceptance:** Rule-scoped `scripts/ci.py` passed in
-  `build/ci/run-h8w9d807`: 503 passed and 9,937 deselected, including exact
+  `build/ci/run-vz4pgmc6`: 504 passed and 9,937 deselected, including exact
   digest-pinned Docker USB lanes on KiCad 10.0.0 and 10.0.5. Ruff, Alphus
   module-boundary and duplication checks, Rumdl, mdrepo, module-size
   preflight, Linux and Windows Pyright, wheel/sdist builds, installed-package
   checks, external-template checks, and the adapted-template playtest passed.
-- **Hosted acceptance:** Pending the tagged prerelease lint gate.
+- **Hosted acceptance:** Tag `v0.5.3rc860` passed GitHub Actions run
+  [43874541611](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43874541611)
+  on commit `52335645bcaa09e0a0d2b43067cbf4d36ee3c4a1`; the prerelease lint
+  gate and installed-wheel check against a separate project passed. Package and
+  preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
