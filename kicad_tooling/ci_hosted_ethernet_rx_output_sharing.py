@@ -201,9 +201,7 @@ def ethernet_rx_output_sharing_fixture_lane(
                             "Native Ethernet COL fixture no longer isolates ERC typing"
                         )
                     if observed.pin_functions.get(f"{reference}.9") != "RX_CTRL":
-                        raise ValueError(
-                            "Native Ethernet RX_CTRL fixture lost its pin function"
-                        )
+                        raise ValueError("Native Ethernet RX_CTRL fixture lost its pin function")
                     if observed.pin_electrical_types.get(f"{reference}.9") != "passive":
                         raise ValueError(
                             "Native Ethernet RX_CTRL fixture no longer isolates ERC typing"

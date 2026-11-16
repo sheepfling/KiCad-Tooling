@@ -157,8 +157,7 @@ class _EthernetRxOutputSharingParity(McpParityHarness):
         netlist.write_text(
             peer_pin_netlist_xml(
                 ethernet_rx_status_output_netlist(
-                    shared=False,
-                    receive_control_functions=("RX_CTRL", "RGMII_RX_CTRL")
+                    shared=False, receive_control_functions=("RX_CTRL", "RGMII_RX_CTRL")
                 )
             ),
             encoding="utf-8",
