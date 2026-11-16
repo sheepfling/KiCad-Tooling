@@ -29766,7 +29766,7 @@ acceptance threads while new lint features proceed:
 #### LINT-523 — Review JTAG TCK and TMS pins sharing one net on a fitted IC
 
 - **Status:** Implemented as `bus.jtag_tck_tms_same_net`, default `review`;
-  local acceptance passed, with the hosted collection-timeout fix ready for retest.
+  local acceptance and the corrected tagged hosted gate passed.
 - **Priority:** P1 interface coverage. LINT-522 reviews one endpoint's TDI/TDO
   same-net assignment, but an IC's TCK and TMS can also share a net while both
   native pins are passive or inputs, leaving ERC without an output conflict.
@@ -29808,8 +29808,12 @@ acceptance threads while new lint features proceed:
 - **Hosted acceptance:** Initial tag `v0.5.3rc856` failed because the new
   architecture test's nested pytest collection exceeded its fixed 30-second
   timeout on the hosted runner. The rule-scoped job had already selected the
-  matching tests; the redundant nested collection is removed in the follow-up.
-  A corrected tagged run is pending.
+  matching tests; the redundant nested collection was removed. Corrected tag
+  `v0.5.3rc857` passed GitHub Actions run `43859438713` on commit
+  `eae8672e8dc65ffb5ed4f10e10fc695bf83f5c64`: 501 passed, 9,926 deselected,
+  and successful scoped CI, native fixtures, package builds, installed-wheel
+  rehearsal, and external-template checks. Package and preview jobs were
+  skipped under prerelease policy.
 
 ## Completion and release gate
 
