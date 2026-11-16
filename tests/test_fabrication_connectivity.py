@@ -30,7 +30,9 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.evidence_lint, pytest.mark.pc
 _ROOT = Path(__file__).parents[1]
 _OWNERS = (
     "fabrication_artwork.py",
+    "fabrication_contact_geometry.py",
     "fabrication_contact_inventory.py",
+    "fabrication_contact_source.py",
     "fabrication_connectivity_models.py",
     "fabrication_connectivity.py",
     "fabrication_connectivity_raster.py",
@@ -254,7 +256,7 @@ def test_artifact_connectivity_reports_opens_shorts_and_intentional_isolation(
     assert {item.code for item in report.findings} == expected
     assert not report.unsupported_reasons, report.unsupported_reasons
     assert report.status == status
-    assert report.analyzer_version == "4"
+    assert report.analyzer_version == "5"
     assert report.board_sha256
     assert "fabrication/board.d356" in report.artifact_sha256
 

@@ -149,7 +149,15 @@ are `UNSUPPORTED`, so a shortened contact file cannot shrink the expected
 copper universe and produce a misleading pass. A present no-connect contact
 must match a source pad without a net; omitted no-connect pads are allowed.
 This inventory check does not verify that each IPC-D-356 coordinate matches
-the physical source pad location.
+the source pad location. The analyzer also binds each present component contact
+to the source footprint placement and pad offset, including footprint rotation,
+and accounts for IPC-D-356's inverted board Y coordinate. Each exported center
+must be within half of its declared coordinate unit, plus 1 nm for source
+coordinate rounding. For example, CUST 0 permits up to 0.001271 mm per axis;
+SI/CUST 1 permits up to 0.000501 mm. A contact with no unique matching source
+center or a larger coordinate error is `UNSUPPORTED` before rasterization.
+This center check does not compare pad shapes, rotations, or copper coverage;
+the raster analysis remains a separate check.
 
 `review` (the default) retains findings in the export receipt without blocking
 the export. `block` fails the export when the analyzer reports an open, short,

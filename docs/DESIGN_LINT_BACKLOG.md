@@ -30651,6 +30651,54 @@ acceptance threads while new lint features proceed:
   checks, external/adapted project verification, and playtest passed. Package
   and preview jobs were skipped under prerelease policy.
 
+#### LINT-539 — Bind IPC-D-356 coordinates to source PCB pad centers
+
+- **Priority:** P1 fabrication-evidence integrity. LINT-538 binds each
+  IPC-D-356 component record to the source footprint, pad number, and net, but
+  a record moved onto another same-net pad can still preserve that identity
+  inventory and let raster analysis inspect the wrong copper location.
+- **Change:** Transform each source pad's local offset through its footprint
+  placement and rotation, then compare the resulting board-space center with
+  the IPC-D-356 record (including its inverted board Y coordinate). Allow half
+  of the declared coordinate unit plus 1 nm for source-coordinate rounding:
+  0.001271 mm per axis for CUST 0 and 0.000501 mm for SI/CUST 1.
+  Missing or ambiguous identities remain covered by LINT-538; an unmatched or
+  displaced present contact fails closed as `UNSUPPORTED` before rasterization.
+  Analyzer version advances to `5` so retained reports identify the stronger
+  source binding.
+- **Boundary:** This compares pad centers, not pad shapes, pad orientation,
+  copper-contact area, or assembly position. It uses the source board and
+  parsed IPC-D-356 evidence and does not establish a physical board connection
+  or infer that distinct net names should be common. Unsupported placement
+  data fails closed.
+- **Regression coverage:** Tooling-owned synthetic tests cover an unchanged
+  same-net inventory, a contact moved onto another same-net pad, positive and
+  negative rounding tolerance for both coordinate grids, rotated footprints,
+  local pad offsets, bottom copper footprints, and malformed placement data.
+  Digest-pinned KiCad 10.0.0 and 10.0.5 Docker tests validate rotated top and
+  bottom exports and require a same-net coordinate mutation to produce a
+  repeatable `UNSUPPORTED` result.
+- **Selection:** Run:
+
+  ```sh
+  python -I -m pytest tests/test_fabrication_contact_geometry.py \
+    tests/test_fabrication_contact_inventory.py \
+    tests/test_fabrication_connectivity.py \
+    -m 'design_lint and evidence_lint and pcb_lint'
+  ```
+
+  Exact-version native coverage is in
+  `tests/test_fabrication_connectivity_native.py` with
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
+- **Local scoped acceptance:** Passed on 2026-11-16 in
+  `build/ci/run-9uqr5nfe`: 41 selected tests, including four exact Docker-native
+  cases on KiCad 10.0.0 and 10.0.5. Ruff, both Alphus checks, Rumdl, mdrepo,
+  module-size preflight, Linux and Windows-targeted Pyright, wheel/sdist builds,
+  source-distribution wheel rebuild, and isolated installed-wheel origin and
+  version checks passed. No external project checkout was supplied to this
+  local run.
+- **Hosted scoped acceptance:** Pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

@@ -41,6 +41,7 @@ class Contact:
     y_mm: float
     layer: Literal["top", "bottom", "through"]
     size_mm: float
+    coordinate_resolution_nm: int = 2_540
 
     @property
     def label(self) -> str:
@@ -326,6 +327,7 @@ def parse_ipc356(text: str) -> tuple[Contact, ...]:
                 y_mm=int(y.replace(" ", "")) * unit_mm,
                 layer=layer,
                 size_mm=int(size) * unit_mm if size else 0.0,
+                coordinate_resolution_nm=round(unit_mm * 1_000_000),
             )
         )
     if not contacts:

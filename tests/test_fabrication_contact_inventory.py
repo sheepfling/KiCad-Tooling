@@ -10,6 +10,7 @@ from kicad_tooling.hwrepo.fabrication_artwork import Contact, UnsupportedFabrica
 from kicad_tooling.hwrepo.fabrication_contact_inventory import (
     require_ipc356_source_pad_inventory,
 )
+from kicad_tooling.hwrepo.fabrication_contact_source import source_component_pads
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.evidence_lint, pytest.mark.pcb_lint]
 
@@ -17,13 +18,13 @@ _BOARD = Path(__file__).parent / "fixtures/fabrication-connectivity/clean.kicad_
 
 
 def _contact(pin: str, net: str = "SIGNAL") -> Contact:
-    return Contact(net, "J1", pin, 5.0 if pin == "1" else 7.0, 5.0, "top", 1.0)
+    return Contact(net, "J1", pin, 5.0 if pin == "1" else 7.0, -5.0, "top", 1.0)
 
 
 def test_complete_component_pad_and_net_inventory_matches_source() -> None:
-    board = _BOARD.read_text(encoding="utf-8")
+    source_pads = source_component_pads(_BOARD.read_text(encoding="utf-8"))
 
-    require_ipc356_source_pad_inventory(board, (_contact("1"), _contact("2")))
+    require_ipc356_source_pad_inventory(source_pads, (_contact("1"), _contact("2")))
 
 
 def test_no_connect_pad_contact_is_optional_but_must_match_source() -> None:
@@ -32,14 +33,15 @@ def test_no_connect_pad_contact_is_optional_but_must_match_source() -> None:
         '(pad "2" smd circle (at 2 0) (size 1 1) (layers "F.Cu" "F.Mask"))',
     )
 
+    source_pads = source_component_pads(board)
     require_ipc356_source_pad_inventory(
-        board,
+        source_pads,
         (
             _contact("1"),
             Contact("N/C:J1:2", "J1", "2", 7.0, 5.0, "top", 1.0),
         ),
     )
-    require_ipc356_source_pad_inventory(board, (_contact("1"),))
+    require_ipc356_source_pad_inventory(source_pads, (_contact("1"),))
 
 
 @pytest.mark.parametrize(
@@ -55,7 +57,7 @@ def test_no_connect_pad_contact_is_optional_but_must_match_source() -> None:
 def test_incomplete_or_mismatched_inventory_fails_closed(
     contacts: tuple[Contact, ...],
 ) -> None:
-    board = _BOARD.read_text(encoding="utf-8")
+    source_pads = source_component_pads(_BOARD.read_text(encoding="utf-8"))
 
     with pytest.raises(UnsupportedFabricationFormat, match="contact inventory differs"):
-        require_ipc356_source_pad_inventory(board, contacts)
+        require_ipc356_source_pad_inventory(source_pads, contacts)

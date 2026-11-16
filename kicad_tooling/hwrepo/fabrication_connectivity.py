@@ -22,7 +22,9 @@ from .fabrication_connectivity_models import (
     FabricationConnectivitySettings,
     FabricationConnectivitySummary,
 )
+from .fabrication_contact_geometry import require_ipc356_source_pad_coordinates
 from .fabrication_contact_inventory import require_ipc356_source_pad_inventory
+from .fabrication_contact_source import source_component_pads
 from .kicad_sexpr import sexpr_atoms, sexpr_children, sexpr_nodes, sexpr_root
 from .pcb_board_net_inventory import pcb_board_net_names
 
@@ -187,7 +189,9 @@ def analyze_fabrication_connectivity(
         gerber_paths, ipc_path, drill_paths = _source_inputs(fabrication_dir)
         contacts = parse_ipc356(ipc_path.read_text(encoding="utf-8", errors="replace"))
         copper_layers = _require_supported_board(board_text, contacts)
-        require_ipc356_source_pad_inventory(board_text, contacts)
+        source_pads = source_component_pads(board_text)
+        require_ipc356_source_pad_inventory(source_pads, contacts)
+        require_ipc356_source_pad_coordinates(source_pads, contacts)
         copper_paths = classify_copper_files(gerber_paths, copper_layers)
         layers = tuple(parse_gerber(path, layer) for path, layer in copper_paths)
         plated: list[DrillHit] = []
