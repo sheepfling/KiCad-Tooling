@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 407 rules are implemented with synthetic regression coverage.
+The following 408 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 407 active rules.
+The catalog currently contains 408 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -4600,7 +4600,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 407 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 408 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -29478,6 +29478,52 @@ acceptance threads while new lint features proceed:
 - **Hosted acceptance:** GitHub Actions run `43813085706` passed for commit
   `9372ca29` and tag `v0.5.3rc846`. The package and preview jobs were skipped
   under the prerelease policy.
+
+#### LINT-518 — Review shared Ethernet PHY MII CRS outputs
+
+- **Status:** Implemented as the default-`review`
+  `bus.ethernet_crs_outputs_share_net` interface heuristic.
+- **Priority:** P1 interface coverage. Existing receive-data, receive-clock,
+  receive-status, and CRS_DV rules do not classify standalone MII CRS pins; a
+  synthetic shared-CRS case produced no candidate in the prior catalog.
+- **Predicate:** Require fitted U/IC references with bounded explicit
+  Ethernet PHY identity, complete unique native pin inventory, one exact net
+  assignment, and a supported output-capable native type. Recognize only exact
+  `CRS`/`MII_CRS` names. Emit one REVIEW candidate when two or more distinct
+  PHYs contribute one CRS pin each to one exact non-return net; suppress
+  incomplete or ambiguous groups and defer two native output pins to ERC.
+- **Evidence basis and boundary:** TI's DP83848 datasheet describes CRS as
+  MII carrier sense and notes that the device's pin is shared with CRS_DV in
+  RMII ([primary source](https://www.ti.com/lit/ds/symlink/dp83848i.pdf)).
+  This supports a device-specific review cue, not a universal topology.
+  Compound CRS/CRS_DV and CRS/strap labels are not recognized, and exact CRS
+  text does not establish interface mode, active output behavior, endpoint
+  selection, firmware state, PCB copper, or off-board wiring.
+- **Fixtures:** Tooling-owned synthetic cases cover exact CRS and MII_CRS
+  aliases, separate nets, mixed CRS/COL roles, CRS_DV names, unrelated
+  identities, DNP/open/ambiguous assignments, missing pin inventory, duplicate
+  roles, return nets, native output conflicts, policy modes, exact ignores,
+  ordered fingerprints, and split-net metamorphism. The native synthetic
+  schematic pair adds a shared-CRS fault and separate-CRS control; the
+  digest-pinned KiCad 10.0.0 and 10.0.5 lane checks exact assignments,
+  repeatability, and no native ERC errors. CLI/MCP parity exercises the same
+  typed service. No cohort or proprietary project source is stored.
+- **Selection:** Run `tests/test_ethernet_crs_output_sharing.py`,
+  `tests/test_design_lint_ethernet_crs_output_sharing_architecture.py`, and
+  the CRS case in
+  `tests/test_design_lint_mcp_parity_ethernet_rx_output_sharing.py` with
+  `design_lint_rule(rule_id="bus.ethernet_crs_outputs_share_net")`. The
+  shared native lane is
+  `tests/test_ethernet_rx_output_sharing_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1`.
+- **Local acceptance:** Rule-scoped `scripts/ci.py` passed 495 tests with
+  9,870 deselected. Ruff, both Alphus profiles, Rumdl, mdrepo, module-size
+  preflight, Linux and Windows Pyright, wheel and sdist builds, installed-wheel
+  checks, and external-template playtests in default and adapted layouts all
+  passed. The selected tests included both digest-pinned native Docker cases
+  and CLI/MCP parity. Receipts are under
+  `build/ci/run-m19_sull/`.
+- **Hosted acceptance:** Pending.
 
 ## Completion and release gate
 

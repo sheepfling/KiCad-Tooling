@@ -1104,7 +1104,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 407 active rules.
+The catalog currently contains 408 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -2259,6 +2259,32 @@ and the CRS_DV case in
 Run the same rule marker on
 `tests/test_ethernet_rx_output_sharing_native_fixture_lane.py` with
 `KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1` for native exports.
+
+### Ethernet PHY MII carrier-sense outputs sharing one net
+
+`bus.ethernet_crs_outputs_share_net` prompts when fitted, explicitly identified
+Ethernet PHY components expose exact `CRS` or `MII_CRS` pins on one exact
+schematic net and their native pin types are output-capable. It requires
+complete unique pin inventories and one exact assignment for each counted pin,
+suppresses incomplete or ambiguous groups, and leaves two native `output` pins
+to ERC.
+
+This configurable default-`review` heuristic uses a pin name as a clue. Texas
+Instruments documents the DP83848 MII `CRS` signal as carrier sense, and its
+pin can have mode-dependent CRS/CRS_DV behavior
+([primary source](https://www.ti.com/lit/ds/symlink/dp83848i.pdf)). The exact
+CRS predicate deliberately excludes compound CRS/CRS_DV or CRS/strap labels;
+even exact CRS text does not prove the selected PHY mode, active output
+behavior, or intended endpoint selection. The check does not establish
+firmware state, PCB copper continuity, or off-board wiring.
+
+Select `tests/test_ethernet_crs_output_sharing.py`,
+`tests/test_design_lint_ethernet_crs_output_sharing_architecture.py`, and the
+CRS case in `tests/test_design_lint_mcp_parity_ethernet_rx_output_sharing.py`
+with `design_lint_rule(rule_id="bus.ethernet_crs_outputs_share_net")`. Run
+the same marker on `tests/test_ethernet_rx_output_sharing_native_fixture_lane.py`
+with `KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1` for native
+exports.
 
 ### Ethernet management one-sided open pin review
 

@@ -39,6 +39,7 @@ from .design_lint_types import Candidate
 from .design_lint_unconnected_interface_candidates import unconnected_interface_candidates
 from .design_lint_usb_c_same_net_candidates import usb_c_same_net_candidates
 from .ethernet_crs_dv_output_sharing import ethernet_crs_dv_output_sharing_candidates
+from .ethernet_crs_output_sharing import ethernet_crs_output_sharing_candidates
 from .ethernet_rx_clock_output_sharing import ethernet_rx_clock_output_sharing_candidates
 from .ethernet_rx_output_sharing import ethernet_rx_output_sharing_candidates
 from .ethernet_rx_status_output_sharing import ethernet_rx_status_output_sharing_candidates
@@ -99,6 +100,7 @@ def bus_candidates(inputs: BusCandidateInputs) -> tuple[Candidate, ...]:
         *ethernet_management_label_mismatch_candidates(observed),
         *ethernet_management_same_net_candidates(observed),
         *ethernet_crs_dv_output_sharing_candidates(observed),
+        *ethernet_crs_output_sharing_candidates(observed),
         *ethernet_rx_output_sharing_candidates(observed),
         *ethernet_rx_clock_output_sharing_candidates(observed),
         *ethernet_rx_status_output_sharing_candidates(observed),

@@ -4,6 +4,13 @@ from __future__ import annotations
 
 INTERFACE_RULE_NODE_CASES = (
     (
+        "bus.ethernet_crs_outputs_share_net",
+        (
+            "tests/test_ethernet_crs_output_sharing.py::"
+            "test_multiple_fitted_ethernet_phy_crs_outputs_are_reviewed_by_default"
+        ),
+    ),
+    (
         "bus.ethernet_crs_dv_outputs_share_net",
         (
             "tests/test_ethernet_crs_dv_output_sharing.py::"
