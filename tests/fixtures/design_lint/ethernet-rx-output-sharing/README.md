@@ -4,8 +4,8 @@ These are tooling-owned synthetic schematics. They contain two passive-typed
 `Synthetic:Ethernet_PHY` symbols and no external project or cohort design
 source.
 
-| Fixture             | SHA-256        | Expected result                                                                                                                    |
-| ------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Fixture             | SHA-256                                                            | Expected result                                                                                                                   |
+| ------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
 | `fault.kicad_sch`   | `805e1238568260ed277cc4953cbc904f3db94db25bcfb92434e4a6d31cd8195c` | Both PHYs share RXD0, RXC, RXDV, RX_CTRL, CRS_DV, CRS, TX_CLK, and COL nets; one REVIEW candidate per rule; no native ERC errors. |
 | `control.kicad_sch` | `eb661d3d23c550948d3dc05aecaad4ecf87a64e7016bc517bdcb5b5d7fb2cb41` | No same-role RXD, RXC, RXDV, RX_CTRL, CRS_DV, CRS, TX_CLK, or COL outputs are shared; no candidate; no native ERC errors.         |
 
