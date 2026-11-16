@@ -29843,6 +29843,15 @@ acceptance threads while new lint features proceed:
 - **Incremental-value limit:** This changes baseline review visibility only;
   the underlying predicate was already present. It improves review context but
   does not add an independently detected defect class.
+- **Local acceptance:** Rule-scoped `scripts/ci.py` passed in
+  `build/ci/run-34_pcyw4`: 500 tests passed and 9,927 were deselected, with
+  `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`. Ruff, Alphus, Rumdl, mdrepo,
+  module-size checks, Linux and Windows Pyright, wheel/sdist builds, installed
+  package checks, public-template checks, and the external playtest passed.
+- **Hosted acceptance:** Tag `v0.5.3rc858` passed GitHub Actions run
+  `43862765564` on commit `ce66a96e1622580bf62a3da1fa7e9c7738fd7dcd`.
+  The scoped lint gate passed; package and preview jobs were skipped under
+  prerelease policy.
 - **Selection:** Run
   `tests/test_connector_footprint_peer_generic_power_partial_open.py`,
   `tests/test_design_lint_mcp_parity_connector_generic_power_partial_open.py`,
