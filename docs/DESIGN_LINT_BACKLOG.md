@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 418 rules are implemented with synthetic regression coverage.
+The following 419 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 418 active rules.
+The catalog currently contains 419 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -30216,7 +30216,8 @@ acceptance threads while new lint features proceed:
 - **Status:** Implemented as
   `schematic.conflicting_placed_datasheet_properties`, a source-hashed,
   default-REVIEW prompt for exact KiCad 10.0.0, 10.0.5, and 10.0.8 versions.
-  Local and hosted acceptance are pending.
+  Exact tag-scoped local acceptance passed; hosted follow-up is pending after
+  correcting the catalog-total documentation.
 - **Predicate:** For each direct placed symbol in the verified hierarchical
   schematic tree, collect well-formed direct `Datasheet` properties in source
   order. Report when at least two exact values differ. Preserve all values and
@@ -30247,12 +30248,13 @@ acceptance threads while new lint features proceed:
   `KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1`, and the same rule
   selector plus `native_kicad`.
 - **Local acceptance:** Rule-scoped `scripts/ci.py` passed in
-  `build/ci/run-c0j0qi87`: 15 selected tests passed and 10,504 were deselected,
-  including repeated digest-pinned KiCad 10.0.0, 10.0.5, and 10.0.8 Docker
-  fault/control exports. Ruff, both Alphus checks, Rumdl, mdrepo, module-size
-  preflight, Linux and Windows type checks, wheel/sdist builds, installed-wheel
-  checks, and default/adapted external template verification and playtest all
-  passed.
+  `build/ci/run-s0umydgr` with the exact annotated-tag selector: 515 selected
+  tests passed and 10,004 were deselected. This includes rule and cross-rule
+  integrity tests, catalog totals, and repeated digest-pinned KiCad 10.0.0,
+  10.0.5, and 10.0.8 Docker fault/control exports. Ruff, both Alphus checks,
+  Rumdl, mdrepo, module-size preflight, Linux and Windows type checks,
+  wheel/sdist builds, installed-wheel checks, and default/adapted external
+  template verification and playtest all passed.
 
 ## Completion and release gate
 
