@@ -29713,7 +29713,7 @@ acceptance threads while new lint features proceed:
 
 - **Status:** Implemented as `bus.jtag_tdi_tdo_same_net`, default `review`;
   focused synthetic, CLI/MCP, architecture, and native fixture wiring is in
-  place. Exact-version acceptance is pending.
+  place. Local and hosted exact-version acceptance passed.
 - **Priority:** P1 interface coverage. Existing JTAG named-rail and cross-device
   TDO-sharing rules did not inspect whether one fitted endpoint's own TDI and
   TDO pins resolve to the same schematic net.
@@ -29757,7 +29757,9 @@ acceptance threads while new lint features proceed:
   Windows Pyright, wheel/sdist builds, isolated installed-wheel checks,
   public-template inventory/surface/verify, and adapted-template playtest all
   passed.
-- **Hosted acceptance:** Pending tagged rule-scope workflow.
+- **Hosted acceptance:** Tag `v0.5.3rc855` passed GitHub Actions run
+  `43851939839` on commit `4b1be0c394151325a474d1d3d3af7ae3ee56546f`.
+  The prerelease lint gate passed; package and preview jobs were skipped.
 
 ## Completion and release gate
 
