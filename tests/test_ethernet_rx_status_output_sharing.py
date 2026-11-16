@@ -144,15 +144,32 @@ def test_rgmii_rx_control_outputs_and_separate_control_are_classified() -> None:
         status_net_name="MIXED_RX_STATUS",
     )
 
-    candidate = ethernet_rx_status_output_sharing_candidates(shared)[0]
+    candidates = ethernet_rx_status_output_sharing_candidates(shared)
+    candidate = next(
+        item
+        for item in candidates
+        if item.evidence["channels"]
+        == (
+            "ethernet-rgmii-receive-control",
+            "ethernet-rgmii-receive-control",
+        )
+    )
+    assert len(candidates) == 2
     assert candidate.evidence["channels"] == (
         "ethernet-rgmii-receive-control",
         "ethernet-rgmii-receive-control",
     )
-    assert candidate.evidence["functions"] == ("RX_CTRL", "RGMII_RX_CTRL")
+    assert candidate.evidence["functions"] == ("RGMII_RX_CTRL", "RX_CTRL")
     assert candidate.evidence["pins"] == ("U1.3", "U2.3")
-    assert not ethernet_rx_status_output_sharing_candidates(separate)
-    assert not ethernet_rx_status_output_sharing_candidates(native_outputs)
+    separate_candidates = ethernet_rx_status_output_sharing_candidates(separate)
+    native_output_candidates = ethernet_rx_status_output_sharing_candidates(native_outputs)
+    assert len(separate_candidates) == 1
+    assert len(native_output_candidates) == 1
+    assert all(
+        channel != "ethernet-rgmii-receive-control"
+        for candidate in separate_candidates + native_output_candidates
+        for channel in candidate.evidence["channels"]
+    )
     assert not ethernet_rx_status_output_sharing_candidates(mixed)
 
 
