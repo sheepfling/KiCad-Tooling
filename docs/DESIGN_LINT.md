@@ -1104,7 +1104,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 408 active rules.
+The catalog currently contains 409 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -2285,6 +2285,33 @@ with `design_lint_rule(rule_id="bus.ethernet_crs_outputs_share_net")`. Run
 the same marker on `tests/test_ethernet_rx_output_sharing_native_fixture_lane.py`
 with `KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1` for native
 exports.
+
+### Ethernet PHY MII transmit-clock outputs sharing one net
+
+`bus.ethernet_tx_clock_outputs_share_net` prompts when fitted, explicitly
+identified Ethernet PHY components expose exact `TX_CLK` or `MII_TX_CLK` pins
+on one exact schematic net and their native pin types are output-capable. It
+requires complete unique pin inventories and one exact assignment for each
+counted pin, suppresses incomplete or ambiguous groups, and leaves two native
+`output` pins to ERC. `GTX_CLK`, `GMII_TX_CLK`, and compound mode/strap labels
+are not recognized.
+
+This configurable default-`review` heuristic treats exact pin names as a cue.
+The TI DP83848x data sheet identifies `TX_CLK` as an output on its MII/RMII
+interface block ([primary source](https://www.ti.com/lit/ds/symlink/dp83848m.pdf));
+that device-specific example motivates review but does not establish the
+selected mode, active output behavior, or endpoint selection. The rule does
+not prove PCB copper continuity or off-board wiring.
+
+Select `tests/test_ethernet_tx_clock_output_sharing.py`,
+`tests/test_design_lint_ethernet_tx_clock_output_sharing_architecture.py`, and
+the TX-clock case in
+`tests/test_design_lint_mcp_parity_ethernet_rx_output_sharing.py` with
+`design_lint_rule(rule_id="bus.ethernet_tx_clock_outputs_share_net")`. Run
+the same marker on
+`tests/test_ethernet_rx_output_sharing_native_fixture_lane.py` with
+`KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1` for digest-pinned
+KiCad 10.0.0 and 10.0.5 exports.
 
 ### Ethernet management one-sided open pin review
 

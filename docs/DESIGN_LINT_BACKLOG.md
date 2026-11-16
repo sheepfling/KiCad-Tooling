@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 408 rules are implemented with synthetic regression coverage.
+The following 409 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 408 active rules.
+The catalog currently contains 409 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -687,6 +687,7 @@ skipped under prerelease policy.
 - `bus.ethernet_rx_clock_outputs_share_net`
 - `bus.ethernet_rx_outputs_share_net`
 - `bus.ethernet_rx_status_outputs_share_net`
+- `bus.ethernet_tx_clock_outputs_share_net`
 - `bus.ethernet_generic_connector_pair_review`
 - `bus.ethernet_management_generic_connector_pair_review`
 - `bus.swd_generic_connector_pair_review`
@@ -29528,6 +29529,57 @@ acceptance threads while new lint features proceed:
   deselected, including repeated digest-pinned KiCad 10.0.0 and 10.0.5 native
   fixtures. The package and preview jobs were skipped under the prerelease
   policy.
+
+#### LINT-519 — Review shared Ethernet PHY MII transmit-clock outputs
+
+- **Status:** Implemented as the default-`review`
+  `bus.ethernet_tx_clock_outputs_share_net` interface heuristic.
+- **Priority:** P1 interface coverage. The existing Ethernet PHY output-sharing
+  family covered receive data, receive clock/status, CRS_DV, and CRS, but a
+  synthetic pair of fitted PHYs with passive-typed `TX_CLK` pins on one exact
+  net produced no candidate from those rules.
+- **Predicate:** Require fitted U/IC references with explicit bounded Ethernet
+  PHY identity, exact `TX_CLK` or `MII_TX_CLK` function text, complete unique
+  native pin inventory, one exact net assignment, and a supported
+  output-capable native type. Emit one REVIEW candidate when two or more
+  distinct PHYs contribute one transmit-clock pin each to one exact
+  non-return net; suppress incomplete or ambiguous groups and defer two native
+  output pins to ERC. `GTX_CLK`, `GMII_TX_CLK`, and compound labels are not
+  recognized.
+- **Evidence basis and boundary:** TI's DP83848x data sheet labels `TX_CLK` as
+  an output on the MII/RMII interface block
+  ([primary source](https://www.ti.com/lit/ds/symlink/dp83848m.pdf)). The rule
+  uses that device-specific example as a review cue, not a universal topology.
+  Exact function text does not prove the selected mode, active output
+  behavior, endpoint selection, PCB copper, or off-board wiring. DNP,
+  return-like nets, unsupported pin types, open or multiply assigned pins,
+  incomplete inventory, duplicate same-role pins, and two native outputs are
+  suppressed or deferred.
+- **Fixtures:** Tooling-owned synthetic tests cover exact aliases, separate
+  clocks, unlike RX/GMII/GTX names, unrelated identity, DNP, open and
+  multiply-assigned pins, missing inventory, duplicate roles, return nets,
+  ERC-typed output pairs, policy modes, exact ignores, deterministic
+  fingerprints, and split-net metamorphism. The shared native schematic pair
+  adds passive-typed `TX_CLK` pins: the fault shares their net and the valid
+  control separates them. Digest-pinned KiCad 10.0.0 and 10.0.5 exports check
+  exact net assignments, repeatability, and no native ERC errors. CLI/MCP
+  parity exercises the same typed service. No cohort or proprietary project
+  source is stored.
+- **Selection:** Run `tests/test_ethernet_tx_clock_output_sharing.py`,
+  `tests/test_design_lint_ethernet_tx_clock_output_sharing_architecture.py`,
+  and the TX-clock case in
+  `tests/test_design_lint_mcp_parity_ethernet_rx_output_sharing.py` with
+  `design_lint_rule(rule_id="bus.ethernet_tx_clock_outputs_share_net")`.
+  Run `tests/test_ethernet_rx_output_sharing_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1` and the same rule
+  marker for native fixture execution.
+- **Local acceptance:** Rule-scoped `scripts/ci.py` passed 497 tests with
+  9,879 deselected. Ruff, both Alphus profiles, Rumdl, mdrepo, module-size
+  preflight, Linux and Windows Pyright, wheel and sdist builds, installed-wheel
+  checks, and external-template playtests in default and adapted layouts all
+  passed. Both digest-pinned native Docker cases and CLI/MCP parity passed.
+  Receipts are under `build/ci/run-4cly2grs/`.
+- **Hosted acceptance:** Pending.
 
 ## Completion and release gate
 

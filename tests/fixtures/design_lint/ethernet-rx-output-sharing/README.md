@@ -1,13 +1,13 @@
-# Ethernet PHY receive-data, receive-clock, receive-status, CRS_DV, and CRS output-sharing fixtures
+# Ethernet PHY output-sharing fixtures
 
 These are tooling-owned synthetic schematics. They contain two passive-typed
 `Synthetic:Ethernet_PHY` symbols and no external project or cohort design
 source.
 
-| Fixture             | SHA-256                                                            | Expected result                                                                                             |
-| ------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| `fault.kicad_sch`   | `91e0021637c127bc8c93cc09f835e3f8f005fd542a6fc4fb8f4ce612fc4786a6` | Both PHYs share RXD0, RXC, RXDV, CRS_DV, and CRS nets; one REVIEW candidate per rule; no native ERC errors. |
-| `control.kicad_sch` | `55ce474a8d3fba3f8690d340e3044f617a877d0cf77d1d6039d09c7c614a5903` | No same-role RXD, RXC, RXDV, CRS_DV, or CRS outputs are shared; no candidate; no native ERC errors.         |
+| Fixture             | SHA-256                                                            | Expected result                                                                                                     |
+| ------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `fault.kicad_sch`   | `296aeafe91a9be95d48947e473749d329983b0dc59d79140716e47ae03a94f46` | Both PHYs share RXD0, RXC, RXDV, CRS_DV, CRS, and TX_CLK nets; one REVIEW candidate per rule; no native ERC errors. |
+| `control.kicad_sch` | `5e9f58445de1bdace9682515fcfd716347bef973881252b85e4b5b910bb39182` | No same-role RXD, RXC, RXDV, CRS_DV, CRS, or TX_CLK outputs are shared; no candidate; no native ERC errors.         |
 
 The test lane exports each schematic twice with digest-pinned KiCad 10.0.0 and
 10.0.5 images, compares normalized netlists and ERC reports, checks both exact
@@ -18,7 +18,7 @@ Run it with:
 KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1 \
   .venv/bin/python -I -m pytest \
   tests/test_ethernet_rx_output_sharing_native_fixture_lane.py \
-  -m 'design_lint and interface_lint and native_kicad and (design_lint_rule(rule_id="bus.ethernet_rx_outputs_share_net") or design_lint_rule(rule_id="bus.ethernet_rx_clock_outputs_share_net") or design_lint_rule(rule_id="bus.ethernet_rx_status_outputs_share_net") or design_lint_rule(rule_id="bus.ethernet_crs_dv_outputs_share_net") or design_lint_rule(rule_id="bus.ethernet_crs_outputs_share_net"))'
+  -m 'design_lint and interface_lint and native_kicad and (design_lint_rule(rule_id="bus.ethernet_rx_outputs_share_net") or design_lint_rule(rule_id="bus.ethernet_rx_clock_outputs_share_net") or design_lint_rule(rule_id="bus.ethernet_rx_status_outputs_share_net") or design_lint_rule(rule_id="bus.ethernet_crs_dv_outputs_share_net") or design_lint_rule(rule_id="bus.ethernet_crs_outputs_share_net") or design_lint_rule(rule_id="bus.ethernet_tx_clock_outputs_share_net"))'
 ```
 
 The receive-data predicate recognizes bounded `RXD`/`RXDATA` functions. The
@@ -32,4 +32,8 @@ only `CRS_DV`/`CRSDV` with an optional RMII prefix; the function label does not
 prove RMII mode or active output behavior. The MII CRS predicate recognizes
 only exact `CRS`/`MII_CRS` names; compound CRS/CRS_DV and CRS/strap labels are
 unclassified. The status, clock, CRS_DV, and CRS rules do not infer PHY mode.
-None proves PHY behavior, MAC topology, PCB copper, or external connectivity.
+The TX_CLK rule recognizes only exact `TX_CLK`/`MII_TX_CLK`; `GTX_CLK`,
+`GMII_TX_CLK`, and compound mode/strap labels remain unclassified because the
+MII clock-output role does not establish the selected interface mode. None of
+the rules proves PHY behavior, MAC topology, PCB copper, or external
+connectivity.

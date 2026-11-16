@@ -26,6 +26,7 @@ CLOCK_RULE_ID = "bus.ethernet_rx_clock_outputs_share_net"
 STATUS_RULE_ID = "bus.ethernet_rx_status_outputs_share_net"
 CRS_DV_RULE_ID = "bus.ethernet_crs_dv_outputs_share_net"
 CRS_RULE_ID = "bus.ethernet_crs_outputs_share_net"
+TX_CLOCK_RULE_ID = "bus.ethernet_tx_clock_outputs_share_net"
 
 
 def ethernet_rx_output_sharing_fixture_lane(
@@ -45,8 +46,8 @@ def ethernet_rx_output_sharing_fixture_lane(
     }
     source_hashes = {case: digest(source) for case, source in sources.items()}
     expected_hashes = {
-        "fault": "91e0021637c127bc8c93cc09f835e3f8f005fd542a6fc4fb8f4ce612fc4786a6",
-        "control": "55ce474a8d3fba3f8690d340e3044f617a877d0cf77d1d6039d09c7c614a5903",
+        "fault": "296aeafe91a9be95d48947e473749d329983b0dc59d79140716e47ae03a94f46",
+        "control": "5e9f58445de1bdace9682515fcfd716347bef973881252b85e4b5b910bb39182",
     }
     if source_hashes != expected_hashes:
         raise ValueError("Ethernet RX-sharing fixture sources changed from their reviewed hashes")
@@ -184,6 +185,12 @@ def ethernet_rx_output_sharing_fixture_lane(
                         raise ValueError(
                             "Native Ethernet CRS fixture no longer isolates ERC typing"
                         )
+                    if observed.pin_functions.get(f"{reference}.7") != "TX_CLK":
+                        raise ValueError("Native Ethernet TX_CLK fixture lost its pin function")
+                    if observed.pin_electrical_types.get(f"{reference}.7") != "passive":
+                        raise ValueError(
+                            "Native Ethernet TX_CLK fixture no longer isolates ERC typing"
+                        )
                     if reference in observed.dnp_components:
                         raise ValueError(
                             "Native Ethernet RX-sharing endpoint unexpectedly became DNP"
@@ -206,6 +213,8 @@ def ethernet_rx_output_sharing_fixture_lane(
                     )
                 if set(observed.nets.get("MII_CRS_SHARED", ())) != {"U1.6", "U2.6"}:
                     raise ValueError("Native Ethernet RX-sharing fault did not preserve shared CRS")
+                if set(observed.nets.get("MII_TX_CLK_SHARED", ())) != {"U1.7", "U2.7"}:
+                    raise ValueError("Native Ethernet TX_CLK fault did not preserve the shared net")
             if case == "control" and run == "first":
                 if set(observed.nets.get("RXD0_TXD_LINK", ())) != {"U1.1", "U2.2"}:
                     raise ValueError(
@@ -231,6 +240,10 @@ def ethernet_rx_output_sharing_fixture_lane(
                     raise ValueError("Native Ethernet control did not isolate U1.CRS")
                 if observed.nets.get("PHY2_CRS") != ("U2.6",):
                     raise ValueError("Native Ethernet control did not isolate U2.CRS")
+                if observed.nets.get("PHY1_TX_CLK") != ("U1.7",):
+                    raise ValueError("Native Ethernet control did not isolate U1.TX_CLK")
+                if observed.nets.get("PHY2_TX_CLK") != ("U2.7",):
+                    raise ValueError("Native Ethernet control did not isolate U2.TX_CLK")
             normalized = json.dumps(
                 observed.model_dump(mode="json"),
                 sort_keys=True,
@@ -255,7 +268,14 @@ def ethernet_rx_output_sharing_fixture_lane(
                 ),
                 DesignLintPolicy(),
             )
-            for rule_id in (RULE_ID, CLOCK_RULE_ID, STATUS_RULE_ID, CRS_DV_RULE_ID, CRS_RULE_ID):
+            for rule_id in (
+                RULE_ID,
+                CLOCK_RULE_ID,
+                STATUS_RULE_ID,
+                CRS_DV_RULE_ID,
+                CRS_RULE_ID,
+                TX_CLOCK_RULE_ID,
+            ):
                 subjects[(case, run, rule_id)] = tuple(
                     item.subject for item in report.findings if item.rule_id == rule_id
                 )
@@ -279,6 +299,10 @@ def ethernet_rx_output_sharing_fixture_lane(
         },
         CRS_RULE_ID: {
             "fault": ("U1, U2: Ethernet PHY CRS outputs share MII_CRS_SHARED",),
+            "control": (),
+        },
+        TX_CLOCK_RULE_ID: {
+            "fault": ("U1, U2: Ethernet PHY TX_CLK outputs share MII_TX_CLK_SHARED",),
             "control": (),
         },
     }

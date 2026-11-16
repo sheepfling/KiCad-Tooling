@@ -19,6 +19,7 @@ CLOCK_RULE_ID = "bus.ethernet_rx_clock_outputs_share_net"
 STATUS_RULE_ID = "bus.ethernet_rx_status_outputs_share_net"
 CRS_DV_RULE_ID = "bus.ethernet_crs_dv_outputs_share_net"
 CRS_RULE_ID = "bus.ethernet_crs_outputs_share_net"
+TX_CLOCK_RULE_ID = "bus.ethernet_tx_clock_outputs_share_net"
 
 pytestmark = [
     pytest.mark.design_lint,
@@ -43,6 +44,7 @@ PROJECT_TOOLCHAINS = tuple(
 @pytest.mark.design_lint_rule(rule_id=STATUS_RULE_ID)
 @pytest.mark.design_lint_rule(rule_id=CRS_DV_RULE_ID)
 @pytest.mark.design_lint_rule(rule_id=CRS_RULE_ID)
+@pytest.mark.design_lint_rule(rule_id=TX_CLOCK_RULE_ID)
 def test_native_ethernet_rx_output_sharing_fault_and_control_repeat(
     tmp_path: Path, version: str, image: str
 ) -> None:

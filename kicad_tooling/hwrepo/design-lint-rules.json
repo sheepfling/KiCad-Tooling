@@ -8622,6 +8622,50 @@
       "implementation_owner": "kicad_tooling/hwrepo/ethernet_crs_output_sharing.py#ethernet_crs_output_sharing_candidates"
     },
     {
+      "rule_id": "bus.ethernet_tx_clock_outputs_share_net",
+      "title": "Ethernet PHY TX_CLK outputs share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining fitted components, bounded Ethernet PHY identity text, TX_CLK functions, exact assignments, native pin types, and complete pin inventory",
+      "predicate": "For fitted U/IC components with explicit bounded Ethernet PHY identity text, recognize only exact TX_CLK or MII_TX_CLK function labels. Require each counted pin in a complete unique native pin inventory, one exact net assignment, and a supported output-capable native type. Emit one REVIEW candidate when transmit-clock pins from at least two distinct components share one exact non-return net, with at most one counted pin per component. Suppress a group if recognized endpoint evidence on that net is incomplete or ambiguous, and leave two native output pins to ERC.",
+      "supported_kicad_versions": [
+        "Digest-pinned KiCad 10.0.0 and 10.0.5 native fixture exports; the selected project's exact version is checked before export"
+      ],
+      "limitations": [
+        "Identity matching is limited to explicit Ethernet/ETH PHY or transceiver text and the reviewed LAN87xx, DP83xx, RTL82xx, and KSZ80xx value families. Other manufacturer naming conventions and generic PHY labels remain unclassified.",
+        "TX_CLK function text does not prove that MII mode is selected or that the pin is an active output. Only TX_CLK and MII_TX_CLK are recognized; GTX_CLK, GMII_TX_CLK, and compound mode/strap labels remain unclassified. This is configurable REVIEW evidence, not a defect verdict or a universal required topology.",
+        "DNP, connector references, return-like nets, unsupported types, incomplete inventory, open or multiply assigned pins, duplicate TX_CLK roles per component, and two native output pins are skipped. The rule does not establish firmware mode, endpoint selection, PCB copper continuity, or off-board wiring."
+      ],
+      "fault_fixtures": [
+        "tests.test_ethernet_tx_clock_output_sharing.test_shared_mii_tx_clock_from_fitted_identified_phys_is_reviewed",
+        "tests.test_design_lint_mcp_parity_ethernet_rx_output_sharing.test_ethernet_tx_clock_output_sharing_cli_mcp_parity",
+        "tests.test_ethernet_rx_output_sharing_native_fixture_lane.test_native_ethernet_rx_output_sharing_fault_and_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_ethernet_tx_clock_output_sharing.test_exact_mii_aliases_and_separate_or_other_clock_controls",
+        "tests.test_ethernet_tx_clock_output_sharing.test_dnp_open_ambiguous_incomplete_and_duplicate_role_evidence_suppress",
+        "tests.test_ethernet_rx_output_sharing_native_fixture_lane.test_native_ethernet_rx_output_sharing_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_ethernet_tx_clock_output_sharing.test_fingerprint_is_order_stable_and_separating_the_clock_nets_clears_it"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/ethernet_tx_clock_output_sharing.py#ethernet_tx_clock_output_sharing_candidates",
+        "kicad_tooling/hwrepo/ethernet_tx_clock_output_sharing.py#ethernet_phy_tx_clock_output_role",
+        "kicad_tooling/hwrepo/ethernet_phy_identity.py#explicit_ethernet_phy_identity",
+        "kicad_tooling/hwrepo/signal_pair_output_sharing.py#signal_output_sharing_groups",
+        "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/ethernet_tx_clock_output_sharing.py#ethernet_tx_clock_output_sharing_candidates"
+    },
+    {
       "rule_id": "bus.ethernet_rx_outputs_share_net",
       "title": "Ethernet PHY receive-data outputs share one net",
       "status": "active",

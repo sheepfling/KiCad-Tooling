@@ -24,6 +24,7 @@ import tests.design_lint_fixtures.ethernet_crs_output_sharing as _ethernet_crs_o
 import tests.design_lint_fixtures.ethernet_rx_clock_output_sharing as _ethernet_rx_clock_fixtures
 import tests.design_lint_fixtures.ethernet_rx_output_sharing as _ethernet_rx_output_fixtures
 import tests.design_lint_fixtures.ethernet_rx_status_output_sharing as _ethernet_rx_status_fixtures
+import tests.design_lint_fixtures.ethernet_tx_clock_output_sharing as _ethernet_tx_clock_fixtures
 import tests.design_lint_fixtures.i2c_addresses as _tests_i2c_address_fixtures
 import tests.design_lint_fixtures.i2c_signal_label as _i2c_signal_label_fixtures
 import tests.design_lint_fixtures.ic_decoupling as _ic_decoupling_fixtures
@@ -211,6 +212,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
             status_net_name="RMII_CRS_DV_SHARED",
         ),
         _ethernet_crs_output_fixtures.ethernet_mii_crs_output_netlist(),
+        _ethernet_tx_clock_fixtures.ethernet_mii_tx_clock_output_netlist(),
         _tests_test_can_excess_termination._can_netlist_with_direct_terminators(
             ("108R", "120R", "132R")
         ),
