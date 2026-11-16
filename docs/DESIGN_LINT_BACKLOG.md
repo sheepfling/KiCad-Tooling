@@ -872,7 +872,16 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc866):** LINT-531 reviews
+- **Latest published lint-gate checkpoint (v0.5.3rc867):** LINT-532 reviews
+  conflicting duplicate placed-symbol custom fields. Hosted acceptance passed in
+  GitHub Actions run `43925303789`: 517 selected tests passed and 10,018 were
+  deselected, including digest-pinned KiCad 10.0.0, 10.0.5, and 10.0.8 native
+  fault/control exports. Tag-scope resolution, Ruff, both Alphus profiles,
+  Rumdl, mdrepo, module-size preflight, Linux and Windows type checks,
+  wheel/sdist builds, installed-wheel checks, external/adapted template
+  verification, and playtest passed. Package and preview jobs were skipped
+  under prerelease policy.
+- **Previous published lint-gate checkpoint (v0.5.3rc866):** LINT-531 reviews
   conflicting direct placed-symbol `Datasheet` properties whose later value
   silently wins in native export. Hosted acceptance passed in GitHub Actions
   run [43917633593](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43917633593):
@@ -30333,6 +30342,10 @@ acceptance threads while new lint features proceed:
   Alphus profiles, Rumdl, mdrepo, module-size preflight, Pyright, Windows type
   checks, wheel/sdist builds, installed-package checks, and external/adapted
   template verification and playtest passed. Receipt: `build/ci/run-r2gmu07c`.
+- **Hosted acceptance:** GitHub Actions run `43925303789` passed against tag
+  `v0.5.3rc867` at commit `aebcb4e9e6237e9291ec0e8cea7cb78b6ad3a3da`, with
+  517 selected tests passed and 10,018 deselected. The job ran the three
+  digest-pinned native KiCad images and uploaded the scoped CI receipt.
 
 ## Completion and release gate
 
