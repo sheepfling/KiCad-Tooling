@@ -60,6 +60,11 @@ _LINT_AREA_MODULES = MappingProxyType(
         ),
         "schematic_lint": frozenset(
             {
+                "tests/test_schematic_reserved_dnp_property.py",
+                "tests/test_native_netlist_dnp_field_collision.py",
+                "tests/test_design_lint_mcp_parity_schematic_reserved_dnp_property.py",
+                "tests/test_schematic_reserved_dnp_property_native.py",
+                "tests/test_design_lint_architecture_schematic_reserved_dnp_property.py",
                 "tests/test_schematic_geometry_text.py",
                 "tests/test_design_lint_schematic_text.py",
                 "tests/test_schematic_erc_unknown_rule_key.py",
@@ -229,6 +234,9 @@ _LINT_AREA_MODULES = MappingProxyType(
         ),
         "evidence_lint": frozenset(
             {
+                "tests/test_schematic_reserved_dnp_property.py",
+                "tests/test_native_netlist_dnp_field_collision.py",
+                "tests/test_schematic_reserved_dnp_property_native.py",
                 "tests/test_connector_fixture_lane_evidence.py",
                 "tests/test_ethernet_data_labels.py",
                 "tests/test_ethernet_management_labels.py",

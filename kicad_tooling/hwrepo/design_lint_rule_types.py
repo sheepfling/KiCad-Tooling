@@ -402,6 +402,7 @@ DesignLintRuleId = Literal[
     "schematic.erc_nonstring_severity_value",
     "schematic.conflicting_placed_value_properties",
     "schematic.conflicting_placed_footprint_properties",
+    "schematic.reserved_dnp_property_collision",
     "schematic.missing_embedded_symbol_definition",
     "schematic.duplicate_embedded_symbol_definition",
     "schematic.embedded_symbol_pin_number_mismatch",

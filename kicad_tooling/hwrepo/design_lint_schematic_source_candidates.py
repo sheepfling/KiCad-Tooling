@@ -13,6 +13,9 @@ from .schematic_conflicting_placed_value import (
     source_bound_conflicting_placed_value_candidates,
 )
 from .schematic_erc_source_candidates import source_bound_schematic_erc_candidates
+from .schematic_reserved_dnp_property import (
+    source_bound_reserved_dnp_property_candidates,
+)
 from .schematic_source_integrity import (
     duplicate_embedded_library_symbol_candidates,
     duplicate_schematic_object_uuid_candidates,
@@ -32,6 +35,7 @@ def collect_schematic_source_candidates(
         *source_bound_schematic_erc_candidates(root, config, source_hashes),
         *source_bound_conflicting_placed_value_candidates(root, config, source_hashes),
         *source_bound_conflicting_placed_footprint_candidates(root, config, source_hashes),
+        *source_bound_reserved_dnp_property_candidates(root, config, source_hashes),
         *missing_embedded_library_symbol_candidates(root, config, source_hashes),
         *duplicate_embedded_library_symbol_candidates(root, config, source_hashes),
         *duplicate_schematic_object_uuid_candidates(root, config, source_hashes),

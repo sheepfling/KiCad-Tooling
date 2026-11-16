@@ -2012,7 +2012,8 @@
         "tests.test_peer_power_assignment_cli_mcp.test_named_peer_power_input_all_open_matches_between_cli_and_mcp",
         "tests.test_design_lint_mcp_parity_reconciliation.test_design_lint_reconciliation_cli_mcp_parity",
         "tests.test_design_lint_mcp_parity_schematic_conflicting_placed_value.test_conflicting_placed_value_review_matches_between_cli_and_mcp",
-        "tests.test_design_lint_mcp_parity_schematic_conflicting_placed_footprint.test_conflicting_placed_footprint_review_matches_between_cli_and_mcp"
+        "tests.test_design_lint_mcp_parity_schematic_conflicting_placed_footprint.test_conflicting_placed_footprint_review_matches_between_cli_and_mcp",
+        "tests.test_design_lint_mcp_parity_schematic_reserved_dnp_property.test_reserved_dnp_property_review_matches_between_cli_and_mcp"
       ]
     },
     {

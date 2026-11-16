@@ -1104,7 +1104,16 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 416 active rules.
+The catalog currently contains 417 active rules.
+
+`schematic.reserved_dnp_property_collision` reviews a direct lowercase `dnp`
+property on placed symbols because KiCad exports that field using the same
+property name as its native Do Not Populate marker. The source-bound lint and
+the netlist parser's collision handling are supported only on measured KiCad
+10.0.0, 10.0.5, and 10.0.8 versions. There, parsing uses the empty native
+marker when a colliding custom field is present, so the field's value does not
+change fitted-part population evidence. A custom field does not determine the
+intended assembly population; the finding remains REVIEW.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports

@@ -21,6 +21,10 @@ from .project_models import (
 )
 from .return_nets import return_net_groups
 
+_DNP_FIELD_COLLISION_TOOL_VERSIONS = frozenset(
+    {"Eeschema 10.0.0", "Eeschema 10.0.5", "Eeschema 10.0.8"}
+)
+
 
 def _mapping(value: JsonValue, label: str) -> Mapping[str, JsonValue]:
     if not isinstance(value, dict):
@@ -111,6 +115,8 @@ def native_report_examples(path: Path, kind: str) -> tuple[str, ...]:
 def read_netlist(path: Path) -> NetlistContract:
     """Parse actual KiCad names, including hierarchical nets and unassigned footprints."""
     tree = ET.parse(path).getroot()
+    native_tool = tree.findtext("./design/tool", "")
+    dnp_field_collision_measured = native_tool in _DNP_FIELD_COLLISION_TOOL_VERSIONS
     library_pins: dict[tuple[str, str], dict[str, str]] = {}
     library_pin_types: dict[tuple[str, str], dict[str, str]] = {}
     library_pin_numbers: dict[tuple[str, str], tuple[str, ...]] = {}
@@ -143,16 +149,36 @@ def read_netlist(path: Path) -> NetlistContract:
         if ref in components:
             raise ValueError("Duplicate reference in netlist")
         dnp_properties = comp.findall("./property[@name='dnp']")
-        if len(dnp_properties) > 1:
-            raise ValueError(f"Repeated native dnp property at {ref}")
-        if dnp_properties:
-            property_ = dnp_properties[0]
-            if len(property_):
+        custom_dnp_fields = comp.findall("./fields/field[@name='dnp']")
+        if custom_dnp_fields and dnp_field_collision_measured:
+            native_dnp_properties = [
+                property_
+                for property_ in dnp_properties
+                if "value" not in property_.attrib
+                and not (property_.text or "").strip()
+                and not len(property_)
+            ]
+            if len(native_dnp_properties) > 1:
+                raise ValueError(f"Repeated native dnp property at {ref}")
+            if any(
+                len(property_) or (property_.text or "").strip()
+                for property_ in dnp_properties
+                if property_ not in native_dnp_properties
+            ):
                 raise ValueError(f"Nested native dnp property at {ref}")
-            dnp_value = property_.get("value", property_.text or "").strip().casefold()
-            if dnp_value not in {"", "true", "yes", "1"}:
-                raise ValueError(f"Ambiguous native dnp property at {ref}")
-            dnp_components.append(ref)
+            if native_dnp_properties:
+                dnp_components.append(ref)
+        else:
+            if len(dnp_properties) > 1:
+                raise ValueError(f"Repeated native dnp property at {ref}")
+            if dnp_properties:
+                property_ = dnp_properties[0]
+                if len(property_):
+                    raise ValueError(f"Nested native dnp property at {ref}")
+                dnp_value = property_.get("value", property_.text or "").strip().casefold()
+                if dnp_value not in {"", "true", "yes", "1"}:
+                    raise ValueError(f"Ambiguous native dnp property at {ref}")
+                dnp_components.append(ref)
         components[ref] = ComponentContract(
             value=comp.findtext("value", ""),
             footprint=comp.findtext("footprint", ""),

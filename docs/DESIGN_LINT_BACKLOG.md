@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 416 rules are implemented with synthetic regression coverage.
+The following 417 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 416 active rules.
+The catalog currently contains 417 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -832,6 +832,7 @@ skipped under prerelease policy.
 - `schematic.duplicate_embedded_symbol_definition`
 - `schematic.conflicting_placed_value_properties`
 - `schematic.conflicting_placed_footprint_properties`
+- `schematic.reserved_dnp_property_collision`
 - `schematic.duplicate_object_uuid`
 - `schematic.embedded_symbol_pin_number_mismatch`
 - `schematic.missing_embedded_symbol_definition`
@@ -4630,7 +4631,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 416 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 417 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -30082,6 +30083,55 @@ acceptance threads while new lint features proceed:
   cross-platform type checks, package build, and installed-wheel checks against
   an external project passed. Package and preview jobs were skipped under
   prerelease policy.
+
+#### LINT-529 — Review placed-symbol properties that collide with native DNP metadata
+
+- **Priority:** P1 schematic population evidence. A direct custom property
+  named lowercase `dnp` collides with KiCad's native Do Not Populate metadata
+  in exported netlists.
+- **Status:** Implemented as
+  `schematic.reserved_dnp_property_collision`, a source-hashed default-REVIEW
+  prompt for exact KiCad 10.0.0, 10.0.5, and 10.0.8 versions.
+- **Predicate:** Review every well-formed direct lowercase `dnp` property on a
+  placed symbol in the verified hierarchical schematic tree. Preserve its
+  source-ordered values and lines, the symbol's native DNP flag, reference,
+  UUID, source path, and SHA-256. Ignore embedded library definitions.
+- **Native evidence:** Digest-pinned Docker exports on all three measured
+  versions show that a custom `dnp=yes` field on a fitted symbol appears as a
+  valued `dnp` property and was previously misread by `read_netlist` as native
+  DNP. With the native DNP flag set and a custom `dnp=no` field, the exporter
+  emits the valued custom property and a separate empty native marker; the
+  old parser rejected these as repeated DNP metadata. Parsing now uses the
+  empty marker as native DNP when the custom field is present. An embedded
+  library-only `dnp` field remains a quiet control and does not alter fitted
+  population. These results apply only to the synthetic fixtures and pinned
+  images.
+- **Limitations:** This is a name-collision review, not a decision about the
+  field's purpose or assembly intent. Only direct lowercase properties on
+  placed symbols and the three measured versions are covered. REVIEW is the
+  default; projects can select review, block, off, or exact-fingerprint ignore.
+- **Regression coverage:** Tool-owned fixtures cover fitted custom `dnp=yes`,
+  native DNP with custom `dnp=no`, ordinary fitted, native-DNP, and
+  library-only controls; source hashes, project kind and version scope,
+  determinism, CLI/MCP parity, parser behavior, and repeatable native exports.
+  No proprietary project source or fixture is included. See the
+  [synthetic fixture README](../tests/fixtures/design_lint/reserved-dnp-property/README.md).
+- **Selection:** Run
+  `tests/test_schematic_reserved_dnp_property.py`,
+  `tests/test_native_netlist_dnp_field_collision.py`, and
+  `tests/test_design_lint_mcp_parity_schematic_reserved_dnp_property.py` with
+  `design_lint and schematic_lint and
+  design_lint_rule(rule_id="schematic.reserved_dnp_property_collision")`.
+  Run `tests/test_schematic_reserved_dnp_property_native.py` with Docker,
+  `KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1`, and the same rule
+  selector plus `native_kicad`.
+- **Local acceptance:** Rule-scoped `scripts/ci.py` passed in
+  `build/ci/run-0ib7wv9e`: 514 tests passed and 9,973 were deselected. The run
+  included the digest-pinned KiCad 10.0.0, 10.0.5, and 10.0.8 Docker
+  fault/control exports, Ruff, both Alphus profiles, Rumdl, mdrepo,
+  module-size checks, Linux and Windows Pyright, wheel/sdist builds, installed-
+  wheel checks, and external/adapted template verification and playtest.
+- **Hosted acceptance:** Pending the published rule-scoped tag and GitHub Actions.
 
 ## Completion and release gate
 

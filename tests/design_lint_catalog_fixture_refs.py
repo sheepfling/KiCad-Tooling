@@ -36,6 +36,9 @@ from tests.design_lint_power_fixture_refs import (
     OPEN_DRAIN_CONTROL_PARITY_FIXTURES,
     SUPPLY_RANGE_MAP_COVERAGE_PARITY_FIXTURES,
 )
+from tests.design_lint_reserved_dnp_fixture_refs import (
+    RESERVED_DNP_PROPERTY_PARITY_FIXTURES,
+)
 from tests.design_lint_swd_generic_connector_parity_fixtures import (
     SWD_GENERIC_CONNECTOR_PARITY_FIXTURES,
 )
@@ -128,6 +131,7 @@ _PARITY_FIXTURES_BY_RULE = MappingProxyType(
                 ),
             }
         ),
+        **RESERVED_DNP_PROPERTY_PARITY_FIXTURES,
         "component.peer_power_output_unconnected": MappingProxyType(
             {
                 "fault_fixtures": _refs(

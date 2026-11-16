@@ -49,6 +49,11 @@ SCHEMATIC_ERC_THEME_SUITES = (
     "test_schematic_erc_duplicate_section_native.py",
 )
 SCHEMATIC_SOURCE_INTEGRITY_SUITES = (
+    "test_schematic_reserved_dnp_property.py",
+    "test_native_netlist_dnp_field_collision.py",
+    "test_design_lint_mcp_parity_schematic_reserved_dnp_property.py",
+    "test_schematic_reserved_dnp_property_native.py",
+    "test_design_lint_architecture_schematic_reserved_dnp_property.py",
     "test_schematic_missing_embedded_symbol_definition.py",
     "test_design_lint_mcp_parity_schematic_missing_embedded_symbol_definition.py",
     "test_schematic_missing_embedded_symbol_definition_native.py",

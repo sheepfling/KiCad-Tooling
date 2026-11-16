@@ -19655,6 +19655,62 @@
       ]
     },
     {
+      "rule_id": "schematic.reserved_dnp_property_collision",
+      "title": "Placed symbol's dnp field collides with native population metadata",
+      "theme": "schematic",
+      "implementation_owner": "kicad_tooling/hwrepo/schematic_reserved_dnp_property.py#source_bound_reserved_dnp_property_candidates",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "SHA-256 verified hierarchical schematic sources, direct placed-symbol lowercase dnp properties with source-order values and lines, symbol reference and UUID, and digest-pinned KiCad 10.0.0, 10.0.5, and 10.0.8 netlist exports",
+      "predicate": "For a source-hashed schematic tree at an exactly measured KiCad version, emit one source-localized REVIEW candidate for each placed symbol with one or more well-formed direct properties named exactly lowercase dnp. Preserve all field values and source lines, native schematic dnp flag, reference, UUID, source path, and source SHA-256. Do not inspect embedded library definitions.",
+      "supported_kicad_versions": [
+        "10.0.0",
+        "10.0.5",
+        "10.0.8"
+      ],
+      "limitations": [
+        "This is a reserved-name collision prompt, not a decision about field intent or assembly population. Projects may select review, block, off, or an exact-fingerprint ignore.",
+        "The predicate covers only well-formed direct lowercase dnp properties on placed symbols. Uppercase or differently named fields, malformed properties, and unsupported schematic structures are not interpreted.",
+        "Embedded library-definition dnp fields are outside the predicate; the measured exporter retains them as ordinary fields and does not emit the placed-component native dnp property for them.",
+        "Native export behavior is measured only for digest-pinned KiCad 10.0.0, 10.0.5, and 10.0.8 images. Other patches and major versions remain unsupported until measured.",
+        "The parser distinguishes the empty native dnp marker from colliding custom field values, but this lint does not establish intended population or manufacturing approval."
+      ],
+      "fault_fixtures": [
+        "tests.test_schematic_reserved_dnp_property.test_placed_dnp_property_is_localized_and_controls_are_quiet",
+        "tests.test_schematic_reserved_dnp_property.test_finding_is_deterministic_and_bound_to_current_source",
+        "tests.test_native_netlist_dnp_field_collision.test_custom_dnp_value_does_not_mark_a_fitted_part_as_dnp",
+        "tests.test_native_netlist_dnp_field_collision.test_native_empty_marker_wins_over_colliding_custom_value",
+        "tests.test_design_lint_mcp_parity_schematic_reserved_dnp_property.test_reserved_dnp_property_review_matches_between_cli_and_mcp",
+        "tests.test_schematic_reserved_dnp_property_native.test_native_exports_preserve_population_and_review_reserved_fields"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_schematic_reserved_dnp_property.test_placed_dnp_property_is_localized_and_controls_are_quiet",
+        "tests.test_schematic_reserved_dnp_property.test_native_version_boundary_is_exact",
+        "tests.test_schematic_reserved_dnp_property.test_pcb_only_projects_are_out_of_scope",
+        "tests.test_native_netlist_dnp_field_collision.test_native_empty_marker_remains_dnp_without_custom_field",
+        "tests.test_native_netlist_dnp_field_collision.test_invalid_native_dnp_value_remains_an_error_without_custom_field",
+        "tests.test_native_netlist_dnp_field_collision.test_unmeasured_kicad_version_keeps_legacy_dnp_interpretation",
+        "tests.test_schematic_reserved_dnp_property_native.test_native_exports_preserve_population_and_review_reserved_fields"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_schematic_reserved_dnp_property.test_finding_is_deterministic_and_bound_to_current_source"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/schematic_reserved_dnp_property.py#source_bound_reserved_dnp_property_candidates",
+        "kicad_tooling/hwrepo/native_report_parsing.py#read_netlist",
+        "kicad_tooling/hwrepo/schematic_source_tree.py#verified_schematic_sources",
+        "kicad_tooling/hwrepo/schematic_geometry_source.py#schematic_direct_property_value_lines",
+        "kicad_tooling/hwrepo/kicad_sexpr.py#sexpr_atoms",
+        "kicad_tooling/hwrepo/design_lint_schematic_source_candidates.py#collect_schematic_source_candidates",
+        "kicad_tooling/hwrepo/design_lint_project_inspection.py#inspect_design_lint_request"
+      ]
+    },
+    {
       "rule_id": "schematic.missing_embedded_symbol_definition",
       "title": "Placed schematic symbol has no embedded definition",
       "theme": "schematic",

@@ -83,7 +83,6 @@ FOOTPRINT_PEER_PARITY_FIXTURES = MappingProxyType(
         "connector.footprint_peer_generic_power_pin_open_outlier": MappingProxyType(
             {
                 "fault_fixtures": (
-                    "tests.test_connector_footprint_peer_generic_power_partial_open.test_generic_power_partial_open_peer_pattern_is_opt_in_review",
                     "tests.test_design_lint_mcp_parity_connector_generic_power_partial_open.test_generic_power_partial_open_cli_mcp_fault_and_control_parity",
                 ),
                 "valid_control_fixtures": (
