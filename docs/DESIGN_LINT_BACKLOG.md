@@ -29270,7 +29270,9 @@ acceptance threads while new lint features proceed:
   selected tests; the remaining parity case included unrelated exact-scope
   DRC checks without native DRC receipts. Follow-up `v0.5.3rc842` disables those
   checks in synthetic parity policy and skips DRC receipt matching when the
-  project has no saved exclusions. Hosted retest is pending.
+  project has no saved exclusions. Run `43796794770` passed for commit
+  `21fb67e3` and tag `v0.5.3rc842`, including the installed-wheel rehearsal
+  against the separate public project checkout.
 
 ## Completion and release gate
 
