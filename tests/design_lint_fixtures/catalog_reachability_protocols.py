@@ -35,6 +35,9 @@ from tests.design_lint_fixtures.i3c_signal_named_rail import i3c_signal_named_ra
 from tests.design_lint_fixtures.jtag_signal_named_rail import jtag_signal_named_rail_netlist
 from tests.design_lint_fixtures.open_drain_control_voltage import open_drain_control_voltage_netlist
 from tests.design_lint_fixtures.rs485_line_named_rail import rs485_line_named_rail_netlist
+from tests.design_lint_fixtures.rs485_receiver_output_sharing import (
+    rs485_receiver_output_sharing_netlist,
+)
 from tests.design_lint_fixtures.spi_signal_named_rail import (
     spi_connector_signal_on_named_rail_netlist,
 )
@@ -86,6 +89,7 @@ def protocol_rule_ids() -> set[str]:
     )
     emitted.update(item.rule_id for item in candidates(rs485_line_named_rail_netlist()))
     emitted.update(item.rule_id for item in candidates(rs485_line_named_rail_netlist(pin="J1.1")))
+    emitted.update(item.rule_id for item in candidates(rs485_receiver_output_sharing_netlist()))
     emitted.update(
         item.rule_id for item in candidates(usb_signal_on_named_rail_netlist(pin="J1.1"))
     )

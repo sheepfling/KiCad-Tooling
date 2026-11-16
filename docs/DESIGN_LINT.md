@@ -1104,7 +1104,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 400 active rules.
+The catalog currently contains 401 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -10251,6 +10251,14 @@ scope. A shared net may be intentional for echo or single-wire operation; the
 default is `review`, and the rule does not infer the required transceiver mode
 or PCB continuity. See the
 [fixture README](../tests/fixtures/design_lint/rs485-data-same-net/README.md).
+
+The configurable `bus.rs485_receiver_outputs_share_net` heuristic checks a different topology:
+receiver-output pins from multiple fitted, explicitly identified RS-485 transceivers assigned to one
+non-return schematic net. It requires unique native pin inventories and assignments, skips ambiguous
+role evidence, and leaves two native output-type pins to ERC. A muxed or otherwise controlled shared
+path can be valid, so this defaults to `review`; it does not model enable signals, establish project
+intent, or prove PCB continuity. See the
+[synthetic fault/control fixture record](../tests/fixtures/design_lint/rs485-receiver-output-sharing/README.md).
 
 The configurable `bus.rs485_generic_connector_pair_review` rule asks whether
 generic connector contacts on both exact line nets of an explicitly identified

@@ -372,6 +372,24 @@ def test_rs485_data_same_net_rule_uses_a_focused_predicate_owner() -> None:
     )
 
 
+def test_rs485_receiver_output_sharing_uses_a_focused_predicate_owner() -> None:
+    rule = next(
+        item
+        for item in rule_catalog().rules
+        if item.rule_id == "bus.rs485_receiver_outputs_share_net"
+    )
+    assert rule.theme == "interfaces"
+    assert rule.implementation_owner == (
+        "kicad_tooling/hwrepo/rs485_receiver_output_sharing.py#"
+        "rs485_receiver_output_sharing_candidates"
+    )
+    assert rule.implementation_owner in rule.implementation_refs
+    assert (
+        "kicad_tooling/hwrepo/rs485_data_functions.py#rs485_data_pin_role"
+        in rule.implementation_refs
+    )
+
+
 def test_rs485_named_rail_rule_uses_a_focused_predicate_owner() -> None:
     rule = next(
         item for item in rule_catalog().rules if item.rule_id == "bus.rs485_signal_on_named_rail"

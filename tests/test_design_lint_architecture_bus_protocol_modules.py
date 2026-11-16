@@ -41,6 +41,7 @@ BUS_ANALYSIS_MODULES = (
     "can_tx_rx_same_net.py",
     "design_lint_rs485_candidates.py",
     "rs485_data_functions.py",
+    "rs485_receiver_output_sharing.py",
     "rs485_signal_named_rail.py",
     "rs485_same_net.py",
     "rs485_ab_same_net.py",

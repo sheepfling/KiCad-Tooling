@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 400 rules are implemented with synthetic regression coverage.
+The following 401 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 400 active rules.
+The catalog currently contains 401 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -624,6 +624,7 @@ skipped under prerelease policy.
 - `bus.rs485_peer_reference_review`
 - `bus.rs485_data_direction_label_mismatch`
 - `bus.rs485_data_input_output_same_net`
+- `bus.rs485_receiver_outputs_share_net`
 - `bus.rs485_generic_connector_pair_review`
 - `bus.rs485_ab_same_net`
 - `bus.rs485_line_label_mismatch`
@@ -4594,7 +4595,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 400 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 401 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -29133,6 +29134,46 @@ acceptance threads while new lint features proceed:
   passed; each exported the four synthetic fixtures twice. Ruff, both Alphus
   profiles, Rumdl, mdrepo, Linux and Windows Pyright, wheel/sdist builds,
   installed-wheel checks, and the separate public-template playtest passed.
+- **Hosted acceptance:** Pending.
+
+#### LINT-511 — Review RS-485 receiver outputs shared across fitted endpoints
+
+- **Priority:** P1 interface coverage. Existing RS-485 checks review a
+  transceiver's own D/DI and R/RO same-net assignment, but did not compare
+  receiver outputs across distinct fitted transceivers. Native KiCad pin types
+  can be passive in a library, leaving ERC without an output-conflict finding.
+- **Predicate:** For each fitted U/IC with an explicit bounded RS-485 identity,
+  one recognized R/RO receiver-output function, unique complete pin-inventory
+  membership, one exact net assignment, and a supported native output type,
+  emit one REVIEW candidate when two or more distinct transceivers' receiver
+  outputs share one exact non-return net. Skip ambiguous role or assignment
+  evidence. Leave two native `output` pins to ERC.
+- **Boundary:** A switch, mux, or controlled tri-state path may make shared
+  receiver signals intentional. The rule does not model enable pins or
+  firmware state, infer RS-485 system topology, establish an approved pinout,
+  prove PCB copper, or establish off-board continuity. Projects can set
+  `review`, `block`, or `off`, or ignore an exact finding fingerprint.
+- **Fixtures:** Synthetic fault and separate-net control cover two fitted
+  passive-typed `RO` pins, bounded function aliases, non-RS-485 identities,
+  connector references, DNP, incomplete/ambiguous inventories, native
+  output-to-output ERC exclusion, return-like nets, exact policy modes, and
+  deterministic ordering. Tooling-owned KiCad schematics bind the shared-net
+  fault and separate-net control by SHA-256; the Docker lane exports each
+  twice with exact KiCad 10.0.0 and 10.0.5 images. No product or proprietary
+  project source is used. See the
+  [fixture record](../tests/fixtures/design_lint/rs485-receiver-output-sharing/README.md).
+- **Selection:** Run `tests/test_rs485_receiver_output_sharing.py` with
+  `design_lint and interface_lint and
+  design_lint_rule(rule_id="bus.rs485_receiver_outputs_share_net")`. The
+  native lane is
+  `tests/test_rs485_receiver_output_sharing_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_RS485_RECEIVER_OUTPUT_SHARING_FIXTURES=1`.
+- **Local acceptance:** The scoped package gate passed 104 selected tests,
+  including the two digest-pinned Docker fixture versions and CLI/MCP parity.
+  Ruff, module-boundary and shared-utility Alphus profiles, Rumdl, mdrepo,
+  Linux and Windows Pyright, wheel/sdist builds, installed-wheel checks, and
+  external and adapted public-template playtests passed. Logs are retained in
+  the ignored `build/ci/` directory.
 - **Hosted acceptance:** Pending.
 
 ## Completion and release gate
