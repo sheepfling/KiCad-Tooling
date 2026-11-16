@@ -842,6 +842,23 @@ Select the focused regression with:
   tests/test_usb_unmapped_asymmetric_series.py
 ```
 
+The value-comparison heuristic separately reviews two fitted USB data-line series resistors with
+different parseable nominal values when no current endpoint map records their per-line ranges.
+Different values may be intentional; the rule asks for project review and does not declare either
+value incorrect. Its tooling-owned fault/control pair and native export boundary are recorded in the
+[USB series-value fixture record](fixtures/design_lint/usb-series-value-mismatch-native/README.md).
+Select the focused suite with:
+
+```sh
+.venv/bin/python -I -m pytest -q \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.usb_unmapped_series_resistor_value_mismatch")' \
+  tests/test_usb_unmapped_series_resistor_values.py
+```
+
+For the exact-version Docker fault/control export, also select
+`tests/test_usb_unmapped_series_resistor_values_native.py` and set
+`KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1`.
+
 The bounded USB SuperSpeed peer-reference heuristic has a fast synthetic
 fault/control and boundary suite:
 

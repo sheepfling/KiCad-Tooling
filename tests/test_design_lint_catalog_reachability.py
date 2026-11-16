@@ -72,7 +72,6 @@ from tests.connector_footprint_peer_pin_inventory_support import (
 from tests.design_lint_fixtures.catalog_reachability import (
     catalog_reachability_rule_ids,
     mapped_connector_rule_ids,
-    protocol_peer_candidate_rule_ids,
 )
 from tests.design_lint_fixtures.catalog_reachability_mapped_contact_sharing import (
     mapped_contact_sharing_rule_ids,
@@ -86,6 +85,9 @@ from tests.design_lint_fixtures.catalog_reachability_pcb_differential_pair_route
 )
 from tests.design_lint_fixtures.catalog_reachability_pcb_power_width import (
     power_pin_width_map_rule_ids,
+)
+from tests.design_lint_fixtures.catalog_reachability_protocol_peers import (
+    protocol_peer_candidate_rule_ids,
 )
 from tests.design_lint_fixtures.catalog_reachability_protocols import protocol_rule_ids
 from tests.design_lint_fixtures.component_catalog_reachability import (

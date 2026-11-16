@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 422 rules are implemented with synthetic regression coverage.
+The following 423 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 422 active rules.
+The catalog currently contains 423 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -872,13 +872,19 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc869):** LINT-534 reviews
+- **Latest lint-gate tag (v0.5.3rc870; hosted acceptance pending):** LINT-535
+  reviews differing parsed USB 2.0 D+/D− series-resistor values when no current
+  project map records the per-line value ranges. Local scoped acceptance passed
+  517 selected tests and 10,055 deselected, including digest-pinned KiCad 10.0.0
+  and 10.0.5 Docker exports, package/type checks, and external/adapted public
+  template rehearsal. Hosted acceptance is pending.
+- **Previous published lint-gate checkpoint (v0.5.3rc869):** LINT-534 reviews
   unmapped USB 2.0 D+/D− paths with a series resistor on one data line and a
   direct path on the other. Local scoped acceptance passed 516 selected tests
   and 10,042 deselected. Hosted acceptance passed in GitHub Actions run
-  `43939908539`, including digest-pinned native exports, external and adapted project
-  verification, and playtest. Package and preview jobs were skipped under
-  prerelease policy.
+  `43939908539`, including digest-pinned native exports, external and adapted
+  project verification, and playtest. Package and preview jobs were skipped
+  under prerelease policy.
 - **Previous published lint-gate checkpoint (v0.5.3rc868):** LINT-533 reviews
   unmapped multi-stage USB 2.0 resistor paths. Local scoped acceptance passed
   512 selected tests and 10,033 deselected, including the digest-pinned KiCad
@@ -900,7 +906,7 @@ standalone parity work when it closes a demonstrated feature regression.
 - **Previous published lint-gate checkpoint (v0.5.3rc866):** LINT-531 reviews
   conflicting direct placed-symbol `Datasheet` properties whose later value
   silently wins in native export. Hosted acceptance passed in GitHub Actions
-  run [43917633593](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43917633593):
+  run 43917633593:
   515 selected tests passed and 10,004 were deselected, including digest-pinned
   KiCad 10.0.0, 10.0.5, and 10.0.8 fault/control exports. Tag-scope resolution,
   Ruff, both Alphus profiles, Rumdl, mdrepo, module-size preflight, Linux and
@@ -29051,7 +29057,7 @@ acceptance threads while new lint features proceed:
   checks passed. The separate public-template checkout rehearsal runs in
   hosted acceptance.
 - **Hosted acceptance:** Tag `v0.5.3rc832` passed GitHub Actions run
-  [`43748573175`](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43748573175):
+  `43748573175`:
   480 selected tests passed and 9,767 were deselected. Digest-pinned KiCad
   10.0.0 and 10.0.5 fixtures, scoped type checks, wheel/sdist builds, and
   installed-wheel rehearsal against the separate public template checkout
@@ -29105,7 +29111,7 @@ acceptance threads while new lint features proceed:
   wheel/sdist builds, and installed-origin/version checks passed. The separate
   public-template checkout rehearsal is part of hosted acceptance.
 - **Hosted acceptance:** Tag `v0.5.3rc833` passed GitHub Actions run
-  [`43752362977`](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43752362977):
+  `43752362977`:
   484 selected tests passed and 9,768 were deselected. Repeated Docker fixtures
   passed on digest-pinned KiCad 10.0.0 and 10.0.5; tag-scope resolution, Ruff,
   Alphus, Rumdl, mdrepo, Linux and Windows type checks, wheel/sdist builds, and
@@ -29146,7 +29152,7 @@ acceptance threads while new lint features proceed:
   That synthetic case now uses a schematic project with source-bound KiCad
   settings and schematic inputs; both parity cases pass.
 - **Hosted acceptance:** Tag `v0.5.3rc834` passed GitHub Actions run
-  [`43756562298`](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43756562298):
+  `43756562298`:
   552 selected tests passed and 9,705 were deselected. The digest-pinned
   connector-only native fault/control ran on KiCad 10.0.0 and 10.0.5; the
   scoped type checks, package build/install, and external-template playtest
@@ -29184,7 +29190,7 @@ acceptance threads while new lint features proceed:
   (including the native fixture adapter), wheel/sdist builds, installed-wheel
   checks, and the external-template playtest passed.
 - **Hosted acceptance:** Annotated tag `v0.5.3rc835` passed GitHub Actions
-  [run `43759886796`](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43759886796)
+  run `43759886796`
   at commit `44defa6f`: 480 selected tests passed and 9,779 were deselected.
   The native fault/control fixtures passed on digest-pinned KiCad 10.0.0 and
   10.0.5 Docker images. Ruff formatting and lint, Alphus module boundaries and
@@ -29734,7 +29740,7 @@ acceptance threads while new lint features proceed:
   external/adapted public-template playtests passed. The 26-stage receipt is
   under `build/ci/run-g9owrcm4/`.
 - **Hosted acceptance:** Tag `v0.5.3rc849` passed GitHub Actions run
-  [`43822447521`](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43822447521):
+  `43822447521`:
   498 selected tests passed and 9,889 were deselected. Scoped lint checks,
   native fixture execution, Linux and Windows type checks, wheel/sdist builds,
   and installed-wheel rehearsal against the separate public template checkout
@@ -30034,7 +30040,7 @@ acceptance threads while new lint features proceed:
   preflight, Linux and Windows Pyright, wheel/sdist builds, installed-package
   checks, external-template checks, and the adapted-template playtest passed.
 - **Hosted acceptance:** Tag `v0.5.3rc860` passed GitHub Actions run
-  [43874541611](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43874541611)
+  43874541611
   on commit `52335645bcaa09e0a0d2b43067cbf4d36ee3c4a1`; the prerelease lint
   gate and installed-wheel check against a separate project passed. Package and
   preview jobs were skipped under prerelease policy.
@@ -30087,7 +30093,7 @@ acceptance threads while new lint features proceed:
   wheel/sdist builds, installed-wheel checks, and the external template
   acceptance/playtest passed.
 - **Hosted acceptance:** Tag `v0.5.3rc861` passed GitHub Actions run
-  [43881279350](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43881279350)
+  43881279350
   on implementation commit `639fedebe8e67168d9bd31c0149677ca0e91ad20`; the
   prerelease lint gate and installed-wheel check against a separate project
   passed. Package and preview jobs were skipped under prerelease policy.
@@ -30294,7 +30300,7 @@ acceptance threads while new lint features proceed:
   wheel/sdist builds, installed-wheel checks, and default/adapted external
   template verification and playtest all passed.
 - **Hosted acceptance:** Tag `v0.5.3rc866` passed GitHub Actions run
-  [43917633593](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43917633593):
+  43917633593:
   515 selected tests passed and 10,004 were deselected. Digest-pinned KiCad
   10.0.0, 10.0.5, and 10.0.8 Docker fault/control exports, tag-scope
   resolution, Ruff, both Alphus profiles, Rumdl, mdrepo, module-size
@@ -30448,12 +30454,61 @@ acceptance threads while new lint features proceed:
   module-size preflight, Linux and Windows Pyright, wheel/sdist builds, and an
   installed-wheel origin/version smoke check. This local run omitted an
   external project checkout; the hosted prerelease gate supplies that fixture.
-- **Hosted acceptance:** Tag `v0.5.3rc869` passed in GitHub Actions run
-  `43939908539`:
-  516 selected tests passed and 10,042 were deselected. The separate checkout's
-  inventory, surface parity, native verification, adapted-project checks, and
-  playtest passed. Package and preview jobs were skipped under prerelease
-  policy.
+
+#### LINT-535 — Review differing USB D+/D− series-resistor values
+
+- **Priority:** P2 configurable interface heuristic. The complete USB peer scan
+  already recognizes one fitted `Device:R` on each data line, but it does not
+  compare their parseable nominal values when no project map states the
+  intended ranges.
+- **Evidence and boundary:** A
+  [Microchip SAM4L schematic checklist](https://www.microchip.com/content/dam/mchp/documents/OTH/ApplicationNotes/ApplicationNotes/Atmel-42025-AT01777-SAM4L-Schematic-Checklist_Application-Note.pdf)
+  shows a device-specific example with equal 39 Ω D+ and D− resistors. This motivates a
+  value-symmetry review cue only; it is not a universal resistor requirement. Different values can
+  be intentional, and neither matching nor differing values establish USB compliance or signal
+  integrity.
+- **Status:** Implemented as `bus.usb_unmapped_series_resistor_value_mismatch`,
+  a configurable default-REVIEW candidate. It uses the shared
+  `resistor_paths.resistance_ohms` parser. A current project USB data-path map
+  supplies exact component identities and accepted ranges for each line and
+  suppresses this heuristic; mapped deviations remain with
+  `bus.usb_data_path_mismatch`.
+- **Predicate:** Require one fitted, completely inventoried passive two-pin
+  `Device:R` on each supported USB 2.0 D+/D− endpoint path and unique native
+  net assignments throughout. Compare only values accepted by the shared
+  parser. Emit one finding when the parsed nominal resistances differ and no
+  current map covers that connector, PHY, and port group. Unparseable values,
+  DNP or incomplete parts, branches, inline or multi-stage topologies,
+  ambiguous endpoint groups, USB SuperSpeed, and unsupported paths are skipped.
+- **Regression coverage:** Tooling-owned synthetic cases cover different values,
+  equal values written with different engineering-unit spellings, zero-ohm
+  aliases, unparseable values, DNP paths, one-resistor and direct controls,
+  exact maps with different approved per-line ranges, policy overrides,
+  exact ignores, and order-stable evidence. CLI and MCP reports are compared
+  on the same source-bound project receipt. The minimal native fault/control
+  pair changes only R2 from `27R` to `33R`; KiCad 10.0.0 and 10.0.5 Docker
+  exports run twice per case and version. See the
+  [fixture record](../tests/fixtures/design_lint/usb-series-value-mismatch-native/README.md).
+  No cohort implementation, board, or project source is stored.
+- **Selection:** Run
+  `tests/test_usb_unmapped_series_resistor_values.py` and
+  `tests/test_design_lint_mcp_parity_usb_series_resistor_values.py` with
+  `design_lint and interface_lint and
+  design_lint_rule(rule_id="bus.usb_unmapped_series_resistor_value_mismatch")`.
+  Run `tests/test_usb_unmapped_series_resistor_values_native.py` with
+  `KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1` and the same rule selector plus
+  `native_kicad`.
+- **Incremental-value limit:** This fills the documented value-comparison gap
+  beside LINT-533/534. It is a review prompt, not a defect verdict; real-board
+  applicability and reviewer-value measurements remain open.
+- **Local scoped acceptance:** Passed on 2026-11-16 in
+  `build/ci/run-uo316ilt`: 517 selected tests passed and 10,055 were deselected.
+  The run included KiCad 10.0.0 and 10.0.5 digest-pinned Docker fault/control
+  exports, catalog and fixture integrity, Ruff, both Alphus profiles, Rumdl,
+  mdrepo, module-size preflight, Linux and Windows Pyright, wheel/sdist builds,
+  installed-wheel origin/version checks, and the pinned external/adapted
+  template inventory, surface, portable verification, and playtest.
+- **Hosted acceptance:** Pending for tag `v0.5.3rc870`.
 
 ## Completion and release gate
 

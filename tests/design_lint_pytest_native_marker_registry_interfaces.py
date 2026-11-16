@@ -14,6 +14,9 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_usb_unmapped_asymmetric_series_native.py": frozenset(
             {"interface_lint", "native_kicad", "slow"}
         ),
+        "test_usb_unmapped_series_resistor_values_native.py": frozenset(
+            {"interface_lint", "native_kicad", "slow"}
+        ),
         "test_usb_c_superspeed_lane_labels.py": frozenset({"interface_lint"}),
         "test_design_lint_architecture_usb_c_lane_labels.py": frozenset({"interface_lint"}),
         "test_can_line_polarity_native_fixture_lane.py": frozenset(

@@ -52,6 +52,7 @@ PARITY_LINT_TEST_MODULES = frozenset(
         "tests/test_electrical_i2c_parity.py",
         "tests/test_electrical_usb_c_parity.py",
         "tests/test_design_lint_mcp_parity_usb_reference.py",
+        "tests/test_design_lint_mcp_parity_usb_series_resistor_values.py",
         "tests/test_design_lint_mcp_parity_usb_c_sbu_unconnected.py",
         "tests/test_design_lint_mcp_parity_i3c_unconnected.py",
         "tests/test_design_lint_mcp_parity_transformer.py",

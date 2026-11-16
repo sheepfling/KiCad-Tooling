@@ -13438,7 +13438,7 @@
       ],
       "implementation_refs": [
         "kicad_tooling/hwrepo/usb_peer_asymmetric_series_path.py#unmapped_usb_asymmetric_series_paths",
-        "kicad_tooling/hwrepo/usb_peer_asymmetric_series_path.py#_has_current_endpoint_map",
+        "kicad_tooling/hwrepo/usb_peer_map_identity.py#usb_data_path_map_matches_peer_path",
         "kicad_tooling/hwrepo/design_lint_usb_unmapped_asymmetric_series.py#usb_unmapped_asymmetric_series_candidates",
         "kicad_tooling/hwrepo/design_lint_usb_unmapped_asymmetric_series_candidate_evidence.py#project_usb_unmapped_asymmetric_series_evidence",
         "kicad_tooling/hwrepo/design_lint_usb_unmapped_asymmetric_series_candidate_evidence.py#UsbUnmappedAsymmetricSeriesCandidate",
@@ -13449,6 +13449,54 @@
       ],
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/usb_peer_asymmetric_series_path.py#unmapped_usb_asymmetric_series_paths"
+    },
+    {
+      "rule_id": "bus.usb_unmapped_series_resistor_value_mismatch",
+      "title": "USB D+/D- series-resistor values differ without mapped value intent",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, using the USB peer scan's exact endpoint pins, complete fitted Device:R inventories, parsed native resistor values, and exact net membership",
+      "predicate": "For one fitted USB 2.0 connector and PHY port group with supported one-resistor paths on both D+ and D-, use the shared resistor-value parser to compare their nominal ohms. Emit a default REVIEW candidate only when both values parse and differ and no current project USB data-path map matches the connector, PHY, and port group. A current map records the exact component identities and accepted per-line resistance ranges, leaving map mismatches to bus.usb_data_path_mismatch.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Only complete, fitted USB 2.0 connector-to-IC endpoints with exactly one supported Device:R path per data line and unique native net assignments are considered. DNP, incomplete, branched, multi-stage, inline, ambiguous, SuperSpeed, and unsupported resistor paths are outside the predicate.",
+        "Only parseable nominal resistance values are compared. Tolerance, temperature behavior, PHY-specific requirements, signal integrity, USB compliance, component conduction, PCB copper continuity, off-board wiring, and physical population are not evaluated.",
+        "Different nominal values can be intentional; the default REVIEW prompt asks the project to verify and record intent. Equal values do not prove suitability. A current exact endpoint map suppresses this heuristic and checks authored per-line ranges through bus.usb_data_path_mismatch."
+      ],
+      "fault_fixtures": [
+        "tests.test_usb_unmapped_series_resistor_values.test_different_fitted_series_values_request_review",
+        "tests.test_usb_unmapped_series_resistor_values.test_review_policy_override_and_exact_ignore_are_supported",
+        "tests.test_usb_unmapped_series_resistor_values_native.test_native_value_mismatch_fault_and_equal_value_control_repeat"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_usb_unmapped_series_resistor_values.test_equal_parsed_values_are_quiet_across_value_spellings",
+        "tests.test_usb_unmapped_series_resistor_values.test_current_exact_map_owns_distinct_approved_resistance_ranges",
+        "tests.test_usb_unmapped_series_resistor_values.test_unmapped_direct_single_resistor_and_unparseable_paths_are_outside_scope",
+        "tests.test_usb_unmapped_series_resistor_values_native.test_native_value_mismatch_fault_and_equal_value_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_usb_unmapped_series_resistor_values.test_finding_is_stable_under_native_netlist_mapping_order"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/usb_peer_asymmetric_series_path.py#unmapped_usb_series_resistor_value_mismatches",
+        "kicad_tooling/hwrepo/usb_peer_map_identity.py#usb_data_path_map_matches_peer_path",
+        "kicad_tooling/hwrepo/resistor_paths.py#resistance_ohms",
+        "kicad_tooling/hwrepo/design_lint_usb_unmapped_series_resistor_values.py#usb_unmapped_series_resistor_value_candidates",
+        "kicad_tooling/hwrepo/design_lint_usb_unmapped_series_resistor_value_evidence.py#project_usb_unmapped_series_resistor_value_evidence",
+        "kicad_tooling/hwrepo/design_lint_usb_unmapped_series_resistor_value_evidence.py#UsbUnmappedSeriesResistorValueCandidate",
+        "kicad_tooling/hwrepo/usb_peer_reference_scan.py#scan_usb_peer_reference_reviews",
+        "kicad_tooling/hwrepo/design_lint_usb_peer_group_candidates.py#usb_peer_group_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/usb_peer_asymmetric_series_path.py#unmapped_usb_series_resistor_value_mismatches"
     },
     {
       "rule_id": "bus.usb_generic_connector_phy_pair_review",

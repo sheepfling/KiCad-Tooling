@@ -104,7 +104,11 @@ def usb_peer_netlist(
 
 
 def usb_peer_series_netlist(
-    *, connector_reference_net: str = "USB_GND", phy_reference_net: str = "BOARD_GND"
+    *,
+    connector_reference_net: str = "USB_GND",
+    phy_reference_net: str = "BOARD_GND",
+    positive_resistor_value: str = "27R",
+    negative_resistor_value: str = "27R",
 ) -> NetlistContract:
     base = usb_peer_netlist(
         connector_reference_net=connector_reference_net,
@@ -123,8 +127,8 @@ def usb_peer_series_netlist(
     components = dict(base.components)
     components.update(
         {
-            "R1": ComponentContract(value="27R", footprint="Synthetic:0603"),
-            "R2": ComponentContract(value="27R", footprint="Synthetic:0603"),
+            "R1": ComponentContract(value=positive_resistor_value, footprint="Synthetic:0603"),
+            "R2": ComponentContract(value=negative_resistor_value, footprint="Synthetic:0603"),
         }
     )
     symbols = dict(base.component_symbols)
@@ -296,6 +300,8 @@ def usb_series_data_map(
     phy_reference_net: str = "BOARD_GND",
     positive_resistor: str = "R1",
     negative_resistor: str = "R2",
+    positive_resistance_ohms: float = 27,
+    negative_resistance_ohms: float = 27,
 ) -> UsbDataPathMap:
     reference_pins: UsbReferenceMapOptions = {}
     if reference_policy is not None:
@@ -314,6 +320,7 @@ def usb_series_data_map(
         resistor: str,
         connector_pin: str,
         phy_pin: str,
+        resistance: float,
     ) -> UsbDataPathLineRequirement:
         return UsbDataPathLineRequirement(
             line=line,
@@ -326,8 +333,8 @@ def usb_series_data_map(
                 reference=resistor,
                 expected_symbol="Device:R",
                 expected_footprint="Synthetic:0603",
-                minimum_ohms=27,
-                maximum_ohms=27,
+                minimum_ohms=resistance,
+                maximum_ohms=resistance,
             ),
         )
 
@@ -344,10 +351,22 @@ def usb_series_data_map(
                 expected_phy_symbol="Synthetic:UsbPhy",
                 expected_phy_footprint="Synthetic:QFN",
                 positive=line_requirement(
-                    "D+", "USB_DP", "USB_DP_PHY", positive_resistor, "J1.1", "U1.1"
+                    "D+",
+                    "USB_DP",
+                    "USB_DP_PHY",
+                    positive_resistor,
+                    "J1.1",
+                    "U1.1",
+                    positive_resistance_ohms,
                 ),
                 negative=line_requirement(
-                    "D-", "USB_DM", "USB_DM_PHY", negative_resistor, "J1.2", "U1.2"
+                    "D-",
+                    "USB_DM",
+                    "USB_DM_PHY",
+                    negative_resistor,
+                    "J1.2",
+                    "U1.2",
+                    negative_resistance_ohms,
                 ),
                 **reference_pins,
             ),

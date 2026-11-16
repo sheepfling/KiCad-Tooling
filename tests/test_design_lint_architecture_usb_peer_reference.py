@@ -39,6 +39,8 @@ USB_PEER_ANALYSIS_MODULES = (
     "design_lint_usb_unmapped_series_chain_candidate_evidence.py",
     "design_lint_usb_unmapped_asymmetric_series.py",
     "design_lint_usb_unmapped_asymmetric_series_candidate_evidence.py",
+    "design_lint_usb_unmapped_series_resistor_values.py",
+    "design_lint_usb_unmapped_series_resistor_value_evidence.py",
 )
 
 
@@ -168,6 +170,40 @@ def test_usb_unmapped_asymmetric_series_rule_uses_its_focused_predicate_and_adap
     assert candidate_owner in rule.implementation_refs
     assert (
         line_count(HWREPO / "design_lint_usb_peer_group_candidates.py") < IMPLEMENTATION_MAX_LINES
+    )
+    sizes = {name: line_count(HWREPO / name) for name in modules}
+    assert all(size < IMPLEMENTATION_MAX_LINES for size in sizes.values()), sizes
+
+
+def test_usb_series_resistor_value_rule_uses_shared_value_and_map_services() -> None:
+    rule = next(
+        item
+        for item in rule_catalog().rules
+        if item.rule_id == "bus.usb_unmapped_series_resistor_value_mismatch"
+    )
+    owner = (
+        "kicad_tooling/hwrepo/usb_peer_asymmetric_series_path.py"
+        "#unmapped_usb_series_resistor_value_mismatches"
+    )
+    candidate_owner = (
+        "kicad_tooling/hwrepo/design_lint_usb_unmapped_series_resistor_value_evidence.py"
+        "#UsbUnmappedSeriesResistorValueCandidate"
+    )
+    modules = (
+        "usb_peer_asymmetric_series_path.py",
+        "usb_peer_map_identity.py",
+        "design_lint_usb_unmapped_series_resistor_values.py",
+        "design_lint_usb_unmapped_series_resistor_value_evidence.py",
+    )
+
+    assert rule.theme == "interfaces"
+    assert rule.implementation_owner == owner
+    assert owner in rule.implementation_refs
+    assert candidate_owner in rule.implementation_refs
+    assert "kicad_tooling/hwrepo/resistor_paths.py#resistance_ohms" in rule.implementation_refs
+    assert (
+        "kicad_tooling/hwrepo/usb_peer_map_identity.py#usb_data_path_map_matches_peer_path"
+        in rule.implementation_refs
     )
     sizes = {name: line_count(HWREPO / name) for name in modules}
     assert all(size < IMPLEMENTATION_MAX_LINES for size in sizes.values()), sizes
