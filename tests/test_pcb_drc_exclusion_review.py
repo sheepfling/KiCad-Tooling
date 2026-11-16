@@ -56,8 +56,19 @@ def _project(
     return root, project, config, {PROJECT_RELATIVE: digest(project)}
 
 
-def _scan(root: Path, config: ProjectConfig, source_hashes: Mapping[str, str]):
-    return source_bound_pcb_drc_exclusion_candidates(root, config, source_hashes)
+def _scan(
+    root: Path,
+    config: ProjectConfig,
+    source_hashes: Mapping[str, str],
+    *,
+    native_summary: Path | None = None,
+):
+    return source_bound_pcb_drc_exclusion_candidates(
+        root,
+        config,
+        source_hashes,
+        native_summary=native_summary,
+    )
 
 
 def test_saved_exclusions_report_rule_key_comment_and_source_binding(tmp_path: Path) -> None:
@@ -123,6 +134,20 @@ def test_empty_or_absent_exclusion_lists_are_valid_controls(tmp_path: Path) -> N
     assert _scan(root, config, source_hashes) == ()
     assert pcb_drc_exclusions('{"board":{"design_settings":{}}}') == ()
     assert pcb_drc_exclusions('{"board":{"design_settings":{"drc_exclusions":[]}}}') == ()
+
+
+def test_empty_exclusions_do_not_require_unrelated_native_drc_receipts(tmp_path: Path) -> None:
+    root, _, config, source_hashes = _project(tmp_path, "control.kicad_pro")
+
+    assert (
+        _scan(
+            root,
+            config,
+            source_hashes,
+            native_summary=tmp_path / "missing-native-summary.json",
+        )
+        == ()
+    )
 
 
 def test_legacy_marker_string_is_supported_without_a_comment() -> None:

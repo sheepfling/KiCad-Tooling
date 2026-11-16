@@ -178,6 +178,8 @@ def source_bound_pcb_drc_exclusion_candidates(
         raise ValueError(f"{relative}: could not read supported PCB DRC exclusions: {exc}") from exc
     if digest(settings_file) != expected_hash:
         raise ValueError("KiCad project settings changed during design-lint inspection")
+    if not exclusions:
+        return ()
 
     native_matches = (
         source_bound_pcb_drc_exclusion_matches(

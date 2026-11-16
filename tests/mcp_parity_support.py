@@ -99,12 +99,16 @@ def parity_workspace(base: Path) -> tuple[Path, Path, Path]:
 
 
 def parity_design_lint_policy(policy: DesignLintPolicy) -> DesignLintPolicy:
-    """Keep unrelated native PCB inventory capture out of synthetic parity cases."""
+    """Keep unrelated native PCB inventory and DRC capture out of parity cases."""
     native_rules = (
         "pcb.schematic_component_inventory",
         "pcb.schematic_pcb_dnp_mismatch",
         "pcb.schematic_pcb_value_mismatch",
         "pcb.schematic_pcb_pad_net_mismatch",
+        "pcb.drc_exact_net_scope_unmatched",
+        "pcb.drc_exact_netclass_scope_unmatched",
+        "pcb.drc_exact_reference_scope_unmatched",
+        "pcb.drc_exact_reference_pad_scope_unmatched",
     )
     overrides = {item.rule_id: item for item in policy.rules}
     inventory_override = overrides.get("pcb.schematic_component_inventory")

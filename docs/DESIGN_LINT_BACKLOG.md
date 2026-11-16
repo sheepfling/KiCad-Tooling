@@ -29258,16 +29258,19 @@ acceptance threads while new lint features proceed:
   design_lint_rule(rule_id="bus.i2s_data_outputs_share_net")`. The native lane
   is `tests/test_i2s_data_output_sharing_native_fixture_lane.py` with
   `KICAD_RUN_NATIVE_I2S_DATA_OUTPUT_SHARING_FIXTURES=1`.
-- **Local acceptance:** The focused `scripts/ci.py` run passed 100 selected unit
-  tests, Ruff format/check, both Alphus profiles, Rumdl, mdrepo, module-size
-  preflight, Linux and Windows Pyright, and wheel/sdist builds. Its installed
-  wheel step could not fetch `pydantic==2.13.5` because this environment could
-  not resolve `pypi.org`. The separate digest-pinned Docker lane passed fault
-  and control cases on KiCad 10.0.0 and 10.0.5. Local CLI/MCP parity remains
-  unverified: the available `KiCAD-Test` checkout differs from the template
-  revision pinned by hosted CI, and its existing I2S parity case also blocks
-  on missing source-bound DRC report/command evidence. Hosted CI is pending.
-- **Hosted acceptance:** Pending the annotated rule-gate tag.
+- **Local acceptance:** The focused I2S, catalog, architecture, DRC exclusion,
+  and CLI/MCP parity selection passed 117 tests against the exact public
+  template revision pinned by CI. The digest-pinned Docker lane passed fault
+  and control cases on KiCad 10.0.0 and 10.0.5. Ruff format/check, both
+  Alphus profiles, Rumdl, mdrepo, module-size preflight, Linux and Windows
+  Pyright, and wheel/sdist builds passed on the first gate. The local
+  installed-wheel step could not fetch `pydantic==2.13.5` because this
+  environment could not resolve `pypi.org`.
+- **Hosted acceptance:** Run `43795240929` for `v0.5.3rc841` passed 488 of 489
+  selected tests; the remaining parity case included unrelated exact-scope
+  DRC checks without native DRC receipts. Follow-up `v0.5.3rc842` disables those
+  checks in synthetic parity policy and skips DRC receipt matching when the
+  project has no saved exclusions. Hosted retest is pending.
 
 ## Completion and release gate
 
