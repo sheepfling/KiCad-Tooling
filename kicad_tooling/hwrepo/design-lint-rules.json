@@ -13403,6 +13403,54 @@
       "implementation_owner": "kicad_tooling/hwrepo/usb_peer_unsupported_series_chain.py#unsupported_usb_series_chain_candidates"
     },
     {
+      "rule_id": "bus.usb_unmapped_asymmetric_series",
+      "title": "USB data lines have different unmapped series topologies",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, using the USB peer scan's exact endpoint pins, complete fitted resistor inventories, and exact native net membership",
+      "predicate": "For one fitted USB 2.0 connector and PHY port group with supported direct-or-single-resistor paths on both D+ and D-, emit a default REVIEW candidate when exactly one data line uses one fitted complete passive two-pin Device:R and the other line is direct, and no current project USB data-path map matches that endpoint pair and port group. The prompt asks the project to review and record the selected topology; it does not assert a defect or evaluate the resistor value.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Only complete USB 2.0 connector-to-IC endpoint groups recognized by native pin functions and the existing peer scan are considered. USB SuperSpeed, ambiguous port pairing, multiple or branched data paths, inline protection, non-Device:R components, incomplete inventories, and non-unique net assignments are outside this predicate.",
+        "The comparison checks resistor presence only. It does not compare nominal values, tolerance, signal integrity, USB compliance, component conduction, PCB copper continuity, off-board wiring, or physical population.",
+        "A current project data-path map matching the connector, PHY, and port group suppresses this review prompt; any mapped topology mismatch remains with bus.usb_data_path_mismatch. Projects can configure, disable, or reasonedly ignore the REVIEW finding."
+      ],
+      "fault_fixtures": [
+        "tests.test_usb_unmapped_asymmetric_series.test_one_sided_series_resistor_requests_review",
+        "tests.test_usb_unmapped_asymmetric_series.test_review_is_configurable_and_exactly_ignorable",
+        "tests.test_usb_unmapped_asymmetric_series_native.test_native_one_sided_series_path_emits_repeatable_review"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_usb_unmapped_asymmetric_series.test_direct_and_matching_two_resistor_paths_are_quiet_controls",
+        "tests.test_usb_unmapped_asymmetric_series.test_exact_endpoint_map_records_and_suppresses_intentional_asymmetry",
+        "tests.test_usb_unmapped_asymmetric_series.test_dnp_series_component_does_not_make_a_supported_path",
+        "tests.test_usb_unmapped_asymmetric_series_native.test_native_matching_two_resistor_paths_are_a_quiet_control"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_usb_unmapped_asymmetric_series.test_evidence_is_stable_under_native_netlist_reordering"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/usb_peer_asymmetric_series_path.py#unmapped_usb_asymmetric_series_paths",
+        "kicad_tooling/hwrepo/usb_peer_asymmetric_series_path.py#_has_current_endpoint_map",
+        "kicad_tooling/hwrepo/design_lint_usb_unmapped_asymmetric_series.py#usb_unmapped_asymmetric_series_candidates",
+        "kicad_tooling/hwrepo/design_lint_usb_unmapped_asymmetric_series_candidate_evidence.py#project_usb_unmapped_asymmetric_series_evidence",
+        "kicad_tooling/hwrepo/design_lint_usb_unmapped_asymmetric_series_candidate_evidence.py#UsbUnmappedAsymmetricSeriesCandidate",
+        "kicad_tooling/hwrepo/usb_peer_reference_scan.py#scan_usb_peer_reference_reviews",
+        "kicad_tooling/hwrepo/usb_peer_map_identity.py#usb_data_interface_matches_endpoint_group",
+        "kicad_tooling/hwrepo/design_lint_usb_peer_group_candidates.py#usb_peer_group_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/usb_peer_asymmetric_series_path.py#unmapped_usb_asymmetric_series_paths"
+    },
+    {
       "rule_id": "bus.usb_generic_connector_phy_pair_review",
       "title": "Generic connector contacts match a recognized USB PHY data pair",
       "status": "active",

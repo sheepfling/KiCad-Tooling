@@ -405,6 +405,8 @@ INTERFACE_LINT_TEST_MODULES = frozenset(
         "tests/test_usb_data_path_native_fixture_lane.py",
         "tests/test_usb_unmapped_series_chain.py",
         "tests/test_usb_unmapped_series_chain_native.py",
+        "tests/test_usb_unmapped_asymmetric_series.py",
+        "tests/test_usb_unmapped_asymmetric_series_native.py",
         "tests/test_usb_generic_connector_pair_review.py",
         "tests/test_usb_superspeed_connector_return_review.py",
         "tests/test_usb_superspeed_connector_return_native_fixture_lane.py",

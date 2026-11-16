@@ -828,6 +828,20 @@ Run its synthetic selector with:
 The native lane uses the same digest-pinned Docker export as the USB data-path
 acceptance above.
 
+The mapped USB scan also reviews a fully observed D+/D− pair when exactly one
+line has a fitted `Device:R` series component and the other is direct. This is
+a configurable REVIEW prompt; it does not establish that either topology is
+incorrect. The project can record an intentional choice in its exact USB path
+map. Synthetic and native inputs are listed in the
+[asymmetric USB series-path fixture record](fixtures/design_lint/usb-asymmetric-series-native/README.md).
+Select the focused regression with:
+
+```sh
+.venv/bin/python -I -m pytest -q \
+  -m 'design_lint and design_lint_rule(rule_id="bus.usb_unmapped_asymmetric_series")' \
+  tests/test_usb_unmapped_asymmetric_series.py
+```
+
 The bounded USB SuperSpeed peer-reference heuristic has a fast synthetic
 fault/control and boundary suite:
 

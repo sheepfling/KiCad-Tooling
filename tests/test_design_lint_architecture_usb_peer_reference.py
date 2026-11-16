@@ -29,6 +29,7 @@ USB_PEER_ANALYSIS_MODULES = (
     "usb_peer_unsupported_topology.py",
     "usb_peer_unsupported_series_chain.py",
     "usb_peer_unsupported_series_chain_types.py",
+    "usb_peer_asymmetric_series_path.py",
     "usb_peer_map_identity.py",
     "usb_peer_generic_connector_models.py",
     "usb_peer_generic_connector_candidates.py",
@@ -36,6 +37,8 @@ USB_PEER_ANALYSIS_MODULES = (
     "design_lint_usb_generic_connector_candidates.py",
     "design_lint_usb_unmapped_series_chain.py",
     "design_lint_usb_unmapped_series_chain_candidate_evidence.py",
+    "design_lint_usb_unmapped_asymmetric_series.py",
+    "design_lint_usb_unmapped_asymmetric_series_candidate_evidence.py",
 )
 
 
@@ -126,6 +129,37 @@ def test_usb_unmapped_series_chain_rule_uses_its_focused_predicate_and_adapter()
         "usb_peer_unsupported_series_chain_types.py",
         "design_lint_usb_unmapped_series_chain.py",
         "design_lint_usb_unmapped_series_chain_candidate_evidence.py",
+    )
+
+    assert rule.theme == "interfaces"
+    assert rule.implementation_owner == owner
+    assert owner in rule.implementation_refs
+    assert candidate_owner in rule.implementation_refs
+    assert (
+        line_count(HWREPO / "design_lint_usb_peer_group_candidates.py") < IMPLEMENTATION_MAX_LINES
+    )
+    sizes = {name: line_count(HWREPO / name) for name in modules}
+    assert all(size < IMPLEMENTATION_MAX_LINES for size in sizes.values()), sizes
+
+
+def test_usb_unmapped_asymmetric_series_rule_uses_its_focused_predicate_and_adapter() -> None:
+    rule = next(
+        item
+        for item in rule_catalog().rules
+        if item.rule_id == "bus.usb_unmapped_asymmetric_series"
+    )
+    owner = (
+        "kicad_tooling/hwrepo/usb_peer_asymmetric_series_path.py"
+        "#unmapped_usb_asymmetric_series_paths"
+    )
+    candidate_owner = (
+        "kicad_tooling/hwrepo/design_lint_usb_unmapped_asymmetric_series_candidate_evidence.py"
+        "#UsbUnmappedAsymmetricSeriesCandidate"
+    )
+    modules = (
+        "usb_peer_asymmetric_series_path.py",
+        "design_lint_usb_unmapped_asymmetric_series.py",
+        "design_lint_usb_unmapped_asymmetric_series_candidate_evidence.py",
     )
 
     assert rule.theme == "interfaces"

@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 420 rules are implemented with synthetic regression coverage.
+The following 422 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 420 active rules.
+The catalog currently contains 422 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -872,7 +872,16 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc867):** LINT-532 reviews
+- **Latest published lint-gate checkpoint (v0.5.3rc868):** LINT-533 reviews
+  unmapped multi-stage USB 2.0 resistor paths. Local scoped acceptance passed
+  512 selected tests and 10,033 deselected, including the digest-pinned KiCad
+  10.0.0 native fault/control exports, source-bound fixtures, Ruff, both
+  Alphus profiles, Rumdl, mdrepo, module-size preflight, Linux and Windows
+  type checks, wheel/sdist builds, installed-wheel checks, and external/adapted
+  template verification and playtest. Hosted acceptance passed in GitHub
+  Actions run `43933847378`; package and preview jobs were skipped under
+  prerelease policy.
+- **Previous published lint-gate checkpoint (v0.5.3rc867):** LINT-532 reviews
   conflicting duplicate placed-symbol custom fields. Hosted acceptance passed in
   GitHub Actions run `43925303789`: 517 selected tests passed and 10,018 were
   deselected, including digest-pinned KiCad 10.0.0, 10.0.5, and 10.0.8 native
@@ -30390,6 +30399,48 @@ acceptance threads while new lint features proceed:
   design_lint_rule(rule_id="bus.usb_unmapped_series_chain")`. For native
   coverage, set `KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1` and select
   `tests/test_usb_unmapped_series_chain_native.py` with `native_kicad`.
+
+#### LINT-534 — Review USB data lines with unmapped asymmetric series paths
+
+- **Priority:** P2 configurable interface heuristic. A complete USB 2.0 path
+  scan can accept direct D+/D− paths and one fitted series resistor per line,
+  but it does not ask for review when just one line uses the resistor.
+- **Status:** Implemented as `bus.usb_unmapped_asymmetric_series`, a
+  configurable default-REVIEW candidate. An exact current map for the same
+  connector, PHY, and port group delegates to `bus.usb_data_path_mismatch` and
+  suppresses this prompt.
+- **Predicate:** Reuse the existing source-bound USB peer scan. Emit when a
+  supported, completely observed USB 2.0 D+/D− pair has one direct path and one
+  path through exactly one fitted, complete, passive two-pin `Device:R`, and
+  there is no exact current endpoint map. The evidence names both endpoint
+  paths, the resistor reference/value/identity, and which line is direct.
+- **Interpretation and limits:** A line-level difference may be intentional;
+  this REVIEW asks the project to record its topology decision. It does not
+  assert a defect, compare resistor values, evaluate signal integrity or USB
+  compliance, prove population or conduction, or establish PCB copper or
+  off-board wiring. USB SuperSpeed, incomplete or ambiguous endpoint groups,
+  branches, non-`Device:R` elements, and multi-stage paths remain outside this
+  predicate; LINT-533 handles the supported unmapped multi-stage case.
+- **Regression coverage:** Synthetic faults cover both polarities, direct and
+  two-resistor controls, DNP exclusion, a matching exact-map control, policy
+  override/disable/exact-ignore, and order-stable evidence. The native
+  fault/control schematics live in the
+  [asymmetric USB series-path fixture record](../tests/fixtures/design_lint/usb-asymmetric-series-native/README.md)
+  and are exported repeatedly with digest-pinned KiCad 10.0.0 in Docker. No
+  cohort board or proprietary project source is stored.
+- **Selection:** Run
+  `tests/test_usb_unmapped_asymmetric_series.py` with
+  `design_lint and interface_lint and
+  design_lint_rule(rule_id="bus.usb_unmapped_asymmetric_series")`. For native
+  coverage, set `KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1` and select
+  `tests/test_usb_unmapped_asymmetric_series_native.py` with `native_kicad`.
+- **Local scoped acceptance:** Passed on 2026-11-16 in
+  `build/ci/run-pucoex_6`: 516 selected tests passed and 10,042 were
+  deselected. The run included both digest-pinned KiCad 10.0.0 Docker exports,
+  catalog/fixture integrity, Ruff, both Alphus profiles, Rumdl, mdrepo,
+  module-size preflight, Linux and Windows Pyright, wheel/sdist builds, and an
+  installed-wheel origin/version smoke check. This local run omitted an
+  external project checkout; the hosted prerelease gate supplies that fixture.
 
 ## Completion and release gate
 
