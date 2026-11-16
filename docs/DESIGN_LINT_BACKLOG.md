@@ -870,7 +870,17 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc863):** LINT-529 reviews
+- **Latest published lint-gate checkpoint (v0.5.3rc864):** LINT-530 reviews
+  conflicting direct placed-symbol `Reference` properties that native export
+  omits. Hosted acceptance passed in GitHub Actions run
+  `43906038100`:
+  513 selected tests passed and 9,990 were deselected, including digest-pinned
+  KiCad 10.0.0, 10.0.5, and 10.0.8 fault/control exports. Tag-scope resolution,
+  Ruff, both Alphus profiles, Rumdl, mdrepo, module-size preflight, Linux and
+  Windows type checks, wheel/sdist builds, installed-wheel checks, and the
+  external/adapted template verification and playtest passed. Package and
+  preview jobs were skipped under prerelease policy.
+- **Previous published lint-gate checkpoint (v0.5.3rc863):** LINT-529 reviews
   placed-symbol fields that collide with native DNP metadata. Hosted acceptance
   passed in GitHub Actions run `43897621537`: 514 selected tests passed and
   9,973 were deselected, including digest-pinned KiCad 10.0.0, 10.0.5, and
@@ -30190,7 +30200,13 @@ acceptance threads while new lint features proceed:
   Pyright, wheel/sdist builds, installed-wheel origin/version checks, and the
   separate public template's default/adapted inventory, CLI/MCP surface,
   verification, and playtest all passed.
-- **Hosted acceptance:** Pending the annotated rule-gate tag.
+- **Hosted acceptance:** Tag `v0.5.3rc864` passed GitHub Actions run
+  `43906038100`:
+  513 selected tests passed and 9,990 were deselected. The digest-pinned KiCad
+  10.0.0, 10.0.5, and 10.0.8 native lanes, tag-scope resolution, cross-platform
+  type checks, wheel/sdist builds, and installed-wheel verification against
+  separate default and adapted public-template checkouts and playtest passed.
+  Package and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
