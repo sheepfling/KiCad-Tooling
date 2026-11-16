@@ -1,4 +1,4 @@
-"""Regressions for shared Ethernet PHY receive-status output review."""
+"""Regressions for shared Ethernet PHY receive-status/control output review."""
 
 from __future__ import annotations
 
@@ -68,7 +68,9 @@ def test_catalog_owns_ethernet_rx_status_rule_in_its_theme_module() -> None:
 def test_multiple_fitted_ethernet_phy_rxdv_outputs_on_one_net_are_reviewed() -> None:
     finding = _findings(_report(ethernet_rx_status_output_netlist()))[0]
 
-    assert finding.subject == ("U1, U2: Ethernet PHY receive-status outputs share MII_RX_DV_SHARED")
+    assert finding.subject == (
+        "U1, U2: Ethernet PHY receive-status/control outputs share MII_RX_DV_SHARED"
+    )
     assert finding.evidence == {
         "components": ("U1", "U2"),
         "channels": (
@@ -112,8 +114,46 @@ def test_rxdv_rxer_aliases_and_separate_or_different_status_controls() -> None:
         "rx",
         "ethernet-mii-receive-status-rxer",
     )
+    assert ethernet_phy_rx_status_output_role("U1", "RX_CTRL") == (
+        "rx",
+        "ethernet-rgmii-receive-control",
+    )
+    assert ethernet_phy_rx_status_output_role("U1", "RGMII_RX_CTRL") == (
+        "rx",
+        "ethernet-rgmii-receive-control",
+    )
     assert ethernet_phy_rx_status_output_role("U1", "RX_CTL") is None
     assert ethernet_phy_rx_status_output_role("U1", "TXER") is None
+
+
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
+def test_rgmii_rx_control_outputs_and_separate_control_are_classified() -> None:
+    shared = ethernet_rx_status_output_netlist(
+        receive_control_functions=("RX_CTRL", "RGMII_RX_CTRL")
+    )
+    separate = ethernet_rx_status_output_netlist(
+        receive_control_functions=("RX_CTRL", "RGMII_RX_CTRL"),
+        receive_control_shared=False,
+    )
+    native_outputs = ethernet_rx_status_output_netlist(
+        receive_control_functions=("RX_CTRL", "RGMII_RX_CTRL"),
+        receive_control_type="output",
+    )
+    mixed = ethernet_rx_status_output_netlist(
+        status_functions=("RXDV", "RX_CTRL"),
+        status_net_name="MIXED_RX_STATUS",
+    )
+
+    candidate = ethernet_rx_status_output_sharing_candidates(shared)[0]
+    assert candidate.evidence["channels"] == (
+        "ethernet-rgmii-receive-control",
+        "ethernet-rgmii-receive-control",
+    )
+    assert candidate.evidence["functions"] == ("RX_CTRL", "RGMII_RX_CTRL")
+    assert candidate.evidence["pins"] == ("U1.3", "U2.3")
+    assert not ethernet_rx_status_output_sharing_candidates(separate)
+    assert not ethernet_rx_status_output_sharing_candidates(native_outputs)
+    assert not ethernet_rx_status_output_sharing_candidates(mixed)
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

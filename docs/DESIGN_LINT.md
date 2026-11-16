@@ -2203,16 +2203,20 @@ KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1 .venv/bin/python -I -m py
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_rx_clock_outputs_share_net")'
 ```
 
-### Ethernet PHY receive-status outputs sharing one net
+### Ethernet PHY receive-status/control outputs sharing one net
 
 `bus.ethernet_rx_status_outputs_share_net` prompts when fitted, explicitly
-identified Ethernet PHY components expose `RXDV` or `RXER` pins on one exact
-schematic net and their native pin types are output-capable. It recognizes
-those functions with optional MII or GMII prefixes. It requires complete
-unique native pin inventories and one exact assignment for every counted pin,
-suppresses incomplete or ambiguous groups, and leaves two native `output`
-pins to ERC. It excludes `RX_CTL`; a broad control label does not establish a
-receive-status role.
+identified Ethernet PHY components expose receive-status pins named `RXDV` or
+`RXER`, or receive-control pins named `RX_CTRL`, on one exact schematic net;
+their native pin types must be output-capable. It recognizes RXDV/RXER with
+optional MII or GMII prefixes and RX_CTRL with an optional RGMII prefix. TI
+documents RX_CTRL as the PHY-to-MAC
+receive-control signal in RGMII mode
+([DP83867 datasheet](https://www.ti.com/lit/ds/symlink/dp83867e.pdf)). It
+requires complete unique native pin inventories and one exact assignment for
+every counted pin, suppresses incomplete or ambiguous groups, and leaves two
+native `output` pins to ERC. It excludes `RX_CTL`; a broad control label does not establish a
+recognized receive role.
 
 This default-`review` heuristic uses pin naming as a clue. A PHY's negotiated
 or configured mode, pin mux, endpoint selection, and any board-level selection
@@ -2221,8 +2225,8 @@ PHY mode, firmware state, routed copper, or off-board wiring. Microchip's
 KSZ8081 checklist maps RXDV and RXER to MII MAC status inputs
 ([source](https://ww1.microchip.com/downloads/en/DeviceDoc/00002763A.pdf));
 that device-specific example motivates review, not a universal connection
-requirement. The digest-pinned native lane checks shared-RXDV fault and
-separate-RXDV control schematics alongside the existing RXD and RXC cases.
+requirement. The digest-pinned native lane checks shared-RXDV and shared-RX_CTRL
+faults with isolated controls alongside the existing RXD and RXC cases.
 
 Select `tests/test_ethernet_rx_status_output_sharing.py`,
 `tests/test_design_lint_ethernet_rx_status_output_sharing_architecture.py`,

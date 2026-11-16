@@ -812,10 +812,9 @@ KICAD_RUN_NATIVE_COMPLEMENTARY_PAIR_FIXTURES=1 python -I -B -m pytest -q \
   tests/test_complementary_pair_native_fixture_lane.py
 ```
 
-Ethernet PHY receive-data, receive-clock, receive-status, CRS_DV, CRS, and
-MII TX_CLK output-sharing heuristics share a digest-pinned native fault/control
-lane. Select the
-receive-status slice with:
+Ethernet PHY receive-data, receive-clock, receive-status/control, CRS_DV, CRS,
+and MII TX_CLK output-sharing heuristics share a digest-pinned native
+fault/control lane. Select the receive-status/control slice with:
 
 ```sh
 .venv/bin/python -I -m pytest tests/test_ethernet_rx_status_output_sharing.py \

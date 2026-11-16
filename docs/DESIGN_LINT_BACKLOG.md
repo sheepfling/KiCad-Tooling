@@ -29388,7 +29388,7 @@ acceptance threads while new lint features proceed:
   `253b57a5` and tag `v0.5.3rc844`. The package and preview jobs were skipped
   under the prerelease policy.
 
-#### LINT-516 — Review Ethernet PHY receive-status outputs sharing one net
+#### LINT-516 — Review shared Ethernet PHY receive-status/control outputs
 
 - **Status:** Implemented as the default-`review`
   `bus.ethernet_rx_status_outputs_share_net` interface heuristic.
@@ -29399,34 +29399,38 @@ acceptance threads while new lint features proceed:
 - **Predicate:** Require fitted U/IC references with bounded explicit
   Ethernet PHY identity, complete unique native pin inventory, one exact net
   assignment, and a supported output-capable native type. Recognize bounded
-  RXDV/RXER names with optional MII or GMII prefixes. Emit one REVIEW
-  candidate when two or more distinct PHYs contribute one same-role status
-  pin each to one exact non-return net; suppress incomplete or ambiguous
-  groups and defer two native output pins to ERC.
+  RXDV/RXER names with optional MII or GMII prefixes and RX_CTRL with an
+  optional RGMII prefix. Emit one REVIEW candidate when two or more
+  distinct PHYs contribute one same-role receive-status/control pin each to
+  one exact non-return net; suppress incomplete or ambiguous groups and defer
+  two native output pins to ERC.
 - **Evidence basis and boundary:** Microchip's KSZ8081 checklist maps RXDV and
   RXER to MII MAC receive-status inputs
   ([primary source](https://ww1.microchip.com/downloads/en/DeviceDoc/00002763A.pdf)).
   The example supports a useful review cue, not a universal topology rule.
-  RXDV/RXER labels do not prove active behavior, selected interface mode,
+  RXDV/RXER/RX_CTRL labels do not prove active behavior, selected interface mode,
   endpoint membership, or that a shared path is wrong. The predicate excludes
-  RX_CTL and does not establish PCB copper or off-board wiring.
+  RX_CTL and does not establish PCB copper or off-board wiring. TI's DP83867
+  datasheet identifies RX_CTRL as the PHY-to-MAC receive-control signal in
+  RGMII mode ([primary source](https://www.ti.com/lit/ds/symlink/dp83867e.pdf)).
 - **Fixtures:** Tooling-owned synthetic passive-typed netlists cover RXDV and
   RXER aliases, shared and separate nets, DNP and open pins, multiply assigned
   pins, missing pin inventory, duplicate roles, return nets, unsupported and
   native-output types, identity boundaries, policy modes, exact ignores,
   stable fingerprints, and a separation metamorphism. The existing synthetic
-  KiCad schematic pair now adds a shared-RXDV fault and separate-RXDV control;
+  KiCad schematic pair now covers shared RXDV/RX_CTRL faults and isolated
+  controls;
   digest-pinned KiCad 10.0.0 and 10.0.5 exports verify exact assignments,
   repeatability, and no native ERC errors. CLI/MCP parity exercises the same
   typed service. No project or cohort source is stored.
 - **Selection:** Run `tests/test_ethernet_rx_status_output_sharing.py`,
   `tests/test_design_lint_ethernet_rx_status_output_sharing_architecture.py`,
-  and the receive-status case in
+  and the receive-status/control cases in
   `tests/test_design_lint_mcp_parity_ethernet_rx_output_sharing.py` with
   `design_lint_rule(rule_id="bus.ethernet_rx_status_outputs_share_net")`. The native
   lane is `tests/test_ethernet_rx_output_sharing_native_fixture_lane.py` with
   `KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1`.
-- **Local acceptance:** The focused status selection passed 8 tests with 3
+- **Prior local acceptance:** The focused status selection passed 8 tests with 3
   deselected. The digest-pinned Docker fault/control lane passed KiCad 10.0.0
   and 10.0.5. Rule-scoped `scripts/ci.py` passed 493 tests with 9,852
   deselected, plus Ruff, both Alphus profiles, Rumdl, mdrepo, module-size

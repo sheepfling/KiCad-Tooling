@@ -1,4 +1,4 @@
-"""Review shared Ethernet PHY receive-status outputs."""
+"""Review shared Ethernet PHY receive-status and receive-control outputs."""
 
 from __future__ import annotations
 
@@ -11,17 +11,20 @@ from .netlist_contract_models import NetlistContract
 from .signal_pair_output_sharing import signal_output_sharing_groups
 
 RULE_ID = "bus.ethernet_rx_status_outputs_share_net"
-_RX_STATUS_FUNCTION = re.compile(r"(?:(?:gmii|mii))?(rxdv|rxer)")
+_MII_RX_STATUS_FUNCTION = re.compile(r"(?:(?:gmii|mii))?(rxdv|rxer)")
+_RGMII_RX_CONTROL_FUNCTION = re.compile(r"(?:rgmii)?rxctrl")
 
 
 def ethernet_phy_rx_status_output_role(_reference: str, function: str) -> tuple[str, str] | None:
-    """Recognize bounded MII/GMII RXDV and RXER function aliases."""
+    """Recognize bounded MII/GMII status and RGMII receive-control aliases."""
     normalized = re.sub(r"[^a-z0-9]", "", function.casefold())
-    match = _RX_STATUS_FUNCTION.fullmatch(normalized)
-    if match is None:
-        return None
-    signal = match.group(1)
-    return "rx", f"ethernet-mii-receive-status-{signal}"
+    status_match = _MII_RX_STATUS_FUNCTION.fullmatch(normalized)
+    if status_match is not None:
+        signal = status_match.group(1)
+        return "rx", f"ethernet-mii-receive-status-{signal}"
+    if _RGMII_RX_CONTROL_FUNCTION.fullmatch(normalized) is not None:
+        return "rx", "ethernet-rgmii-receive-control"
+    return None
 
 
 def ethernet_rx_status_output_sharing_candidates(
@@ -60,14 +63,14 @@ def ethernet_rx_status_output_sharing_candidates(
             Candidate(
                 rule_id=RULE_ID,
                 subject=(
-                    f"{', '.join(group.components)}: Ethernet PHY receive-status outputs "
+                    f"{', '.join(group.components)}: Ethernet PHY receive-status/control outputs "
                     f"share {group.net}"
                 ),
                 message=(
-                    f"Fitted Ethernet PHY receive-status pins {', '.join(group.pins)} "
+                    f"Fitted Ethernet PHY receive-status/control pins {', '.join(group.pins)} "
                     f"({', '.join(group.functions)}) share one schematic net ({group.net}) "
                     f"with native pin types {', '.join(group.pin_types)}. Review whether "
-                    "the status outputs are intentionally combined for the selected PHY mode. "
+                    "the outputs are intentionally combined for the selected PHY mode. "
                     "The heuristic does not infer mode, endpoint selection, board copper, or "
                     "off-board wiring."
                 ),

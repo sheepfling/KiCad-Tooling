@@ -1,4 +1,4 @@
-"""Digest-pinned native fixtures for Ethernet PHY receive-data-output sharing review."""
+"""Digest-pinned native fixtures for Ethernet PHY receive-output review."""
 
 from __future__ import annotations
 
@@ -47,8 +47,8 @@ def ethernet_rx_output_sharing_fixture_lane(
     }
     source_hashes = {case: digest(source) for case, source in sources.items()}
     expected_hashes = {
-        "fault": "eca30a712a22b7d4f2429168dbda9bca98e122add0e7e2090acdf3245273c3f3",
-        "control": "3fae0fad8eb15c2f06d4268d69b14fb939f6709f79428a1e098c694b0a8819e5",
+        "fault": "805e1238568260ed277cc4953cbc904f3db94db25bcfb92434e4a6d31cd8195c",
+        "control": "eb661d3d23c550948d3dc05aecaad4ecf87a64e7016bc517bdcb5b5d7fb2cb41",
     }
     if source_hashes != expected_hashes:
         raise ValueError("Ethernet RX-sharing fixture sources changed from their reviewed hashes")
@@ -77,9 +77,11 @@ def ethernet_rx_output_sharing_fixture_lane(
         f'test "$actual" = "{version}"\n'
         "for case in fault control; do\n"
         "  for run in first repeat; do\n"
-        '    kicad-cli sch export netlist --format kicadxml --output "/output/$case.$run.netlist.xml" '
+        "    kicad-cli sch export netlist --format kicadxml "
+        '--output "/output/$case.$run.netlist.xml" '
         '"/fixtures/$case.kicad_sch"\n'
-        '    kicad-cli sch erc --format json --severity-all --output "/output/$case.$run.erc.json" '
+        "    kicad-cli sch erc --format json --severity-all "
+        '--output "/output/$case.$run.erc.json" '
         '"/fixtures/$case.kicad_sch"\n'
         "  done\n"
         "done\n"
@@ -198,6 +200,16 @@ def ethernet_rx_output_sharing_fixture_lane(
                         raise ValueError(
                             "Native Ethernet COL fixture no longer isolates ERC typing"
                         )
+                    if observed.pin_functions.get(f"{reference}.9") != "RX_CTRL":
+                        raise ValueError(
+                            "Native Ethernet RX_CTRL fixture lost its pin function"
+                        )
+                    if observed.pin_electrical_types.get(f"{reference}.9") != "passive":
+                        raise ValueError(
+                            "Native Ethernet RX_CTRL fixture no longer isolates ERC typing"
+                        )
+                    if "9" not in observed.component_pin_numbers[reference]:
+                        raise ValueError("Native Ethernet RX_CTRL pin is missing from inventory")
                     if reference in observed.dnp_components:
                         raise ValueError(
                             "Native Ethernet RX-sharing endpoint unexpectedly became DNP"
@@ -224,6 +236,10 @@ def ethernet_rx_output_sharing_fixture_lane(
                     raise ValueError("Native Ethernet TX_CLK fault did not preserve the shared net")
                 if set(observed.nets.get("MII_COL_SHARED", ())) != {"U1.8", "U2.8"}:
                     raise ValueError("Native Ethernet COL fault did not preserve the shared net")
+                if set(observed.nets.get("RGMII_RX_CTRL_SHARED", ())) != {"U1.9", "U2.9"}:
+                    raise ValueError(
+                        "Native Ethernet RX_CTRL fault did not preserve the shared net"
+                    )
             if case == "control" and run == "first":
                 if set(observed.nets.get("RXD0_TXD_LINK", ())) != {"U1.1", "U2.2"}:
                     raise ValueError(
@@ -257,6 +273,10 @@ def ethernet_rx_output_sharing_fixture_lane(
                     raise ValueError("Native Ethernet control did not isolate U1.COL")
                 if observed.nets.get("PHY2_COL") != ("U2.8",):
                     raise ValueError("Native Ethernet control did not isolate U2.COL")
+                if observed.nets.get("PHY1_RX_CTRL") != ("U1.9",):
+                    raise ValueError("Native Ethernet control did not isolate U1.RX_CTRL")
+                if observed.nets.get("PHY2_RX_CTRL") != ("U2.9",):
+                    raise ValueError("Native Ethernet control did not isolate U2.RX_CTRL")
             normalized = json.dumps(
                 observed.model_dump(mode="json"),
                 sort_keys=True,
@@ -304,7 +324,10 @@ def ethernet_rx_output_sharing_fixture_lane(
             "control": (),
         },
         STATUS_RULE_ID: {
-            "fault": ("U1, U2: Ethernet PHY receive-status outputs share MII_RX_DV_SHARED",),
+            "fault": (
+                "U1, U2: Ethernet PHY receive-status/control outputs share MII_RX_DV_SHARED",
+                "U1, U2: Ethernet PHY receive-status/control outputs share RGMII_RX_CTRL_SHARED",
+            ),
             "control": (),
         },
         CRS_DV_RULE_ID: {

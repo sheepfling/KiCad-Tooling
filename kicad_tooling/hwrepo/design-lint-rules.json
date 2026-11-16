@@ -8491,28 +8491,30 @@
     },
     {
       "rule_id": "bus.ethernet_rx_status_outputs_share_net",
-      "title": "Ethernet PHY receive-status outputs share one net",
+      "title": "Ethernet PHY receive-status/control outputs share one net",
       "status": "active",
       "maturity": "synthetic_validated",
       "default_mode": "review",
       "metamorphic_status": "covered",
-      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining fitted components, bounded Ethernet PHY identity text, RXDV/RXER functions, exact assignments, native pin types, and complete pin inventory",
-      "predicate": "For fitted U/IC components with explicit bounded Ethernet PHY identity text, recognize RXDV or RXER with an optional MII or GMII prefix. Require each counted pin in a complete unique native pin inventory, one exact net assignment, and a supported output-capable native type. Emit one REVIEW candidate when same-role receive-status pins from at least two distinct components share one exact non-return net, with at most one counted pin per component. Suppress a group if recognized endpoint evidence on that net is incomplete or ambiguous, and leave two native output pins to ERC.",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining fitted components, bounded Ethernet PHY identity text, MII/GMII RXDV/RXER and RGMII RX_CTRL functions, exact assignments, native pin types, and complete pin inventory",
+      "predicate": "For fitted U/IC components with explicit bounded Ethernet PHY identity text, recognize RXDV or RXER with an optional MII or GMII prefix, and RX_CTRL with an optional RGMII prefix. Require each counted pin in a complete unique native pin inventory, one exact net assignment, and a supported output-capable native type. Emit one REVIEW candidate when same-role receive-status/control pins from at least two distinct components share one exact non-return net, with at most one counted pin per component. Suppress a group if recognized endpoint evidence on that net is incomplete or ambiguous, and leave two native output pins to ERC.",
       "supported_kicad_versions": [
         "Digest-pinned KiCad 10.0.0 and 10.0.5 native fixture exports; the selected project's exact version is checked before export"
       ],
       "limitations": [
         "Identity matching is limited to explicit Ethernet/ETH PHY or transceiver text and the reviewed LAN87xx, DP83xx, RTL82xx, and KSZ80xx value families. Other manufacturer naming conventions and generic PHY labels remain unclassified.",
-        "RXDV/RXER function text does not prove that a PHY is configured for MII operation or that the pin is actively driving a status signal. A selected or multiplexed path may be intentional; this is configurable REVIEW evidence, not a defect verdict or required topology.",
-        "DNP, connector references, return-like nets, unsupported types, incomplete inventory, open or multiply assigned pins, duplicate receive-status roles per component, and two native output pins are skipped. The rule does not establish PCB copper continuity, firmware mode, endpoint selection, or off-board wiring."
+        "RXDV/RXER/RX_CTRL function text does not prove that a PHY is configured for MII, GMII, or RGMII operation or that the pin is actively driving the named signal. A selected or multiplexed path may be intentional; this is configurable REVIEW evidence, not a defect verdict or required topology.",
+        "DNP, connector references, return-like nets, unsupported types, incomplete inventory, open or multiply assigned pins, duplicate receive-status/control roles per component, and two native output pins are skipped. The rule does not establish PCB copper continuity, firmware mode, endpoint selection, or off-board wiring."
       ],
       "fault_fixtures": [
         "tests.test_ethernet_rx_status_output_sharing.test_multiple_fitted_ethernet_phy_rxdv_outputs_on_one_net_are_reviewed",
+        "tests.test_ethernet_rx_status_output_sharing.test_rgmii_rx_control_outputs_and_separate_control_are_classified",
         "tests.test_design_lint_mcp_parity_ethernet_rx_output_sharing.test_ethernet_rx_status_output_sharing_cli_mcp_parity",
         "tests.test_ethernet_rx_output_sharing_native_fixture_lane.test_native_ethernet_rx_output_sharing_fault_and_control_repeat"
       ],
       "valid_control_fixtures": [
         "tests.test_ethernet_rx_status_output_sharing.test_rxdv_rxer_aliases_and_separate_or_different_status_controls",
+        "tests.test_ethernet_rx_status_output_sharing.test_rgmii_rx_control_outputs_and_separate_control_are_classified",
         "tests.test_ethernet_rx_status_output_sharing.test_dnp_open_ambiguous_incomplete_and_duplicate_evidence_suppress_group",
         "tests.test_ethernet_rx_output_sharing_native_fixture_lane.test_native_ethernet_rx_output_sharing_fault_and_control_repeat"
       ],

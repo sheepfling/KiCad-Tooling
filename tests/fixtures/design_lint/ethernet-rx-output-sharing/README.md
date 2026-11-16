@@ -4,10 +4,10 @@ These are tooling-owned synthetic schematics. They contain two passive-typed
 `Synthetic:Ethernet_PHY` symbols and no external project or cohort design
 source.
 
-| Fixture             | SHA-256                                                            | Expected result                                                                                                               |
-| ------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| `fault.kicad_sch`   | `eca30a712a22b7d4f2429168dbda9bca98e122add0e7e2090acdf3245273c3f3` | Both PHYs share RXD0, RXC, RXDV, CRS_DV, CRS, TX_CLK, and COL nets; one REVIEW candidate per rule; no native ERC errors.      |
-| `control.kicad_sch` | `3fae0fad8eb15c2f06d4268d69b14fb939f6709f79428a1e098c694b0a8819e5` | No same-role RXD, RXC, RXDV, CRS_DV, CRS, TX_CLK, or COL outputs are shared; no candidate; no native ERC errors.              |
+| Fixture             | SHA-256        | Expected result                                                                                                                    |
+| ------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `fault.kicad_sch`   | `805e1238568260ed277cc4953cbc904f3db94db25bcfb92434e4a6d31cd8195c` | Both PHYs share RXD0, RXC, RXDV, RX_CTRL, CRS_DV, CRS, TX_CLK, and COL nets; one REVIEW candidate per rule; no native ERC errors. |
+| `control.kicad_sch` | `eb661d3d23c550948d3dc05aecaad4ecf87a64e7016bc517bdcb5b5d7fb2cb41` | No same-role RXD, RXC, RXDV, RX_CTRL, CRS_DV, CRS, TX_CLK, or COL outputs are shared; no candidate; no native ERC errors.         |
 
 The test lane exports each schematic twice with digest-pinned KiCad 10.0.0 and
 10.0.5 images, compares normalized netlists and ERC reports, checks both exact
@@ -24,8 +24,9 @@ KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1 \
 The receive-data predicate recognizes bounded `RXD`/`RXDATA` functions. The
 receive-clock predicate recognizes only `RXC`/`RXCLK` with optional MII, GMII,
 or RGMII prefixes. The receive-status predicate recognizes `RXDV` and `RXER`
-with optional MII or GMII prefixes. Each requires explicit bounded Ethernet
-PHY identity, complete unique pin inventory, one exact assignment per counted
+with optional MII or GMII prefixes, plus `RX_CTRL` with an optional RGMII
+prefix. Each requires explicit bounded Ethernet PHY identity, complete unique
+pin inventory, one exact assignment per counted
 pin, and a supported output-capable native pin type. All ask for review;
 selected or multiplexed paths may be intentional. The CRS_DV predicate accepts
 only `CRS_DV`/`CRSDV` with an optional RMII prefix; the function label does not
