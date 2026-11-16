@@ -110,4 +110,10 @@ def validate_usb_unmapped_topology_fixtures(
             unsupported_component_references=component,
             usb_reference_findings="none",
             usb_unmapped_topology_findings=findings[0].subject,
+            usb_endpoint_path_coverage_findings=";".join(
+                item.subject
+                for item in report.findings
+                if item.rule_id == "bus.usb_endpoint_path_coverage_incomplete"
+            )
+            or "none",
         )

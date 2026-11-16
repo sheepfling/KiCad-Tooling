@@ -10,6 +10,8 @@ import pytest
 
 from kicad_tooling.hwrepo.electrical import selected_config
 
+RULE_ID = "bus.usb_endpoint_path_coverage_incomplete"
+
 pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.interface_lint,
@@ -27,6 +29,7 @@ pytestmark = [
     ("project", "version"),
     (("controller", "10.0.0"), ("raspberry-pi-status-led", "10.0.5")),
 )
+@pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_native_usb_data_path_fixture_lane_is_repeatable(
     hosted_reference_root: Path, project: str, version: str
 ) -> None:
@@ -135,6 +138,7 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
     assert unmapped_inline["usb_unmapped_topology_findings"] == (
         "J1 / U1: unmapped USB multi-pin topology port 1 (U2)"
     )
+    assert unmapped_inline["usb_endpoint_path_coverage_findings"] == "none"
     for case in (
         "integrated-direct",
         "external-series",
@@ -148,6 +152,7 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
         assert result["status"] == "PASS"
         assert result["usb_path_findings"] == "none"
         assert result["usb_unmapped_topology_findings"] == "none"
+        assert result["usb_endpoint_path_coverage_findings"] == "none"
     external_protection = results["usb-data-path-fixture/external-protection-contract"]
     assert external_protection["status"] == "PASS"
     assert external_protection["control_coverage_status"] == "COMPLETE"
@@ -221,6 +226,7 @@ def test_native_usb_data_path_fixture_lane_is_repeatable(
     assert unmapped_shunt["usb_unmapped_topology_findings"] == (
         "J1 / U1: unmapped USB multi-pin data attachment port 1 (U6)"
     )
+    assert unmapped_shunt["usb_endpoint_path_coverage_findings"] == "none"
     shunt_common = results["usb-data-path-fixture/protection-shunt-common-reference"]
     assert shunt_common["status"] == "PASS"
     assert shunt_common["usb_path_findings"] == "none"

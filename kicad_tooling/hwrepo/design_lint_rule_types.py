@@ -202,6 +202,7 @@ DesignLintRuleId = Literal[
     "bus.serial_peer_voltage_review",
     "bus.serial_peer_reference_review",
     "bus.usb_peer_reference_review",
+    "bus.usb_endpoint_path_coverage_incomplete",
     "bus.usb_unmapped_multi_pin_topology",
     "bus.usb_generic_connector_phy_pair_review",
     "bus.usb_superspeed_generic_connector_pair_review",

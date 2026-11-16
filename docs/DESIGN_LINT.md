@@ -1104,7 +1104,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 413 active rules.
+The catalog currently contains 414 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -3825,6 +3825,18 @@ separate nets are joined elsewhere, or that a common net has continuous PCB
 copper. Without this explicit map, the
 USB peer heuristic asks for review when the two endpoints use distinct
 reference nets. `bus.usb_data_path_mismatch` reports a stale mapped pin or net.
+
+`bus.usb_endpoint_path_coverage_incomplete` adds a separate coverage prompt
+when the USB analyzer recognizes an active connector group but cannot include
+one or more recognized groups in a supported connector-to-PHY path, an exact
+authored map, or a more specific unsupported multi-pin topology review. The
+finding lists the unassessed groups and any supported paths. It asks the
+reviewer to confirm applicability, add the relevant map, or document why the
+path is outside this analyzer. It does not claim a missing electrical
+connection or require common reference. The default is non-blocking REVIEW;
+project policy can turn it off, promote it after review, or ignore an exact
+finding with a reason. DNP-only connectors and projects with no recognized
+USB connector groups remain quiet.
 
 The source-bound regression exports synthetic integrated-PHY,
 external-PHY-series-resistor, resistor-bypass, split-reference, and

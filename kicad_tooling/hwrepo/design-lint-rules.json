@@ -13122,6 +13122,55 @@
       "implementation_owner": "kicad_tooling/hwrepo/serial_peer_reference_scan.py#unmapped_serial_peer_reference_reviews"
     },
     {
+      "rule_id": "bus.usb_endpoint_path_coverage_incomplete",
+      "title": "Recognized USB endpoints lack supported peer-path coverage",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining recognized USB connector and PHY endpoint groups, supported path entries, exact authored USB maps, and existing narrow unsupported-topology candidates",
+      "predicate": "When at least one non-DNP USB connector endpoint group is recognized, emit one default REVIEW candidate if any non-DNP recognized connector or PHY group is not represented by a supported connector-to-PHY path, an exact authored USB path map, or an existing specific unmapped multi-pin topology candidate. Evidence lists the unassessed endpoint groups and any supported paths. The prompt requests review or documented analyzer non-applicability; it does not assert an absent physical connection, require common reference, infer USB function, or declare a defect.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "The rule only sees endpoint groups recognized by the bounded USB analyzer. It cannot identify every USB connector, PHY, mux, retimer, relay, isolator, or multi-hop path.",
+        "An unassessed group may be intentional, isolated, switched, or outside the supported topology. REVIEW asks for applicability review and does not establish a missing connection, electrical defect, required ground bond, PCB copper path, or USB compliance issue.",
+        "DNP-only connector groups and projects with no recognized connector endpoint groups are quiet. Exact current maps and specific unsupported multi-pin topology prompts suppress the generic prompt for their endpoint groups; stale authored maps remain the responsibility of bus.usb_data_path_mismatch.",
+        "A supported schematic endpoint path does not prove copper continuity, fitted hardware, off-board connectivity, or physical interface behavior."
+      ],
+      "fault_fixtures": [
+        "tests.test_usb_endpoint_path_coverage_lint.test_incomplete_recognized_endpoints_get_a_non_defect_review_prompt",
+        "tests.test_usb_endpoint_path_coverage_lint.test_complete_but_unpaired_usb_endpoints_get_coverage_review",
+        "tests.test_usb_endpoint_path_coverage_lint.test_rule_override_and_exact_ignore_are_available",
+        "tests.test_design_lint_mcp_parity_usb_endpoint_coverage.test_incomplete_usb_endpoint_coverage_cli_mcp_parity"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_usb_endpoint_path_coverage_lint.test_supported_usb_path_is_a_quiet_coverage_control",
+        "tests.test_usb_endpoint_path_coverage_lint.test_dnp_only_connector_groups_do_not_create_coverage_prompts",
+        "tests.test_usb_endpoint_path_coverage_lint.test_unrecognized_projects_do_not_get_usb_endpoint_coverage_prompts",
+        "tests.test_usb_endpoint_path_coverage_lint.test_specific_unmapped_topology_prompt_supersedes_generic_coverage_prompt",
+        "tests.test_usb_endpoint_path_coverage_lint.test_exact_authored_map_resolves_endpoint_coverage_prompt",
+        "tests.test_usb_endpoint_path_coverage_lint.test_stale_authored_map_leaves_exact_map_mismatch_as_the_specific_finding",
+        "tests.test_usb_data_path_native_fixture_lane.test_native_usb_data_path_fixture_lane_is_repeatable"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_usb_endpoint_path_coverage_lint.test_endpoint_coverage_fingerprint_is_stable_under_netlist_mapping_order"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/usb_peer_endpoint_coverage_review.py#usb_endpoint_path_coverage_candidates",
+        "kicad_tooling/hwrepo/usb_peer_endpoint_coverage_review.py#UsbEndpointPathCoverageCandidate",
+        "kicad_tooling/hwrepo/usb_peer_reference_scan.py#scan_usb_peer_reference_reviews",
+        "kicad_tooling/hwrepo/design_lint_usb_peer_group_candidates.py#usb_peer_group_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/usb_peer_endpoint_coverage_review.py#usb_endpoint_path_coverage_candidates"
+    },
+    {
       "rule_id": "bus.usb_peer_reference_review",
       "title": "USB peers use different explicit reference nets",
       "status": "active",

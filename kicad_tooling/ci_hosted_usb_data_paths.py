@@ -423,6 +423,12 @@ def usb_data_path_fixture_lane(root: Path, *, project: str, image: str, log: Hos
                 if item.rule_id == "bus.usb_unmapped_multi_pin_topology"
             )
             or "none",
+            usb_endpoint_path_coverage_findings=";".join(
+                item.subject
+                for item in report.findings
+                if item.rule_id == "bus.usb_endpoint_path_coverage_incomplete"
+            )
+            or "none",
             usb_reference_coverage_status=coverage.status,
             usb_reference_recognized_connector_groups=coverage.recognized_connector_group_count,
             usb_reference_supported_connector_groups=coverage.supported_connector_group_count,

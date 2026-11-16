@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 413 rules are implemented with synthetic regression coverage.
+The following 414 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 413 active rules.
+The catalog currently contains 414 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -633,6 +633,7 @@ skipped under prerelease policy.
 - `bus.rs485_unconnected_data_pin`
 - `bus.rs485_unconnected_line_pin`
 - `bus.usb_peer_reference_review`
+- `bus.usb_endpoint_path_coverage_incomplete`
 - `bus.usb_unconnected_data_pin`
 - `bus.spi_unconnected_chip_select`
 - `bus.spi_unconnected_data_pin`
@@ -4613,7 +4614,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 413 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 414 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -29908,6 +29909,55 @@ acceptance threads while new lint features proceed:
   `43866907696` on commit
   `55470f1da3430aeefa8126405ba7a252b04b72c9`; the prerelease lint gate passed.
   Package and preview jobs were skipped under prerelease policy.
+
+#### LINT-526 — Review recognized USB endpoints outside supported path coverage
+
+- **Status:** Implemented as `bus.usb_endpoint_path_coverage_incomplete`, a
+  configurable default-REVIEW coverage prompt. It reuses the source-bound USB
+  endpoint and path scan; it adds no new electrical topology predicate.
+- **Reason:** The pinned public relay-switched USB hub screen recognized nine
+  connector endpoint groups, all `INCOMPLETE`, with no supported connector-to-
+  PHY paths. That screen did not establish a design defect or approved path
+  intent. The existing typed coverage report exposed this unsupported analysis
+  state, but users could not configure or acknowledge it as a finding. The
+  new rule makes that review visible without treating the screen as a fault.
+- **Predicate and boundary:** Emit one review when an active recognized USB
+  connector group exists and any non-DNP endpoint group is outside a supported
+  path, a current endpoint map, or the specific unmapped multi-pin topology
+  prompt. No recognized connector groups and DNP-only connector groups are
+  quiet. Existing precise USB topology and stale-map findings retain precedence
+  for their endpoint pairs. The finding requests applicability review or a
+  project map; it does not assert a missing wire, required common reference,
+  electrical defect, physical path, or USB compliance issue.
+- **Configuration:** Projects may set the rule to `off` or `block`, or ignore
+  an exact finding with a reason. `block` is appropriate only after a project
+  owner adopts an explicit coverage requirement.
+- **Fixtures:** Tooling-owned synthetic cases cover incomplete and unpaired
+  endpoint groups, supported-path, DNP-only, no-USB, and specific-topology
+  controls, stable ordering, policy overrides, exact ignores, and CLI/MCP
+  parity. The broader USB regression lane is also exercised against digest-
+  pinned KiCad 10.0.0 and 10.0.5 Docker images. No public cohort design source
+  or proprietary project data is stored as a fixture.
+- **Incremental value:** This is a configurable coverage-review improvement,
+  not a newly discovered electrical defect detector. It turns a report-only
+  `INCOMPLETE` or unpaired endpoint state into a selectable review action. The
+  rule does not expand the USB analyzer's supported topology set; its public
+  cohort applicability remains unmeasured by independent reviewer outcomes.
+- **Selection:** Run
+  `tests/test_usb_endpoint_path_coverage_lint.py` and
+  `tests/test_design_lint_mcp_parity_usb_endpoint_coverage.py` with
+  `design_lint and interface_lint and
+  design_lint_rule(rule_id="bus.usb_endpoint_path_coverage_incomplete")`.
+  The exact-version impacted USB lane is
+  `tests/test_usb_data_path_native_fixture_lane.py` with Docker and
+  `KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1`.
+- **Local acceptance:** Rule-scoped `scripts/ci.py` passed in
+  `build/ci/run-h8w9d807`: 503 passed and 9,937 deselected, including exact
+  digest-pinned Docker USB lanes on KiCad 10.0.0 and 10.0.5. Ruff, Alphus
+  module-boundary and duplication checks, Rumdl, mdrepo, module-size
+  preflight, Linux and Windows Pyright, wheel/sdist builds, installed-package
+  checks, external-template checks, and the adapted-template playtest passed.
+- **Hosted acceptance:** Pending the tagged prerelease lint gate.
 
 ## Completion and release gate
 

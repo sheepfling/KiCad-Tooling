@@ -22,6 +22,9 @@ from .design_lint_usb_unmapped_topology import usb_unmapped_multi_pin_topology_c
 from .netlist_contract_models import NetlistContract
 from .usb_c_ports import UsbCPortRosterContext
 from .usb_peer_data_crossing import usb_peer_data_pair_crossing_candidates
+from .usb_peer_endpoint_coverage_review import (
+    usb_endpoint_path_coverage_candidates,
+)
 from .usb_peer_reference_scan import UsbPeerReferenceScan
 
 
@@ -50,6 +53,7 @@ def usb_peer_group_candidates(
             reviewed_connector_references,
         ),
         *usb_unmapped_multi_pin_topology_candidates(reference_scan, data_path),
+        *usb_endpoint_path_coverage_candidates(reference_scan, data_path),
     )
 
 
