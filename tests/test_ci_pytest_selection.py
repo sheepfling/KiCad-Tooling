@@ -9,6 +9,10 @@ from unittest.mock import Mock
 
 import pytest
 
+from kicad_tooling.ci_module_size_preflight import (
+    MODULE_SIZE_TEST_PATH,
+    module_size_preflight_command,
+)
 from kicad_tooling.pytest_scope import validate_test_module_files
 from scripts import ci
 
@@ -60,6 +64,8 @@ def test_ci_driver_uses_marker_selection_and_reports_durations(
         "--durations=10",
         "-m",
         "design_lint and interface_lint",
+        "--ignore",
+        MODULE_SIZE_TEST_PATH,
     )
 
 
@@ -95,6 +101,8 @@ def test_ci_driver_combines_marker_and_explicit_test_module_selection(
         selected,
         "-m",
         "design_lint and interface_lint",
+        "--ignore",
+        MODULE_SIZE_TEST_PATH,
     )
 
 
@@ -148,7 +156,29 @@ def test_ci_test_module_selection_rejects_missing_files(tmp_path: Path) -> None:
         validate_test_module_files(("tests/test_missing.py",), tmp_path)
 
 
-@pytest.mark.parametrize("failure_stage", ("ruff-format", "ruff", "rumdl", "mdrepo"))
+@pytest.mark.architecture
+@pytest.mark.design_lint
+@pytest.mark.rule_gate_integrity
+def test_ci_driver_preflights_module_size_before_unit_selection(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    preflight = _selected_stage_command(tmp_path, monkeypatch, [], "module-size-preflight")
+    unit = _selected_unit_command(
+        tmp_path,
+        monkeypatch,
+        ["--pytest-markexpr", "design_lint and rule_gate_integrity"],
+    )
+
+    assert preflight == module_size_preflight_command(sys.executable)
+    assert preflight[-1] == MODULE_SIZE_TEST_PATH
+    assert "--ignore" in unit
+    assert unit[unit.index("--ignore") + 1] == MODULE_SIZE_TEST_PATH
+
+
+@pytest.mark.parametrize(
+    "failure_stage",
+    ("ruff-format", "ruff", "rumdl", "mdrepo", "module-size-preflight"),
+)
 @pytest.mark.architecture
 def test_fast_quality_gate_failure_stops_before_unit_suite(
     tmp_path: Path,
@@ -179,6 +209,7 @@ def test_fast_quality_gate_failure_stops_before_unit_suite(
         "alphus-shared-utility-duplication",
         "rumdl",
         "mdrepo",
+        "module-size-preflight",
     )
     expected = fast_stages[: fast_stages.index(failure_stage) + 1]
     assert calls == list(expected)

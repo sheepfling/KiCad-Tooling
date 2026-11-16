@@ -9,6 +9,8 @@ from kicad_tooling.hwrepo.design_lint_rule_models import DesignLintRuleMetadata
 from kicad_tooling.hwrepo.design_lint_rule_types import DesignLintTheme
 
 RULE_GATE_TYPECHECK_PATHS = (
+    "kicad_tooling/ci_module_size_preflight.py",
+    "kicad_tooling/ci_template_playtest.py",
     "kicad_tooling/ci_typecheck.py",
     "kicad_tooling/lint_gate_typecheck.py",
     "scripts/ci.py",

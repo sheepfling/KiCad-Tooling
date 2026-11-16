@@ -31,10 +31,13 @@ python3.11 scripts/ci.py --project-root /path/to/populated-project-checkout
 
 The Python CI driver records each stage's output and timing under ignored
 `build/ci/`. Its pytest stage reports the ten slowest selected test cases along
-with pass, skip, and deselection counts. It runs unit tests, Ruff, strict
-Pyright, markdown checks, and packaging. The development install includes the
-`fabrication_connectivity` extra so its source and native artifact regressions
-run with their declared raster dependencies.
+with pass, skip, and deselection counts. It checks the repository-wide Python
+module-size limit in a small preflight before selected unit tests, so oversized
+modules fail before expensive native fixtures. The preflight test is excluded
+from the main pytest selection unless explicitly requested. The gate then runs
+unit tests, Ruff, strict Pyright, markdown checks, and packaging. The development
+install includes the `fabrication_connectivity` extra so its source and native
+artifact regressions run with their declared raster dependencies.
 It builds a wheel and source distribution, rebuilds the wheel from that source
 distribution outside any Git tree, compares metadata and package contents, then
 installs the rebuilt wheel in a fresh environment. The installed command must
