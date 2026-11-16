@@ -2149,22 +2149,22 @@
       "title": "Generic power contact is open on every footprint-similar connector peer",
       "status": "active",
       "maturity": "synthetic_validated",
-      "default_mode": "off",
+      "default_mode": "review",
       "metamorphic_status": "covered",
       "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist",
-      "predicate": "Among fitted connector instances with distinct native symbols and no PART_ID, require exact nonempty value and footprint matches, complete identical pin inventories, and matching nonempty per-pin native function and electrical-type metadata. A generic Pin_N or numeric-only pin-function contact with native power_in or power_out type is unassigned on every compared peer. Require either a different pin with one common-net assignment in the same scope or a current source-matched peer_assignment_group. Emit a default-off REVIEW prompt to verify the approved pinout and intended port use; neither identity clues nor power electrical type prove that the contact must connect or share a net.",
+      "predicate": "Among fitted connector instances with distinct native symbols and no PART_ID, require exact nonempty value and footprint matches, complete identical pin inventories, and matching nonempty per-pin native function and electrical-type metadata. A generic Pin_N or numeric-only pin-function contact with native power_in or power_out type is unassigned on every compared peer. Require either a different pin with one common-net assignment in the same scope or a current source-matched peer_assignment_group. Emit a default REVIEW prompt to verify the approved pinout and intended port use; neither identity clues nor power electrical type prove that the contact must connect or share a net.",
       "supported_kicad_versions": [
         "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
       ],
       "limitations": [
         "Matching symbol metadata, value, footprint, inventory, native power type, and a common anchor are review clues only; they do not establish connector role, power intent, or a required connection.",
-        "The rule is disabled by default because a connector power contact may be intentionally unused. Project owners should review an approved pinout before enabling it.",
+        "A connector power contact may be intentionally unused. The default REVIEW prompt is non-blocking; project owners can disable it when an approved pinout confirms the open contacts are intentional.",
         "Only generic pin functions with native power_in or power_out type are considered. Meaningfully named pins, passive contacts, signal contacts, free pins, and unspecified pins stay with their specific checks or remain outside this rule.",
         "The rule requires complete identical pin inventories and matching nonempty per-pin functions and electrical types, plus a common assigned anchor or current source-matched peer group. Missing or inconsistent evidence, ambiguous assignments, stale maps, and separate peer groups do not produce a prompt.",
         "DNP and PART_ID-bearing components are excluded. The finding does not establish PCB copper continuity, off-board wiring, or that separate power contacts should share a rail."
       ],
       "fault_fixtures": [
-        "tests.test_connector_footprint_peer_generic_power_all_open.test_generic_power_contact_open_on_all_alias_peers_is_opt_in_review",
+        "tests.test_connector_footprint_peer_generic_power_all_open.test_generic_power_contact_open_on_all_alias_peers_is_review_by_default",
         "tests.test_design_lint_mcp_parity_connector_generic_power_all_open.test_generic_power_contact_cli_mcp_fault_and_control_parity",
         "tests.test_connector_footprint_peer_unanchored_all_open_native.test_native_generic_power_pin_all_open_fault_and_control_are_repeatable"
       ],

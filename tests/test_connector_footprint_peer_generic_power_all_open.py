@@ -79,14 +79,16 @@ def _existing_pin_rule_off_policy() -> DesignLintPolicy:
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 @pytest.mark.parametrize("power_type", ("power_in", "power_out"))
-def test_generic_power_contact_open_on_all_alias_peers_is_opt_in_review(power_type: str) -> None:
+def test_generic_power_contact_open_on_all_alias_peers_is_review_by_default(
+    power_type: str,
+) -> None:
     source = _source(power_type=power_type)
     default = _report(source, _existing_pin_rule_off_policy())
     (default_finding,) = _rule_findings(default)
 
-    assert default.status == "PASS"
-    assert default_finding.mode == "off"
-    assert default_finding.disposition == "RULE_OFF"
+    assert default.status == "REVIEW"
+    assert default_finding.mode == "review"
+    assert default_finding.disposition == "OPEN"
     assert default_finding.evidence["pin_electrical_type"] == (power_type,)
     assert default_finding.evidence["assignments"] == (
         "J1.2=<unassigned>",
@@ -169,10 +171,25 @@ def test_peer_power_review_policy_and_exact_ignore_are_project_configurable() ->
             ),
         ),
     )
+    disabled = _report(
+        source,
+        DesignLintPolicy(
+            rules=(
+                *_existing_pin_rule_off_policy().rules,
+                DesignLintRuleOverride(
+                    rule_id=RULE_ID,
+                    mode="off",
+                    reason="Synthetic project confirms these contacts are intentionally unused.",
+                ),
+            )
+        ),
+    )
 
     assert blocked.status == "FAIL"
     assert _rule_findings(blocked)[0].mode == "block"
     assert _rule_findings(ignored)[0].disposition == "IGNORED"
+    assert disabled.status == "PASS"
+    assert _rule_findings(disabled)[0].disposition == "RULE_OFF"
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)

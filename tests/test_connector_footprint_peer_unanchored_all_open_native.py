@@ -46,6 +46,7 @@ _GENERIC_POWER_FIXTURES = {
 pytestmark = [
     pytest.mark.design_lint,
     pytest.mark.connector_lint,
+    pytest.mark.power_lint,
     pytest.mark.native_kicad,
     pytest.mark.slow,
     pytest.mark.skipif(

@@ -29861,6 +29861,51 @@ acceptance threads while new lint features proceed:
   `tests/test_connector_footprint_peer_generic_power_partial_open_native.py`
   with Docker and `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`.
 
+#### LINT-525 — Review all-open generic power contacts across connector peers
+
+- **Status:** Promoted the existing
+  `connector.footprint_peer_generic_power_pin_all_open` from default `off` to
+  default `review`; its predicate and evidence scope are unchanged.
+- **Priority:** P2 review context. When every eligible similar connector leaves
+  the same generic `power_in` or `power_out` contact open, per-pin findings do
+  not summarize the repeated pattern. The group prompt asks the reviewer to
+  compare the approved pinout and intended port use.
+- **Incremental-value limit:** This does not add a new electrical defect
+  detector. Existing unconnected-power checks can already report each pin.
+  The rule adds default visibility and compact peer evidence. It does not catch
+  assigned-but-separated return nets; those require return-domain heuristics or
+  independently authored connector requirements.
+- **Predicate and boundary:** Require distinct native symbols, no `PART_ID`,
+  exact nonempty value and footprint matches, complete identical pin
+  inventories, matching nonempty native function and electrical-type metadata,
+  generic pin-function text, and native `power_in` or `power_out` type. Every
+  peer's pin must be unassigned, with either another common-net anchor or a
+  current source-matched peer-assignment group. An open contact may be
+  intentional; the default is non-blocking REVIEW, with project `off`, `block`,
+  and exact-fingerprint ignore available. Project owners should only select
+  block when project policy is grounded in a reviewed requirement.
+- **Fixtures:** Existing tooling-owned synthetic fault/control cases cover
+  `power_in`, `power_out`, connected and named-pin controls, mismatched
+  metadata, separate peer groups, deterministic evidence, CLI/MCP parity,
+  project overrides, and exact ignores. The fixture README records the
+  source-bound native KiCad 10.0.0 and 10.0.5 exports; the Docker-native test
+  is now marked for both connector and power-focused selection.
+- **Selection:** Run
+  `tests/test_connector_footprint_peer_generic_power_all_open.py` and
+  `tests/test_design_lint_mcp_parity_connector_generic_power_all_open.py` with
+  `design_lint and connector_lint and power_lint and
+  design_lint_rule(rule_id="connector.footprint_peer_generic_power_pin_all_open")`.
+  Run `tests/test_connector_footprint_peer_unanchored_all_open_native.py` with
+  Docker, `KICAD_RUN_NATIVE_CONNECTOR_FIXTURES=1`, `native_kicad`, and the same
+  rule selector.
+- **Local acceptance:** Rule-scoped `scripts/ci.py` passed in
+  `build/ci/run-1y5h6ite`: 499 passed and 9,928 deselected, with the exact
+  digest-pinned Docker fixtures on KiCad 10.0.0 and 10.0.5. Ruff, both Alphus
+  profiles, Rumdl, mdrepo, module-size preflight, Linux and Windows Pyright,
+  wheel/sdist builds, installed-package checks, external-template inventory,
+  surface, verification, and adapted-template playtest all passed.
+- **Hosted acceptance:** Pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
