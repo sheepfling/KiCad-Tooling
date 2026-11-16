@@ -30697,7 +30697,12 @@ acceptance threads while new lint features proceed:
   source-distribution wheel rebuild, and isolated installed-wheel origin and
   version checks passed. No external project checkout was supplied to this
   local run.
-- **Hosted scoped acceptance:** Pending.
+- **Hosted scoped acceptance:** Tag `v0.5.3rc874` passed GitHub Actions run
+  `43978854575`: 41 selected tests passed, including exact KiCad 10.0.0 and
+  10.0.5 Docker exports. Ruff, both Alphus checks, Rumdl, mdrepo, module-size
+  preflight, Linux and Windows type checks, wheel/sdist builds, installed-wheel
+  checks, external/adapted project verification, and playtest passed. Package
+  and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
