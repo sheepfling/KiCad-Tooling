@@ -37,8 +37,14 @@ def test_catalog_connects_ethernet_rx_rule_to_its_native_fault_and_control_lane(
     assert NATIVE_TEST in rule.valid_control_fixtures
 
     owner = REPOSITORY / "kicad_tooling/hwrepo/ethernet_rx_output_sharing.py"
+    identity_owner = REPOSITORY / "kicad_tooling/hwrepo/ethernet_phy_identity.py"
     coordinator = REPOSITORY / "kicad_tooling/hwrepo/design_lint_bus_candidates.py"
     assert len(owner.read_text(encoding="utf-8").splitlines()) < 500
+    assert len(identity_owner.read_text(encoding="utf-8").splitlines()) < 500
+    assert (
+        "kicad_tooling/hwrepo/ethernet_phy_identity.py#explicit_ethernet_phy_identity"
+        in rule.implementation_refs
+    )
     assert "from .ethernet_rx_output_sharing import ethernet_rx_output_sharing_candidates" in (
         coordinator.read_text(encoding="utf-8")
     )

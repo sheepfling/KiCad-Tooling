@@ -1104,7 +1104,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 404 active rules.
+The catalog currently contains 405 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -2169,6 +2169,38 @@ documents the exact native inputs and limits.
 KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_ethernet_rx_output_sharing_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_rx_outputs_share_net")'
+```
+
+### Ethernet PHY receive-clock outputs sharing one net
+
+`bus.ethernet_rx_clock_outputs_share_net` prompts when fitted, explicitly
+identified Ethernet PHY components expose `RXC` or `RXCLK` pins on one exact
+schematic net and their native pin types are output-capable. It recognizes
+those functions with optional MII, GMII, or RGMII prefixes. It requires a
+complete unique native pin inventory and one exact assignment for every
+counted pin, suppresses incomplete or ambiguous groups, and leaves two native
+`output` pins to ERC. The predicate deliberately does not recognize `REF_CLK`:
+that name alone does not identify a receive-clock role or interface mode.
+
+This default-`review` heuristic does not assert a defect or required topology.
+A selected PHY, clock mux, or another board-level arrangement can be
+intentional. RXC naming does not prove that a device is configured for MII or
+actively drives the net; the check does not establish PHY mode, firmware
+selection, routed copper, or off-board wiring. For one documented device
+example, Microchip's KSZ8081MNX checklist maps RXC to the MII MAC RX_CLK signal
+([source](https://ww1.microchip.com/downloads/en/DeviceDoc/00002763A.pdf));
+the heuristic uses that as a review cue, not as a universal topology rule. The
+same native lane checks synthetic shared RXD and RXC fault/control cases.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_ethernet_rx_clock_output_sharing.py \
+  tests/test_design_lint_ethernet_rx_clock_output_sharing_architecture.py \
+  tests/test_design_lint_mcp_parity_ethernet_rx_output_sharing.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.ethernet_rx_clock_outputs_share_net")'
+
+KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_ethernet_rx_output_sharing_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_rx_clock_outputs_share_net")'
 ```
 
 ### Ethernet management one-sided open pin review

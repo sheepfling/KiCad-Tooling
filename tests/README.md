@@ -812,6 +812,20 @@ KICAD_RUN_NATIVE_COMPLEMENTARY_PAIR_FIXTURES=1 python -I -B -m pytest -q \
   tests/test_complementary_pair_native_fixture_lane.py
 ```
 
+Ethernet PHY receive-data and receive-clock output-sharing heuristics share a
+digest-pinned native fault/control lane. Select the receive-clock slice with:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_ethernet_rx_clock_output_sharing.py \
+  tests/test_design_lint_ethernet_rx_clock_output_sharing_architecture.py \
+  tests/test_design_lint_mcp_parity_ethernet_rx_output_sharing.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.ethernet_rx_clock_outputs_share_net")'
+
+KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_ethernet_rx_output_sharing_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.ethernet_rx_clock_outputs_share_net")'
+```
+
 Connector/capacitor-only DC-reference review also has a focused exact-version
 native fault and valid-control lane:
 

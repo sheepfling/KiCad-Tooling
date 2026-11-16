@@ -22,12 +22,13 @@ from .hwrepo.native_report_parsing import read_netlist
 
 ETHERNET_RX_OUTPUT_SHARING_TOOLCHAINS = KICAD_10_NATIVE_TOOLCHAINS
 RULE_ID = "bus.ethernet_rx_outputs_share_net"
+CLOCK_RULE_ID = "bus.ethernet_rx_clock_outputs_share_net"
 
 
 def ethernet_rx_output_sharing_fixture_lane(
     root: Path, *, version: str, image: str, log: HostedLog
 ) -> None:
-    """Repeat native exports for shared-RXD fault and separate control fixtures."""
+    """Repeat native exports for shared-RXD/RXC faults and separate controls."""
     root = root.resolve()
     if (version, image) not in ETHERNET_RX_OUTPUT_SHARING_TOOLCHAINS:
         raise ValueError(
@@ -41,8 +42,8 @@ def ethernet_rx_output_sharing_fixture_lane(
     }
     source_hashes = {case: digest(source) for case, source in sources.items()}
     expected_hashes = {
-        "fault": "1d78b669cc9b320b3eacd4b1bd74feeb1de0c6300fcaea795a5f195b877e5dca",
-        "control": "ed421c7f626734649f69560340b94184668e888e221e55def18ee476f2f290eb",
+        "fault": "2da0e7b83d033c59b4056fc976abf32b638aa3f61ee12d2488e3175607c6ea92",
+        "control": "3f44175e5bf4492bdfc87ea773e2756a1aec83e0e35acbf20458e52993d26bfc",
     }
     if source_hashes != expected_hashes:
         raise ValueError("Ethernet RX-sharing fixture sources changed from their reviewed hashes")
@@ -129,7 +130,7 @@ def ethernet_rx_output_sharing_fixture_lane(
         )
 
     normalized_hashes: dict[tuple[str, str], str] = {}
-    subjects: dict[tuple[str, str], tuple[str, ...]] = {}
+    subjects: dict[tuple[str, str, str], tuple[str, ...]] = {}
     erc_errors: dict[tuple[str, str], tuple[str, ...]] = {}
     for case in sources:
         for run in ("first", "repeat"):
@@ -152,6 +153,14 @@ def ethernet_rx_output_sharing_fixture_lane(
                         raise ValueError(
                             "Native Ethernet RX-sharing fixture no longer isolates ERC typing"
                         )
+                    if observed.pin_functions.get(f"{reference}.3") != "RXC":
+                        raise ValueError(
+                            "Native Ethernet RX-sharing fault lost its RXC pin function"
+                        )
+                    if observed.pin_electrical_types.get(f"{reference}.3") != "passive":
+                        raise ValueError(
+                            "Native Ethernet RXC fixture no longer isolates ERC typing"
+                        )
                     if reference in observed.dnp_components:
                         raise ValueError(
                             "Native Ethernet RX-sharing endpoint unexpectedly became DNP"
@@ -159,6 +168,10 @@ def ethernet_rx_output_sharing_fixture_lane(
                 if set(observed.nets.get("ETH_RXD_SHARED", ())) != {"U1.1", "U2.1"}:
                     raise ValueError(
                         "Native Ethernet RX-sharing fault did not preserve the shared net"
+                    )
+                if set(observed.nets.get("MII_RX_CLK_SHARED", ())) != {"U1.3", "U2.3"}:
+                    raise ValueError(
+                        "Native Ethernet RX-sharing fault did not preserve the shared RXC net"
                     )
             if case == "control" and run == "first":
                 if set(observed.nets.get("RXD0_TXD_LINK", ())) != {"U1.1", "U2.2"}:
@@ -169,6 +182,10 @@ def ethernet_rx_output_sharing_fixture_lane(
                     raise ValueError(
                         "Native Ethernet RX-sharing control unexpectedly joins both RXD pins"
                     )
+                if observed.nets.get("PHY1_RX_CLK") != ("U1.3",):
+                    raise ValueError("Native Ethernet control did not isolate U1.RXC")
+                if observed.nets.get("PHY2_RX_CLK") != ("U2.3",):
+                    raise ValueError("Native Ethernet control did not isolate U2.RXC")
             normalized = json.dumps(
                 observed.model_dump(mode="json"),
                 sort_keys=True,
@@ -193,13 +210,20 @@ def ethernet_rx_output_sharing_fixture_lane(
                 ),
                 DesignLintPolicy(),
             )
-            subjects[(case, run)] = tuple(
-                item.subject for item in report.findings if item.rule_id == RULE_ID
-            )
+            for rule_id in (RULE_ID, CLOCK_RULE_ID):
+                subjects[(case, run, rule_id)] = tuple(
+                    item.subject for item in report.findings if item.rule_id == rule_id
+                )
 
     expected_subjects = {
-        "fault": ("U1, U2: Ethernet PHY receive-data outputs share ETH_RXD_SHARED",),
-        "control": (),
+        RULE_ID: {
+            "fault": ("U1, U2: Ethernet PHY receive-data outputs share ETH_RXD_SHARED",),
+            "control": (),
+        },
+        CLOCK_RULE_ID: {
+            "fault": ("U1, U2: Ethernet PHY receive-clock outputs share MII_RX_CLK_SHARED",),
+            "control": (),
+        },
     }
     for case in sources:
         if normalized_hashes[(case, "first")] != normalized_hashes[(case, "repeat")]:
@@ -210,13 +234,16 @@ def ethernet_rx_output_sharing_fixture_lane(
             raise ValueError(f"Native Ethernet RX-sharing {case} ERC results differ on repeat")
         if erc_errors[(case, "first")]:
             raise ValueError(f"Native ERC reported Ethernet RX-sharing {case} errors")
-        if subjects[(case, "first")] != expected_subjects[case]:
-            raise ValueError(
-                f"Native Ethernet RX-sharing {case} produced {subjects[(case, 'first')]!r}; "
-                f"expected {expected_subjects[case]!r}"
-            )
-        if subjects[(case, "repeat")] != subjects[(case, "first")]:
-            raise ValueError(f"Native Ethernet RX-sharing {case} findings differ on repeat")
+        for rule_id, cases in expected_subjects.items():
+            if subjects[(case, "first", rule_id)] != cases[case]:
+                raise ValueError(
+                    f"Native Ethernet RX-sharing {case} for {rule_id} produced "
+                    f"{subjects[(case, 'first', rule_id)]!r}; expected {cases[case]!r}"
+                )
+            if subjects[(case, "repeat", rule_id)] != subjects[(case, "first", rule_id)]:
+                raise ValueError(
+                    f"Native Ethernet RX-sharing {case} findings differ on repeat for {rule_id}"
+                )
         log.event(
             f"ethernet-rx-output-sharing-fixture/{case}",
             "PASS",
@@ -228,7 +255,10 @@ def ethernet_rx_output_sharing_fixture_lane(
             repeat_normalized_netlist_sha256=normalized_hashes[(case, "repeat")],
             erc_errors="none",
             repeatable="true",
-            subjects=";".join(subjects[(case, "first")]) or "none",
+            subjects=";".join(
+                f"{rule_id}={'|'.join(subjects[(case, 'first', rule_id)]) or 'none'}"
+                for rule_id in expected_subjects
+            ),
         )
     log.event(
         "ethernet-rx-output-sharing-fixture/native-export",

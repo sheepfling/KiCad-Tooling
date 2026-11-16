@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 404 rules are implemented with synthetic regression coverage.
+The following 405 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 404 active rules.
+The catalog currently contains 405 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -684,6 +684,8 @@ skipped under prerelease policy.
 - `bus.ethernet_management_unconnected_pin`
 - `bus.ethernet_management_signal_on_named_rail`
 - `bus.ethernet_signal_on_named_rail`
+- `bus.ethernet_rx_clock_outputs_share_net`
+- `bus.ethernet_rx_outputs_share_net`
 - `bus.ethernet_generic_connector_pair_review`
 - `bus.ethernet_management_generic_connector_pair_review`
 - `bus.swd_generic_connector_pair_review`
@@ -4597,7 +4599,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 403 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 405 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -29320,6 +29322,60 @@ acceptance threads while new lint features proceed:
   ignored `build/ci/run-c76jn43s/`.
 - **Hosted acceptance:** Run `43800775357` passed for commit `08e44d23` and
   tag `v0.5.3rc843`.
+
+#### LINT-515 — Review Ethernet PHY receive-clock outputs sharing one net
+
+- **Status:** Implemented as the default-`review`
+  `bus.ethernet_rx_clock_outputs_share_net` interface heuristic.
+- **Priority:** P1 interface coverage. LINT-514 covers Ethernet PHY receive-
+  data output labels; the same deterministic grouping service did not classify
+  receive-clock labels. A synthetic passive-typed RXC-sharing net passed the
+  previous catalog unchanged, demonstrating an uncovered class rather than a
+  duplicate warning.
+- **Predicate:** Require fitted U/IC references with bounded explicit
+  Ethernet PHY identity, complete unique native pin inventory, one exact net
+  assignment, and a supported output-capable pin type. Recognize `RXC` or
+  `RXCLK` with optional MII, GMII, or RGMII prefixes. Emit one REVIEW candidate
+  when receive-clock pins from at least two distinct components share one
+  exact non-return net, with one counted receive-clock pin per component.
+  Suppress incomplete or ambiguous groups and leave two native `output` pins
+  to ERC.
+- **Evidence basis and boundary:** Microchip's KSZ8081MNX hardware checklist
+  maps the device's RXC pin to the MII MAC RX_CLK signal
+  ([primary source](https://ww1.microchip.com/downloads/en/DeviceDoc/00002763A.pdf)).
+  This supports RXC as a useful review cue for that device; it does not make
+  RXC universally active or establish a required board topology. The rule
+  intentionally excludes `REF_CLK`, whose name alone does not identify role
+  or mode. A selected PHY or clock mux may be intentional. The heuristic does
+  not infer operating mode, endpoint selection, PCB copper, or off-board
+  wiring.
+- **Fixtures:** The tooling-owned synthetic fault/control schematic pair
+  covers both LINT-514's shared receive-data pins and this shared RXC case.
+  Digest-pinned KiCad 10.0.0 and 10.0.5 exports verify exact nets, pin
+  functions, no native ERC errors, and repeatable normalized netlists. Rule
+  tests cover aliases, separate and unrelated clocks, DNP, open and multiply
+  assigned pins, incomplete inventories, duplicate roles, return nets,
+  native-output conflict deferral, unsupported types, policy modes, exact
+  ignores, stable fingerprints, and separation metamorphism. CLI/MCP parity
+  is checked against the same typed service. No cohort or external project
+  source is used.
+- **Selection:** Run `tests/test_ethernet_rx_clock_output_sharing.py`,
+  `tests/test_design_lint_ethernet_rx_clock_output_sharing_architecture.py`,
+  and the receive-clock case in
+  `tests/test_design_lint_mcp_parity_ethernet_rx_output_sharing.py` with
+  `design_lint and interface_lint and
+  design_lint_rule(rule_id="bus.ethernet_rx_clock_outputs_share_net")`. The
+  shared native lane is
+  `tests/test_ethernet_rx_output_sharing_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1`.
+- **Local acceptance:** Scoped `scripts/ci.py` passed 117 tests with 2 native
+  cases skipped in that run and 3 deselected. The skipped native fixture lane
+  was run separately and passed both digest-pinned KiCad 10.0.0 and 10.0.5
+  cases. Ruff, both Alphus profiles, Rumdl, mdrepo, module-size preflight,
+  Linux and Windows Pyright, wheel/sdist builds, installed-wheel verification,
+  and the external/adapted public-template playtest passed. Receipts are under
+  ignored `build/ci/run-ha3ynaxk/`.
+- **Hosted acceptance:** Pending.
 
 ## Completion and release gate
 
