@@ -4,6 +4,13 @@ from __future__ import annotations
 
 INTERFACE_RULE_NODE_CASES = (
     (
+        "bus.ethernet_rx_status_outputs_share_net",
+        (
+            "tests/test_ethernet_rx_status_output_sharing.py::"
+            "test_multiple_fitted_ethernet_phy_rxdv_outputs_on_one_net_are_reviewed"
+        ),
+    ),
+    (
         "bus.ethernet_rx_clock_outputs_share_net",
         (
             "tests/test_ethernet_rx_clock_output_sharing.py::"

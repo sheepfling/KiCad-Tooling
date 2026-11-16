@@ -263,6 +263,7 @@ DesignLintRuleId = Literal[
     "bus.ethernet_management_same_net",
     "bus.ethernet_rx_outputs_share_net",
     "bus.ethernet_rx_clock_outputs_share_net",
+    "bus.ethernet_rx_status_outputs_share_net",
     "bus.ethernet_management_unconnected_pin",
     "bus.ethernet_data_unconnected_pin",
     "bus.ethernet_generic_connector_pair_review",

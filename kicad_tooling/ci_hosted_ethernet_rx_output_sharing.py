@@ -23,6 +23,7 @@ from .hwrepo.native_report_parsing import read_netlist
 ETHERNET_RX_OUTPUT_SHARING_TOOLCHAINS = KICAD_10_NATIVE_TOOLCHAINS
 RULE_ID = "bus.ethernet_rx_outputs_share_net"
 CLOCK_RULE_ID = "bus.ethernet_rx_clock_outputs_share_net"
+STATUS_RULE_ID = "bus.ethernet_rx_status_outputs_share_net"
 
 
 def ethernet_rx_output_sharing_fixture_lane(
@@ -42,8 +43,8 @@ def ethernet_rx_output_sharing_fixture_lane(
     }
     source_hashes = {case: digest(source) for case, source in sources.items()}
     expected_hashes = {
-        "fault": "2da0e7b83d033c59b4056fc976abf32b638aa3f61ee12d2488e3175607c6ea92",
-        "control": "3f44175e5bf4492bdfc87ea773e2756a1aec83e0e35acbf20458e52993d26bfc",
+        "fault": "b338af0a3373c57c2f636c44eb3ae8e5e05764fe16590a77cae6043da25af82e",
+        "control": "bee79ef0035f002944aeaf2453c398aebd101c2a39493d6cb73f04890f448d79",
     }
     if source_hashes != expected_hashes:
         raise ValueError("Ethernet RX-sharing fixture sources changed from their reviewed hashes")
@@ -161,6 +162,14 @@ def ethernet_rx_output_sharing_fixture_lane(
                         raise ValueError(
                             "Native Ethernet RXC fixture no longer isolates ERC typing"
                         )
+                    if observed.pin_functions.get(f"{reference}.4") != "RXDV":
+                        raise ValueError(
+                            "Native Ethernet RX-sharing fault lost its RXDV pin function"
+                        )
+                    if observed.pin_electrical_types.get(f"{reference}.4") != "passive":
+                        raise ValueError(
+                            "Native Ethernet RXDV fixture no longer isolates ERC typing"
+                        )
                     if reference in observed.dnp_components:
                         raise ValueError(
                             "Native Ethernet RX-sharing endpoint unexpectedly became DNP"
@@ -172,6 +181,10 @@ def ethernet_rx_output_sharing_fixture_lane(
                 if set(observed.nets.get("MII_RX_CLK_SHARED", ())) != {"U1.3", "U2.3"}:
                     raise ValueError(
                         "Native Ethernet RX-sharing fault did not preserve the shared RXC net"
+                    )
+                if set(observed.nets.get("MII_RX_DV_SHARED", ())) != {"U1.4", "U2.4"}:
+                    raise ValueError(
+                        "Native Ethernet RX-sharing fault did not preserve the shared RXDV net"
                     )
             if case == "control" and run == "first":
                 if set(observed.nets.get("RXD0_TXD_LINK", ())) != {"U1.1", "U2.2"}:
@@ -186,6 +199,10 @@ def ethernet_rx_output_sharing_fixture_lane(
                     raise ValueError("Native Ethernet control did not isolate U1.RXC")
                 if observed.nets.get("PHY2_RX_CLK") != ("U2.3",):
                     raise ValueError("Native Ethernet control did not isolate U2.RXC")
+                if observed.nets.get("PHY1_RX_DV") != ("U1.4",):
+                    raise ValueError("Native Ethernet control did not isolate U1.RXDV")
+                if observed.nets.get("PHY2_RX_DV") != ("U2.4",):
+                    raise ValueError("Native Ethernet control did not isolate U2.RXDV")
             normalized = json.dumps(
                 observed.model_dump(mode="json"),
                 sort_keys=True,
@@ -210,7 +227,7 @@ def ethernet_rx_output_sharing_fixture_lane(
                 ),
                 DesignLintPolicy(),
             )
-            for rule_id in (RULE_ID, CLOCK_RULE_ID):
+            for rule_id in (RULE_ID, CLOCK_RULE_ID, STATUS_RULE_ID):
                 subjects[(case, run, rule_id)] = tuple(
                     item.subject for item in report.findings if item.rule_id == rule_id
                 )
@@ -222,6 +239,10 @@ def ethernet_rx_output_sharing_fixture_lane(
         },
         CLOCK_RULE_ID: {
             "fault": ("U1, U2: Ethernet PHY receive-clock outputs share MII_RX_CLK_SHARED",),
+            "control": (),
+        },
+        STATUS_RULE_ID: {
+            "fault": ("U1, U2: Ethernet PHY receive-status outputs share MII_RX_DV_SHARED",),
             "control": (),
         },
     }

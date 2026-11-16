@@ -22,6 +22,7 @@ import tests.design_lint_fixtures.connector_return_supply as _connector_return_s
 import tests.design_lint_fixtures.connector_role_sharing_reachability as _connector_role_sharing_reachability
 import tests.design_lint_fixtures.ethernet_rx_clock_output_sharing as _ethernet_rx_clock_fixtures
 import tests.design_lint_fixtures.ethernet_rx_output_sharing as _ethernet_rx_output_fixtures
+import tests.design_lint_fixtures.ethernet_rx_status_output_sharing as _ethernet_rx_status_fixtures
 import tests.design_lint_fixtures.i2c_addresses as _tests_i2c_address_fixtures
 import tests.design_lint_fixtures.i2c_signal_label as _i2c_signal_label_fixtures
 import tests.design_lint_fixtures.ic_decoupling as _ic_decoupling_fixtures
@@ -203,6 +204,7 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         _tests_design_lint_fixtures.can_peer_netlist(divergent_peer=True),
         _ethernet_rx_output_fixtures.ethernet_rx_output_netlist(),
         _ethernet_rx_clock_fixtures.ethernet_rx_clock_output_netlist(),
+        _ethernet_rx_status_fixtures.ethernet_rx_status_output_netlist(),
         _tests_test_can_excess_termination._can_netlist_with_direct_terminators(
             ("108R", "120R", "132R")
         ),

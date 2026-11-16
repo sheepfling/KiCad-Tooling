@@ -40,6 +40,7 @@ from .design_lint_unconnected_interface_candidates import unconnected_interface_
 from .design_lint_usb_c_same_net_candidates import usb_c_same_net_candidates
 from .ethernet_rx_clock_output_sharing import ethernet_rx_clock_output_sharing_candidates
 from .ethernet_rx_output_sharing import ethernet_rx_output_sharing_candidates
+from .ethernet_rx_status_output_sharing import ethernet_rx_status_output_sharing_candidates
 from .i2s_clock_data_same_net import i2s_clock_data_same_net_candidates
 from .i2s_data_output_sharing import i2s_data_output_sharing_candidates
 from .i2s_same_net import i2s_clock_frame_same_net_candidates
@@ -98,6 +99,7 @@ def bus_candidates(inputs: BusCandidateInputs) -> tuple[Candidate, ...]:
         *ethernet_management_same_net_candidates(observed),
         *ethernet_rx_output_sharing_candidates(observed),
         *ethernet_rx_clock_output_sharing_candidates(observed),
+        *ethernet_rx_status_output_sharing_candidates(observed),
         *ethernet_unconnected_pin_candidates(observed),
         *ethernet_generic_connector_pair_review_candidates(
             observed,

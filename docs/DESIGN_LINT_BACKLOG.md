@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 405 rules are implemented with synthetic regression coverage.
+The following 406 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 405 active rules.
+The catalog currently contains 406 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -686,6 +686,7 @@ skipped under prerelease policy.
 - `bus.ethernet_signal_on_named_rail`
 - `bus.ethernet_rx_clock_outputs_share_net`
 - `bus.ethernet_rx_outputs_share_net`
+- `bus.ethernet_rx_status_outputs_share_net`
 - `bus.ethernet_generic_connector_pair_review`
 - `bus.ethernet_management_generic_connector_pair_review`
 - `bus.swd_generic_connector_pair_review`
@@ -4599,7 +4600,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 405 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 406 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -29378,6 +29379,54 @@ acceptance threads while new lint features proceed:
 - **Hosted acceptance:** GitHub Actions run `43805848902` passed for commit
   `253b57a5` and tag `v0.5.3rc844`. The package and preview jobs were skipped
   under the prerelease policy.
+
+#### LINT-516 — Review Ethernet PHY receive-status outputs sharing one net
+
+- **Status:** Implemented as the default-`review`
+  `bus.ethernet_rx_status_outputs_share_net` interface heuristic.
+- **Priority:** P1 interface coverage. The receive-data and receive-clock
+  checks did not classify MII receive-status outputs. A synthetic passive-pin
+  RXDV/RXER shared-net case produced no finding in the prior catalog, showing
+  a distinct naming and signal-role gap.
+- **Predicate:** Require fitted U/IC references with bounded explicit
+  Ethernet PHY identity, complete unique native pin inventory, one exact net
+  assignment, and a supported output-capable native type. Recognize bounded
+  RXDV/RXER names with optional MII or GMII prefixes. Emit one REVIEW
+  candidate when two or more distinct PHYs contribute one same-role status
+  pin each to one exact non-return net; suppress incomplete or ambiguous
+  groups and defer two native output pins to ERC.
+- **Evidence basis and boundary:** Microchip's KSZ8081 checklist maps RXDV and
+  RXER to MII MAC receive-status inputs
+  ([primary source](https://ww1.microchip.com/downloads/en/DeviceDoc/00002763A.pdf)).
+  The example supports a useful review cue, not a universal topology rule.
+  RXDV/RXER labels do not prove active behavior, selected interface mode,
+  endpoint membership, or that a shared path is wrong. The predicate excludes
+  RX_CTL and does not establish PCB copper or off-board wiring.
+- **Fixtures:** Tooling-owned synthetic passive-typed netlists cover RXDV and
+  RXER aliases, shared and separate nets, DNP and open pins, multiply assigned
+  pins, missing pin inventory, duplicate roles, return nets, unsupported and
+  native-output types, identity boundaries, policy modes, exact ignores,
+  stable fingerprints, and a separation metamorphism. The existing synthetic
+  KiCad schematic pair now adds a shared-RXDV fault and separate-RXDV control;
+  digest-pinned KiCad 10.0.0 and 10.0.5 exports verify exact assignments,
+  repeatability, and no native ERC errors. CLI/MCP parity exercises the same
+  typed service. No project or cohort source is stored.
+- **Selection:** Run `tests/test_ethernet_rx_status_output_sharing.py`,
+  `tests/test_design_lint_ethernet_rx_status_output_sharing_architecture.py`,
+  and the receive-status case in
+  `tests/test_design_lint_mcp_parity_ethernet_rx_output_sharing.py` with
+  `design_lint_rule(rule_id="bus.ethernet_rx_status_outputs_share_net")`. The native
+  lane is `tests/test_ethernet_rx_output_sharing_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1`.
+- **Local acceptance:** The focused status selection passed 8 tests with 3
+  deselected. The digest-pinned Docker fault/control lane passed KiCad 10.0.0
+  and 10.0.5. Rule-scoped `scripts/ci.py` passed 493 tests with 9,852
+  deselected, plus Ruff, both Alphus profiles, Rumdl, mdrepo, module-size
+  preflight, Linux and Windows Pyright, wheel/sdist/rebuilt-wheel checks, and
+  installed-wheel playtests against the separate public template in its
+  default and adapted layouts. Receipts are under ignored
+  `build/ci/run-0aazisg_/`.
+- **Hosted acceptance:** Pending tag push and GitHub Actions.
 
 ## Completion and release gate
 
