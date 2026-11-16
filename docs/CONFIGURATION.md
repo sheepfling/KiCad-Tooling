@@ -142,7 +142,14 @@ vias and through-hole pads must span the full copper stack, and each plated
 drill file must explicitly declare that full layer pair. Blind or buried
 source vias, partial-span drill metadata, and missing or malformed drill-span
 metadata fail closed. Unsupported layer names, artwork, or via spans also fail
-closed.
+closed. Before rasterization, the analyzer compares the IPC-D-356 component
+contacts for every net-assigned source pad by footprint reference, pad number,
+and assigned net. Missing, unexpected, over-repeated, or reassigned contacts
+are `UNSUPPORTED`, so a shortened contact file cannot shrink the expected
+copper universe and produce a misleading pass. A present no-connect contact
+must match a source pad without a net; omitted no-connect pads are allowed.
+This inventory check does not verify that each IPC-D-356 coordinate matches
+the physical source pad location.
 
 `review` (the default) retains findings in the export receipt without blocking
 the export. `block` fails the export when the analyzer reports an open, short,

@@ -30604,6 +30604,48 @@ acceptance threads while new lint features proceed:
   installed-wheel checks, external/adapted project verification, and playtest
   passed. Package and preview jobs were skipped under prerelease policy.
 
+#### LINT-538 — Bind IPC-D-356 contacts to source PCB pads
+
+- **Priority:** P1 fabrication-evidence integrity. FA-001 previously accepted
+  a syntactically valid IPC-D-356 file that omitted a netted component pad. The
+  raster analyzer then used the reduced contact list as its expected-contact
+  universe and could report `PASS` without checking the omitted pad.
+- **Change:** Before rasterization, compare every net-assigned source component
+  pad's footprint reference, pad number, and assigned net with the IPC-D-356
+  contact records. Missing, extra, over-repeated, or reassigned contacts fail
+  closed as `UNSUPPORTED`. A present no-connect record must match a source pad
+  without a net; omitted no-connect pads are allowed. Via records remain
+  outside this component-pad inventory. Analyzer version advances to `4` so
+  retained reports identify the stronger evidence check.
+- **Boundary:** This binds contact identity and net assignment. It does not
+  compare IPC-D-356 coordinates with transformed source-pad coordinates, nor
+  infer that distinct net names should be joined. Unsupported or incomplete
+  inventory is not reported as clean.
+- **Regression coverage:** Tooling-owned synthetic tests cover a complete
+  inventory, optional no-connect contacts, an omitted pad, an unexpected pad,
+  a reassigned net, and an over-repeated contact; the existing
+  intentional-isolation fixture keeps separate source nets valid. Native
+  KiCad 10.0.0 and 10.0.5 Docker exports remove a real component-pad record
+  and require repeatable `UNSUPPORTED` results.
+- **Selection:** Run:
+
+  ```sh
+  python -I -m pytest tests/test_fabrication_contact_inventory.py \
+    tests/test_fabrication_connectivity.py \
+    -m 'design_lint and evidence_lint and pcb_lint'
+  ```
+
+  Exact-version native coverage is in
+  `tests/test_fabrication_connectivity_native.py` with
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
+- **Local scoped acceptance:** Passed on 2026-11-16 in
+  `build/ci/run-4n55g4ba`: 30 selected tests, including native KiCad 10.0.0 and
+  10.0.5 Docker exports. Ruff, both Alphus checks, Rumdl, mdrepo, module-size
+  preflight, Linux and Windows-targeted Pyright, wheel/sdist builds,
+  source-distribution wheel rebuild, and isolated installed-wheel
+  origin/version checks passed.
+- **Hosted scoped acceptance:** Pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

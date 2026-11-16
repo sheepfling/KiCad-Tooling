@@ -147,6 +147,31 @@ def test_native_gerber_ipc356_connectivity_fault_controls_repeat(
             expected_codes,
         )
 
+        if name == "clean":
+            ipc = fabrication / "board.d356"
+            original_lines = ipc.read_text(encoding="utf-8").splitlines()
+            omitted = [
+                line
+                for line in original_lines
+                if line.startswith(("317", "327"))
+                and line[20:26].strip() == "J1"
+                and line[27:31].strip() == "2"
+            ]
+            assert len(omitted) == 1
+            ipc.write_text(
+                "\n".join(line for line in original_lines if line != omitted[0]) + "\n",
+                encoding="utf-8",
+            )
+            incomplete = analyze_fabrication_connectivity(
+                board, fabrication, FabricationConnectivitySettings()
+            )
+            repeated_incomplete = analyze_fabrication_connectivity(
+                board, fabrication, FabricationConnectivitySettings()
+            )
+            assert incomplete == repeated_incomplete
+            assert incomplete.status == "UNSUPPORTED"
+            assert "missing j1.2=SIGNAL" in incomplete.unsupported_reasons[0]
+
         if name == "via":
             (fabrication / "via-PTH.drl").unlink()
             missing_drill = analyze_fabrication_connectivity(

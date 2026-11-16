@@ -30,6 +30,7 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.evidence_lint, pytest.mark.pc
 _ROOT = Path(__file__).parents[1]
 _OWNERS = (
     "fabrication_artwork.py",
+    "fabrication_contact_inventory.py",
     "fabrication_connectivity_models.py",
     "fabrication_connectivity.py",
     "fabrication_connectivity_raster.py",
@@ -65,9 +66,16 @@ def _export(
     inner_layer: bool = False,
 ) -> tuple[Path, Path]:
     board = directory / "board.kicad_pcb"
-    board.write_bytes(
-        (_ROOT / "tests/fixtures/fabrication-connectivity/clean.kicad_pcb").read_bytes()
-    )
+    fixture = "via-only.kicad_pcb" if through else "clean.kicad_pcb"
+    board.write_bytes((_ROOT / "tests/fixtures/fabrication-connectivity" / fixture).read_bytes())
+    if not through and second_net != "SIGNAL":
+        board.write_text(
+            board.read_text(encoding="utf-8").replace(
+                '(pad "2" smd circle (at 2 0) (size 1 1) (layers "F.Cu" "F.Mask") (net 1 "SIGNAL"))',
+                f'(pad "2" smd circle (at 2 0) (size 1 1) (layers "F.Cu" "F.Mask") (net 2 "{second_net}"))',
+            ),
+            encoding="utf-8",
+        )
     fabrication = directory / "fabrication"
     fabrication.mkdir()
     if through:
@@ -246,7 +254,7 @@ def test_artifact_connectivity_reports_opens_shorts_and_intentional_isolation(
     assert {item.code for item in report.findings} == expected
     assert not report.unsupported_reasons, report.unsupported_reasons
     assert report.status == status
-    assert report.analyzer_version == "3"
+    assert report.analyzer_version == "4"
     assert report.board_sha256
     assert "fabrication/board.d356" in report.artifact_sha256
 
