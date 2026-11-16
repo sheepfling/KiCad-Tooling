@@ -49,6 +49,10 @@ SCHEMATIC_ERC_THEME_SUITES = (
     "test_schematic_erc_duplicate_section_native.py",
 )
 SCHEMATIC_SOURCE_INTEGRITY_SUITES = (
+    "test_schematic_conflicting_placed_datasheet.py",
+    "test_design_lint_mcp_parity_schematic_conflicting_placed_datasheet.py",
+    "test_schematic_conflicting_placed_datasheet_native.py",
+    "test_design_lint_architecture_schematic_conflicting_placed_datasheet.py",
     "test_schematic_conflicting_placed_reference.py",
     "test_design_lint_mcp_parity_schematic_conflicting_placed_reference.py",
     "test_schematic_conflicting_placed_reference_native.py",

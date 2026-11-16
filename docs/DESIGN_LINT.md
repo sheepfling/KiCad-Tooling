@@ -1447,6 +1447,42 @@ KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
   -m 'design_lint and schematic_lint and evidence_lint and native_kicad and design_lint_rule(rule_id="schematic.conflicting_placed_reference_properties")'
 ```
 
+### Conflicting Datasheet properties on a placed schematic symbol
+
+`schematic.conflicting_placed_datasheet_properties` reviews a direct placed
+symbol that contains multiple `Datasheet` properties with different exact
+values. It retains the values and source lines with the symbol UUID, source
+path, and source SHA-256. Identical repeated values and conflicts confined to
+embedded library definitions are quiet. The measured boundary is KiCad 10.0.0,
+10.0.5, and 10.0.8.
+
+Digest-pinned native netlist exports accept the conflicting fields and retain
+only the later direct value in the component's exported `Datasheet` field.
+This is a source-inconsistency prompt; it does not select the correct URL,
+verify that a datasheet is reachable or accurate, or establish BOM, electrical,
+or manufacturing correctness. The default is REVIEW, with project review,
+block, off, and exact-fingerprint ignore options.
+
+The tooling-owned sources are described in the
+[fixture README](../tests/fixtures/design_lint/conflicting-placed-datasheet/README.md).
+Run the source and CLI/MCP regressions with:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_schematic_conflicting_placed_datasheet.py \
+  tests/test_design_lint_mcp_parity_schematic_conflicting_placed_datasheet.py \
+  -m 'design_lint and schematic_lint and design_lint_rule(rule_id="schematic.conflicting_placed_datasheet_properties")'
+```
+
+Run the exact native fault/control regression with:
+
+```sh
+KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
+  .venv/bin/python -I -m pytest \
+  tests/test_schematic_conflicting_placed_datasheet_native.py \
+  -m 'design_lint and schematic_lint and evidence_lint and native_kicad and design_lint_rule(rule_id="schematic.conflicting_placed_datasheet_properties")'
+```
+
 ### Schematic object UUID repeats across source files
 
 `schematic.duplicate_object_uuid` reviews a UUID value that appears in

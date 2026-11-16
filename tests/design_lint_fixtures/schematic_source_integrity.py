@@ -8,6 +8,9 @@ from typing import cast
 
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import ProjectConfig, ProjectKind
+from kicad_tooling.hwrepo.schematic_conflicting_placed_datasheet import (
+    source_bound_conflicting_placed_datasheet_candidates,
+)
 from kicad_tooling.hwrepo.schematic_conflicting_placed_footprint import (
     source_bound_conflicting_placed_footprint_candidates,
 )
@@ -177,6 +180,26 @@ def schematic_source_integrity_rule_ids() -> frozenset[str]:
         conflicting_reference_config,
         {conflicting_reference_relative: digest(conflicting_reference_source)},
     )
+    conflicting_datasheet_relative = (
+        "tests/fixtures/design_lint/conflicting-placed-datasheet/fault.kicad_sch"
+    )
+    conflicting_datasheet_source = repository / conflicting_datasheet_relative
+    conflicting_datasheet_project = (
+        conflicting_datasheet_relative.removesuffix(".kicad_sch") + ".kicad_pro"
+    )
+    conflicting_datasheet_config = cast(
+        ProjectConfig,
+        SimpleNamespace(
+            kind=ProjectKind.PCB,
+            project=conflicting_datasheet_project,
+            kicad_version="10.0.8",
+        ),
+    )
+    conflicting_datasheet_candidates = source_bound_conflicting_placed_datasheet_candidates(
+        repository,
+        conflicting_datasheet_config,
+        {conflicting_datasheet_relative: digest(conflicting_datasheet_source)},
+    )
     return frozenset(
         item.rule_id
         for item in (
@@ -188,5 +211,6 @@ def schematic_source_integrity_rule_ids() -> frozenset[str]:
             *conflicting_footprint_candidates,
             *reserved_dnp_candidates,
             *conflicting_reference_candidates,
+            *conflicting_datasheet_candidates,
         )
     )

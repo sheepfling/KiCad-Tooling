@@ -1,4 +1,4 @@
-"""CLI/MCP parity fixture references for placed Reference field review."""
+"""CLI/MCP parity fixture references for placed-symbol property reviews."""
 
 from types import MappingProxyType
 
@@ -15,6 +15,18 @@ PLACED_REFERENCE_PARITY_FIXTURES = MappingProxyType(
                 "valid_control_fixtures": _refs(
                     "tests.test_design_lint_mcp_parity_schematic_conflicting_placed_reference",
                     "test_conflicting_placed_reference_review_matches_between_cli_and_mcp",
+                ),
+            }
+        ),
+        "schematic.conflicting_placed_datasheet_properties": MappingProxyType(
+            {
+                "fault_fixtures": _refs(
+                    "tests.test_design_lint_mcp_parity_schematic_conflicting_placed_datasheet",
+                    "test_conflicting_placed_datasheet_review_matches_between_cli_and_mcp",
+                ),
+                "valid_control_fixtures": _refs(
+                    "tests.test_design_lint_mcp_parity_schematic_conflicting_placed_datasheet",
+                    "test_conflicting_placed_datasheet_review_matches_between_cli_and_mcp",
                 ),
             }
         ),

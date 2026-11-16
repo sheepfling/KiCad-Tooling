@@ -30208,6 +30208,52 @@ acceptance threads while new lint features proceed:
   separate default and adapted public-template checkouts and playtest passed.
   Package and preview jobs were skipped under prerelease policy.
 
+#### LINT-531 — Review conflicting placed-symbol Datasheet properties
+
+- **Priority:** P1 schematic source metadata integrity. A placed symbol with
+  different direct Datasheet values has ambiguous source metadata, and the
+  measured native export silently retains only the later value.
+- **Status:** Implemented as
+  `schematic.conflicting_placed_datasheet_properties`, a source-hashed,
+  default-REVIEW prompt for exact KiCad 10.0.0, 10.0.5, and 10.0.8 versions.
+  Local and hosted acceptance are pending.
+- **Predicate:** For each direct placed symbol in the verified hierarchical
+  schematic tree, collect well-formed direct `Datasheet` properties in source
+  order. Report when at least two exact values differ. Preserve all values and
+  lines, a reference, UUID, source path, and SHA-256. Ignore embedded library
+  definitions and identical repeated values.
+- **Native evidence:** Digest-pinned KiCad 10.0.0, 10.0.5, and 10.0.8 exports
+  accepted the synthetic conflicting fields and retained only the later
+  Datasheet URL in J1's component field. One-value and identical-value controls
+  exported their URL, and an embedded-library-only conflict left the placed
+  value empty. This is measured only on these fixtures and images.
+- **Limitations:** The prompt identifies inconsistent metadata, not which URL
+  is intended or correct. It does not verify URL reachability, datasheet
+  accuracy, BOM correctness, electrical behavior, or manufacturing intent.
+  Malformed fields, embedded library definitions, identical duplicate values,
+  and unmeasured KiCad versions are outside the predicate. REVIEW is the
+  default; projects can select review, block, off, or exact-fingerprint ignore.
+- **Regression coverage:** Tooling-owned fixtures cover conflicting, unique,
+  identical-duplicate, and library-definition properties; source hashes,
+  exact version and project-kind scope, deterministic findings, CLI/MCP parity,
+  and repeated native exports. No proprietary project source or fixture is
+  included.
+- **Selection:** Run
+  `tests/test_schematic_conflicting_placed_datasheet.py` and
+  `tests/test_design_lint_mcp_parity_schematic_conflicting_placed_datasheet.py`
+  with `design_lint and schematic_lint and
+  design_lint_rule(rule_id="schematic.conflicting_placed_datasheet_properties")`.
+  Run `tests/test_schematic_conflicting_placed_datasheet_native.py` with Docker,
+  `KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1`, and the same rule
+  selector plus `native_kicad`.
+- **Local acceptance:** Rule-scoped `scripts/ci.py` passed in
+  `build/ci/run-c0j0qi87`: 15 selected tests passed and 10,504 were deselected,
+  including repeated digest-pinned KiCad 10.0.0, 10.0.5, and 10.0.8 Docker
+  fault/control exports. Ruff, both Alphus checks, Rumdl, mdrepo, module-size
+  preflight, Linux and Windows type checks, wheel/sdist builds, installed-wheel
+  checks, and default/adapted external template verification and playtest all
+  passed.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
