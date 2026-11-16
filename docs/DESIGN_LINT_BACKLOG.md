@@ -872,12 +872,13 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest lint-gate tag (v0.5.3rc870; hosted acceptance pending):** LINT-535
+- **Latest published lint-gate checkpoint (v0.5.3rc870):** LINT-535
   reviews differing parsed USB 2.0 D+/D− series-resistor values when no current
   project map records the per-line value ranges. Local scoped acceptance passed
   517 selected tests and 10,055 deselected, including digest-pinned KiCad 10.0.0
   and 10.0.5 Docker exports, package/type checks, and external/adapted public
-  template rehearsal. Hosted acceptance is pending.
+  template rehearsal. Hosted acceptance passed in GitHub Actions run
+  `43949582389`; package and preview jobs were skipped under prerelease policy.
 - **Previous published lint-gate checkpoint (v0.5.3rc869):** LINT-534 reviews
   unmapped USB 2.0 D+/D− paths with a series resistor on one data line and a
   direct path on the other. Local scoped acceptance passed 516 selected tests
@@ -30508,7 +30509,12 @@ acceptance threads while new lint features proceed:
   mdrepo, module-size preflight, Linux and Windows Pyright, wheel/sdist builds,
   installed-wheel origin/version checks, and the pinned external/adapted
   template inventory, surface, portable verification, and playtest.
-- **Hosted acceptance:** Pending for tag `v0.5.3rc870`.
+- **Hosted acceptance:** Tag `v0.5.3rc870` passed in GitHub Actions run
+  `43949582389`: 517 selected tests passed and 10,055 were deselected. The
+  digest-pinned KiCad 10.0.0/10.0.5 fault/control exports, scoped static and
+  type checks, package rehearsal, and external/adapted template verification
+  and playtest passed. Package and preview jobs were skipped under prerelease
+  policy.
 
 ## Completion and release gate
 
