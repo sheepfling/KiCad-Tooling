@@ -29318,7 +29318,8 @@ acceptance threads while new lint features proceed:
   preflight, Linux and Windows type checks, wheel/sdist/installed-wheel checks,
   and the external/adapted public-template playtest passed. Logs are under
   ignored `build/ci/run-c76jn43s/`.
-- **Hosted acceptance:** Pending tag `v0.5.3rc843`.
+- **Hosted acceptance:** Run `43800775357` passed for commit `08e44d23` and
+  tag `v0.5.3rc843`.
 
 ## Completion and release gate
 
