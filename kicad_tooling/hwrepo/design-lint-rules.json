@@ -9266,6 +9266,49 @@
       "implementation_owner": "kicad_tooling/hwrepo/jtag_signal_inventory.py#jtag_named_rail_signal_pins"
     },
     {
+      "rule_id": "bus.jtag_tdi_tdo_same_net",
+      "title": "JTAG TDI and TDO pins share one net on a fitted IC",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining fitted IC pin inventory, native pin functions, electrical types, fitted state, and exact net assignments",
+      "predicate": "For each fitted U/IC reference with a complete unique native pin inventory, use the endpoint's unique JTAG signal-role inventory to identify exactly one TDI and one TDO pin. Emit one REVIEW candidate when both pins each have one assignment to the same exact non-return schematic net. Skip DNP parts, non-IC references, duplicate or ambiguous roles, incomplete pin metadata, open or multiply assigned pins, return-like nets, and groups where both native pin types are output.",
+      "supported_kicad_versions": [
+        "Digest-pinned KiCad 10.0.0 and 10.0.5 native fixture exports; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Native pin-function text identifies JTAG roles only within a complete endpoint inventory; it does not prove that the endpoint uses JTAG in the selected mode.",
+        "A same-net TDI/TDO assignment can be an intentional loopback or test configuration. The default REVIEW asks whether it is intentional and does not establish an electrical defect, firmware state, scan-chain topology, PCB copper continuity, or off-board wiring.",
+        "Two native output pins remain with ERC. This check compares schematic assignments only and does not establish electrical approval or manufacturing readiness."
+      ],
+      "fault_fixtures": [
+        "tests.test_jtag_data_same_net.test_jtag_tdi_and_tdo_on_one_fitted_ic_net_are_reviewed",
+        "tests.test_jtag_data_same_net_native_fixture_lane.test_native_jtag_data_same_net_fault_and_control_repeat",
+        "tests.test_design_lint_mcp_parity_jtag_data_same_net.test_jtag_data_same_net_cli_mcp_parity"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_jtag_data_same_net.test_separate_data_nets_and_complete_generic_jtag_roles_are_controls",
+        "tests.test_jtag_data_same_net.test_dnp_non_ic_incomplete_ambiguous_open_and_multiply_assigned_cases_suppress",
+        "tests.test_jtag_data_same_net.test_return_net_and_two_native_output_conflict_are_left_to_existing_checks",
+        "tests.test_jtag_data_same_net_native_fixture_lane.test_native_jtag_data_same_net_fault_and_control_repeat"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_jtag_data_same_net.test_mapping_order_preserves_fingerprint_and_separation_repairs_candidate"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_JTAG_DATA_SAME_NET_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/jtag_data_same_net.py#jtag_tdi_tdo_same_net_candidates",
+        "kicad_tooling/hwrepo/jtag_signal_inventory.py#JtagEndpointInventory.named_rail_signal_pins",
+        "kicad_tooling/hwrepo/jtag_signal_inventory.py#jtag_signal_roles",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/jtag_data_same_net.py#jtag_tdi_tdo_same_net_candidates"
+    },
+    {
       "rule_id": "bus.jtag_tdo_outputs_share_net",
       "title": "Fitted JTAG TDO outputs share one schematic net",
       "status": "active",

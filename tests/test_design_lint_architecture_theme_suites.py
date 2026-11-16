@@ -192,11 +192,15 @@ ETHERNET_GENERIC_CONNECTOR_THEME_SUITES = (
     "test_design_lint_mcp_parity_i2s_clock_data_same_net.py",
     "test_design_lint_architecture_i2s_clock_data_same_net.py",
 )
-JTAG_TDO_OUTPUT_SHARING_THEME_SUITES = (
+JTAG_SIGNAL_THEME_SUITES = (
     "test_jtag_tdo_output_sharing.py",
     "test_jtag_tdo_output_sharing_native_fixture_lane.py",
     "test_design_lint_jtag_tdo_output_sharing_architecture.py",
     "test_design_lint_mcp_parity_jtag_tdo_output_sharing.py",
+    "test_jtag_data_same_net.py",
+    "test_jtag_data_same_net_native_fixture_lane.py",
+    "test_design_lint_architecture_jtag_data_same_net.py",
+    "test_design_lint_mcp_parity_jtag_data_same_net.py",
 )
 JTAG_CONNECTOR_RETURN_THEME_SUITES = (
     "test_jtag_connector_return_review.py",
@@ -433,7 +437,7 @@ def test_design_lint_theme_suites_stay_below_review_limit() -> None:
                     *SPI_GENERIC_CONNECTOR_THEME_SUITES,
                     *SERIAL_GENERIC_CONNECTOR_THEME_SUITES,
                     *ETHERNET_GENERIC_CONNECTOR_THEME_SUITES,
-                    *JTAG_TDO_OUTPUT_SHARING_THEME_SUITES,
+                    *JTAG_SIGNAL_THEME_SUITES,
                     *JTAG_CONNECTOR_RETURN_THEME_SUITES,
                     *USB_INLINE_COMPONENT_THEME_SUITES,
                     *POWER_PATH_HOSTED_THEME_SUITES,

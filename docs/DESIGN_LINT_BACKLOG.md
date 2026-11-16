@@ -29709,6 +29709,56 @@ acceptance threads while new lint features proceed:
   validated only. Independent board examples or adjudicated reviewer results
   are needed before claiming applicability or reviewer value.
 
+#### LINT-522 — Review JTAG TDI and TDO pins sharing one net on a fitted IC
+
+- **Status:** Implemented as `bus.jtag_tdi_tdo_same_net`, default `review`;
+  focused synthetic, CLI/MCP, architecture, and native fixture wiring is in
+  place. Exact-version acceptance is pending.
+- **Priority:** P1 interface coverage. Existing JTAG named-rail and cross-device
+  TDO-sharing rules did not inspect whether one fitted endpoint's own TDI and
+  TDO pins resolve to the same schematic net.
+- **Predicate:** For a fitted U/IC with complete unique native pin inventory,
+  use the source-bound JTAG endpoint inventory to require exactly one TDI role
+  and one TDO role, each assigned once to the same exact non-return net. Skip
+  DNP, non-IC, incomplete, open, multiply assigned, or duplicate-role cases;
+  leave two native output pins to ERC. Emit exact pin, function, type, and net
+  evidence for the review candidate.
+- **Evidence basis and boundary:** Arm's
+  [DSTREAM JTAG interface reference][arm-dstream-jtag-interface] describes TDI as serial
+  data provided to the target and TDO as data returned from it. This motivates
+  a same-device loopback review cue only; it does not prove that the endpoint
+  uses JTAG, that the assignment is invalid, or that a test loopback cannot be
+  intentional. The rule does not infer scan-chain topology, firmware, PCB
+  copper, off-board wiring, or physical continuity. Keep default REVIEW and
+  require project policy for any blocking use.
+- **Fixtures:** Tooling-owned native schematics pair one same-net TDI/TDO fault
+  with a distinct-net control and source hashes. Synthetic tests cover generic
+  TCK/TMS identity, DNP and non-IC exclusions, duplicate/ambiguous roles,
+  incomplete inventory, open or multiply assigned pins, return nets, native
+  output conflict deferral, mode/ignore policy, stable fingerprints, and
+  separation repair. The native fault/control lane repeats exact pin/net
+  inventories, ERC, and normalized-netlist evidence on KiCad 10.0.0 and 10.0.5.
+  CLI/MCP parity exercises the shared design-lint service. No product or cohort
+  source is stored.
+- **Selection:** Run `tests/test_jtag_data_same_net.py`,
+  `tests/test_design_lint_mcp_parity_jtag_data_same_net.py`, and the focused
+  architecture suite with
+  `design_lint_rule(rule_id="bus.jtag_tdi_tdo_same_net")`. The exact native
+  lane is `tests/test_jtag_data_same_net_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_JTAG_DATA_SAME_NET_FIXTURES=1`.
+- **Incremental-value limit:** Synthetic and native fixtures establish bounded
+  predicate and export behavior only. Independent applicability and reviewer
+  value remain unmeasured.
+- **Local acceptance:** Exact prerelease scope passed on 2026-11-16 at
+  `build/ci/run-gqboffua`: 500 passed and 9,914 deselected, including both
+  digest-pinned KiCad 10.0.0 and 10.0.5 native fixture cases, CLI/MCP parity,
+  catalog reachability, and rule-gate integrity. Ruff, both configured
+  Alphus mainline profiles, Rumdl, mdrepo, module-size preflight, Linux and
+  Windows Pyright, wheel/sdist builds, isolated installed-wheel checks,
+  public-template inventory/surface/verify, and adapted-template playtest all
+  passed.
+- **Hosted acceptance:** Pending tagged rule-scope workflow.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -29776,6 +29826,7 @@ quality, or first-article continuity.
 [kicad-10-drc-exclusions]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#design-rule-checking
 [kicad-10-cli-drc]: https://docs.kicad.org/10.0/en/cli/cli.html
 [arm-jtag-signals]: https://documentation-service.arm.com/static/5f900a61f86e16515cdc0610
+[arm-dstream-jtag-interface]: https://support.arm.com/documentation/dui0499/k/arm-dstream-target-interface-connections/the-arm-jtag-20-connector-pinouts-and-interface-signals/arm-jtag-20-interface-signals?lang=en
 [arm-swd-signals]: https://documentation-service.arm.com/static/5f900abff86e16515cdc063b
 [arm-coresight-swo]: https://documentation-service.arm.com/static/63a03a981d698c4dc521ca77
 [arm-cortex-debug-connector]: https://documentation-service.arm.com/static/5fce6c49e167456a35b36af1

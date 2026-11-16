@@ -1104,7 +1104,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 411 active rules.
+The catalog currently contains 412 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -4584,6 +4584,36 @@ in the [fixture record](../tests/fixtures/design_lint/jtag-tdo-output-sharing/RE
 KICAD_RUN_NATIVE_JTAG_TDO_OUTPUT_SHARING_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_jtag_tdo_output_sharing_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.jtag_tdo_outputs_share_net")'
+```
+
+## Review JTAG TDI and TDO sharing one IC pin net
+
+`bus.jtag_tdi_tdo_same_net` emits a default `review` finding when one fitted
+U/IC has exactly one uniquely identified TDI pin and one TDO pin on the same
+non-return schematic net. JTAG role identity requires a complete, unique native
+pin inventory and either explicit JTAG function metadata or a uniquely
+assigned TCK/TMS pair. Both data pins must have one net assignment. DNP parts,
+non-IC references, incomplete or ambiguous roles, open or multiply assigned
+pins, and pairs of native `output` pins stay with existing checks.
+
+The prompt asks whether this is an intentional loopback. TDI/TDO function
+labels and a shared net do not prove that the device uses JTAG or that the
+assignment is faulty. The rule does not infer scan-chain topology, PCB copper,
+or off-board wiring. Project policy can promote, disable, or exactly ignore the
+finding. Tooling-authored KiCad 10.0.0 and 10.0.5 native fault/control schematics
+are repeated and checked for exact assignments, ERC errors, and normalized
+netlist stability; see the
+[fixture record](../tests/fixtures/design_lint/jtag-data-same-net/README.md).
+
+```sh
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test .venv/bin/python -I -m pytest tests/test_jtag_data_same_net.py \
+  tests/test_design_lint_mcp_parity_jtag_data_same_net.py \
+  tests/test_design_lint_architecture_jtag_data_same_net.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.jtag_tdi_tdo_same_net")'
+
+KICAD_RUN_NATIVE_JTAG_DATA_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_jtag_data_same_net_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.jtag_tdi_tdo_same_net")'
 ```
 
 ## Review SWD signal pins assigned to named rails

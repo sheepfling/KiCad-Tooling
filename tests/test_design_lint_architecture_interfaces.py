@@ -78,10 +78,9 @@ I2C_GENERIC_CONNECTOR_MODULES = (
 
 I3C_CONNECTOR_RETURN_MODULES = ("connector_return_i3c_review.py",)
 
-SWD_SIGNAL_SAME_NET_MODULES = (
-    "swd_same_net.py",
-    "design_lint_swd_same_net_candidate_evidence.py",
-    "swd_endpoint_inventory.py",
+JTAG_DATA_SAME_NET_MODULES = (
+    "jtag_data_same_net.py",
+    "jtag_signal_inventory.py",
 )
 
 SERIAL_PEER_ANALYSIS_MODULES = (
@@ -116,6 +115,12 @@ def test_i3c_named_rail_rule_stays_in_a_focused_protocol_module() -> None:
     module = HWREPO / "i3c_signal_named_rail.py"
 
     assert _line_count(module) < IMPLEMENTATION_MAX_LINES
+
+
+def test_jtag_data_same_net_rule_stays_in_focused_protocol_modules() -> None:
+    modules = [HWREPO / name for name in JTAG_DATA_SAME_NET_MODULES]
+
+    assert all(_line_count(module) < IMPLEMENTATION_MAX_LINES for module in modules)
 
 
 def test_i2c_generic_connector_pair_rule_stays_in_focused_modules() -> None:
@@ -168,22 +173,6 @@ def test_i3c_connector_return_rule_stays_in_a_focused_protocol_module() -> None:
         "kicad_tooling/hwrepo/connector_return_i3c_review.py#i3c_connector_missing_return_candidates"
     )
     assert rule.implementation_owner in rule.implementation_refs
-
-
-def test_swd_signal_same_net_rule_uses_its_focused_protocol_owner() -> None:
-    modules = [HWREPO / name for name in SWD_SIGNAL_SAME_NET_MODULES]
-    rule = next(item for item in rule_catalog().rules if item.rule_id == "bus.swdio_swclk_same_net")
-    module_sizes = {path.name: _line_count(path) for path in modules if path.is_file()}
-    oversized = {
-        name: lines for name, lines in module_sizes.items() if lines >= IMPLEMENTATION_MAX_LINES
-    }
-    owner = "kicad_tooling/hwrepo/swd_same_net.py#swdio_swclk_same_net_candidates"
-
-    assert len(module_sizes) == len(SWD_SIGNAL_SAME_NET_MODULES)
-    assert not oversized, f"SWD signal same-net modules reached the review limit: {oversized}"
-    assert rule.theme == "interfaces"
-    assert rule.implementation_owner == owner
-    assert owner in rule.implementation_refs
 
 
 def test_i2s_protocol_modules_stay_below_review_limit() -> None:

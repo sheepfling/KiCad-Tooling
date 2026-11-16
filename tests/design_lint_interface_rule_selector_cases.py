@@ -60,6 +60,13 @@ INTERFACE_RULE_NODE_CASES = (
         ),
     ),
     (
+        "bus.jtag_tdi_tdo_same_net",
+        (
+            "tests/test_jtag_data_same_net.py::"
+            "test_jtag_tdi_and_tdo_on_one_fitted_ic_net_are_reviewed"
+        ),
+    ),
+    (
         "bus.can_rx_outputs_share_net",
         (
             "tests/test_can_rx_output_sharing.py::"
