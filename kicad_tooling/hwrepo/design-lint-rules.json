@@ -13355,6 +13355,54 @@
       "implementation_owner": "kicad_tooling/hwrepo/usb_peer_unsupported_topology.py#unsupported_usb_multi_pin_path_candidates"
     },
     {
+      "rule_id": "bus.usb_unmapped_series_chain",
+      "title": "USB multi-stage series chain lacks a coverage decision",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including complete two-pin passive Device:R inventories, exact fitted state, endpoint pin functions, and exact native net membership",
+      "predicate": "For one fitted USB 2.0 connector and one fitted USB 2.0 PHY port group, emit a default REVIEW candidate when both D+ and D- have exact direct or unbranched resistor-only paths, at least one line contains two or more fitted complete passive two-pin Device:R stages, every path net contains only its expected endpoint and resistor pins, and no current project USB data-path map matches the endpoint pair and port group. The prompt asks the project to record intent and coverage status; it does not claim the resistors conduct or are suitable.",
+      "supported_kicad_versions": [
+        "KiCad 10 CLI profile; the selected project's exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Only complete, fitted, two-pin Device:R components with passive native pin types and unique native net assignments are eligible. DNP parts, incomplete inventories, unknown symbols, branches, extra peers, cycles, mixed/non-resistor stages, ambiguous endpoint pairing, and unconnected pins are outside the predicate.",
+        "At least one data line must contain two or more resistor stages; the other line must be an exact direct or unbranched resistor-only path. This rule does not infer USB compliance, required resistor values, component conduction, signal integrity, PCB copper continuity, or off-board wiring.",
+        "The current USB data-path map schema records at most one series resistor per data line and cannot express this multi-stage topology. A map matching the same endpoint pair suppresses this coverage prompt and leaves map mismatch reporting to bus.usb_data_path_mismatch. Projects can configure, disable, or reasonedly ignore the REVIEW finding.",
+        "Only USB 2.0 connector-to-IC endpoint groups recognized by native pin functions are considered. USB-C orientation switches, hubs with ambiguous numbered groups, muxes, inline protection, USB SuperSpeed, and arbitrary path elements remain outside this predicate."
+      ],
+      "fault_fixtures": [
+        "tests.test_usb_unmapped_series_chain.test_two_stage_usb_data_paths_request_map_coverage",
+        "tests.test_usb_unmapped_series_chain.test_review_is_configurable_and_exactly_ignorable",
+        "tests.test_usb_unmapped_series_chain_native.test_native_two_stage_usb_fixture_lane_is_repeatable"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_usb_unmapped_series_chain.test_direct_and_single_resistor_paths_are_controls",
+        "tests.test_usb_unmapped_series_chain.test_dnp_incomplete_and_branched_chains_are_outside_scope",
+        "tests.test_usb_unmapped_series_chain.test_matching_endpoint_map_suppresses_duplicate_coverage_prompt",
+        "tests.test_usb_unmapped_series_chain_native.test_native_one_stage_usb_fixture_is_a_quiet_control"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_usb_unmapped_series_chain.test_chain_evidence_is_stable_under_native_order_changes"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/usb_peer_unsupported_series_chain.py#unsupported_usb_series_chain_candidates",
+        "kicad_tooling/hwrepo/usb_peer_unsupported_series_chain.py#_line_path",
+        "kicad_tooling/hwrepo/usb_peer_unsupported_series_chain_types.py#UsbPeerUnsupportedSeriesChain",
+        "kicad_tooling/hwrepo/design_lint_usb_unmapped_series_chain.py#usb_unmapped_series_chain_candidates",
+        "kicad_tooling/hwrepo/design_lint_usb_unmapped_series_chain_candidate_evidence.py#UsbUnmappedSeriesChainCandidate",
+        "kicad_tooling/hwrepo/usb_peer_endpoint_analysis.py#usb_endpoints",
+        "kicad_tooling/hwrepo/usb_peer_map_identity.py#usb_data_interface_matches_endpoint_group",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/usb_peer_unsupported_series_chain.py#unsupported_usb_series_chain_candidates"
+    },
+    {
       "rule_id": "bus.usb_generic_connector_phy_pair_review",
       "title": "Generic connector contacts match a recognized USB PHY data pair",
       "status": "active",

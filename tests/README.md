@@ -814,6 +814,20 @@ KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1 python -I -B -m pytest -q \
   tests/test_usb_data_path_native_fixture_lane.py
 ```
 
+Unmapped multi-stage USB resistor chains have a separate review-only coverage
+rule. Its synthetic fault and native control are documented in the
+[USB series-chain fixture record](fixtures/design_lint/usb-series-chain-native/README.md).
+Run its synthetic selector with:
+
+```sh
+.venv/bin/python -I -m pytest -q \
+  -m 'design_lint and design_lint_rule(rule_id="bus.usb_unmapped_series_chain")' \
+  tests/test_usb_unmapped_series_chain.py tests/test_usb_unmapped_series_chain_native.py
+```
+
+The native lane uses the same digest-pinned Docker export as the USB data-path
+acceptance above.
+
 The bounded USB SuperSpeed peer-reference heuristic has a fast synthetic
 fault/control and boundary suite:
 

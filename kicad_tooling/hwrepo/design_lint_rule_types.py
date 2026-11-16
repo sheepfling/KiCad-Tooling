@@ -204,6 +204,7 @@ DesignLintRuleId = Literal[
     "bus.usb_peer_reference_review",
     "bus.usb_endpoint_path_coverage_incomplete",
     "bus.usb_unmapped_multi_pin_topology",
+    "bus.usb_unmapped_series_chain",
     "bus.usb_generic_connector_phy_pair_review",
     "bus.usb_superspeed_generic_connector_pair_review",
     "bus.spi_unconnected_chip_select",

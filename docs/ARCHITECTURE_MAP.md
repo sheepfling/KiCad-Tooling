@@ -351,7 +351,7 @@ parity.
 
 ## Audited catalog-to-surface design-lint routes
 
-These six end-to-end audits identify distinct input contracts while sharing
+These seven end-to-end audits identify distinct input contracts while sharing
 catalog disposition, report assembly, and CLI/MCP evaluation.
 
 | Rule                                        | Authored/native input boundary                                                                              | Predicate owner                                                                                   | Limit of the result                                                                                                   |
@@ -362,6 +362,7 @@ catalog disposition, report assembly, and CLI/MCP evaluation.
 | `pcb.schematic_pcb_value_mismatch`          | Source-bound schematic netlist and shared native PCB snapshot; named variants also require matching exports | `pcb_component_values.py#compare_schematic_pcb_values`                                            | Compares CAD value text; it does not establish component identity, assembly intent, or physical population.           |
 | `pcb.schematic_pcb_pad_net_mismatch`        | Source-bound schematic pin assignments and shared native PCB pad snapshot, schema 12 through 16             | `pcb_pad_net_comparison.py#compare_schematic_pcb_pad_nets`                                        | Compares exact same-reference/pin assignments; it does not infer copper continuity or physical conduction.            |
 | `bus.usb_unmapped_multi_pin_topology`       | Native unsupported multi-pin USB topology plus current authored data-path map scope                         | `usb_peer_unsupported_topology.py#unsupported_usb_multi_pin_path_candidates`                      | Requests exact map coverage; it does not assert component conduction, a data path, or a defect.                       |
+| `bus.usb_unmapped_series_chain`             | Native USB endpoint pins, exact resistor pin inventory, and current authored data-path map scope            | `usb_peer_unsupported_series_chain.py#unsupported_usb_series_chain_candidates`                    | Requests project review for a fully observed multi-stage chain; it does not claim suitable resistance or continuity.  |
 
 Each route reaches project inspection, typed candidate generation, the shared
 `evaluate_request` disposition service, and report assembly. CLI and MCP

@@ -50,6 +50,7 @@ import tests.test_regulator_feedback as _tests_test_regulator_feedback
 import tests.test_stm32_pin_map as _tests_test_stm32_pin_map
 import tests.usb_data_path_support as _usb_data_path_support
 import tests.usb_peer_reference_support as _usb_peer_reference_support
+import tests.usb_series_chain_support as _usb_series_chain_support
 from kicad_tooling.hwrepo.design_lint import candidates, evaluate, rule_catalog
 from kicad_tooling.hwrepo.external_protection import evaluate as evaluate_external_protection
 from kicad_tooling.hwrepo.i2c_addressing import scan_i2c_address_map
@@ -433,6 +434,10 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
     emitted.update(
         item.rule_id
         for item in candidates(_tests_design_lint_fixtures.generic_component_power_output_netlist())
+    )
+    emitted.update(
+        item.rule_id
+        for item in candidates(_usb_series_chain_support.two_stage_usb_series_netlist())
     )
     emitted.update(protocol_rule_ids())
     active = {item.rule_id for item in rule_catalog().rules if item.status == "active"}

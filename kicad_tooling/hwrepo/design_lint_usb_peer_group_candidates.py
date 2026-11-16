@@ -18,6 +18,7 @@ from .design_lint_usb_peer_candidates import usb_peer_reference_candidates
 from .design_lint_usb_superspeed_generic_connector_candidates import (
     generic_usb_superspeed_connector_pair_review_candidates,
 )
+from .design_lint_usb_unmapped_series_chain import usb_unmapped_series_chain_candidates
 from .design_lint_usb_unmapped_topology import usb_unmapped_multi_pin_topology_candidates
 from .netlist_contract_models import NetlistContract
 from .usb_c_ports import UsbCPortRosterContext
@@ -53,6 +54,11 @@ def usb_peer_group_candidates(
             reviewed_connector_references,
         ),
         *usb_unmapped_multi_pin_topology_candidates(reference_scan, data_path),
+        *usb_unmapped_series_chain_candidates(
+            observed,
+            data_path,
+            reviewed_connector_references,
+        ),
         *usb_endpoint_path_coverage_candidates(reference_scan, data_path),
     )
 

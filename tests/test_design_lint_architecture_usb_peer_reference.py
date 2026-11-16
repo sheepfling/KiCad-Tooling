@@ -27,11 +27,15 @@ USB_PEER_ANALYSIS_MODULES = (
     "usb_peer_reference_evidence.py",
     "usb_peer_reference_scan.py",
     "usb_peer_unsupported_topology.py",
+    "usb_peer_unsupported_series_chain.py",
+    "usb_peer_unsupported_series_chain_types.py",
     "usb_peer_map_identity.py",
     "usb_peer_generic_connector_models.py",
     "usb_peer_generic_connector_candidates.py",
     "design_lint_usb_generic_connector_candidate_evidence.py",
     "design_lint_usb_generic_connector_candidates.py",
+    "design_lint_usb_unmapped_series_chain.py",
+    "design_lint_usb_unmapped_series_chain_candidate_evidence.py",
 )
 
 
@@ -103,3 +107,33 @@ def test_usb_peer_reference_rule_refs_point_to_the_owning_modules() -> None:
         "design_lint_usb_generic_connector_candidate_evidence.py",
         "design_lint_usb_generic_connector_candidates.py",
     }
+
+
+def test_usb_unmapped_series_chain_rule_uses_its_focused_predicate_and_adapter() -> None:
+    rule = next(
+        item for item in rule_catalog().rules if item.rule_id == "bus.usb_unmapped_series_chain"
+    )
+    owner = (
+        "kicad_tooling/hwrepo/usb_peer_unsupported_series_chain.py"
+        "#unsupported_usb_series_chain_candidates"
+    )
+    candidate_owner = (
+        "kicad_tooling/hwrepo/design_lint_usb_unmapped_series_chain_candidate_evidence.py"
+        "#UsbUnmappedSeriesChainCandidate"
+    )
+    modules = (
+        "usb_peer_unsupported_series_chain.py",
+        "usb_peer_unsupported_series_chain_types.py",
+        "design_lint_usb_unmapped_series_chain.py",
+        "design_lint_usb_unmapped_series_chain_candidate_evidence.py",
+    )
+
+    assert rule.theme == "interfaces"
+    assert rule.implementation_owner == owner
+    assert owner in rule.implementation_refs
+    assert candidate_owner in rule.implementation_refs
+    assert (
+        line_count(HWREPO / "design_lint_usb_peer_group_candidates.py") < IMPLEMENTATION_MAX_LINES
+    )
+    sizes = {name: line_count(HWREPO / name) for name in modules}
+    assert all(size < IMPLEMENTATION_MAX_LINES for size in sizes.values()), sizes

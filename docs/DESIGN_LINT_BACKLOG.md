@@ -30347,6 +30347,50 @@ acceptance threads while new lint features proceed:
   517 selected tests passed and 10,018 deselected. The job ran the three
   digest-pinned native KiCad images and uploaded the scoped CI receipt.
 
+#### LINT-533 — Review unmapped multi-stage USB series chains
+
+- **Priority:** P2 path-coverage review. The existing USB peer scan supports
+  direct paths, one fitted `Device:R` per line, or exact mapped inline paths.
+  A complete multi-stage chain was silently outside those predicates.
+- **Status:** Implemented as `bus.usb_unmapped_series_chain`, a configurable
+  default-REVIEW candidate that asks the project to record intent and coverage
+  status when a supported USB 2.0 endpoint pair has an unmapped multi-stage
+  resistor path.
+- **Predicate:** Recognize only a fitted connector-to-IC pair with complete
+  USB 2.0 endpoint pin functions. Both D+ and D- must have exact direct or
+  unbranched paths through complete, fitted, two-pin passive `Device:R`
+  components. At least one data line must use two or more stages. Every path
+  net must contain only its expected endpoint and resistor pins. An exact map
+  for the connector/PHY port group suppresses this prompt so stale-map review
+  remains with `bus.usb_data_path_mismatch`.
+- **Limitations:** The current map schema can describe at most one series
+  resistor per line and cannot express multiple stages. This rule therefore
+  asks for review and a recorded coverage decision; it does not assert that a
+  resistor is suitable, that a component conducts, or that PCB copper or
+  off-board wiring completes the path. Branches, unexplained peers, DNP or
+  incomplete resistors, ambiguous pin assignments, mixed non-resistor paths,
+  USB SuperSpeed, and unsupported endpoint groups are skipped.
+- **Regression coverage:** Synthetic tests cover two-stage paths on both
+  lines, an asymmetric two-stage/single-stage pair, direct and single-stage
+  controls, DNP/incomplete/branched controls, map suppression, configuration,
+  exact ignore, and stable evidence under input reordering. The tooling-owned
+  native schematic is exported twice with digest-pinned KiCad 10.0.0 in a
+  network-disabled Docker container; a one-stage native path is a quiet control.
+  Both Docker tests passed locally. No product or proprietary schematic is
+  included.
+- **Local acceptance:** The scoped package gate passed with 512 selected tests
+  and 10,033 deselected, including active-rule fixture reachability, native
+  Docker fault/control exports, Ruff, Alphus, Rumdl, mdrepo, module-size
+  preflight, Pyright, Windows type checks, wheel/sdist builds, installed-wheel
+  checks, and external/adapted template playtest. Receipt:
+  `build/ci/run-qufqy64a`.
+- **Selection:** Run
+  `tests/test_usb_unmapped_series_chain.py` with
+  `design_lint and interface_lint and
+  design_lint_rule(rule_id="bus.usb_unmapped_series_chain")`. For native
+  coverage, set `KICAD_RUN_NATIVE_USB_DATA_PATH_FIXTURES=1` and select
+  `tests/test_usb_unmapped_series_chain_native.py` with `native_kicad`.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
