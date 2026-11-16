@@ -29168,7 +29168,7 @@ acceptance threads while new lint features proceed:
   native lane is
   `tests/test_rs485_receiver_output_sharing_native_fixture_lane.py` with
   `KICAD_RUN_NATIVE_RS485_RECEIVER_OUTPUT_SHARING_FIXTURES=1`.
-- **Local acceptance:** The scoped package gate passed 104 selected tests,
+- **Local acceptance:** The scoped package gate passed 105 selected tests,
   including the two digest-pinned Docker fixture versions and CLI/MCP parity.
   Ruff, module-boundary and shared-utility Alphus profiles, Rumdl, mdrepo,
   Linux and Windows Pyright, wheel/sdist builds, installed-wheel checks, and
