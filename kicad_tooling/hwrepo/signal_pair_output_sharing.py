@@ -10,7 +10,7 @@ from .netlist_contract_models import NetlistContract
 from .return_nets import is_return_like_net_name
 
 _SUPPORTED_PIN_TYPES = frozenset({"output", "tri_state", "bidirectional", "passive"})
-SignalRole = Literal["tx", "rx", "collision"]
+SignalRole = Literal["tx", "rx", "collision", "jtag_tdo"]
 RoleAndChannel: TypeAlias = Callable[[str, str], tuple[str, str] | None]
 
 

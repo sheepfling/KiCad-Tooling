@@ -19,6 +19,9 @@ PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
         "test_i2s_data_output_sharing_native_fixture_lane.py": frozenset(
             {"interface_lint", "native_kicad", "slow"}
         ),
+        "test_jtag_tdo_output_sharing_native_fixture_lane.py": frozenset(
+            {"interface_lint", "native_kicad", "slow"}
+        ),
         "test_can_single_termination.py": frozenset({"interface_lint"}),
         "test_design_lint_mcp_parity_can_single_termination.py": frozenset(
             {"interface_lint", "parity_lint", "slow"}

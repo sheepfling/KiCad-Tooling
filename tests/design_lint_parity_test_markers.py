@@ -40,6 +40,7 @@ PARITY_LINT_TEST_MODULES = frozenset(
         "tests/test_electrical_component_rating_parity.py",
         "tests/test_electrical_connector_rating_parity.py",
         "tests/test_design_lint_mcp_parity_jtag_connector_return.py",
+        "tests/test_design_lint_mcp_parity_jtag_tdo_output_sharing.py",
         "tests/test_design_lint_mcp_parity_swd_signal_named_rail.py",
         "tests/test_electrical_serial_peer_parity.py",
         "tests/test_electrical_parity.py",

@@ -55,6 +55,7 @@ _LINT_AREA_MODULES = MappingProxyType(
                 "tests/test_design_lint_architecture_serial_endpoint_role_collision.py",
                 "tests/test_design_lint_architecture_named_rail_protocols.py",
                 "tests/test_design_lint_architecture_signal_divider.py",
+                "tests/test_design_lint_jtag_tdo_output_sharing_architecture.py",
             }
         ),
         "schematic_lint": frozenset(

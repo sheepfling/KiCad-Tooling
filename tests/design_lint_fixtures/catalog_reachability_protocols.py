@@ -33,6 +33,7 @@ from tests.design_lint_fixtures.i2s_signal_named_rail import i2s_signal_named_ra
 from tests.design_lint_fixtures.i3c_same_net import i3c_same_net_netlist
 from tests.design_lint_fixtures.i3c_signal_named_rail import i3c_signal_named_rail_netlist
 from tests.design_lint_fixtures.jtag_signal_named_rail import jtag_signal_named_rail_netlist
+from tests.design_lint_fixtures.jtag_tdo_output_sharing import jtag_tdo_output_sharing_netlist
 from tests.design_lint_fixtures.open_drain_control_voltage import open_drain_control_voltage_netlist
 from tests.design_lint_fixtures.rs485_line_named_rail import rs485_line_named_rail_netlist
 from tests.design_lint_fixtures.rs485_receiver_output_sharing import (
@@ -137,6 +138,7 @@ def protocol_rule_ids() -> set[str]:
     emitted.update(
         item.rule_id for item in candidates(jtag_signal_named_rail_netlist(rail_pins={"1": "GND"}))
     )
+    emitted.update(item.rule_id for item in candidates(jtag_tdo_output_sharing_netlist()))
     emitted.update(
         item.rule_id
         for item in candidates(

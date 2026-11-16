@@ -278,6 +278,19 @@ metamorphic, CLI/MCP, and native cases can be selected together. Execution-cost
 markers live in `tests/execution_test_markers.py`; mixed modules mark only the
 test functions that actually run the exact native tool:
 
+JTAG TDO output sharing has a focused review-rule selector and an opt-in native
+Docker lane for repeatable fault/control exports:
+
+```sh
+.venv/bin/python -I -m pytest tests/test_jtag_tdo_output_sharing.py \
+  tests/test_design_lint_mcp_parity_jtag_tdo_output_sharing.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.jtag_tdo_outputs_share_net")'
+
+KICAD_RUN_NATIVE_JTAG_TDO_OUTPUT_SHARING_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_jtag_tdo_output_sharing_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.jtag_tdo_outputs_share_net")'
+```
+
 The BJT base-drive review has synthetic rule/policy tests and an exact-version
 native source-export lane. Its native cases use only tooling-owned schematics:
 direct NPN/PNP drive faults and a series-resistor control.

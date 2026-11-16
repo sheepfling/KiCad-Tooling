@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 410 rules are implemented with synthetic regression coverage.
+The following 411 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 410 active rules.
+The catalog currently contains 411 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -687,6 +687,8 @@ skipped under prerelease policy.
 - `bus.ethernet_rx_clock_outputs_share_net`
 - `bus.ethernet_rx_outputs_share_net`
 - `bus.ethernet_rx_status_outputs_share_net`
+- `bus.ethernet_crs_outputs_share_net`
+- `bus.ethernet_crs_dv_outputs_share_net`
 - `bus.ethernet_tx_clock_outputs_share_net`
 - `bus.ethernet_mii_collision_outputs_share_net`
 - `bus.ethernet_generic_connector_pair_review`
@@ -698,6 +700,7 @@ skipped under prerelease policy.
 - `bus.i2s_data_outputs_share_net`
 - `bus.jtag_generic_connector_pair_review`
 - `bus.jtag_signal_on_named_rail`
+- `bus.jtag_tdo_outputs_share_net`
 - `bus.swd_signal_on_named_rail`
 - `bus.can_tx_rx_same_net`
 - `bus.can_tx_rx_label_mismatch`
@@ -4608,7 +4611,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 408 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 411 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -29659,6 +29662,52 @@ acceptance threads while new lint features proceed:
   role to the PHY output-sharing matrix. Predicate and native compatibility
   evidence do not measure applicability or reviewer value on independent
   boards.
+
+#### LINT-521 — Review fitted JTAG TDO outputs sharing one net
+
+- **Priority:** P2 configurable interface heuristic. Multiple fitted JTAG ICs
+  can expose TDO pins with separate named nets yet still share a schematic net;
+  ERC cannot decide whether the outputs are selected, muxed, or expected to be
+  isolated.
+- **Status:** Implemented as `bus.jtag_tdo_outputs_share_net`, default
+  `review`, with per-project mode and exact-fingerprint ignore controls.
+- **Predicate:** For each fitted U/IC reference, require a complete unique
+  native pin inventory and one uniquely identified JTAG TDO role using exact
+  bounded `TDO`, `JTAG_TDO`, or `TDO_JTAG` aliases. Review one assigned,
+  output-capable TDO pin from each of at least two references when they share
+  an exact non-return net. Skip incomplete/ambiguous roles and defer two or
+  more native output pins to ERC.
+- **Interpretation:** The signal name, component category, pin type, and shared
+  net are review evidence; they do not prove active JTAG, output contention,
+  or a required topology. A mux or selected TAP path can be intentional. The
+  rule does not inspect PCB copper, firmware selection, off-board wiring, or
+  physical continuity.
+- **Evidence:** Synthetic cases cover exact aliases and compound-name
+  rejection, independent nets, non-IC references, DNP, open and multiply
+  assigned pins, incomplete inventory, duplicate roles, return nets, native
+  output conflict deferral, policy, exact ignores, stable fingerprints, and
+  repair. Tooling-authored native fault/control schematics repeat netlist and
+  ERC exports with digest-pinned KiCad 10.0.0 and 10.0.5. CLI/MCP parity uses
+  the same typed lint service. Source hashes are recorded in the
+  [fixture record](../tests/fixtures/design_lint/jtag-tdo-output-sharing/README.md).
+- **Selection:** Run `tests/test_jtag_tdo_output_sharing.py`,
+  `tests/test_design_lint_mcp_parity_jtag_tdo_output_sharing.py`, and the
+  focused architecture suite with `design_lint_rule(rule_id="bus.jtag_tdo_outputs_share_net")`.
+  The Docker lane is
+  `tests/test_jtag_tdo_output_sharing_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_JTAG_TDO_OUTPUT_SHARING_FIXTURES=1`.
+- **Local acceptance:** Exact tag-scoped `scripts/ci.py` passed on 2026-11-16
+  at `build/ci/run-3hna4m5c`: 499 passed and 9,902 deselected, including both
+  digest-pinned Docker fixture cases, CLI/MCP parity, catalog reachability,
+  and every rule-gate integrity check. Ruff, both Alphus profiles, Rumdl,
+  mdrepo, module-size preflight, the tag-resolved Linux and Windows Pyright
+  paths, wheel/sdist builds, isolated installed-wheel checks, public-template
+  inventory/surface/verify, and the adapted external-template playtest all
+  passed.
+- **Hosted acceptance:** Pending tagged rule-scope workflow.
+- **Incremental-value limit:** This is synthetic and native-compatibility
+  validated only. Independent board examples or adjudicated reviewer results
+  are needed before claiming applicability or reviewer value.
 
 ## Completion and release gate
 

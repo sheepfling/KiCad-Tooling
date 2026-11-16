@@ -9266,6 +9266,51 @@
       "implementation_owner": "kicad_tooling/hwrepo/jtag_signal_inventory.py#jtag_named_rail_signal_pins"
     },
     {
+      "rule_id": "bus.jtag_tdo_outputs_share_net",
+      "title": "Fitted JTAG TDO outputs share one schematic net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining fitted IC pin inventory, native pin functions, electrical types, fitted state, and exact net assignments",
+      "predicate": "For fitted U/IC references with a complete unique native pin inventory, recognize exact bounded TDO, JTAG_TDO, or TDO_JTAG pin-function aliases only when the endpoint inventory identifies one unambiguous JTAG TDO role. Emit one REVIEW candidate when at least two distinct fitted references contribute exactly one supported output-capable TDO pin each to the same exact non-return net. Require one native net assignment per pin, suppress incomplete or ambiguous inventory and duplicate TDO roles per reference, and leave groups with two or more native output pins to ERC.",
+      "supported_kicad_versions": [
+        "Digest-pinned KiCad 10.0.0 and 10.0.5 native fixture exports; the selected project exact catalogued version is checked before export"
+      ],
+      "limitations": [
+        "Only fitted U/IC references with complete unique native pin metadata and one unique JTAG TDO role are considered. DNP parts, open or ambiguous assignments, incomplete inventory or pin-type evidence, duplicate TDO roles per component, return-like nets, and unsupported pin types are skipped.",
+        "Native function text and output-capable pin types do not prove that the pins drive the net in the selected mode. A mux or selected TAP topology can make shared outputs intentional; the rule asks for review and does not claim a defect.",
+        "Two native output pins remain with ERC. The schematic-net heuristic does not establish JTAG topology, TAP selection, firmware state, PCB copper continuity, off-board wiring, electrical approval, or manufacturing readiness."
+      ],
+      "fault_fixtures": [
+        "tests.test_jtag_tdo_output_sharing.test_shared_jtag_tdo_outputs_from_fitted_ics_are_reviewed",
+        "tests.test_jtag_tdo_output_sharing_native_fixture_lane.test_native_jtag_tdo_output_sharing_fault_and_control_repeat",
+        "tests.test_design_lint_mcp_parity_jtag_tdo_output_sharing.test_jtag_tdo_output_sharing_cli_mcp_parity"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_jtag_tdo_output_sharing.test_exact_jtag_tdo_aliases_and_non_jtag_compounds_are_bounded",
+        "tests.test_jtag_tdo_output_sharing.test_dnp_open_ambiguous_incomplete_and_duplicate_role_evidence_suppress",
+        "tests.test_jtag_tdo_output_sharing.test_return_nets_and_native_output_conflicts_are_left_to_existing_checks",
+        "tests.test_jtag_tdo_output_sharing_native_fixture_lane.test_native_jtag_tdo_output_sharing_fault_and_control_repeat"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_jtag_tdo_output_sharing.test_fingerprint_is_order_stable_and_separating_outputs_clears_finding"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_JTAG_TDO_OUTPUT_SHARING_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/jtag_tdo_output_sharing.py#jtag_tdo_outputs_share_net_candidates",
+        "kicad_tooling/hwrepo/jtag_tdo_output_sharing.py#jtag_tdo_output_role",
+        "kicad_tooling/hwrepo/jtag_signal_inventory.py#JtagEndpointInventory.named_rail_signal_pins",
+        "kicad_tooling/hwrepo/jtag_signal_inventory.py#jtag_signal_roles",
+        "kicad_tooling/hwrepo/signal_pair_output_sharing.py#signal_output_sharing_groups",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/jtag_tdo_output_sharing.py#jtag_tdo_outputs_share_net_candidates"
+    },
+    {
       "rule_id": "bus.swd_signal_on_named_rail",
       "title": "SWD signal pin is assigned directly to a named rail",
       "status": "active",

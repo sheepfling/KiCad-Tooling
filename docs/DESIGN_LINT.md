@@ -1104,7 +1104,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 410 active rules.
+The catalog currently contains 411 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -4554,6 +4554,36 @@ checked with digest-pinned KiCad 10.0.0 and 10.0.5 Docker images; see the
 KICAD_RUN_NATIVE_JTAG_SIGNAL_NAMED_RAIL_FIXTURES=1 .venv/bin/python -I -m pytest -q \
   tests/test_jtag_signal_named_rail_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.jtag_signal_on_named_rail")'
+```
+
+## Review fitted JTAG TDO outputs sharing one net
+
+`bus.jtag_tdo_outputs_share_net` emits a default `review` finding when at least
+two fitted U/IC devices each contribute one uniquely identified JTAG TDO pin to
+the same exact non-return schematic net. It requires complete unique pin
+inventory, native pin-function and electrical-type evidence, and one net
+assignment per pin. Exact TDO aliases are bounded; compound names such as
+`TDO/SWO` are excluded. Nets with two or more native `output` pins remain with
+ERC.
+
+This is a review clue, not a claim that the schematic is wrong. A mux or
+selected TAP topology can make shared TDO intentional. Project policy can
+promote the rule to `block`, set it to `off`, or ignore one exact finding
+fingerprint. The finding does not establish active driver behavior, JTAG
+selection, PCB copper continuity, or external wiring. The source-bound native
+fault/control fixtures are tooling-authored, ERC-clean, and checked repeatedly
+with digest-pinned KiCad 10.0.0 and 10.0.5 images; fixture hashes and limits are
+in the [fixture record](../tests/fixtures/design_lint/jtag-tdo-output-sharing/README.md).
+
+```sh
+.venv/bin/python -I -m pytest tests/test_jtag_tdo_output_sharing.py \
+  tests/test_design_lint_mcp_parity_jtag_tdo_output_sharing.py \
+  tests/test_design_lint_jtag_tdo_output_sharing_architecture.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.jtag_tdo_outputs_share_net")'
+
+KICAD_RUN_NATIVE_JTAG_TDO_OUTPUT_SHARING_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_jtag_tdo_output_sharing_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.jtag_tdo_outputs_share_net")'
 ```
 
 ## Review SWD signal pins assigned to named rails
