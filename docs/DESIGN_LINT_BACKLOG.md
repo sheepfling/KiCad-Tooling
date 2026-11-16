@@ -29224,7 +29224,8 @@ acceptance threads while new lint features proceed:
   module-size preflight, Linux and Windows Pyright, wheel/sdist builds, the
   installed-wheel rehearsal, and external/adapted public-template playtests
   passed. Logs are retained under ignored `build/ci/` directories.
-- **Hosted acceptance:** Pending.
+- **Hosted acceptance:** GitHub Actions run `43791349313` passed for commit
+  `157bfff2` in tag `v0.5.3rc840`.
 
 ## Completion and release gate
 
