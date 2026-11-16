@@ -8,6 +8,9 @@ from typing import cast
 
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.models import ProjectConfig, ProjectKind
+from kicad_tooling.hwrepo.schematic_conflicting_placed_footprint import (
+    source_bound_conflicting_placed_footprint_candidates,
+)
 from kicad_tooling.hwrepo.schematic_conflicting_placed_value import (
     source_bound_conflicting_placed_value_candidates,
 )
@@ -110,6 +113,26 @@ def schematic_source_integrity_rule_ids() -> frozenset[str]:
         conflicting_value_config,
         {conflicting_value_relative: digest(conflicting_value_source)},
     )
+    conflicting_footprint_relative = (
+        "tests/fixtures/design_lint/conflicting-placed-footprint/fault.kicad_sch"
+    )
+    conflicting_footprint_source = repository / conflicting_footprint_relative
+    conflicting_footprint_project = (
+        conflicting_footprint_relative.removesuffix(".kicad_sch") + ".kicad_pro"
+    )
+    conflicting_footprint_config = cast(
+        ProjectConfig,
+        SimpleNamespace(
+            kind=ProjectKind.PCB,
+            project=conflicting_footprint_project,
+            kicad_version="10.0.8",
+        ),
+    )
+    conflicting_footprint_candidates = source_bound_conflicting_placed_footprint_candidates(
+        repository,
+        conflicting_footprint_config,
+        {conflicting_footprint_relative: digest(conflicting_footprint_source)},
+    )
     return frozenset(
         item.rule_id
         for item in (
@@ -118,5 +141,6 @@ def schematic_source_integrity_rule_ids() -> frozenset[str]:
             *pin_mismatch_candidates,
             *duplicate_uuid_candidates,
             *conflicting_value_candidates,
+            *conflicting_footprint_candidates,
         )
     )

@@ -1104,7 +1104,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 415 active rules.
+The catalog currently contains 416 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -1363,6 +1363,43 @@ KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
   .venv/bin/python -I -m pytest \
   tests/test_schematic_conflicting_placed_value_native.py \
   -m 'design_lint and schematic_lint and evidence_lint and native_kicad and design_lint_rule(rule_id="schematic.conflicting_placed_value_properties")'
+```
+
+### Conflicting Footprint properties on a placed schematic symbol
+
+`schematic.conflicting_placed_footprint_properties` reviews a direct placed
+symbol that contains multiple `Footprint` properties with different exact
+values. The finding retains the reference, UUID, source path and SHA-256, every
+footprint value, and the source line for each property. Identical repeated
+values are quiet, as are duplicate `Footprint` properties inside an embedded
+library definition when the placed instance has one direct value. This check
+covers KiCad 10.0.8 only; other patches are outside the measured behavior.
+
+The digest-pinned KiCad 10.0.8 export accepts a conflicting placed-symbol
+duplicate and emits its last `Footprint` value in the exported netlist. The same
+test repeats unique, identical-value, and embedded-library duplicate controls.
+The result is a source ambiguity prompt, not a decision about the intended
+footprint, library correctness, pad mapping, or PCB placement. The default is
+REVIEW, with project review, block, off, and exact-fingerprint ignore options.
+
+The tooling-owned sources are described in the
+[fixture README](../tests/fixtures/design_lint/conflicting-placed-footprint/README.md).
+Run the source and CLI/MCP regressions with:
+
+```sh
+.venv/bin/python -I -m pytest \
+  tests/test_schematic_conflicting_placed_footprint.py \
+  tests/test_design_lint_mcp_parity_schematic_conflicting_placed_footprint.py \
+  -m 'design_lint and schematic_lint and design_lint_rule(rule_id="schematic.conflicting_placed_footprint_properties")'
+```
+
+Run the exact native fault/control regression with:
+
+```sh
+KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1 \
+  .venv/bin/python -I -m pytest \
+  tests/test_schematic_conflicting_placed_footprint_native.py \
+  -m 'design_lint and schematic_lint and evidence_lint and native_kicad and design_lint_rule(rule_id="schematic.conflicting_placed_footprint_properties")'
 ```
 
 ### Schematic object UUID repeats across source files

@@ -8,7 +8,12 @@ from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate
 from .kicad_sexpr import sexpr_atoms
 from .project_models import ProjectConfig, ProjectKind
-from .schematic_geometry_source import schematic_nodes, schematic_property, schematic_root
+from .schematic_geometry_source import (
+    schematic_direct_property_value_lines,
+    schematic_nodes,
+    schematic_property,
+    schematic_root,
+)
 from .schematic_source_tree import verified_schematic_sources
 from .source_state_models import SourceHashInventory
 
@@ -47,13 +52,7 @@ def source_bound_conflicting_placed_value_candidates(
         document = schematic_root(source_file.contents)
         text = document.text
         for symbol in schematic_nodes(text, document.root, "symbol"):
-            value_properties: list[tuple[str, int]] = []
-            for property_node in schematic_nodes(text, symbol, "property"):
-                atoms = sexpr_atoms(text, property_node)
-                if len(atoms) == 3 and atoms[1] == "Value":
-                    source_line = text.count("\n", 0, property_node.start) + 1
-                    value_properties.append((atoms[2], source_line))
-
+            value_properties = schematic_direct_property_value_lines(text, symbol, "Value")
             values = tuple(value for value, _line in value_properties)
             if len(values) < 2 or len(set(values)) < 2:
                 continue

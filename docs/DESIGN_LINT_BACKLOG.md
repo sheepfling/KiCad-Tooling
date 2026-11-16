@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 414 rules are implemented with synthetic regression coverage.
+The following 416 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 414 active rules.
+The catalog currently contains 416 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -831,6 +831,7 @@ skipped under prerelease policy.
 - `mcu.stm32_cubemx_pin_map`
 - `schematic.duplicate_embedded_symbol_definition`
 - `schematic.conflicting_placed_value_properties`
+- `schematic.conflicting_placed_footprint_properties`
 - `schematic.duplicate_object_uuid`
 - `schematic.embedded_symbol_pin_number_mismatch`
 - `schematic.missing_embedded_symbol_definition`
@@ -4615,7 +4616,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 414 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 416 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -30016,6 +30017,52 @@ acceptance threads while new lint features proceed:
   on implementation commit `639fedebe8e67168d9bd31c0149677ca0e91ad20`; the
   prerelease lint gate and installed-wheel check against a separate project
   passed. Package and preview jobs were skipped under prerelease policy.
+
+#### LINT-528 — Review conflicting placed-symbol Footprint properties
+
+- **Priority:** P1 schematic source integrity. Repeated direct `Footprint`
+  fields can disagree, and the measured KiCad 10.0.8 export accepts the source
+  and uses the last value.
+- **Status:** Implemented as `schematic.conflicting_placed_footprint_properties`,
+  a source-hashed default-REVIEW prompt bounded to KiCad 10.0.8.
+- **Predicate:** For every direct placed symbol in the unique files of the
+  verified schematic source tree, collect well-formed direct `Footprint`
+  property nodes in source order. Report when there are multiple nodes and
+  their exact values are not all equal. Include every value and source line,
+  the placed-symbol reference and UUID, and source path and SHA-256. Do not
+  inspect embedded `lib_symbols` definitions or report identical repeated
+  values.
+- **Native evidence:** The digest-pinned KiCad 10.0.8 image accepted the
+  tooling-owned fault and exported `Synthetic:Wrong` from the second direct
+  `Footprint` entry. Unique, identical-value duplicate, and conflicting
+  embedded-library duplicate controls exported `Synthetic:USB-A` and produced
+  no finding. Each case repeated with identical output. This is specific to
+  the synthetic source and pinned image.
+- **Limitations:** The rule does not choose the intended footprint or establish
+  library correctness, pad mapping, PCB placement, electrical correctness, or
+  manufacturing approval. Other KiCad versions, malformed fields, and other
+  property contexts are outside the predicate. REVIEW is the default;
+  projects can select review, block, off, or exact-fingerprint ignore.
+- **Regression coverage:** Tooling-owned fixtures cover the conflicting fault,
+  unique-footprint control, identical-value duplicate control,
+  library-definition control, exact version and project-kind scope, current
+  source hashes, deterministic findings, CLI/MCP parity, and repeatable native
+  exports. No proprietary project source or fixture is included.
+- **Selection:** Run
+  `tests/test_schematic_conflicting_placed_footprint.py` and
+  `tests/test_design_lint_mcp_parity_schematic_conflicting_placed_footprint.py`
+  with `design_lint and schematic_lint and
+  design_lint_rule(rule_id="schematic.conflicting_placed_footprint_properties")`.
+  Run `tests/test_schematic_conflicting_placed_footprint_native.py` with Docker,
+  `KICAD_RUN_NATIVE_SCHEMATIC_SYMBOL_INTEGRITY_FIXTURES=1`, and the same rule
+  selector plus `native_kicad`.
+- **Local acceptance:** Rule-scoped `scripts/ci.py` passed in
+  `build/ci/run-gjojw17r`: 507 passed and 9,961 deselected, including the
+  digest-pinned KiCad 10.0.8 Docker fault/control run. Ruff, both Alphus
+  profiles, Rumdl, mdrepo, module-size preflight, Linux and Windows Pyright,
+  wheel/sdist builds, installed-wheel checks, and external/adapted template
+  acceptance and playtest all passed.
+- **Hosted acceptance:** Pending tag `v0.5.3rc862`.
 
 ## Completion and release gate
 

@@ -40,6 +40,7 @@ from .design_lint_project_contexts import (
 )
 from .design_lint_report_models import DesignLintReport
 from .design_lint_schematic_coverage import scan_schematic_geometry
+from .design_lint_schematic_source_candidates import collect_schematic_source_candidates
 from .design_lint_stm32_coverage import scan_stm32_pin_maps
 from .discovery import load_config
 from .evidence import digest
@@ -70,16 +71,6 @@ from .pcb_track_width_rule_coverage import track_width_rule_scope_candidates
 from .pcb_unassigned_copper_pad import unassigned_copper_pad_candidates
 from .project_models import ProjectManifest
 from .project_source_hashes import hash_project_sources as hashes
-from .schematic_conflicting_placed_value import (
-    source_bound_conflicting_placed_value_candidates,
-)
-from .schematic_erc_source_candidates import source_bound_schematic_erc_candidates
-from .schematic_source_integrity import (
-    duplicate_embedded_library_symbol_candidates,
-    duplicate_schematic_object_uuid_candidates,
-    embedded_symbol_pin_number_mismatch_candidates,
-    missing_embedded_library_symbol_candidates,
-)
 from .selection import resolve_project
 
 
@@ -205,21 +196,10 @@ def inspect_design_lint_request(
             coach.source_hashes,
             native_summary,
         )
-        schematic_source_candidates = (
-            *source_bound_schematic_erc_candidates(root, config, coach.source_hashes),
-            *source_bound_conflicting_placed_value_candidates(
-                root,
-                config,
-                coach.source_hashes,
-            ),
-            *missing_embedded_library_symbol_candidates(root, config, coach.source_hashes),
-            *duplicate_embedded_library_symbol_candidates(root, config, coach.source_hashes),
-            *duplicate_schematic_object_uuid_candidates(root, config, coach.source_hashes),
-            *embedded_symbol_pin_number_mismatch_candidates(
-                root,
-                config,
-                coach.source_hashes,
-            ),
+        schematic_source_candidates = collect_schematic_source_candidates(
+            root,
+            config,
+            coach.source_hashes,
         )
         pcb_source_candidates = (
             *power_pin_net_track_width_map_candidates(

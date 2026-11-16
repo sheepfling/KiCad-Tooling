@@ -214,6 +214,21 @@ def schematic_property(source: str, parent: _Span, name: str) -> str:
     return ""
 
 
+def schematic_direct_property_value_lines(
+    source: str,
+    parent: _Span,
+    name: str,
+) -> tuple[tuple[str, int], ...]:
+    """Return well-formed direct property values and their one-based source lines."""
+    values: list[tuple[str, int]] = []
+    for node in schematic_nodes(source, parent, "property"):
+        atoms = _atoms(source, node)
+        if len(atoms) == 3 and atoms[1] == name:
+            line = source.count("\n", 0, node.start) + 1
+            values.append((atoms[2], line))
+    return tuple(values)
+
+
 def schematic_property_aliases(source: str, parent: _Span, names: tuple[str, ...]) -> str:
     values = [
         atoms[2]
