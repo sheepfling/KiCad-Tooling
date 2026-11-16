@@ -869,7 +869,16 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc862):** LINT-528 reviews
+- **Latest published lint-gate checkpoint (v0.5.3rc863):** LINT-529 reviews
+  placed-symbol fields that collide with native DNP metadata. Hosted acceptance
+  passed in GitHub Actions run `43897621537`: 514 selected tests passed and
+  9,973 were deselected, including digest-pinned KiCad 10.0.0, 10.0.5, and
+  10.0.8 fault/control exports. Tag-scope resolution, Ruff, both Alphus
+  profiles, Rumdl, mdrepo, module-size preflight, Linux and Windows type
+  checks, wheel/sdist builds, and external/adapted template verification and
+  playtest passed. Package and preview jobs were skipped under prerelease
+  policy.
+- **Previous published lint-gate checkpoint (v0.5.3rc862):** LINT-528 reviews
   conflicting direct placed-symbol Footprint properties. Hosted acceptance
   passed in GitHub Actions run `43888815992`: 507 selected tests passed and
   9,961 were deselected, including the repeated digest-pinned KiCad 10.0.8
@@ -30131,7 +30140,12 @@ acceptance threads while new lint features proceed:
   fault/control exports, Ruff, both Alphus profiles, Rumdl, mdrepo,
   module-size checks, Linux and Windows Pyright, wheel/sdist builds, installed-
   wheel checks, and external/adapted template verification and playtest.
-- **Hosted acceptance:** Pending the published rule-scoped tag and GitHub Actions.
+- **Hosted acceptance:** Tag `v0.5.3rc863` passed GitHub Actions run
+  `43897621537`: 514 selected tests passed and 9,973 were deselected. The three
+  digest-pinned KiCad 10.0.0, 10.0.5, and 10.0.8 native lanes, tag-scope
+  resolution, cross-platform type checks, wheel/sdist builds, and external
+  template installed-wheel verification and playtest passed. Package and
+  preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
