@@ -29375,7 +29375,9 @@ acceptance threads while new lint features proceed:
   Linux and Windows Pyright, wheel/sdist builds, installed-wheel verification,
   and the external/adapted public-template playtest passed. Receipts are under
   ignored `build/ci/run-ha3ynaxk/`.
-- **Hosted acceptance:** Pending.
+- **Hosted acceptance:** GitHub Actions run `43805848902` passed for commit
+  `253b57a5` and tag `v0.5.3rc844`. The package and preview jobs were skipped
+  under the prerelease policy.
 
 ## Completion and release gate
 
