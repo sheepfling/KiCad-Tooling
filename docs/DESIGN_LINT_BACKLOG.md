@@ -30011,7 +30011,11 @@ acceptance threads while new lint features proceed:
   profiles, Rumdl, mdrepo, module-size preflight, Linux and Windows Pyright,
   wheel/sdist builds, installed-wheel checks, and the external template
   acceptance/playtest passed.
-- **Hosted acceptance:** Pending tag `v0.5.3rc861`.
+- **Hosted acceptance:** Tag `v0.5.3rc861` passed GitHub Actions run
+  [43881279350](https://github.com/sheepfling/KiCad-Tooling/actions/runs/43881279350)
+  on implementation commit `639fedebe8e67168d9bd31c0149677ca0e91ad20`; the
+  prerelease lint gate and installed-wheel check against a separate project
+  passed. Package and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
