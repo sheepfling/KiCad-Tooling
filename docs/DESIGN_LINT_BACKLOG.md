@@ -872,13 +872,13 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc871):** LINT-536
-  extends FA-001 to full-through multilayer stacks. Local scoped acceptance
-  passed 18 selected tests, including digest-pinned KiCad 10.0.0 and 10.0.5
-  Docker exports, package/type checks, and installed-wheel origin/version
-  checks. Hosted acceptance passed in GitHub Actions run `43956654168` with 18
-  selected tests, external/adapted template verification, and playtest; package
-  and preview jobs were skipped under prerelease policy.
+- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc872):** LINT-537
+  validates plated drill-file layer spans against the source copper stack.
+  Local and hosted scoped acceptance each passed 24 selected tests, including
+  four digest-pinned KiCad 10.0.0 and 10.0.5 Docker cases. Hosted acceptance
+  passed in GitHub Actions run `43964266504`, including type/package checks,
+  external and adapted project verification, and playtest; package and preview
+  jobs were skipped under prerelease policy.
 - **Previous published lint-gate checkpoint (v0.5.3rc869):** LINT-534 reviews
   unmapped USB 2.0 D+/D− paths with a series resistor on one data line and a
   direct path on the other. Local scoped acceptance passed 516 selected tests
@@ -30597,6 +30597,12 @@ acceptance threads while new lint features proceed:
   module-size preflight, Linux and Windows-targeted Pyright, wheel/sdist builds,
   source-distribution wheel rebuild, and isolated installed-wheel origin/version
   checks passed. The offline run skipped mdrepo and had no external checkout.
+- **Hosted scoped acceptance:** Tag `v0.5.3rc872` passed GitHub Actions run
+  `43964266504`: 24 selected tests passed, including native KiCad 10.0.0 and
+  10.0.5 Docker exports. Ruff, both Alphus profiles, Rumdl, mdrepo,
+  module-size preflight, Linux and Windows type checks, wheel/sdist builds,
+  installed-wheel checks, external/adapted project verification, and playtest
+  passed. Package and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
