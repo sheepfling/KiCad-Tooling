@@ -11,6 +11,13 @@ INTERFACE_RULE_NODE_CASES = (
         ),
     ),
     (
+        "bus.ethernet_mii_collision_outputs_share_net",
+        (
+            "tests/test_ethernet_mii_collision_output_sharing.py::"
+            "test_shared_mii_collision_outputs_from_fitted_identified_phys_are_reviewed"
+        ),
+    ),
+    (
         "bus.ethernet_crs_outputs_share_net",
         (
             "tests/test_ethernet_crs_output_sharing.py::"

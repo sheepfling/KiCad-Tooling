@@ -4,10 +4,10 @@ These are tooling-owned synthetic schematics. They contain two passive-typed
 `Synthetic:Ethernet_PHY` symbols and no external project or cohort design
 source.
 
-| Fixture             | SHA-256                                                            | Expected result                                                                                                     |
-| ------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| `fault.kicad_sch`   | `296aeafe91a9be95d48947e473749d329983b0dc59d79140716e47ae03a94f46` | Both PHYs share RXD0, RXC, RXDV, CRS_DV, CRS, and TX_CLK nets; one REVIEW candidate per rule; no native ERC errors. |
-| `control.kicad_sch` | `5e9f58445de1bdace9682515fcfd716347bef973881252b85e4b5b910bb39182` | No same-role RXD, RXC, RXDV, CRS_DV, CRS, or TX_CLK outputs are shared; no candidate; no native ERC errors.         |
+| Fixture             | SHA-256                                                            | Expected result                                                                                                               |
+| ------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `fault.kicad_sch`   | `eca30a712a22b7d4f2429168dbda9bca98e122add0e7e2090acdf3245273c3f3` | Both PHYs share RXD0, RXC, RXDV, CRS_DV, CRS, TX_CLK, and COL nets; one REVIEW candidate per rule; no native ERC errors.      |
+| `control.kicad_sch` | `3fae0fad8eb15c2f06d4268d69b14fb939f6709f79428a1e098c694b0a8819e5` | No same-role RXD, RXC, RXDV, CRS_DV, CRS, TX_CLK, or COL outputs are shared; no candidate; no native ERC errors.              |
 
 The test lane exports each schematic twice with digest-pinned KiCad 10.0.0 and
 10.0.5 images, compares normalized netlists and ERC reports, checks both exact
@@ -36,4 +36,8 @@ The TX_CLK rule recognizes only exact `TX_CLK`/`MII_TX_CLK`; `GTX_CLK`,
 `GMII_TX_CLK`, and compound mode/strap labels remain unclassified because the
 MII clock-output role does not establish the selected interface mode. None of
 the rules proves PHY behavior, MAC topology, PCB copper, or external
-connectivity.
+connectivity. The MII collision rule recognizes only `COL`/`MII_COL`; TI's
+DP83848x example documents COL as an MII collision output used for collision
+detection in half-duplex operation. The heuristic does not infer mode,
+duplex, active output state, or whether PHY selection makes the shared route
+intentional.

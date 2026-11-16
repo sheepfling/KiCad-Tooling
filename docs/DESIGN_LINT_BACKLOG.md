@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 409 rules are implemented with synthetic regression coverage.
+The following 410 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 409 active rules.
+The catalog currently contains 410 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -688,6 +688,7 @@ skipped under prerelease policy.
 - `bus.ethernet_rx_outputs_share_net`
 - `bus.ethernet_rx_status_outputs_share_net`
 - `bus.ethernet_tx_clock_outputs_share_net`
+- `bus.ethernet_mii_collision_outputs_share_net`
 - `bus.ethernet_generic_connector_pair_review`
 - `bus.ethernet_management_generic_connector_pair_review`
 - `bus.swd_generic_connector_pair_review`
@@ -29592,6 +29593,62 @@ acceptance threads while new lint features proceed:
   Linux and Windows type checks, wheel/sdist builds, and installed-wheel
   rehearsal against the separate public template checkout passed. Package and
   preview jobs were skipped under prerelease policy.
+
+#### LINT-520 — Review shared Ethernet PHY MII collision outputs
+
+- **Status:** Implemented as the default-`review`
+  `bus.ethernet_mii_collision_outputs_share_net` interface heuristic.
+- **Priority:** P1 interface coverage. The Ethernet PHY output-sharing family
+  did not recognize standalone MII `COL` pins. A synthetic pair of fitted PHYs
+  with passive-typed `COL` pins on one exact net produced no candidate from
+  the prior catalog.
+- **Predicate:** Require fitted U/IC references with explicit bounded Ethernet
+  PHY identity, exact `COL` or `MII_COL` function text, complete unique native
+  pin inventory, one exact net assignment, and a supported output-capable
+  native type. Emit one REVIEW candidate when two or more distinct PHYs
+  contribute one collision-detect pin each to one exact non-return net;
+  suppress incomplete or ambiguous groups and defer two native output pins to
+  ERC. Compound labels and broader names such as `COLLISION` are not
+  recognized.
+- **Evidence basis and boundary:** TI's DP83848x data sheet identifies `COL`
+  as an MII collision-detect output used for collision detection in
+  half-duplex operation
+  ([primary source](https://www.ti.com/lit/ds/symlink/dp83848m.pdf)). This is a
+  device-specific review cue. Pin-function text does not prove selected MII or
+  duplex mode, active output behavior, endpoint selection, PCB copper, or
+  off-board wiring. A selected or multiplexed path can be intentional. The
+  default remains REVIEW; project policy can promote, disable, or exactly
+  ignore a candidate.
+- **Fixtures:** Tooling-owned synthetic tests cover exact aliases, unlike
+  functions, separate nets, unrelated identity, connector references, DNP,
+  open and multiply assigned pins, missing inventory, duplicate roles, return
+  nets, native-output conflicts, policy modes, exact ignores, stable
+  fingerprints, and split-net metamorphism. The shared synthetic KiCad pair
+  adds passive-typed pin 8 `COL`: the fault shares its exact net and the valid
+  control separates it. Digest-pinned KiCad 10.0.0 and 10.0.5 exports check
+  exact assignments, repeatability, and no native ERC errors. CLI/MCP parity
+  exercises the same typed service. No cohort or proprietary project source is
+  stored. Fixture hashes are recorded in the
+  [Ethernet output-sharing fixture README](../tests/fixtures/design_lint/ethernet-rx-output-sharing/README.md).
+- **Selection:** Run `tests/test_ethernet_mii_collision_output_sharing.py`,
+  `tests/test_design_lint_ethernet_mii_collision_output_sharing_architecture.py`,
+  and the matching parity case in
+  `tests/test_design_lint_mcp_parity_ethernet_rx_output_sharing.py` with
+  `design_lint_rule(rule_id="bus.ethernet_mii_collision_outputs_share_net")`.
+  Run `tests/test_ethernet_rx_output_sharing_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1` and the same marker
+  for the exact native exports.
+- **Local acceptance:** Rule-scoped `scripts/ci.py` passed 498 tests with
+  9,889 deselected. Both digest-pinned KiCad Docker cases and CLI/MCP parity
+  passed. Ruff, both Alphus profiles, Rumdl, mdrepo, module-size preflight,
+  Linux and Windows Pyright, wheel/sdist builds, installed-wheel checks, and
+  external/adapted public-template playtests passed. The 26-stage receipt is
+  under `build/ci/run-g9owrcm4/`.
+- **Hosted acceptance:** Pending the annotated lint-rule tag.
+- **Incremental-value limit:** This adds the exact standalone MII collision
+  role to the PHY output-sharing matrix. Predicate and native compatibility
+  evidence do not measure applicability or reviewer value on independent
+  boards.
 
 ## Completion and release gate
 

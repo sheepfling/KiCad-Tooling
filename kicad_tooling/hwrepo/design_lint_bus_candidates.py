@@ -38,6 +38,7 @@ from .design_lint_two_wire_signal_candidates import two_wire_signal_candidates
 from .design_lint_types import Candidate
 from .design_lint_unconnected_interface_candidates import unconnected_interface_candidates
 from .design_lint_usb_c_same_net_candidates import usb_c_same_net_candidates
+from .ethernet_col_output_sharing import ethernet_mii_collision_output_sharing_candidates
 from .ethernet_crs_dv_output_sharing import ethernet_crs_dv_output_sharing_candidates
 from .ethernet_crs_output_sharing import ethernet_crs_output_sharing_candidates
 from .ethernet_rx_clock_output_sharing import ethernet_rx_clock_output_sharing_candidates
@@ -106,6 +107,7 @@ def bus_candidates(inputs: BusCandidateInputs) -> tuple[Candidate, ...]:
         *ethernet_rx_clock_output_sharing_candidates(observed),
         *ethernet_rx_status_output_sharing_candidates(observed),
         *ethernet_tx_clock_output_sharing_candidates(observed),
+        *ethernet_mii_collision_output_sharing_candidates(observed),
         *ethernet_unconnected_pin_candidates(observed),
         *ethernet_generic_connector_pair_review_candidates(
             observed,

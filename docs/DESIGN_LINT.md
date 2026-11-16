@@ -1104,7 +1104,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 409 active rules.
+The catalog currently contains 410 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -2309,6 +2309,34 @@ the TX-clock case in
 `tests/test_design_lint_mcp_parity_ethernet_rx_output_sharing.py` with
 `design_lint_rule(rule_id="bus.ethernet_tx_clock_outputs_share_net")`. Run
 the same marker on
+`tests/test_ethernet_rx_output_sharing_native_fixture_lane.py` with
+`KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1` for digest-pinned
+KiCad 10.0.0 and 10.0.5 exports.
+
+### Ethernet PHY MII collision outputs sharing one net
+
+`bus.ethernet_mii_collision_outputs_share_net` prompts when fitted,
+explicitly identified Ethernet PHY components expose exact `COL` or `MII_COL`
+pins on one exact schematic net and their native pin types are output-capable.
+It requires complete unique pin inventories and one exact assignment per
+counted pin, suppresses incomplete or ambiguous groups, and leaves two native
+`output` pins to ERC. Compound labels such as `COL/PHYAD0` are not classified.
+
+This configurable default-`review` heuristic treats exact function labels as a
+cue. The TI DP83848x data sheet identifies `COL` as an MII collision-detect
+output that is active for collision detection in half-duplex operation
+([primary source](https://www.ti.com/lit/ds/symlink/dp83848m.pdf)). That
+device-specific example does not establish the selected MII or duplex mode,
+active output behavior, or endpoint selection on another project. A selected
+or multiplexed path may be intentional. The rule does not prove PCB copper
+continuity or off-board wiring.
+
+Select `tests/test_ethernet_mii_collision_output_sharing.py`,
+`tests/test_design_lint_ethernet_mii_collision_output_sharing_architecture.py`,
+and the MII collision case in
+`tests/test_design_lint_mcp_parity_ethernet_rx_output_sharing.py` with
+`design_lint_rule(rule_id="bus.ethernet_mii_collision_outputs_share_net")`.
+Run the same marker on
 `tests/test_ethernet_rx_output_sharing_native_fixture_lane.py` with
 `KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1` for digest-pinned
 KiCad 10.0.0 and 10.0.5 exports.

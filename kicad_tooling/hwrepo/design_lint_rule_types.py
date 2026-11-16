@@ -263,6 +263,7 @@ DesignLintRuleId = Literal[
     "bus.ethernet_management_same_net",
     "bus.ethernet_crs_dv_outputs_share_net",
     "bus.ethernet_crs_outputs_share_net",
+    "bus.ethernet_mii_collision_outputs_share_net",
     "bus.ethernet_rx_outputs_share_net",
     "bus.ethernet_rx_clock_outputs_share_net",
     "bus.ethernet_rx_status_outputs_share_net",

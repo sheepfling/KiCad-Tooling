@@ -66,6 +66,7 @@ REQUIRED_WHEEL_ASSETS = frozenset(
         "kicad_tooling/hwrepo/ethernet_crs_dv_output_sharing.py",
         "kicad_tooling/hwrepo/ethernet_crs_output_sharing.py",
         "kicad_tooling/hwrepo/ethernet_tx_clock_output_sharing.py",
+        "kicad_tooling/hwrepo/ethernet_col_output_sharing.py",
         "kicad_tooling/hwrepo/ethernet_phy_identity.py",
         "kicad_tooling/hwrepo/component_references.py",
         "kicad_tooling/hwrepo/signal_pair_output_sharing.py",

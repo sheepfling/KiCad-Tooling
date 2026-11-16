@@ -27,6 +27,7 @@ STATUS_RULE_ID = "bus.ethernet_rx_status_outputs_share_net"
 CRS_DV_RULE_ID = "bus.ethernet_crs_dv_outputs_share_net"
 CRS_RULE_ID = "bus.ethernet_crs_outputs_share_net"
 TX_CLOCK_RULE_ID = "bus.ethernet_tx_clock_outputs_share_net"
+COL_RULE_ID = "bus.ethernet_mii_collision_outputs_share_net"
 
 
 def ethernet_rx_output_sharing_fixture_lane(
@@ -46,8 +47,8 @@ def ethernet_rx_output_sharing_fixture_lane(
     }
     source_hashes = {case: digest(source) for case, source in sources.items()}
     expected_hashes = {
-        "fault": "296aeafe91a9be95d48947e473749d329983b0dc59d79140716e47ae03a94f46",
-        "control": "5e9f58445de1bdace9682515fcfd716347bef973881252b85e4b5b910bb39182",
+        "fault": "eca30a712a22b7d4f2429168dbda9bca98e122add0e7e2090acdf3245273c3f3",
+        "control": "3fae0fad8eb15c2f06d4268d69b14fb939f6709f79428a1e098c694b0a8819e5",
     }
     if source_hashes != expected_hashes:
         raise ValueError("Ethernet RX-sharing fixture sources changed from their reviewed hashes")
@@ -191,6 +192,12 @@ def ethernet_rx_output_sharing_fixture_lane(
                         raise ValueError(
                             "Native Ethernet TX_CLK fixture no longer isolates ERC typing"
                         )
+                    if observed.pin_functions.get(f"{reference}.8") != "COL":
+                        raise ValueError("Native Ethernet COL fixture lost its pin function")
+                    if observed.pin_electrical_types.get(f"{reference}.8") != "passive":
+                        raise ValueError(
+                            "Native Ethernet COL fixture no longer isolates ERC typing"
+                        )
                     if reference in observed.dnp_components:
                         raise ValueError(
                             "Native Ethernet RX-sharing endpoint unexpectedly became DNP"
@@ -215,6 +222,8 @@ def ethernet_rx_output_sharing_fixture_lane(
                     raise ValueError("Native Ethernet RX-sharing fault did not preserve shared CRS")
                 if set(observed.nets.get("MII_TX_CLK_SHARED", ())) != {"U1.7", "U2.7"}:
                     raise ValueError("Native Ethernet TX_CLK fault did not preserve the shared net")
+                if set(observed.nets.get("MII_COL_SHARED", ())) != {"U1.8", "U2.8"}:
+                    raise ValueError("Native Ethernet COL fault did not preserve the shared net")
             if case == "control" and run == "first":
                 if set(observed.nets.get("RXD0_TXD_LINK", ())) != {"U1.1", "U2.2"}:
                     raise ValueError(
@@ -244,6 +253,10 @@ def ethernet_rx_output_sharing_fixture_lane(
                     raise ValueError("Native Ethernet control did not isolate U1.TX_CLK")
                 if observed.nets.get("PHY2_TX_CLK") != ("U2.7",):
                     raise ValueError("Native Ethernet control did not isolate U2.TX_CLK")
+                if observed.nets.get("PHY1_COL") != ("U1.8",):
+                    raise ValueError("Native Ethernet control did not isolate U1.COL")
+                if observed.nets.get("PHY2_COL") != ("U2.8",):
+                    raise ValueError("Native Ethernet control did not isolate U2.COL")
             normalized = json.dumps(
                 observed.model_dump(mode="json"),
                 sort_keys=True,
@@ -275,6 +288,7 @@ def ethernet_rx_output_sharing_fixture_lane(
                 CRS_DV_RULE_ID,
                 CRS_RULE_ID,
                 TX_CLOCK_RULE_ID,
+                COL_RULE_ID,
             ):
                 subjects[(case, run, rule_id)] = tuple(
                     item.subject for item in report.findings if item.rule_id == rule_id
@@ -303,6 +317,10 @@ def ethernet_rx_output_sharing_fixture_lane(
         },
         TX_CLOCK_RULE_ID: {
             "fault": ("U1, U2: Ethernet PHY TX_CLK outputs share MII_TX_CLK_SHARED",),
+            "control": (),
+        },
+        COL_RULE_ID: {
+            "fault": ("U1, U2: Ethernet PHY MII COL outputs share MII_COL_SHARED",),
             "control": (),
         },
     }

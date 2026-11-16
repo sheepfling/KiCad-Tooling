@@ -21,6 +21,7 @@ import tests.design_lint_fixtures.connector_peer_pin_all_open as _connector_peer
 import tests.design_lint_fixtures.connector_return_supply as _connector_return_supply_fixtures
 import tests.design_lint_fixtures.connector_role_sharing_reachability as _connector_role_sharing_reachability
 import tests.design_lint_fixtures.ethernet_crs_output_sharing as _ethernet_crs_output_fixtures
+import tests.design_lint_fixtures.ethernet_output_sharing as _ethernet_output_fixtures
 import tests.design_lint_fixtures.ethernet_rx_clock_output_sharing as _ethernet_rx_clock_fixtures
 import tests.design_lint_fixtures.ethernet_rx_output_sharing as _ethernet_rx_output_fixtures
 import tests.design_lint_fixtures.ethernet_rx_status_output_sharing as _ethernet_rx_status_fixtures
@@ -213,6 +214,11 @@ def test_every_active_rule_is_reachable_from_synthetic_cases() -> None:
         ),
         _ethernet_crs_output_fixtures.ethernet_mii_crs_output_netlist(),
         _ethernet_tx_clock_fixtures.ethernet_mii_tx_clock_output_netlist(),
+        _ethernet_output_fixtures.ethernet_phy_output_sharing_netlist(
+            default_function="COL",
+            pin_number="8",
+            net_name="MII_COL_SHARED",
+        ),
         _tests_test_can_excess_termination._can_netlist_with_direct_terminators(
             ("108R", "120R", "132R")
         ),

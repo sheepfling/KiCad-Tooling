@@ -20,6 +20,9 @@ from tests.component_peer_power_assignment_support import peer_pin_netlist_xml
 from tests.design_lint_fixtures.ethernet_crs_output_sharing import (
     ethernet_mii_crs_output_netlist,
 )
+from tests.design_lint_fixtures.ethernet_output_sharing import (
+    ethernet_phy_output_sharing_netlist,
+)
 from tests.design_lint_fixtures.ethernet_rx_clock_output_sharing import (
     ethernet_rx_clock_output_netlist,
 )
@@ -38,6 +41,7 @@ STATUS_RULE_ID = "bus.ethernet_rx_status_outputs_share_net"
 CRS_DV_RULE_ID = "bus.ethernet_crs_dv_outputs_share_net"
 CRS_RULE_ID = "bus.ethernet_crs_outputs_share_net"
 TX_CLOCK_RULE_ID = "bus.ethernet_tx_clock_outputs_share_net"
+COL_RULE_ID = "bus.ethernet_mii_collision_outputs_share_net"
 
 
 class _EthernetRxOutputSharingParity(McpParityHarness):
@@ -261,6 +265,47 @@ class _EthernetRxOutputSharingParity(McpParityHarness):
         )
         assert findings[0].evidence["pins"] == ("U1.1", "U2.1")
 
+    async def _case_ethernet_mii_collision_output_sharing_cli_mcp_parity(self) -> None:
+        native = self.native_evidence()
+        netlist = native.parent / "netlist.xml"
+        netlist.write_text(
+            peer_pin_netlist_xml(
+                ethernet_phy_output_sharing_netlist(
+                    default_function="COL",
+                    pin_number="8",
+                    net_name="MII_COL_SHARED",
+                )
+            ),
+            encoding="utf-8",
+        )
+        self.rehash_native_netlist(native)
+
+        async with Client(create_server(self.root), mode="legacy") as client:
+            cli = await self.cli(
+                "kicad_tooling.design_lint",
+                DesignLintReport,
+                "--project",
+                "controller",
+                "--native-summary",
+                str(native),
+                expected_exit=1,
+            )
+            mcp = await self.call(
+                client,
+                "inspect_design_lint",
+                DesignLintReport,
+                {
+                    "project_id": "controller",
+                    "native_summary": native.relative_to(self.root).as_posix(),
+                },
+            )
+
+        assert cli == mcp
+        findings = tuple(item for item in cli.findings if item.rule_id == COL_RULE_ID)
+        assert len(findings) == 1
+        assert findings[0].subject == ("U1, U2: Ethernet PHY MII COL outputs share MII_COL_SHARED")
+        assert findings[0].evidence["pins"] == ("U1.8", "U2.8")
+
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
 def test_ethernet_rx_output_sharing_cli_mcp_parity() -> None:
@@ -307,4 +352,12 @@ def test_ethernet_tx_clock_output_sharing_cli_mcp_parity() -> None:
     run_mcp_parity(
         _EthernetRxOutputSharingParity,
         "_case_ethernet_tx_clock_output_sharing_cli_mcp_parity",
+    )
+
+
+@pytest.mark.design_lint_rule(rule_id=COL_RULE_ID)
+def test_ethernet_mii_collision_output_sharing_cli_mcp_parity() -> None:
+    run_mcp_parity(
+        _EthernetRxOutputSharingParity,
+        "_case_ethernet_mii_collision_output_sharing_cli_mcp_parity",
     )
