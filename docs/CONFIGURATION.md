@@ -138,8 +138,10 @@ unsupported format, the result is `UNSUPPORTED`; the release gate does not
 report a clean pass. The analyzer supports a positive-polarity stack from
 F.Cu through consecutively numbered inner copper layers to B.Cu, with absolute
 coordinates and the supported Gerber, Excellon, and IPC-D-356 subset. Plated
-vias and through-hole pads must span the full copper stack; blind and buried
-vias fail closed. Unsupported layer names, artwork, or via spans also fail
+vias and through-hole pads must span the full copper stack, and each plated
+drill file must explicitly declare that full layer pair. Blind or buried
+source vias, partial-span drill metadata, and missing or malformed drill-span
+metadata fail closed. Unsupported layer names, artwork, or via spans also fail
 closed.
 
 `review` (the default) retains findings in the export receipt without blocking

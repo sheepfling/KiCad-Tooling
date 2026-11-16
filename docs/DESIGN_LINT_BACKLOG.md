@@ -872,13 +872,13 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc870):** LINT-535
-  reviews differing parsed USB 2.0 D+/D− series-resistor values when no current
-  project map records the per-line value ranges. Local scoped acceptance passed
-  517 selected tests and 10,055 deselected, including digest-pinned KiCad 10.0.0
-  and 10.0.5 Docker exports, package/type checks, and external/adapted public
-  template rehearsal. Hosted acceptance passed in GitHub Actions run
-  `43949582389`; package and preview jobs were skipped under prerelease policy.
+- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc871):** LINT-536
+  extends FA-001 to full-through multilayer stacks. Local scoped acceptance
+  passed 18 selected tests, including digest-pinned KiCad 10.0.0 and 10.0.5
+  Docker exports, package/type checks, and installed-wheel origin/version
+  checks. Hosted acceptance passed in GitHub Actions run `43956654168` with 18
+  selected tests, external/adapted template verification, and playtest; package
+  and preview jobs were skipped under prerelease policy.
 - **Previous published lint-gate checkpoint (v0.5.3rc869):** LINT-534 reviews
   unmapped USB 2.0 D+/D− paths with a series resistor on one data line and a
   direct path on the other. Local scoped acceptance passed 516 selected tests
@@ -30550,6 +30550,53 @@ acceptance threads while new lint features proceed:
   offline run skipped mdrepo and had no external project checkout; hosted tag
   acceptance remains responsible for those checks. Logs are in
   `build/ci/run-rtwc7ffq`.
+- **Hosted acceptance:** Tag `v0.5.3rc871` passed in GitHub Actions run
+  `43956654168`: 18 selected tests passed, including the KiCad 10.0.0/10.0.5
+  Docker exports. Ruff, both Alphus profiles, Rumdl, mdrepo, module-size
+  preflight, Linux and Windows type checks, wheel/sdist builds, installed-wheel
+  checks, external/adapted template verification, and playtest passed. Package
+  and preview jobs were skipped under prerelease policy.
+
+#### LINT-537 — Reject partial-span plated drill artifacts
+
+- **Priority:** P1 fabrication-evidence integrity. FA-001 rejects source boards
+  containing partial-span vias, but the raster analyzer previously treated
+  every plated Excellon hit as a full-stack connection without validating the
+  drill file's own declared layer pair. A stale or mismatched partial-span
+  drill file could therefore overstate copper connectivity.
+- **Evidence:** KiCad 10.0.0 and 10.0.5 exports of a tooling-owned four-layer
+  blind-via board produced one PTH drill file declaring
+  `TF.FileFunction,Plated,1,4,PTH`; it did not include per-hit via spans. The
+  KiCad 10 CLI documents `--excellon-separate-th` as separating plated and
+  non-plated through-hole files only. See the
+  [KiCad 10 drill export contract](https://docs.kicad.org/10.0/en/cli/cli.html#pcb-export-drill-file).
+- **Change:** Before rasterization, require each plated Excellon file to have
+  exactly one recognized FileFunction with `Plated`, `PTH`, and an explicit
+  layer pair from 1 through the final copper layer. Blind/buried flags, a
+  partial or malformed pair, a missing declaration, or unknown suffixes now
+  return `UNSUPPORTED`; their hits are never unioned across the full stack.
+  The analyzer version advances to `3` so retained reports identify the new
+  artifact check.
+- **Boundary:** The source board and every plated drill file must independently
+  describe the same full-stack support boundary. This does not add blind or
+  buried via analysis and does not infer electrical intent or manufacturing
+  readiness.
+- **Regression coverage:** Synthetic controls mutate the drill FileFunction to
+  cover partial spans, blind flags, missing and duplicate declarations,
+  malformed layer numbers, and unknown suffixes. Native KiCad 10.0.0 and 10.0.5
+  fault/control exports prove that full-stack output remains supported while
+  a partial-span artifact paired with the same four-layer source fails closed.
+- **Selection:** Run `tests/test_fabrication_connectivity.py` and
+  `tests/test_fabrication_connectivity_native.py` with
+  `design_lint and evidence_lint and pcb_lint`. Set
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` to execute the exact-version
+  Docker cases.
+- **Local scoped acceptance:** Passed on 2026-11-16 in
+  `build/ci/run-jrky_9eg`: 24 selected tests, including four exact Docker-native
+  cases on KiCad 10.0.0 and 10.0.5. Ruff, both Alphus profiles, Rumdl,
+  module-size preflight, Linux and Windows-targeted Pyright, wheel/sdist builds,
+  source-distribution wheel rebuild, and isolated installed-wheel origin/version
+  checks passed. The offline run skipped mdrepo and had no external checkout.
 
 ## Completion and release gate
 

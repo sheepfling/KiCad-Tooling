@@ -246,7 +246,7 @@ def test_artifact_connectivity_reports_opens_shorts_and_intentional_isolation(
     assert {item.code for item in report.findings} == expected
     assert not report.unsupported_reasons, report.unsupported_reasons
     assert report.status == status
-    assert report.analyzer_version == "2"
+    assert report.analyzer_version == "3"
     assert report.board_sha256
     assert "fabrication/board.d356" in report.artifact_sha256
 
@@ -287,6 +287,44 @@ def test_plated_via_joins_layers_and_missing_drill_is_visible(tmp_path: Path) ->
     assert clean.status == "PASS"
     assert not clean.findings
     assert {item.code for item in missing_drill.findings} == {"NO_DRILL", "OPEN"}
+
+
+@pytest.mark.parametrize(
+    ("replacement", "message"),
+    [
+        ("Plated,1,1,PTH", "full source copper stack"),
+        ("Plated,1,2,PTH,Blind", "blind or buried"),
+        (None, "no explicit layer span"),
+        ("Plated,1,2,PTH,Microvia", "unsupported FileFunction suffix"),
+        ("Plated,one,2,PTH", "malformed layer span"),
+        (
+            "Plated,1,2,PTH\n; #@! TF.FileFunction,Plated,1,2,PTH",
+            "multiple FileFunction attributes",
+        ),
+    ],
+)
+def test_plated_drill_span_must_match_the_full_source_stack(
+    tmp_path: Path, replacement: str | None, message: str
+) -> None:
+    board, fabrication = _export(tmp_path, through=True)
+    drill = fabrication / "board-PTH.drl"
+    source = drill.read_text(encoding="utf-8")
+    if replacement is None:
+        source = source.replace("; #@! TF.FileFunction,Plated,1,2,PTH\n", "")
+    else:
+        source = source.replace("Plated,1,2,PTH", replacement)
+    drill.write_text(source, encoding="utf-8")
+
+    report = analyze_fabrication_connectivity(board, fabrication, FabricationConnectivitySettings())
+    repeated = analyze_fabrication_connectivity(
+        board, fabrication, FabricationConnectivitySettings()
+    )
+
+    assert report == repeated
+    assert report.status == "UNSUPPORTED"
+    assert report.unsupported_reasons
+    assert message in report.unsupported_reasons[0]
+    assert not report.findings
 
 
 def test_inner_copper_layer_fails_closed_and_exposes_stale_ignores(tmp_path: Path) -> None:

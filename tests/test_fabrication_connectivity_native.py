@@ -242,6 +242,27 @@ def test_native_multilayer_inner_copper_connectivity_and_via_boundary_repeat(
             expected_status,
             expected_codes,
         )
+        if name == "four-layer-clean":
+            drill_path = next(fabrication.glob("*-PTH.drl"))
+            drill_source = drill_path.read_text(encoding="utf-8")
+            assert "TF.FileFunction,Plated,1,4,PTH" in drill_source
+            drill_path.write_text(
+                drill_source.replace(
+                    "TF.FileFunction,Plated,1,4,PTH",
+                    "TF.FileFunction,Plated,1,2,PTH,Blind",
+                ),
+                encoding="utf-8",
+            )
+            mismatched = analyze_fabrication_connectivity(
+                board, fabrication, FabricationConnectivitySettings()
+            )
+            mismatched_repeat = analyze_fabrication_connectivity(
+                board, fabrication, FabricationConnectivitySettings()
+            )
+            assert mismatched == mismatched_repeat
+            assert mismatched.status == "UNSUPPORTED"
+            assert "full source copper stack" in mismatched.unsupported_reasons[0]
+            drill_path.write_text(drill_source, encoding="utf-8")
         if name == "four-layer-blind-via":
             assert "full-stack" in " ".join(first.unsupported_reasons)
         else:

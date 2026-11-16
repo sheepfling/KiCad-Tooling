@@ -11,6 +11,7 @@ from .fabrication_artwork import (
     DrillHit,
     UnsupportedFabricationFormat,
     classify_copper_files,
+    drill_file_function,
     drill_file_is_plated,
     parse_excellon,
     parse_gerber,
@@ -79,6 +80,38 @@ def _require_full_span_plated_features(board_text: str, copper_layers: tuple[str
                 raise UnsupportedFabricationFormat(
                     "fabrication connectivity supports only full-stack plated through pads"
                 )
+
+
+def _require_full_stack_drill_file(
+    path: Path, function: tuple[str, ...] | None, copper_layers: tuple[str, ...]
+) -> None:
+    if function is None:
+        raise UnsupportedFabricationFormat(
+            f"plated drill file has no explicit layer span: {path.name}"
+        )
+    if len(function) < 4 or function[0] != "plated" or function[3] != "pth":
+        raise UnsupportedFabricationFormat(
+            f"plated drill file has an unsupported FileFunction: {path.name}"
+        )
+    try:
+        first_layer, last_layer = int(function[1]), int(function[2])
+    except ValueError as exc:
+        raise UnsupportedFabricationFormat(
+            f"plated drill file has a malformed layer span: {path.name}"
+        ) from exc
+    if (first_layer, last_layer) != (1, len(copper_layers)):
+        raise UnsupportedFabricationFormat(
+            f"plated drill file does not declare the full source copper stack: {path.name}"
+        )
+    suffix = set(function[4:])
+    if suffix & {"blind", "buried"}:
+        raise UnsupportedFabricationFormat(
+            f"plated drill file declares blind or buried holes outside the supported full-stack span: {path.name}"
+        )
+    if suffix - {"drill", "route", "mixed"}:
+        raise UnsupportedFabricationFormat(
+            f"plated drill file has an unsupported FileFunction suffix: {path.name}"
+        )
 
 
 def _require_supported_board(board_text: str, contacts: tuple[Contact, ...]) -> tuple[str, ...]:
@@ -158,6 +191,7 @@ def analyze_fabrication_connectivity(
         plated: list[DrillHit] = []
         for path in drill_paths:
             if drill_file_is_plated(path):
+                _require_full_stack_drill_file(path, drill_file_function(path), copper_layers)
                 plated.extend(parse_excellon(path.read_text(encoding="utf-8", errors="replace")))
         try:
             from .fabrication_connectivity_raster import analyze_raster
