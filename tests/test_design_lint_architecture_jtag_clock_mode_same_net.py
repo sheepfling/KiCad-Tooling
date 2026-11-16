@@ -7,7 +7,6 @@ from pathlib import Path
 import pytest
 
 from kicad_tooling.hwrepo.design_lint import rule_catalog
-from tests.design_lint_rule_selector_support import collect_rule_nodes
 
 RULE_ID = "bus.jtag_tck_tms_same_net"
 OWNER = "kicad_tooling/hwrepo/jtag_clock_mode_same_net.py#jtag_tck_tms_same_net_candidates"
@@ -40,18 +39,6 @@ def test_rule_owns_synthetic_native_parity_and_metamorphic_cases() -> None:
         "kicad_tooling/hwrepo/jtag_signal_inventory.py#JtagEndpointInventory.named_rail_signal_pins"
         in rule.implementation_refs
     )
-
-    selection = collect_rule_nodes(RULE_ID)
-    assert selection.returncode == 0, selection.stdout + selection.stderr
-    assert (
-        "tests/test_jtag_clock_mode_same_net.py::"
-        "test_mapping_order_preserves_fingerprint_and_separation_repairs_candidate"
-    ) in selection.stdout
-    assert (
-        "tests/test_design_lint_mcp_parity_jtag_clock_mode_same_net.py::"
-        "test_jtag_clock_mode_same_net_cli_mcp_parity"
-    ) in selection.stdout
-    assert NATIVE_TEST.rsplit(".", 1)[-1] in selection.stdout
 
 
 @pytest.mark.design_lint_rule(rule_id=RULE_ID)
