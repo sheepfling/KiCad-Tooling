@@ -83,6 +83,11 @@ JTAG_DATA_SAME_NET_MODULES = (
     "jtag_signal_inventory.py",
 )
 
+JTAG_CLOCK_MODE_SAME_NET_MODULES = (
+    "jtag_clock_mode_same_net.py",
+    "jtag_signal_inventory.py",
+)
+
 SERIAL_PEER_ANALYSIS_MODULES = (
     "serial_peer_reference_types.py",
     "serial_peer_reference_domains.py",
@@ -120,6 +125,13 @@ def test_i3c_named_rail_rule_stays_in_a_focused_protocol_module() -> None:
 def test_jtag_data_same_net_rule_stays_in_focused_protocol_modules() -> None:
     modules = [HWREPO / name for name in JTAG_DATA_SAME_NET_MODULES]
 
+    assert all(_line_count(module) < IMPLEMENTATION_MAX_LINES for module in modules)
+
+
+def test_jtag_clock_mode_same_net_rule_stays_in_focused_protocol_modules() -> None:
+    modules = [HWREPO / name for name in JTAG_CLOCK_MODE_SAME_NET_MODULES]
+
+    assert all(module.is_file() for module in modules)
     assert all(_line_count(module) < IMPLEMENTATION_MAX_LINES for module in modules)
 
 

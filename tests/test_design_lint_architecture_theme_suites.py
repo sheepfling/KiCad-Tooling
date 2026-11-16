@@ -201,6 +201,10 @@ JTAG_SIGNAL_THEME_SUITES = (
     "test_jtag_data_same_net_native_fixture_lane.py",
     "test_design_lint_architecture_jtag_data_same_net.py",
     "test_design_lint_mcp_parity_jtag_data_same_net.py",
+    "test_jtag_clock_mode_same_net.py",
+    "test_jtag_clock_mode_same_net_native_fixture_lane.py",
+    "test_design_lint_architecture_jtag_clock_mode_same_net.py",
+    "test_design_lint_mcp_parity_jtag_clock_mode_same_net.py",
 )
 JTAG_CONNECTOR_RETURN_THEME_SUITES = (
     "test_jtag_connector_return_review.py",

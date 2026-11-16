@@ -67,6 +67,13 @@ INTERFACE_RULE_NODE_CASES = (
         ),
     ),
     (
+        "bus.jtag_tck_tms_same_net",
+        (
+            "tests/test_jtag_clock_mode_same_net.py::"
+            "test_jtag_tck_and_tms_on_one_fitted_ic_net_are_reviewed"
+        ),
+    ),
+    (
         "bus.can_rx_outputs_share_net",
         (
             "tests/test_can_rx_output_sharing.py::"

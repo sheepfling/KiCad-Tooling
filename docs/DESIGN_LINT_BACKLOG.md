@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 411 rules are implemented with synthetic regression coverage.
+The following 413 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 411 active rules.
+The catalog currently contains 413 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -701,6 +701,8 @@ skipped under prerelease policy.
 - `bus.jtag_generic_connector_pair_review`
 - `bus.jtag_signal_on_named_rail`
 - `bus.jtag_tdo_outputs_share_net`
+- `bus.jtag_tdi_tdo_same_net`
+- `bus.jtag_tck_tms_same_net`
 - `bus.swd_signal_on_named_rail`
 - `bus.can_tx_rx_same_net`
 - `bus.can_tx_rx_label_mismatch`
@@ -4611,7 +4613,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 411 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 413 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -29760,6 +29762,49 @@ acceptance threads while new lint features proceed:
 - **Hosted acceptance:** Tag `v0.5.3rc855` passed GitHub Actions run
   `43851939839` on commit `4b1be0c394151325a474d1d3d3af7ae3ee56546f`.
   The prerelease lint gate passed; package and preview jobs were skipped.
+
+#### LINT-523 — Review JTAG TCK and TMS pins sharing one net on a fitted IC
+
+- **Status:** Implemented as `bus.jtag_tck_tms_same_net`, default `review`;
+  local acceptance passed, and the tagged hosted gate is pending.
+- **Priority:** P1 interface coverage. LINT-522 reviews one endpoint's TDI/TDO
+  same-net assignment, but an IC's TCK and TMS can also share a net while both
+  native pins are passive or inputs, leaving ERC without an output conflict.
+- **Predicate:** For a fitted U/IC with a complete unique native pin inventory,
+  use the JTAG signal-role inventory to identify exactly one TCK and one TMS
+  pin, each assigned once to the same exact non-return net. Require explicit
+  JTAG function metadata or one uniquely assigned TCK/TMS pair to establish
+  endpoint identity. Skip DNP, non-IC, incomplete or ambiguous roles, open or
+  multiply assigned pins, return-like nets, and two native output pins.
+- **Evidence basis and boundary:** Arm's
+  [ADIv5 JTAG signal table][arm-jtag-signals] defines TCK as Test Clock and
+  TMS as Test Mode Select. This motivates a review cue only; names and a shared
+  schematic net do not prove active JTAG, device configuration, or an invalid
+  assignment. A test fixture or multiplexed device may intentionally share
+  roles. The rule does not establish PCB copper, electrical approval, or
+  manufacturing readiness. Keep default REVIEW and use project policy for
+  blocking, disabling, or exact-fingerprint ignores.
+- **Fixtures:** Tooling-owned synthetic and native schematics pair a passive-
+  pin TCK/TMS same-net fault with a separate-net control. Native KiCad 10.0.0
+  and 10.0.5 exports must retain exact pin functions and assignments, repeat
+  identically, and report no ERC errors. No cohort or product source is used.
+  See the [fixture record](../tests/fixtures/design_lint/jtag-clock-mode-same-net/README.md).
+- **Selection:** Run `tests/test_jtag_clock_mode_same_net.py`,
+  `tests/test_design_lint_mcp_parity_jtag_clock_mode_same_net.py`, and
+  `tests/test_design_lint_architecture_jtag_clock_mode_same_net.py` with
+  `design_lint_rule(rule_id="bus.jtag_tck_tms_same_net")`. The exact native
+  lane is `tests/test_jtag_clock_mode_same_net_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_JTAG_CLOCK_MODE_SAME_NET_FIXTURES=1`.
+- **Incremental-value limit:** Synthetic and native fixtures establish bounded
+  predicate and export behavior only. Independent project applicability,
+  reviewer dispositions, and false-positive rate remain unmeasured.
+- **Local acceptance:** The exact native fault/control fixtures passed on
+  digest-pinned KiCad 10.0.0 and 10.0.5; CLI/MCP parity passed against the
+  separate public template checkout. The scoped CI receipt
+  `build/ci/run-4fhe1ivq` records 501 passed tests and 9,926 deselected, plus
+  successful lint, type-check, wheel, installed-wheel, external-template, and
+  playtest stages.
+- **Hosted acceptance:** Pending tagged rule-scope workflow.
 
 ## Completion and release gate
 

@@ -305,6 +305,21 @@ KICAD_RUN_NATIVE_JTAG_DATA_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.jtag_tdi_tdo_same_net")'
 ```
 
+JTAG TCK/TMS same-net review has focused synthetic, CLI/MCP parity,
+architecture, and exact-version native fault/control selectors:
+
+```sh
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test .venv/bin/python -I -m pytest \
+  tests/test_jtag_clock_mode_same_net.py \
+  tests/test_design_lint_mcp_parity_jtag_clock_mode_same_net.py \
+  tests/test_design_lint_architecture_jtag_clock_mode_same_net.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.jtag_tck_tms_same_net")'
+
+KICAD_RUN_NATIVE_JTAG_CLOCK_MODE_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_jtag_clock_mode_same_net_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.jtag_tck_tms_same_net")'
+```
+
 The BJT base-drive review has synthetic rule/policy tests and an exact-version
 native source-export lane. Its native cases use only tooling-owned schematics:
 direct NPN/PNP drive faults and a series-resistor control.

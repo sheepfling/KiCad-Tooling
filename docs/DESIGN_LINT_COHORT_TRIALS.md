@@ -2868,10 +2868,10 @@ Source: [kicad-happy release notes][happy-fiducial-release-notes].
   proprietary project, cohort board, or upstream source was stored.
 
 The shipped `kicad_tooling/hwrepo/design-lint-rules.json` catalog currently
-contains 412 active rules. Each entry has a deterministic predicate, evidence
+contains 413 active rules. Each entry has a deterministic predicate, evidence
 adapter, exact supported KiCad profile boundary, maturity, limitations,
 implementation references, and named synthetic fault and valid-control tests.
-Of the 412 active rules, 346 default to `review`, 65 to `off`, and
+Of the 413 active rules, 347 default to `review`, 65 to `off`, and
 `pcb.required_fitted_reference` to `block`. Off-by-default checks include
 schematic geometry, generic peer assignment, selected component topology
 reviews such as the BJT base-bias and base/collector same-net prompts, and

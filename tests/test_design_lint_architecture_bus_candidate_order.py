@@ -39,6 +39,7 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
         "design_lint_spi_signal_candidates.py",
         "design_lint_bus_named_rail_candidates.py",
         "jtag_data_same_net.py",
+        "jtag_clock_mode_same_net.py",
         "jtag_signal_inventory.py",
     )
 
@@ -103,6 +104,7 @@ def test_bus_candidate_coordinator_delegates_by_theme_in_stable_order() -> None:
         "jtag_generic_connector_pair_review_candidates",
         "jtag_tdo_outputs_share_net_candidates",
         "jtag_tdi_tdo_same_net_candidates",
+        "jtag_tck_tms_same_net_candidates",
         "bus_named_rail_candidates",
         "complementary_signal_candidates",
         "usb_data_polarity_label_candidates",

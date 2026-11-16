@@ -1104,7 +1104,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 412 active rules.
+The catalog currently contains 413 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -4614,6 +4614,34 @@ KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test .venv/bin/python -I -m pytest tests/test
 KICAD_RUN_NATIVE_JTAG_DATA_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_jtag_data_same_net_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.jtag_tdi_tdo_same_net")'
+```
+
+## Review JTAG TCK and TMS sharing one IC pin net
+
+`bus.jtag_tck_tms_same_net` emits a default `review` finding when one fitted
+U/IC has uniquely identified TCK and TMS pins assigned to the same exact
+non-return schematic net. Role recognition uses complete native pin inventory
+and either explicit JTAG function metadata or one uniquely assigned TCK/TMS
+pair. The finding asks whether the clock and mode-control connection is
+intentional; it does not establish active JTAG, device configuration, or PCB
+copper continuity. Two native `output` pins remain with ERC. Project policy
+can promote, disable, or exactly ignore the finding. The synthetic fault and
+control repeat through digest-pinned KiCad 10.0.0 and 10.0.5 exports; see the
+[fixture record](../tests/fixtures/design_lint/jtag-clock-mode-same-net/README.md).
+Arm's [ADIv5 JTAG signal table][arm-jtag-signals] identifies TCK as Test Clock
+and TMS as Test Mode Select, which motivates this review cue without proving
+the assignment is invalid.
+
+```sh
+KICAD_TEMPLATE_ROOT=/path/to/KiCad-Test .venv/bin/python -I -m pytest \
+  tests/test_jtag_clock_mode_same_net.py \
+  tests/test_design_lint_mcp_parity_jtag_clock_mode_same_net.py \
+  tests/test_design_lint_architecture_jtag_clock_mode_same_net.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.jtag_tck_tms_same_net")'
+
+KICAD_RUN_NATIVE_JTAG_CLOCK_MODE_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_jtag_clock_mode_same_net_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.jtag_tck_tms_same_net")'
 ```
 
 ## Review SWD signal pins assigned to named rails

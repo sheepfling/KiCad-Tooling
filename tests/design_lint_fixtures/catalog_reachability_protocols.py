@@ -32,6 +32,9 @@ from tests.design_lint_fixtures.i2c_signal_named_rail import (
 from tests.design_lint_fixtures.i2s_signal_named_rail import i2s_signal_named_rail_netlist
 from tests.design_lint_fixtures.i3c_same_net import i3c_same_net_netlist
 from tests.design_lint_fixtures.i3c_signal_named_rail import i3c_signal_named_rail_netlist
+from tests.design_lint_fixtures.jtag_clock_mode_same_net import (
+    jtag_clock_mode_same_net_netlist,
+)
 from tests.design_lint_fixtures.jtag_data_same_net import jtag_data_same_net_netlist
 from tests.design_lint_fixtures.jtag_signal_named_rail import jtag_signal_named_rail_netlist
 from tests.design_lint_fixtures.jtag_tdo_output_sharing import jtag_tdo_output_sharing_netlist
@@ -141,6 +144,7 @@ def protocol_rule_ids() -> set[str]:
     )
     emitted.update(item.rule_id for item in candidates(jtag_tdo_output_sharing_netlist()))
     emitted.update(item.rule_id for item in candidates(jtag_data_same_net_netlist()))
+    emitted.update(item.rule_id for item in candidates(jtag_clock_mode_same_net_netlist()))
     emitted.update(
         item.rule_id
         for item in candidates(

@@ -48,6 +48,7 @@ from .ethernet_tx_clock_output_sharing import ethernet_tx_clock_output_sharing_c
 from .i2s_clock_data_same_net import i2s_clock_data_same_net_candidates
 from .i2s_data_output_sharing import i2s_data_output_sharing_candidates
 from .i2s_same_net import i2s_clock_frame_same_net_candidates
+from .jtag_clock_mode_same_net import jtag_tck_tms_same_net_candidates
 from .jtag_data_same_net import jtag_tdi_tdo_same_net_candidates
 from .jtag_tdo_output_sharing import jtag_tdo_outputs_share_net_candidates
 from .peer_reference_candidate_keys import PeerReferenceCandidateKeys
@@ -134,6 +135,7 @@ def bus_candidates(inputs: BusCandidateInputs) -> tuple[Candidate, ...]:
         ),
         *jtag_tdo_outputs_share_net_candidates(observed),
         *jtag_tdi_tdo_same_net_candidates(observed),
+        *jtag_tck_tms_same_net_candidates(observed),
         *bus_named_rail_candidates(observed),
         *complementary_signal_candidates(observed, inputs.complementary_alias_resolution),
         *usb_data_polarity_label_candidates(observed),
