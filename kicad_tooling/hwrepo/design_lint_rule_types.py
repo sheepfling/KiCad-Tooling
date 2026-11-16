@@ -244,6 +244,7 @@ DesignLintRuleId = Literal[
     "bus.can_generic_connector_pair_review",
     "bus.can_signal_on_named_rail",
     "bus.can_line_on_named_rail",
+    "bus.can_rx_outputs_share_net",
     "bus.can_tx_rx_same_net",
     "bus.can_tx_rx_label_mismatch",
     "bus.can_tx_outputs_share_net",

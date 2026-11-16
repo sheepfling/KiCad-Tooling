@@ -84,5 +84,6 @@ PARITY_LINT_TEST_MODULES = frozenset(
         "tests/test_design_lint_mcp_parity_pcb_drc_exact_reference_pad_scope.py",
         "tests/test_design_lint_mcp_parity_pcb_drc_malformed_netclass_numeric_constraints.py",
         "tests/test_design_lint_mcp_parity_can_single_termination.py",
+        "tests/test_design_lint_mcp_parity_usb_can.py",
     }
 )

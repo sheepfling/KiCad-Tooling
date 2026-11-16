@@ -358,6 +358,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="can-tx-output-sharing",
     ),
     pytest.param(
+        "bus.can_rx_outputs_share_net",
+        "KICAD_RUN_NATIVE_CAN_RX_OUTPUT_SHARING_FIXTURES",
+        "tests.test_can_rx_output_sharing_native_fixture_lane."
+        "test_native_can_rx_output_sharing_fault_and_control_repeat",
+        id="can-rx-output-sharing",
+    ),
+    pytest.param(
         "bus.can_tx_rx_label_mismatch",
         "KICAD_RUN_NATIVE_CAN_TX_RX_LABEL_MISMATCH_FIXTURES",
         "tests.test_can_tx_rx_label_mismatch_native_fixture_lane."

@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 401 rules are implemented with synthetic regression coverage.
+The following 402 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 401 active rules.
+The catalog currently contains 402 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -696,6 +696,7 @@ skipped under prerelease policy.
 - `bus.can_tx_rx_same_net`
 - `bus.can_tx_rx_label_mismatch`
 - `bus.can_tx_outputs_share_net`
+- `bus.can_rx_outputs_share_net`
 - `bus.complementary_pair_assignment`
 - `signal.named_pair_without_reviewed_requirement`
 - `net.numbered_returns`
@@ -4595,7 +4596,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 401 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 402 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -29178,6 +29179,51 @@ acceptance threads while new lint features proceed:
   Linux and Windows Pyright, wheel/sdist builds, installed-wheel checks, and
   external and adapted public-template playtests passed. Logs are retained in
   the ignored `build/ci/` directory.
+- **Hosted acceptance:** GitHub Actions run `43785396450` passed for commit
+  `bad8d60c`.
+
+#### LINT-512 — Review fitted CAN receiver outputs sharing one net
+
+- **Priority:** P1 interface coverage. The existing CAN TX-sharing heuristic
+  did not review multiple fitted transceiver receiver outputs assigned to the
+  same schematic net. Passive native pin types can leave that topology outside
+  ERC output-conflict reporting.
+- **Predicate:** For fitted U/IC references with an explicit CAN/FDCAN module
+  identity, recognize bounded RX/RXD functions, including generic RXD only
+  with explicit module identity. Require unique complete native pin inventory,
+  one exact native net assignment, a supported native pin type, and at most
+  one recognized receiver endpoint per component. Emit one REVIEW candidate
+  when at least two distinct modules share one exact non-return net. Suppress
+  the whole group when another recognized receiver endpoint on that net has
+  incomplete assignment, type, or inventory evidence. Leave two native
+  `output` pins to ERC.
+- **Boundary:** The signal names and identities do not prove device behavior,
+  topology, output-enable state, intentional multiplexing, PCB copper, or
+  off-board wiring. The check asks for review; it does not decide that CAN
+  receiver outputs must always be isolated. Projects can use `review`, `block`,
+  or `off`, or ignore an exact finding fingerprint.
+- **Fixtures:** Separate tooling-owned synthetic fault and control schematics
+  bind shared passive-typed CAN_RXD outputs and unlike-role/separate-receiver
+  controls by SHA-256. Docker exports each fixture twice with digest-pinned
+  KiCad 10.0.0 and 10.0.5; native ERC remains clear, while the design-lint
+  review appears only for the shared-receiver fault. Synthetic netlist tests
+  cover generic and protocol aliases, output/ERC deferral, returns, DNP,
+  incomplete and ambiguous assignments, policy modes, stable fingerprints,
+  and separation metamorphism. No proprietary project sources are used.
+- **Selection:** Run `tests/test_can_rx_output_sharing.py` with
+  `design_lint and interface_lint and
+  design_lint_rule(rule_id="bus.can_rx_outputs_share_net")`. Run the native
+  lane in `tests/test_can_rx_output_sharing_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_CAN_RX_OUTPUT_SHARING_FIXTURES=1`. CLI/MCP parity is in
+  `tests/test_design_lint_mcp_parity_usb_can.py` and uses the separate public
+  `KiCAD-Test` checkout.
+- **Local acceptance:** The focused `scripts/ci.py` gate passed 258 tests with
+  four native cases skipped by the socket-restricted runner. The CAN RX and
+  existing CAN TX Docker lanes were run separately with elevated access; all
+  four versioned cases passed. Ruff, both Alphus profiles, Rumdl, mdrepo,
+  module-size preflight, Linux and Windows Pyright, wheel/sdist builds, the
+  installed-wheel rehearsal, and external/adapted public-template playtests
+  passed. Logs are retained under ignored `build/ci/` directories.
 - **Hosted acceptance:** Pending.
 
 ## Completion and release gate

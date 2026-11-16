@@ -10,17 +10,22 @@ from .design_lint_tx_output_sharing_candidate_evidence import (
 )
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
-from .signal_pair_tx_output_sharing import tx_output_sharing_groups
+from .signal_pair_output_sharing import signal_output_sharing_groups
 
 RULE_ID = "bus.can_tx_outputs_share_net"
+
+
+def _can_tx_role_and_channel(_reference: str, function: str) -> tuple[str, str] | None:
+    return can_signal_role_and_channel(function)
 
 
 def can_tx_output_sharing_candidates(observed: NetlistContract) -> tuple[Candidate, ...]:
     """Find multiple fitted CAN transmit-function pins on one native net."""
     findings: list[Candidate] = []
-    for group in tx_output_sharing_groups(
+    for group in signal_output_sharing_groups(
         observed,
-        role_and_channel=can_signal_role_and_channel,
+        role_and_channel=_can_tx_role_and_channel,
+        expected_role="tx",
         is_supported_reference=is_integrated_circuit_reference,
         require_pin_inventory=True,
         skip_return_like_nets=False,

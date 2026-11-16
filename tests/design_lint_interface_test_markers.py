@@ -172,6 +172,8 @@ INTERFACE_LINT_TEST_MODULES = frozenset(
         "tests/test_can_tx_rx_same_net.py",
         "tests/test_can_tx_rx_same_net_native_fixture_lane.py",
         "tests/test_can_tx_output_sharing.py",
+        "tests/test_can_rx_output_sharing.py",
+        "tests/test_can_rx_output_sharing_native_fixture_lane.py",
         "tests/test_tx_output_sharing_candidate_evidence.py",
         "tests/test_design_lint_architecture_tx_output_sharing_candidate_evidence.py",
         "tests/test_can_tx_output_sharing_native_fixture_lane.py",

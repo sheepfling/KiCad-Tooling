@@ -9484,13 +9484,60 @@
         "kicad_tooling/hwrepo/can_signal_functions.py#can_signal_role_and_channel",
         "kicad_tooling/hwrepo/can_signal_functions.py#can_channel_label",
         "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
-        "kicad_tooling/hwrepo/signal_pair_tx_output_sharing.py#tx_output_sharing_groups",
+        "kicad_tooling/hwrepo/signal_pair_output_sharing.py#signal_output_sharing_groups",
         "kicad_tooling/hwrepo/design_lint_tx_output_sharing_candidate_evidence.py#TxOutputSharingCandidate",
         "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
       ],
       "theme": "interfaces",
       "implementation_owner": "kicad_tooling/hwrepo/can_tx_output_sharing.py#can_tx_output_sharing_candidates"
+    },
+    {
+      "rule_id": "bus.can_rx_outputs_share_net",
+      "title": "CAN transceiver receiver outputs share one net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "review",
+      "metamorphic_status": "covered",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, including explicit CAN module identity, RX/RXD function, exact assignments, pin electrical types, fitted state, and complete pin inventory",
+      "predicate": "For one exact non-return net, group RX/RXD functions from fitted U/IC references with an explicit CAN/FDCAN module or transceiver identity. Require exactly one receiver role per reference, unique complete pin inventory membership, one exact assignment, and an output-capable native type (output, tri_state, bidirectional, or passive). Emit one REVIEW candidate when at least two distinct references contribute one receiver function each, except when two or more are native output pins covered by ERC. Suppress groups with incomplete or ambiguous role evidence on that net.",
+      "supported_kicad_versions": [
+        "KiCad 10.0.0 and 10.0.5 digest-pinned native export lanes"
+      ],
+      "limitations": [
+        "Identity matching uses the bounded CAN/FDCAN module or transceiver marker in native symbol-library and component-value text. Other manufacturer or module naming conventions remain outside this rule until reviewed and tested.",
+        "RX/RXD function labels, component identity text, and passive electrical types are clues rather than a reviewed pinout or proof of output behavior. A shared path may be intentional behind a selector, gate, or application-specific arrangement; the finding is configurable REVIEW evidence, not a defect verdict.",
+        "The check skips DNP, connector references, return-like nets, unsupported types, incomplete inventories, duplicate receiver roles, ambiguous assignments, and two native output-type pins. It does not infer enable state, firmware behavior, bus topology, PCB copper continuity, or off-board wiring."
+      ],
+      "fault_fixtures": [
+        "tests.test_can_rx_output_sharing.test_multiple_fitted_can_receiver_outputs_on_one_net_are_reviewed",
+        "tests.test_can_rx_output_sharing_native_fixture_lane.test_native_can_rx_output_sharing_fault_and_control_repeat",
+        "tests.test_design_lint_mcp_parity_usb_can.test_can_rx_output_sharing_lint_cli_mcp_parity"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_can_rx_output_sharing.test_protocol_aliases_are_bounded_and_split_receivers_are_valid_controls",
+        "tests.test_can_rx_output_sharing.test_dnp_open_and_incomplete_peer_evidence_suppress_the_shared_net",
+        "tests.test_can_rx_output_sharing_native_fixture_lane.test_native_can_rx_output_sharing_fault_and_control_repeat"
+      ],
+      "metamorphic_fixtures": [
+        "tests.test_can_rx_output_sharing.test_fingerprint_is_order_stable_and_separating_outputs_clears_the_finding"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_CAN_RX_OUTPUT_SHARING_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/can_rx_output_sharing.py#can_rx_output_sharing_candidates",
+        "kicad_tooling/hwrepo/can_signal_functions.py#can_signal_role_and_channel",
+        "kicad_tooling/hwrepo/can_signal_functions.py#can_module_data_role",
+        "kicad_tooling/hwrepo/can_signal_functions.py#explicit_can_module_identity",
+        "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
+        "kicad_tooling/hwrepo/return_nets.py#is_return_like_net_name",
+        "kicad_tooling/hwrepo/signal_pair_output_sharing.py#signal_output_sharing_groups",
+        "kicad_tooling/hwrepo/design_lint_can_candidates.py#can_candidates",
+        "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/can_rx_output_sharing.py#can_rx_output_sharing_candidates"
     },
     {
       "rule_id": "bus.spi_data_polarity_label_mismatch",
@@ -12372,7 +12419,7 @@
         "kicad_tooling/hwrepo/serial_participants.py#serial_function_role_and_channel",
         "kicad_tooling/hwrepo/serial_participants.py#is_serial_ic_reference",
         "kicad_tooling/hwrepo/component_references.py#is_integrated_circuit_reference",
-        "kicad_tooling/hwrepo/signal_pair_tx_output_sharing.py#tx_output_sharing_groups",
+        "kicad_tooling/hwrepo/signal_pair_output_sharing.py#signal_output_sharing_groups",
         "kicad_tooling/hwrepo/design_lint_tx_output_sharing_candidate_evidence.py#TxOutputSharingCandidate",
         "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates",
         "kicad_tooling/hwrepo/design_lint_candidate_aggregation.py#candidates"

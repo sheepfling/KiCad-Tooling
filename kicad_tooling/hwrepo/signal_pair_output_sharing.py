@@ -1,19 +1,22 @@
-"""Shared grouping predicate for same-role transmitter pins on one net."""
+"""Shared grouping predicate for fitted same-role output-capable signal pins."""
 
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Literal, TypeAlias
 
 from .netlist_contract_models import NetlistContract
 from .return_nets import is_return_like_net_name
 
 _SUPPORTED_PIN_TYPES = frozenset({"output", "tri_state", "bidirectional", "passive"})
+SignalRole = Literal["tx", "rx"]
+RoleAndChannel: TypeAlias = Callable[[str, str], tuple[str, str] | None]
 
 
 @dataclass(frozen=True, slots=True)
-class TxOutputSharingGroup:
-    """One unambiguous fitted same-role TX group that is not an ERC output conflict."""
+class SignalOutputSharingGroup:
+    """One unambiguous fitted same-role group that is not an ERC output conflict."""
 
     net: str
     components: tuple[str, ...]
@@ -23,19 +26,21 @@ class TxOutputSharingGroup:
     pin_types: tuple[str, ...]
 
 
-def tx_output_sharing_groups(
+def signal_output_sharing_groups(
     observed: NetlistContract,
     *,
-    role_and_channel: Callable[[str], tuple[str, str] | None],
+    role_and_channel: RoleAndChannel,
+    expected_role: SignalRole,
     is_supported_reference: Callable[[str], bool],
     require_pin_inventory: bool,
     skip_return_like_nets: bool,
-) -> tuple[TxOutputSharingGroup, ...]:
-    """Group uniquely assigned TX pins while leaving typed output conflicts to ERC."""
+    exclude_nets_with_incomplete_evidence: bool = False,
+) -> tuple[SignalOutputSharingGroup, ...]:
+    """Group one signal role while leaving typed output conflicts to ERC."""
     fitted = {reference.casefold(): reference for reference in observed.components}
     dnp = {reference.casefold() for reference in observed.dnp_components}
     inventory = {
-        reference.casefold(): {number.casefold() for number in numbers}
+        reference.casefold(): tuple(number.casefold() for number in numbers)
         for reference, numbers in observed.component_pin_numbers.items()
     }
     nets_by_pin: dict[str, set[str]] = {}
@@ -49,6 +54,7 @@ def tx_output_sharing_groups(
 
     by_net: dict[str, list[tuple[str, str, str, str, str]]] = {}
     display_names: dict[str, set[str]] = {}
+    unsupported_nets: set[str] = set()
     for pin, function in observed.pin_functions.items():
         reference, separator, number = pin.rpartition(".")
         reference_key = reference.casefold()
@@ -58,18 +64,23 @@ def tx_output_sharing_groups(
             or canonical_reference is None
             or reference_key in dnp
             or not is_supported_reference(canonical_reference)
-            or (
-                require_pin_inventory
-                and number.casefold() not in inventory.get(reference_key, set())
-            )
         ):
             continue
-        role_channel = role_and_channel(function)
-        if role_channel is None or role_channel[0] != "tx":
+        role_channel = role_and_channel(canonical_reference, function)
+        if role_channel is None or role_channel[0] != expected_role:
             continue
         assignments = nets_by_pin.get(pin.casefold(), set())
         electrical_type = pin_types.get(pin.casefold())
+        pin_inventory = inventory.get(reference_key, ())
+        if require_pin_inventory and (
+            number.casefold() not in pin_inventory or len(pin_inventory) != len(set(pin_inventory))
+        ):
+            if exclude_nets_with_incomplete_evidence:
+                unsupported_nets.update(net.casefold() for net in assignments)
+            continue
         if len(assignments) != 1 or electrical_type not in _SUPPORTED_PIN_TYPES:
+            if exclude_nets_with_incomplete_evidence:
+                unsupported_nets.update(net.casefold() for net in assignments)
             continue
         net = next(iter(assignments))
         if skip_return_like_nets and is_return_like_net_name(net):
@@ -80,10 +91,12 @@ def tx_output_sharing_groups(
         )
         display_names.setdefault(key, set()).add(net)
 
-    groups: list[TxOutputSharingGroup] = []
+    groups: list[SignalOutputSharingGroup] = []
     for key, endpoints in sorted(by_net.items()):
         ordered = sorted(set(endpoints), key=lambda item: tuple(part.casefold() for part in item))
-        if len(display_names[key]) != 1:
+        if len(display_names[key]) != 1 or (
+            exclude_nets_with_incomplete_evidence and key in unsupported_nets
+        ):
             continue
         by_reference: dict[str, list[tuple[str, str, str, str, str]]] = {}
         for endpoint in ordered:
@@ -93,7 +106,7 @@ def tx_output_sharing_groups(
         if sum(item[3] == "output" for item in ordered) >= 2:
             continue
         groups.append(
-            TxOutputSharingGroup(
+            SignalOutputSharingGroup(
                 net=next(iter(display_names[key])),
                 components=tuple(
                     sorted((items[0][0] for items in by_reference.values()), key=str.casefold)

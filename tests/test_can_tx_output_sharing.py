@@ -54,7 +54,7 @@ def test_catalog_owns_can_tx_rule_in_its_theme_module() -> None:
     )
     assert rule.implementation_owner in rule.implementation_refs
     assert (
-        "kicad_tooling/hwrepo/signal_pair_tx_output_sharing.py#tx_output_sharing_groups"
+        "kicad_tooling/hwrepo/signal_pair_output_sharing.py#signal_output_sharing_groups"
         in rule.implementation_refs
     )
 

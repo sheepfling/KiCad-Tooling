@@ -9,9 +9,13 @@ from .design_lint_tx_output_sharing_candidate_evidence import (
 from .design_lint_types import Candidate
 from .netlist_contract_models import NetlistContract
 from .serial_participants import is_serial_ic_reference, serial_function_role_and_channel
-from .signal_pair_tx_output_sharing import tx_output_sharing_groups
+from .signal_pair_output_sharing import signal_output_sharing_groups
 
 RULE_ID = "bus.serial_tx_outputs_share_net"
+
+
+def _serial_tx_role_and_channel(_reference: str, function: str) -> tuple[str, str] | None:
+    return serial_function_role_and_channel(function)
 
 
 def serial_tx_output_sharing_candidates(observed: NetlistContract) -> tuple[Candidate, ...]:
@@ -33,9 +37,10 @@ def serial_tx_output_sharing_candidates(observed: NetlistContract) -> tuple[Cand
                 "The function names do not prove driver behavior or required peer topology."
             ),
         )
-        for group in tx_output_sharing_groups(
+        for group in signal_output_sharing_groups(
             observed,
-            role_and_channel=serial_function_role_and_channel,
+            role_and_channel=_serial_tx_role_and_channel,
+            expected_role="tx",
             is_supported_reference=is_serial_ic_reference,
             require_pin_inventory=False,
             skip_return_like_nets=True,

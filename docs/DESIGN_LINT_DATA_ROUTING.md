@@ -1230,21 +1230,34 @@ separate public `KiCAD-Test` checkout at `ed89536`. Ruff, targeted Pyright,
 Rumdl, mdrepo, and `git diff --check` passed. No exact native KiCad lane was
 run.
 
-## CAN and serial TX-sharing evidence
+## CAN and serial same-role output-sharing evidence
 
-CAN and serial TX-output-sharing findings now retain `TxOutputSharingGroup`
+CAN and serial TX-output-sharing findings now retain `SignalOutputSharingGroup`
 through `TxOutputSharingCandidate`, alongside the exact source
 `NetlistContract`. The typed source re-runs the canonical group service and
 rejects a group that no longer matches the current native source. It keeps
 each protocol's existing rules for supported references, inventory
 requirements, return-like nets, and output-to-output ERC exclusion. The
-report projection keeps the existing fields and channel labels; CAN channel
-formatting now lives in the shared CAN function owner.
+shared grouping service now accepts a protocol role callback and supports
+both TX and RX roles. The CAN RX-sharing review additionally suppresses a
+whole net group when another recognized receiver endpoint on that net has
+incomplete assignment, pin type, or pin-inventory evidence. Its candidate
+retains the typed group and explicit CAN module identity. The report projection
+keeps the existing TX fields and channel labels; CAN channel formatting now
+lives in the shared CAN function owner.
 
 The focused CAN/serial output-sharing, CAN TX/RX, architecture, catalog,
 selector, marker, and CLI/MCP parity selection passed 99 tests. Ruff, targeted
 Pyright, Rumdl, mdrepo, and `git diff --check` passed. Parity used the separate
 public `KiCAD-Test` checkout at `ed89536`; no exact native KiCad lane was run.
+
+The CAN RX-sharing extension adds one protocol callback to the same grouping
+service. The new candidate revalidates explicit CAN module identity and keeps
+incomplete recognized receiver evidence from forming a partial shared-output
+group. Its focused behavior, selector, catalog, architecture, package, and
+CLI/MCP checks passed. Fault and control schematics passed repeatable Docker
+exports with KiCad 10.0.0 and 10.0.5, and the scoped installed-wheel CI passed
+258 tests with its four native fixture cases run separately.
 
 ## I2C and I3C same-net evidence
 

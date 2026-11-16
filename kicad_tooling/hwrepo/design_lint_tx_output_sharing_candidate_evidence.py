@@ -11,7 +11,7 @@ from .design_lint_rule_types import DesignLintRuleId
 from .design_lint_types import Candidate, CandidateEvidenceProjection
 from .netlist_contract_models import NetlistContract
 from .serial_participants import is_serial_ic_reference, serial_function_role_and_channel
-from .signal_pair_tx_output_sharing import TxOutputSharingGroup, tx_output_sharing_groups
+from .signal_pair_output_sharing import SignalOutputSharingGroup, signal_output_sharing_groups
 
 CAN_TX_OUTPUT_SHARING_RULE_ID: DesignLintRuleId = "bus.can_tx_outputs_share_net"
 SERIAL_TX_OUTPUT_SHARING_RULE_ID: DesignLintRuleId = "bus.serial_tx_outputs_share_net"
@@ -22,12 +22,13 @@ class CanTxOutputSharingEvidence:
     """A current CAN TX group produced by the canonical sharing scan."""
 
     observed: NetlistContract
-    group: TxOutputSharingGroup
+    group: SignalOutputSharingGroup
 
     def __post_init__(self) -> None:
-        current_groups = tx_output_sharing_groups(
+        current_groups = signal_output_sharing_groups(
             self.observed,
-            role_and_channel=can_signal_role_and_channel,
+            role_and_channel=_can_tx_role_and_channel,
+            expected_role="tx",
             is_supported_reference=is_integrated_circuit_reference,
             require_pin_inventory=True,
             skip_return_like_nets=False,
@@ -41,12 +42,13 @@ class SerialTxOutputSharingEvidence:
     """A current serial TX group produced by the canonical sharing scan."""
 
     observed: NetlistContract
-    group: TxOutputSharingGroup
+    group: SignalOutputSharingGroup
 
     def __post_init__(self) -> None:
-        current_groups = tx_output_sharing_groups(
+        current_groups = signal_output_sharing_groups(
             self.observed,
-            role_and_channel=serial_function_role_and_channel,
+            role_and_channel=_serial_tx_role_and_channel,
+            expected_role="tx",
             is_supported_reference=is_serial_ic_reference,
             require_pin_inventory=False,
             skip_return_like_nets=True,
@@ -56,6 +58,14 @@ class SerialTxOutputSharingEvidence:
 
 
 TxOutputSharingEvidence: TypeAlias = CanTxOutputSharingEvidence | SerialTxOutputSharingEvidence
+
+
+def _can_tx_role_and_channel(_reference: str, function: str) -> tuple[str, str] | None:
+    return can_signal_role_and_channel(function)
+
+
+def _serial_tx_role_and_channel(_reference: str, function: str) -> tuple[str, str] | None:
+    return serial_function_role_and_channel(function)
 
 
 def project_tx_output_sharing_evidence(

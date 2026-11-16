@@ -43,6 +43,7 @@ from tests.design_lint_fixtures.bjt_collector_emitter_same_net import (
     bjt_collector_emitter_netlist,
 )
 from tests.design_lint_fixtures.bjt_terminal_order import bjt_terminal_order_netlist
+from tests.design_lint_fixtures.can_rx_output_sharing import can_rx_output_netlist
 from tests.design_lint_fixtures.can_signal_named_rail import can_signal_on_named_rail_netlist
 from tests.design_lint_fixtures.can_tx_output_sharing import can_tx_output_netlist
 from tests.design_lint_fixtures.can_tx_rx_same_net import can_tx_rx_same_net_netlist
@@ -429,6 +430,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
             update={"nets": {"CAN1_RX": ("U1.1",), "CAN1_TX": ("U1.2",)}}
         ),
         can_tx_output_netlist(),
+        can_rx_output_netlist(),
         can_netlist("121R").model_copy(
             update={
                 "nets": {

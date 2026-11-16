@@ -1568,7 +1568,7 @@ Pyright, Rumdl, mdrepo, and `git diff --check` passed. No exact native KiCad
 lane was run.
 
 CAN and serial TX-output-sharing findings now retain the exact
-`TxOutputSharingGroup` and source `NetlistContract` through
+`SignalOutputSharingGroup` and source `NetlistContract` through
 `TxOutputSharingCandidate`. The evidence owner reruns the canonical grouping
 service with each protocol's existing reference, inventory, and return-net
 policy, then projects the same report fields. CAN channel labels now have one

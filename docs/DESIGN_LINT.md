@@ -1104,7 +1104,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 401 active rules.
+The catalog currently contains 402 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -2391,6 +2391,30 @@ Select the CAN TX output-sharing check with:
 KICAD_RUN_NATIVE_CAN_TX_OUTPUT_SHARING_FIXTURES=1 .venv/bin/python -I -m pytest \
   tests/test_can_tx_output_sharing_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_tx_outputs_share_net")'
+```
+
+### Multiple CAN receiver outputs sharing one net
+
+`bus.can_rx_outputs_share_net` reviews an exact net shared by fitted U/IC
+references with explicit CAN/FDCAN module or transceiver identity and one
+bounded RX/RXD function per reference. It requires unique complete pin
+inventories, one assignment per pin, and supported output-capable native types;
+two explicit native output pins remain with ERC. Return-like nets, DNP parts,
+connectors, and incomplete or ambiguous groups are skipped. The default is
+`review`: function names, component identity text, and passive pin types do not
+prove output behavior or required topology, and a shared path may be
+intentional. The source-hashed synthetic shared-net fault and unlike-role
+control repeat with clean ERC on digest-pinned KiCad 10.0.0 and 10.0.5. See the
+[fixture record](../tests/fixtures/design_lint/can-rx-output-sharing/README.md)
+for hashes and limits.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_can_rx_output_sharing.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.can_rx_outputs_share_net")'
+
+KICAD_RUN_NATIVE_CAN_RX_OUTPUT_SHARING_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_can_rx_output_sharing_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.can_rx_outputs_share_net")'
 ```
 
 ### CAN/FDCAN signal pins assigned directly to named rails
