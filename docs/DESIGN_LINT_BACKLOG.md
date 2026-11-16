@@ -29468,8 +29468,16 @@ acceptance threads while new lint features proceed:
   shared native lane is
   `tests/test_ethernet_rx_output_sharing_native_fixture_lane.py` with
   `KICAD_RUN_NATIVE_ETHERNET_RX_OUTPUT_SHARING_FIXTURES=1`.
-- **Local acceptance:** Pending.
-- **Hosted acceptance:** Pending.
+- **Local acceptance:** Rule-scoped `scripts/ci.py` passed 494 tests with
+  9,861 deselected. Ruff, both Alphus profiles, Rumdl, mdrepo, module-size
+  preflight, Linux and Windows Pyright, wheel and sdist builds, installed-wheel
+  checks, and external-template playtests in default and adapted layouts all
+  passed. The selected tests included both digest-pinned native Docker cases
+  and CLI/MCP parity. Receipts are under
+  `build/ci/run-5ckn073x/`.
+- **Hosted acceptance:** GitHub Actions run `43813085706` passed for commit
+  `9372ca29` and tag `v0.5.3rc846`. The package and preview jobs were skipped
+  under the prerelease policy.
 
 ## Completion and release gate
 
