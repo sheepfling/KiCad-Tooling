@@ -29426,7 +29426,9 @@ acceptance threads while new lint features proceed:
   installed-wheel playtests against the separate public template in its
   default and adapted layouts. Receipts are under ignored
   `build/ci/run-0aazisg_/`.
-- **Hosted acceptance:** Pending tag push and GitHub Actions.
+- **Hosted acceptance:** GitHub Actions run `43809636970` passed for commit
+  `0b834b8b` and tag `v0.5.3rc845`. The package and preview jobs were
+  skipped under the prerelease policy.
 
 ## Completion and release gate
 
