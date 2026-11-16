@@ -859,15 +859,21 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest published lint-gate checkpoint (v0.5.3rc847):** LINT-518 adds
-  review of shared standalone MII CRS outputs across identified Ethernet PHYs.
-  Hosted acceptance passed in GitHub Actions run `43815435854`:
-  495 selected tests passed and 9,870 were deselected, including repeated
+- **Latest published lint-gate checkpoint (v0.5.3rc848):** LINT-519 adds
+  review of shared standalone MII TX_CLK outputs across identified Ethernet
+  PHYs. Hosted acceptance passed in GitHub Actions run `43818815728`:
+  497 selected tests passed and 9,879 were deselected, including repeated
   digest-pinned KiCad 10.0.0 and 10.0.5 fixtures. Tag-scope resolution, Ruff,
-  both Alphus profiles, Rumdl, mdrepo, Linux and Windows type checks,
-  wheel/sdist builds, and installed-wheel rehearsal against the separate public
-  template checkout passed. Package and preview jobs were skipped under
-  prerelease policy.
+  both Alphus profiles, Rumdl, mdrepo, module-size preflight, Linux and Windows
+  type checks, wheel/sdist builds, and installed-wheel rehearsal against the
+  separate public template checkout passed. Package and preview jobs were
+  skipped under prerelease policy.
+- **Previous checkpoint (v0.5.3rc847):** LINT-518 adds review of shared
+  standalone MII CRS outputs across identified Ethernet PHYs. Hosted acceptance
+  passed in GitHub Actions run `43815435854`: 495 selected tests passed and
+  9,870 were deselected, including repeated digest-pinned KiCad 10.0.0 and
+  10.0.5 fixtures. Package and preview jobs were skipped under prerelease
+  policy.
 - **Previous checkpoint (v0.5.3rc832):** LINT-506 adds default-review
   detection for a fitted resistor bridging recognized I2C SDA/SCL nets. Hosted
   acceptance passed in GitHub Actions run `43748573175`: 480 selected tests
@@ -29579,7 +29585,13 @@ acceptance threads while new lint features proceed:
   checks, and external-template playtests in default and adapted layouts all
   passed. Both digest-pinned native Docker cases and CLI/MCP parity passed.
   Receipts are under `build/ci/run-4cly2grs/`.
-- **Hosted acceptance:** Pending.
+- **Hosted acceptance:** GitHub Actions run `43818815728` passed for commit
+  `24930e6c` and tag `v0.5.3rc848`. It ran 497 selected tests with 9,879
+  deselected, including repeated digest-pinned KiCad 10.0.0 and 10.0.5 native
+  fixtures. Ruff, both Alphus profiles, Rumdl, mdrepo, module-size preflight,
+  Linux and Windows type checks, wheel/sdist builds, and installed-wheel
+  rehearsal against the separate public template checkout passed. Package and
+  preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
