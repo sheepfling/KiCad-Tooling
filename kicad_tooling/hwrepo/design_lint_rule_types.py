@@ -269,6 +269,7 @@ DesignLintRuleId = Literal[
     "bus.swdio_swclk_same_net",
     "bus.i2s_clock_data_same_net",
     "bus.i2s_clock_frame_same_net",
+    "bus.i2s_data_outputs_share_net",
     "bus.i2s_signal_on_named_rail",
     "bus.jtag_signal_on_named_rail",
     "bus.swd_signal_on_named_rail",

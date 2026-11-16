@@ -187,6 +187,8 @@ ETHERNET_GENERIC_CONNECTOR_THEME_SUITES = (
     "test_design_lint_architecture_i2s_same_net.py",
     "test_i2s_clock_data_same_net.py",
     "test_i2s_clock_data_same_net_native_fixture_lane.py",
+    "test_i2s_data_output_sharing.py",
+    "test_i2s_data_output_sharing_native_fixture_lane.py",
     "test_design_lint_mcp_parity_i2s_clock_data_same_net.py",
     "test_design_lint_architecture_i2s_clock_data_same_net.py",
 )

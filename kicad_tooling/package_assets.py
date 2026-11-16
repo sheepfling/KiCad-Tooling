@@ -64,6 +64,8 @@ REQUIRED_WHEEL_ASSETS = frozenset(
         "kicad_tooling/hwrepo/signal_pair_output_sharing.py",
         "kicad_tooling/ci_hosted_can_tx_output_sharing.py",
         "kicad_tooling/ci_hosted_can_rx_output_sharing.py",
+        "kicad_tooling/hwrepo/i2s_data_output_sharing.py",
+        "kicad_tooling/ci_hosted_i2s_data_output_sharing.py",
         "kicad_tooling/hwrepo/usb_data_path_models.py",
         "kicad_tooling/hwrepo/usb_data_path_component_models.py",
         "kicad_tooling/hwrepo/connector_return_distribution_models.py",

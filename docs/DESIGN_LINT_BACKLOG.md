@@ -413,10 +413,10 @@ intended requirement.
 
 ## Existing baseline
 
-The following 402 rules are implemented with synthetic regression coverage.
+The following 403 rules are implemented with synthetic regression coverage.
 Their actual recognition limits are documented in
 [DESIGN_LINT.md](DESIGN_LINT.md):
-The catalog currently contains 402 active rules.
+The catalog currently contains 403 active rules.
 
 The mapped-topology execution receipt now has a focused model owner; internal
 coverage, evaluation, and report code import it directly while the shared model
@@ -690,6 +690,7 @@ skipped under prerelease policy.
 - `bus.swdio_swclk_same_net`
 - `bus.i2s_clock_data_same_net`
 - `bus.i2s_clock_frame_same_net`
+- `bus.i2s_data_outputs_share_net`
 - `bus.jtag_generic_connector_pair_review`
 - `bus.jtag_signal_on_named_rail`
 - `bus.swd_signal_on_named_rail`
@@ -4596,7 +4597,7 @@ is not a reason by itself to expand its scope or change its default policy.
   unreviewed. Catalog validation resolves and runs registered cases; the catalog suite rejects an
   unreviewed active rule and keeps the backlog inventory synchronized.
 
-Current catalog audit: 402 covered, 0 not applicable, 0 unreviewed.
+Current catalog audit: 403 covered, 0 not applicable, 0 unreviewed.
 
   The connector-peer hash-seed regression is linked to the
   named-complementary-pair rule it also asserts, so catalog metadata covers every finding checked by
@@ -29226,6 +29227,47 @@ acceptance threads while new lint features proceed:
   passed. Logs are retained under ignored `build/ci/` directories.
 - **Hosted acceptance:** GitHub Actions run `43791349313` passed for commit
   `157bfff2` in tag `v0.5.3rc840`.
+
+#### LINT-513 — Review I2S data outputs sharing one net
+
+- **Priority:** P1 interface coverage. Existing I2S rules review clock/data
+  role collisions within one device but do not review two fitted audio-device
+  serial-data outputs assigned to the same net. ERC can remain clear when
+  native pin types are passive or tri-state.
+- **Predicate:** Require complete unique native pin inventories and an
+  unambiguous assigned I2S bit-clock context per U/IC. Recognize bounded
+  `SDO`, `SDOUT`, `DOUT`, `DATAOUT`, `SDATAOUT`, and `DATA_OUT` functions only
+  within that context. Review one exact non-return net with one supported
+  output-capable data pin from each of at least two fitted references. Skip
+  incomplete or ambiguous endpoint evidence, return-like nets, DNP devices,
+  duplicate output roles per reference, and unsupported native types. Leave
+  two native `output` pins to ERC.
+- **Boundary:** This rule defaults to `off`. Shared output connections may be
+  intentional for tri-state or time-division audio buses. Function labels and
+  native pin types do not prove configured output behavior, audio framing,
+  slot coordination, bus membership, or PCB continuity. The finding is
+  configurable review evidence, not a wiring verdict.
+- **Fixtures:** Tooling-owned synthetic shared-output fault and separate-net
+  control use passive native pin types so ERC remains clean. Additional tests
+  cover output-to-input, non-I2S `SDO`, DNP, open, multiply assigned, incomplete,
+  unsupported, return, two-output/ERC, override, exact ignore, stable evidence,
+  and separation controls. Digest-pinned native netlist/ERC exports repeat on
+  KiCad 10.0.0 and 10.0.5. No cohort code or project design was imported.
+- **Selection:** Run `tests/test_i2s_data_output_sharing.py` and the I2S
+  CLI/MCP parity case with `design_lint and interface_lint and
+  design_lint_rule(rule_id="bus.i2s_data_outputs_share_net")`. The native lane
+  is `tests/test_i2s_data_output_sharing_native_fixture_lane.py` with
+  `KICAD_RUN_NATIVE_I2S_DATA_OUTPUT_SHARING_FIXTURES=1`.
+- **Local acceptance:** The focused `scripts/ci.py` run passed 100 selected unit
+  tests, Ruff format/check, both Alphus profiles, Rumdl, mdrepo, module-size
+  preflight, Linux and Windows Pyright, and wheel/sdist builds. Its installed
+  wheel step could not fetch `pydantic==2.13.5` because this environment could
+  not resolve `pypi.org`. The separate digest-pinned Docker lane passed fault
+  and control cases on KiCad 10.0.0 and 10.0.5. Local CLI/MCP parity remains
+  unverified: the available `KiCAD-Test` checkout differs from the template
+  revision pinned by hosted CI, and its existing I2S parity case also blocks
+  on missing source-bound DRC report/command evidence. Hosted CI is pending.
+- **Hosted acceptance:** Pending the annotated rule-gate tag.
 
 ## Completion and release gate
 

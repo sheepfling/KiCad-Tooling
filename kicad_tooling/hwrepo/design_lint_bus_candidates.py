@@ -39,6 +39,7 @@ from .design_lint_types import Candidate
 from .design_lint_unconnected_interface_candidates import unconnected_interface_candidates
 from .design_lint_usb_c_same_net_candidates import usb_c_same_net_candidates
 from .i2s_clock_data_same_net import i2s_clock_data_same_net_candidates
+from .i2s_data_output_sharing import i2s_data_output_sharing_candidates
 from .i2s_same_net import i2s_clock_frame_same_net_candidates
 from .peer_reference_candidate_keys import PeerReferenceCandidateKeys
 from .swd_same_net import swdio_swclk_same_net_candidates
@@ -70,6 +71,7 @@ def bus_candidates(inputs: BusCandidateInputs) -> tuple[Candidate, ...]:
         *i2c_protocol_bus_candidates(inputs),
         *i3c_protocol_bus_candidates(inputs),
         *i2s_clock_data_same_net_candidates(observed),
+        *i2s_data_output_sharing_candidates(observed),
         *i2s_clock_frame_same_net_candidates(observed),
         *two_wire_signal_candidates(observed),
         *serial_protocol_bus_candidates(inputs),

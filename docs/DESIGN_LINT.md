@@ -1104,7 +1104,7 @@ The read-only MCP tool `list_design_lint_rules` returns the same typed catalog.
 Use this view before adding project overrides; `review`, `block`, and `off`
 are explicit project decisions, and the rule metadata states what each check
 can and cannot establish.
-The catalog currently contains 402 active rules.
+The catalog currently contains 403 active rules.
 
 For KiCad 10.0.8, `pcb.drc_unresolved_netclass_assignment` recognizes both
 legacy scalar assignments and the current array of class names. It reports
@@ -4242,6 +4242,30 @@ schematics; see the
 KICAD_RUN_NATIVE_I2S_CLOCK_DATA_SAME_NET_FIXTURES=1 .venv/bin/python -I -m pytest -q \
   tests/test_i2s_clock_data_same_net_native_fixture_lane.py \
   -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2s_clock_data_same_net")'
+```
+
+## Review I2S data outputs sharing one net
+
+`bus.i2s_data_outputs_share_net` is an off-by-default review heuristic for
+complete fitted U/IC inventories with one assigned I2S bit-clock context and
+bounded `SDO`, `SDOUT`, `DOUT`, or `DATA_OUT` output functions. It reports when
+outputs on two or more devices share one exact non-return net, while leaving
+two native `output` pins to ERC. It does not infer that shared outputs are
+wrong: tri-state and time-division audio topologies may intentionally share a
+data net. Projects can enable the rule as `review` or `block`, or ignore an
+exact finding fingerprint. The synthetic native fault and separate-output
+control repeat on digest-pinned KiCad 10.0.0 and 10.0.5 with clean ERC. See the
+[fixture record](../tests/fixtures/design_lint/i2s-data-output-sharing/README.md)
+for hashes and limits.
+
+```sh
+.venv/bin/python -I -m pytest tests/test_i2s_data_output_sharing.py \
+  tests/test_design_lint_mcp_parity_i2s_clock_data_same_net.py \
+  -m 'design_lint and interface_lint and design_lint_rule(rule_id="bus.i2s_data_outputs_share_net")'
+
+KICAD_RUN_NATIVE_I2S_DATA_OUTPUT_SHARING_FIXTURES=1 .venv/bin/python -I -m pytest \
+  tests/test_i2s_data_output_sharing_native_fixture_lane.py \
+  -m 'design_lint and interface_lint and native_kicad and design_lint_rule(rule_id="bus.i2s_data_outputs_share_net")'
 ```
 
 ## Review I2S signal pins assigned to named rails

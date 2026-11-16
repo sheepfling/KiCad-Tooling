@@ -17,6 +17,13 @@ _PROTOCOL_NATIVE_CASES = (
         id="i2c-peer-reference",
     ),
     pytest.param(
+        "bus.i2s_data_outputs_share_net",
+        "KICAD_RUN_NATIVE_I2S_DATA_OUTPUT_SHARING_FIXTURES",
+        "tests.test_i2s_data_output_sharing_native_fixture_lane."
+        "test_native_i2s_data_output_sharing_fault_and_control_repeat",
+        id="i2s-data-output-sharing",
+    ),
+    pytest.param(
         "bus.spi_peer_reference_review",
         "KICAD_RUN_NATIVE_SPI_PEER_REFERENCE_FIXTURES",
         "tests.test_spi_peer_reference_native_fixture_lane."

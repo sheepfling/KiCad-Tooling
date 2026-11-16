@@ -18,7 +18,10 @@ _BIT_CLOCK_TOKENS = frozenset({"bclk", "bck", "bitclk", "bitclock", "sck"})
 _WORD_SELECT_TOKENS = frozenset(
     {"lrck", "lrclk", "wclk", "wordclock", "wordsel", "wordselect", "ws"}
 )
-_DATA_TOKENS = frozenset({"data", "din", "dout", "sd", "sdata", "sdi", "sdo", "sdin", "sdout"})
+_DATA_TOKENS = frozenset(
+    {"data", "dataout", "din", "dout", "sd", "sdata", "sdataout", "sdi", "sdo", "sdin", "sdout"}
+)
+_DATA_OUTPUT_TOKENS = frozenset({"dataout", "dout", "sdataout", "sdo", "sdout"})
 _STRONG_BIT_CLOCK_TOKENS = frozenset({"bclk", "bck", "bitclk", "bitclock"})
 
 
@@ -39,13 +42,33 @@ def i2s_function_role(function: str) -> str | None:
 
 
 def _i2s_data_function(function: str) -> bool:
-    """Recognize bounded serial-data names used by native I2S pin functions."""
+    """Recognize bounded serial-data names used by native I2S pin functions.
+
+    Generic ``DATA_OUT`` aliases are accepted only when the complete endpoint
+    also has a strong assigned I2S bit-clock pin.
+    """
     tokens = {token.casefold() for token in _FUNCTION_TOKENS.findall(function)}
     if not tokens & _DATA_TOKENS:
         return False
     # Generic DIN/SDI names overlap with unrelated interfaces. Accept them only
-    # beside a distinctive I2S marker, supplied by the caller's clock pin.
-    return "i2s" in tokens or bool(tokens & {"sd", "sdata", "sdin", "sdout"})
+    # beside a distinctive I2S marker or bounded data-output spelling, supplied
+    # by the caller's clock-pin context.
+    return (
+        "i2s" in tokens
+        or bool(tokens & {"sd", "sdata", "sdataout", "sdin", "sdout"})
+        or {"data", "out"} <= tokens
+    )
+
+
+def i2s_data_output_function(function: str) -> bool:
+    """Recognize bounded I2S serial-data output aliases.
+
+    The caller must establish the I2S endpoint context from the complete native
+    component inventory and its assigned bit-clock pin. Generic ``SDO`` and
+    ``DOUT`` aliases alone are not sufficient to classify a component as I2S.
+    """
+    tokens = {token.casefold() for token in _FUNCTION_TOKENS.findall(function)}
+    return bool(tokens & _DATA_OUTPUT_TOKENS) or {"data", "out"} <= tokens
 
 
 @dataclass(frozen=True, slots=True)

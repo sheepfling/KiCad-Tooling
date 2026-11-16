@@ -93,6 +93,7 @@ from tests.design_lint_fixtures.ethernet_signal_named_rail import (
 )
 from tests.design_lint_fixtures.i2c_signal_label import i2c_signal_label_netlist
 from tests.design_lint_fixtures.i2c_signal_named_rail import i2c_signal_on_named_rail_netlist
+from tests.design_lint_fixtures.i2s_data_output_sharing import i2s_data_output_netlist
 from tests.design_lint_fixtures.mosfet_drain_source_same_net import mosfet_drain_source_netlist
 from tests.design_lint_fixtures.mosfet_gate_direct_drive import netlist as mosfet_gate_drive_netlist
 from tests.design_lint_fixtures.mosfet_terminal_order import mosfet_terminal_order_netlist
@@ -431,6 +432,7 @@ def protocol_peer_candidate_rule_ids() -> set[str]:
         ),
         can_tx_output_netlist(),
         can_rx_output_netlist(),
+        i2s_data_output_netlist(),
         can_netlist("121R").model_copy(
             update={
                 "nets": {

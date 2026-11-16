@@ -8767,6 +8767,50 @@
       "implementation_owner": "kicad_tooling/hwrepo/i2s_clock_data_same_net.py#i2s_clock_data_same_net_candidates"
     },
     {
+      "rule_id": "bus.i2s_data_outputs_share_net",
+      "title": "I2S data-output pins share one schematic net",
+      "status": "active",
+      "maturity": "synthetic_validated",
+      "default_mode": "off",
+      "evidence_adapter": "KiCad 10 native XML netlist normalized by kicad_tooling.validate.read_netlist, retaining complete fitted U/IC pin inventory, I2S bit-clock context, native pin functions, electrical types, fitted state, and exact net assignments",
+      "predicate": "For fitted U/IC endpoints with a complete unique native pin inventory and one unambiguous assigned I2S bit-clock context, recognize bounded serial-data output aliases SDO, SDOUT, DOUT, DATAOUT, SDATAOUT, and DATA_OUT. Emit one REVIEW candidate when at least two distinct fitted references contribute exactly one supported output-capable data-output pin each to the same exact non-return net. Require one native net assignment per output, suppress incomplete or ambiguous I2S context and duplicate output roles per reference, and leave groups with two or more native output pins to ERC.",
+      "supported_kicad_versions": [
+        "Digest-pinned KiCad 10.0.0 and 10.0.5 native fixture exports; the selected project's exact version is checked before export"
+      ],
+      "limitations": [
+        "Only fitted U/IC references with complete unique native pin metadata and a bounded I2S bit-clock context are considered. DNP parts, open or ambiguous assignments, incomplete inventory or pin-type evidence, duplicate output roles per component, return-like nets, and unsupported pin types are skipped.",
+        "Native function text and output-capable pin types do not prove that the pins drive the net in the selected mode. Tri-state audio buses and other multi-device topologies can intentionally share data outputs; the rule defaults to off and asks for explicit project review when enabled.",
+        "Two native output pins remain with ERC. The schematic-net heuristic does not establish bus membership, audio framing, time-slot coordination, firmware state, PCB copper continuity, off-board wiring, electrical approval, or manufacturing readiness."
+      ],
+      "fault_fixtures": [
+        "tests.test_i2s_data_output_sharing.test_multiple_fitted_i2s_data_outputs_form_a_configurable_review_candidate",
+        "tests.test_i2s_data_output_sharing_native_fixture_lane.test_native_i2s_data_output_sharing_fault_and_control_repeat",
+        "tests.test_design_lint_mcp_parity_i2s_clock_data_same_net.test_i2s_data_output_sharing_cli_mcp_parity"
+      ],
+      "valid_control_fixtures": [
+        "tests.test_i2s_data_output_sharing.test_bounded_aliases_and_output_to_input_are_controls",
+        "tests.test_i2s_data_output_sharing.test_dnp_open_ambiguous_incomplete_and_unsupported_groups_are_skipped",
+        "tests.test_i2s_data_output_sharing.test_return_net_and_two_native_outputs_are_left_out",
+        "tests.test_i2s_data_output_sharing_native_fixture_lane.test_native_i2s_data_output_sharing_fault_and_control_repeat"
+      ],
+      "metamorphic_status": "covered",
+      "metamorphic_fixtures": [
+        "tests.test_i2s_data_output_sharing.test_fingerprint_is_order_stable_and_separating_outputs_clears_finding"
+      ],
+      "required_native_fixtures": [
+        "KICAD_RUN_NATIVE_I2S_DATA_OUTPUT_SHARING_FIXTURES"
+      ],
+      "implementation_refs": [
+        "kicad_tooling/hwrepo/i2s_data_output_sharing.py#i2s_data_output_sharing_candidates",
+        "kicad_tooling/hwrepo/i2s_data_output_sharing.py#i2s_data_output_sharing_groups",
+        "kicad_tooling/hwrepo/i2s_endpoint_inventory.py#i2s_data_output_function",
+        "kicad_tooling/hwrepo/signal_pair_output_sharing.py#signal_output_sharing_groups",
+        "kicad_tooling/hwrepo/design_lint_bus_candidates.py#bus_candidates"
+      ],
+      "theme": "interfaces",
+      "implementation_owner": "kicad_tooling/hwrepo/i2s_data_output_sharing.py#i2s_data_output_sharing_candidates"
+    },
+    {
       "rule_id": "bus.i2s_clock_frame_same_net",
       "title": "Native I2S bit clock and word select pins share a net",
       "status": "active",
