@@ -29904,7 +29904,10 @@ acceptance threads while new lint features proceed:
   profiles, Rumdl, mdrepo, module-size preflight, Linux and Windows Pyright,
   wheel/sdist builds, installed-package checks, external-template inventory,
   surface, verification, and adapted-template playtest all passed.
-- **Hosted acceptance:** Pending.
+- **Hosted acceptance:** Tag `v0.5.3rc859` passed GitHub Actions run
+  `43866907696` on commit
+  `55470f1da3430aeefa8126405ba7a252b04b72c9`; the prerelease lint gate passed.
+  Package and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
