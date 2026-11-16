@@ -135,9 +135,12 @@ operation both use this setting through the same service.
 Install the tooling's optional `fabrication_connectivity` dependency extra to
 run the raster analysis. If it is missing, or the source/export uses an
 unsupported format, the result is `UNSUPPORTED`; the release gate does not
-report a clean pass. This initial analyzer supports only a two-layer
-positive-polarity F.Cu/B.Cu stack, absolute coordinates, and the supported
-Gerber, Excellon, and IPC-D-356 subset. Other copper stacks fail closed.
+report a clean pass. The analyzer supports a positive-polarity stack from
+F.Cu through consecutively numbered inner copper layers to B.Cu, with absolute
+coordinates and the supported Gerber, Excellon, and IPC-D-356 subset. Plated
+vias and through-hole pads must span the full copper stack; blind and buried
+vias fail closed. Unsupported layer names, artwork, or via spans also fail
+closed.
 
 `review` (the default) retains findings in the export receipt without blocking
 the export. `block` fails the export when the analyzer reports an open, short,

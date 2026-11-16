@@ -11,6 +11,10 @@ import pytest
 from kicad_tooling.hwrepo import exports, models
 from kicad_tooling.hwrepo.command_evidence_models import CommandEvidence
 from kicad_tooling.hwrepo.evidence import digest
+from kicad_tooling.hwrepo.fabrication_artwork import (
+    UnsupportedFabricationFormat,
+    classify_copper_files,
+)
 from kicad_tooling.hwrepo.fabrication_connectivity import analyze_fabrication_connectivity
 from kicad_tooling.hwrepo.fabrication_connectivity_models import (
     FabricationConnectivityIgnore,
@@ -242,6 +246,7 @@ def test_artifact_connectivity_reports_opens_shorts_and_intentional_isolation(
     assert {item.code for item in report.findings} == expected
     assert not report.unsupported_reasons, report.unsupported_reasons
     assert report.status == status
+    assert report.analyzer_version == "2"
     assert report.board_sha256
     assert "fabrication/board.d356" in report.artifact_sha256
 
@@ -298,8 +303,30 @@ def test_inner_copper_layer_fails_closed_and_exposes_stale_ignores(tmp_path: Pat
     )
 
     assert unsupported.status == "UNSUPPORTED"
-    assert "inner" in unsupported.unsupported_reasons[0]
+    assert "mismatch" in unsupported.unsupported_reasons[0]
     assert stale.status == "UNSUPPORTED"
+
+
+def test_multilayer_gerbers_follow_the_source_stack_and_missing_layers_block(
+    tmp_path: Path,
+) -> None:
+    stack = ("F.Cu", "In1.Cu", "In2.Cu", "B.Cu")
+    paths: list[Path] = []
+    positions = ("Top", "Inr", "Inr", "Bot")
+    for index, (layer, position) in enumerate(zip(stack, positions, strict=True), start=1):
+        path = tmp_path / f"board-{layer.replace('.', '_')}.gbr"
+        path.write_text(
+            f"%TF.FileFunction,Copper,L{index},{position}*%\n"
+            "%FSLAX46Y46*%\n%MOMM*%\n%LPD*%\nM02*\n",
+            encoding="utf-8",
+        )
+        paths.append(path)
+
+    classified = classify_copper_files(tuple(reversed(paths)), stack)
+    assert tuple(layer for _, layer in classified) == stack
+
+    with pytest.raises(UnsupportedFabricationFormat, match="every source copper layer"):
+        classify_copper_files(tuple(paths[:-1]), stack)
 
 
 def test_stale_ignore_on_supported_board_fails_policy(tmp_path: Path) -> None:

@@ -33,6 +33,12 @@ _EXPECTED = {
     "short": ("REVIEW", {"SHORT"}),
     "via": ("PASS", set()),
 }
+_MULTILAYER_EXPECTED = {
+    "four-layer-clean": ("PASS", set()),
+    "four-layer-open": ("REVIEW", {"OPEN"}),
+    "four-layer-short": ("REVIEW", {"SHORT"}),
+    "four-layer-blind-via": ("UNSUPPORTED", set()),
+}
 
 
 def _run(
@@ -147,3 +153,96 @@ def test_native_gerber_ipc356_connectivity_fault_controls_repeat(
                 board, fabrication, FabricationConnectivitySettings()
             )
             assert {item.code for item in missing_drill.findings} == {"NO_DRILL", "OPEN"}
+
+
+@pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
+def test_native_multilayer_inner_copper_connectivity_and_via_boundary_repeat(
+    tmp_path: Path, version: str
+) -> None:
+    image = PINNED_NATIVE_KICAD_IMAGES[version]
+    fixture_directory = tmp_path / "fixtures"
+    fixture_directory.mkdir()
+    outputs = tmp_path / "outputs"
+    outputs.mkdir()
+    layers = "F.Cu,In1.Cu,In2.Cu,B.Cu"
+
+    version_result = execute_kicad_cli(
+        image,
+        ("kicad-cli", "version"),
+        tmp_path,
+        home_directory="fabrication-connectivity-multilayer-version",
+        fixture_directory=fixture_directory,
+        output_directory=outputs,
+    )
+    assert version_result.returncode == 0
+    assert version_result.stdout.strip() == version
+
+    source_dir = _FIXTURES / "multilayer"
+    for name, (expected_status, expected_codes) in _MULTILAYER_EXPECTED.items():
+        board = fixture_directory / f"{name}.kicad_pcb"
+        shutil.copyfile(source_dir / board.name, board)
+        fabrication = outputs / name / "fabrication"
+        fabrication.mkdir(parents=True)
+        _run(
+            image,
+            tmp_path,
+            fixture_directory,
+            fabrication,
+            board,
+            (
+                "pcb",
+                "export",
+                "gerbers",
+                "--layers",
+                layers,
+                "--no-protel-ext",
+                "--check-zones",
+                "--output",
+                str(fabrication),
+            ),
+        )
+        _run(
+            image,
+            tmp_path,
+            fixture_directory,
+            fabrication,
+            board,
+            (
+                "pcb",
+                "export",
+                "drill",
+                "--format",
+                "excellon",
+                "--excellon-separate-th",
+                "--drill-origin",
+                "absolute",
+                "--excellon-units",
+                "mm",
+                "--output",
+                str(fabrication),
+            ),
+        )
+        _run(
+            image,
+            tmp_path,
+            fixture_directory,
+            fabrication,
+            board,
+            ("pcb", "export", "ipcd356", "--output", str(fabrication / "board.d356")),
+        )
+
+        first = analyze_fabrication_connectivity(
+            board, fabrication, FabricationConnectivitySettings()
+        )
+        repeated = analyze_fabrication_connectivity(
+            board, fabrication, FabricationConnectivitySettings()
+        )
+        assert first == repeated
+        assert (first.status, {item.code for item in first.findings}) == (
+            expected_status,
+            expected_codes,
+        )
+        if name == "four-layer-blind-via":
+            assert "full-stack" in " ".join(first.unsupported_reasons)
+        else:
+            assert not first.unsupported_reasons, first.unsupported_reasons

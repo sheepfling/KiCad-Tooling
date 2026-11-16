@@ -28,7 +28,7 @@ class GerberFeature:
 @dataclass(frozen=True)
 class GerberLayer:
     name: str
-    side: Literal["top", "bottom"]
+    layer: str
     features: tuple[GerberFeature, ...]
 
 
@@ -56,14 +56,17 @@ class DrillHit:
 
 
 def classify_copper_files(
-    paths: tuple[Path, ...],
-) -> tuple[tuple[Path, Literal["top", "bottom"]], ...]:
-    """Return exactly one top and bottom copper file; reject inner-layer output."""
-    found: dict[Literal["top", "bottom"], Path] = {}
+    paths: tuple[Path, ...], copper_layers: tuple[str, ...]
+) -> tuple[tuple[Path, str], ...]:
+    """Match every copper Gerber to the source board's ordered copper stack."""
+    if len(copper_layers) < 2:
+        raise UnsupportedFabricationFormat("source board has fewer than two copper layers")
+    expected = {name.casefold(): name for name in copper_layers}
+    found: dict[str, Path] = {}
     for path in paths:
         head = path.read_text(encoding="utf-8", errors="replace")[:4000]
         function = re.search(r"%TF\.FileFunction,([^*]*)\*%", head)
-        side: str | None = None
+        layer_name: str | None = None
         if function:
             fields = [field.strip().casefold() for field in function.group(1).split(",")]
             if fields and fields[0] == "copper":
@@ -75,32 +78,44 @@ def classify_copper_files(
                     ),
                     None,
                 )
-                if "top" in fields and layer_number == 1:
-                    side = "top"
-                elif ("bot" in fields or "bottom" in fields) and layer_number == 2:
-                    side = "bottom"
-                else:
+                if layer_number is None or not 1 <= layer_number <= len(copper_layers):
                     raise UnsupportedFabricationFormat(
-                        f"inner or unknown copper layer in {path.name}"
+                        f"unknown copper layer number in {path.name}"
+                    )
+                layer_name = copper_layers[layer_number - 1]
+                if layer_number == 1 and "top" not in fields:
+                    raise UnsupportedFabricationFormat(
+                        f"top copper function mismatch in {path.name}"
+                    )
+                if layer_number == len(copper_layers) and not ({"bot", "bottom"} & set(fields)):
+                    raise UnsupportedFabricationFormat(
+                        f"bottom copper function mismatch in {path.name}"
+                    )
+                if 1 < layer_number < len(copper_layers) and (
+                    {"top", "bot", "bottom"} & set(fields)
+                ):
+                    raise UnsupportedFabricationFormat(
+                        f"inner copper function mismatch in {path.name}"
                     )
         else:
             name = path.name.casefold()
-            if re.search(r"in\d+[_\.]cu|\.gp?\d+$|\.g\d+$", name):
-                raise UnsupportedFabricationFormat(f"inner copper layer in {path.name}")
-            if re.search(r"(?:^|[-_.])f[_\.]?cu(?:[-_.]|$)", name):
-                side = "top"
-            elif re.search(r"(?:^|[-_.])b[_\.]?cu(?:[-_.]|$)", name):
-                side = "bottom"
-        if side is None:
+            normalized = re.sub(r"[_-]", ".", name)
+            for key, source_name in expected.items():
+                if re.search(rf"(?:^|[._]){re.escape(key)}(?:[._]|$)", normalized):
+                    if layer_name is not None:
+                        raise UnsupportedFabricationFormat(f"ambiguous copper layer in {path.name}")
+                    layer_name = source_name
+        if layer_name is None:
             continue
-        if side in found:
-            raise UnsupportedFabricationFormat(f"multiple {side} copper files")
-        found[side] = path
-    if set(found) != {"top", "bottom"}:
+        key = layer_name.casefold()
+        if key in found:
+            raise UnsupportedFabricationFormat(f"multiple Gerbers for {layer_name}")
+        found[key] = path
+    if set(found) != set(expected):
         raise UnsupportedFabricationFormat(
-            "connectivity v1 requires exactly one top and one bottom copper Gerber"
+            "fabrication connectivity requires one Gerber for every source copper layer"
         )
-    return ((found["top"], "top"), (found["bottom"], "bottom"))
+    return tuple((found[name.casefold()], name) for name in copper_layers)
 
 
 class GerberParser:
@@ -260,12 +275,12 @@ class GerberParser:
             self.x, self.y = nx, ny
 
 
-def parse_gerber(path: Path, side: Literal["top", "bottom"]) -> GerberLayer:
+def parse_gerber(path: Path, layer: str) -> GerberLayer:
     text = path.read_text(encoding="utf-8", errors="replace")
     parser = GerberParser(text, path.name)
-    if side not in {"top", "bottom"}:
-        raise UnsupportedFabricationFormat(f"unknown copper side for {path.name}")
-    return GerberLayer(path.name, side, tuple(parser.features))
+    if not layer.casefold().endswith(".cu"):
+        raise UnsupportedFabricationFormat(f"unknown copper layer for {path.name}")
+    return GerberLayer(path.name, layer, tuple(parser.features))
 
 
 def parse_ipc356(text: str) -> tuple[Contact, ...]:

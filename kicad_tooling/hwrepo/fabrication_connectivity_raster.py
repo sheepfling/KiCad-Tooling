@@ -198,27 +198,31 @@ def analyze_raster(
     plated_drills: tuple[DrillHit, ...],
     density: int,
 ) -> RasterAnalysis:
-    """Return deterministic net-to-island differences for a two-layer board."""
+    """Return deterministic net-to-island differences across copper layers."""
     canvas = _canvas(layers, contacts, plated_drills, density)
     labels: dict[str, np.ndarray] = {}
     base: dict[str, int] = {}
     component_count = 0
     for layer in layers:
-        labels[layer.side], count = _label_components(_render(layer, canvas))
-        base[layer.side] = component_count
+        key = layer.layer.casefold()
+        if key in labels:
+            raise ValueError(f"duplicate raster copper layer {layer.layer}")
+        labels[key], count = _label_components(_render(layer, canvas))
+        base[key] = component_count
         component_count += int(count) + 1
     union = _UnionFind(component_count + 1)
 
-    def node(side: str, x_mm: float, y_mm: float, size_mm: float = 0.0) -> int | None:
-        part = _component_at(labels[side], canvas, x_mm, y_mm, size_mm)
-        return None if part is None else base[side] + part
+    def node(layer: str, x_mm: float, y_mm: float, size_mm: float = 0.0) -> int | None:
+        key = layer.casefold()
+        part = _component_at(labels[key], canvas, x_mm, y_mm, size_mm)
+        return None if part is None else base[key] + part
 
     for hit in plated_drills:
         for x_mm, y_mm in _hit_samples(hit):
             across_layers = [
                 candidate
-                for side in ("top", "bottom")
-                if (candidate := node(side, x_mm, y_mm)) is not None
+                for layer in layers
+                if (candidate := node(layer.layer, x_mm, y_mm)) is not None
             ]
             for candidate in across_layers[1:]:
                 union.union(across_layers[0], candidate)
@@ -227,12 +231,17 @@ def analyze_raster(
     no_copper: list[Contact] = []
     no_drill: list[Contact] = []
     for contact in contacts:
-        sides = ("top", "bottom") if contact.layer == "through" else (contact.layer,)
-        parts = [
+        if contact.layer == "through":
+            contact_layers = tuple(layer.layer for layer in layers)
+        elif contact.layer == "top":
+            contact_layers = (layers[0].layer,)
+        else:
+            contact_layers = (layers[-1].layer,)
+        parts = tuple(
             part
-            for side in sides
-            if (part := node(side, contact.x_mm, contact.y_mm, contact.size_mm)) is not None
-        ]
+            for layer in contact_layers
+            if (part := node(layer, contact.x_mm, contact.y_mm, contact.size_mm)) is not None
+        )
         if not parts:
             no_copper.append(contact)
         assignments.append(PadAssignment(contact, tuple(union.find(part) for part in parts)))

@@ -415,6 +415,14 @@ for dispositions and timing; leave unmeasured values unstated.
   returns should have been common. That remains an authored connector/ground
   contract or separate review-heuristic gap. No external project or
   proprietary board was used.
+- **Multilayer follow-up (2026-11-16):** The first-party analyzer now maps one
+  Gerber to each source copper layer and joins copper islands through plated
+  features only when the board source establishes a full-stack span. Four-layer
+  tooling-owned fault/control boards use an In1.Cu route; the blind-via case
+  remains `UNSUPPORTED` because KiCad's separate Excellon output does not encode
+  the via layer span. Digest-pinned KiCad 10.0.0 and 10.0.5 Docker exports
+  repeated the clean, open, short, and unsupported outcomes. No cohort code or
+  project data was used.
 - **References:** [Candidate README][layout-skill-readme],
   [`gerber_check.py` at the pinned commit][layout-skill-gerber-check], and
   [MIT license][layout-skill-license].

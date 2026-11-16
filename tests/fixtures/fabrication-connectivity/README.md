@@ -1,9 +1,10 @@
 # Exported fabrication connectivity fixtures
 
 These tooling-owned board files are small two-layer inputs for evaluating
-Gerber/Excellon connectivity against KiCad's IPC-D-356 output. They were derived
-from the synthetic `pcb-unassigned-copper-pad/control.kicad_pcb` fixture; no
-customer or product project was used.
+Gerber/Excellon connectivity against KiCad's IPC-D-356 output. The
+`multilayer/` subdirectory contains four-layer fault/control boards with an
+inner-copper route and a blind-via unsupported case. They were derived from
+synthetic tooling fixtures; no customer or product project was used.
 
 | Board                | Expected artifact result         | Controlled change                                                     |
 | -------------------- | -------------------------------- | --------------------------------------------------------------------- |
@@ -30,3 +31,22 @@ SHA-256 of each board source:
 The fixtures exercise artifact connectivity only. They do not encode a product
 pinout, require unrelated nets to be common, or establish manufacturing
 approval.
+
+## Four-layer fixtures
+
+| Board                                       | Expected result  | Controlled case                                                                     |
+| ------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------- |
+| `multilayer/four-layer-clean.kicad_pcb`     | PASS             | Two full-stack through-hole pads connect through an In1.Cu route.                   |
+| `multilayer/four-layer-open.kicad_pcb`      | REVIEW / `OPEN`  | Removes only the In1.Cu route.                                                      |
+| `multilayer/four-layer-short.kicad_pcb`     | REVIEW / `SHORT` | Assigns the second through-hole pad to `RETURN` while retaining the `SIGNAL` route. |
+| `multilayer/four-layer-blind-via.kicad_pcb` | UNSUPPORTED      | Adds a plated via spanning only F.Cu to In1.Cu.                                     |
+
+The native lane exports all four copper layers, drills, and IPC-D-356 twice
+with each digest-pinned KiCad version. Source SHA-256 values:
+
+| Board                                       | SHA-256                                                            |
+| ------------------------------------------- | ------------------------------------------------------------------ |
+| `multilayer/four-layer-clean.kicad_pcb`     | `c1a066ec478600c8fc9031c53e8d7f4a827e11ce770c9d8086917c986d9db719` |
+| `multilayer/four-layer-open.kicad_pcb`      | `6fde51d4e7ac915465987032dadf4d3a174409bd35d5a9d9e2dceacbcc94dc81` |
+| `multilayer/four-layer-short.kicad_pcb`     | `77ae0433992abbe43323e79727b5fc25dc2c1478564d5543c65eaf961c387397` |
+| `multilayer/four-layer-blind-via.kicad_pcb` | `a8ee8f8f89ab06dd2d75b80522e87956d2ceee13a0ca5a264998f5caed1f34ba` |

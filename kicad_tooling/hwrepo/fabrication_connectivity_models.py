@@ -18,7 +18,7 @@ class FabricationConnectivityIgnore(StrictModel):
 
 
 class FabricationConnectivitySettings(StrictModel):
-    """Opt-in policy for comparing two-layer Gerber output with IPC-D-356."""
+    """Opt-in policy for comparing supported Gerber output with IPC-D-356."""
 
     mode: Literal["review", "block"] = "review"
     pixel_density: Literal[25, 50, 100] = 50
@@ -46,7 +46,7 @@ class FabricationConnectivitySummary(StrictModel):
     """Reproducible result whose input files are bound by SHA-256."""
 
     schema_version: Literal["1"] = "1"
-    analyzer_version: Literal["1"] = "1"
+    analyzer_version: Literal["2"] = "2"
     status: Literal["PASS", "REVIEW", "FAIL", "UNSUPPORTED"]
     board_sha256: Digest
     artifact_sha256: Mapping[RepositoryPath, Digest]

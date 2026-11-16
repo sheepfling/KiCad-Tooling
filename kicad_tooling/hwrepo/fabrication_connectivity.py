@@ -25,7 +25,7 @@ from .kicad_sexpr import sexpr_atoms, sexpr_children, sexpr_nodes, sexpr_root
 from .pcb_board_net_inventory import pcb_board_net_names
 
 
-def _require_supported_board(board_text: str, contacts: tuple[Contact, ...]) -> None:
+def _source_copper_layers(board_text: str) -> tuple[str, ...]:
     root = sexpr_root(board_text, "kicad_pcb")
     layers = sexpr_nodes(board_text, root, "layers")
     if len(layers) != 1:
@@ -37,10 +37,53 @@ def _require_supported_board(board_text: str, contacts: tuple[Contact, ...]) -> 
         and atoms[2] == "signal"
         and atoms[1].casefold().endswith(".cu")
     )
-    if copper_layers != ("F.Cu", "B.Cu"):
+    if (
+        len(copper_layers) < 2
+        or copper_layers[0].casefold() != "f.cu"
+        or copper_layers[-1].casefold() != "b.cu"
+        or tuple(layer.casefold() for layer in copper_layers[1:-1])
+        != tuple(f"in{index}.cu" for index in range(1, len(copper_layers) - 1))
+        or len({layer.casefold() for layer in copper_layers}) != len(copper_layers)
+    ):
         raise UnsupportedFabricationFormat(
-            "connectivity v1 requires a source board with only F.Cu and B.Cu"
+            "source board copper stack must run from F.Cu through consecutively numbered inner layers to B.Cu"
         )
+    return copper_layers
+
+
+def _require_full_span_plated_features(board_text: str, copper_layers: tuple[str, ...]) -> None:
+    root = sexpr_root(board_text, "kicad_pcb")
+    outer = (copper_layers[0].casefold(), copper_layers[-1].casefold())
+    for via in sexpr_nodes(board_text, root, "via"):
+        layer_nodes = sexpr_nodes(board_text, via, "layers")
+        if len(layer_nodes) != 1:
+            raise UnsupportedFabricationFormat("plated via has no unique layer span")
+        span = tuple(value.casefold() for value in sexpr_atoms(board_text, layer_nodes[0])[1:])
+        if span != outer:
+            raise UnsupportedFabricationFormat(
+                "fabrication connectivity supports only full-stack plated through vias"
+            )
+    for footprint in sexpr_nodes(board_text, root, "footprint"):
+        for pad in sexpr_nodes(board_text, footprint, "pad"):
+            atoms = sexpr_atoms(board_text, pad)
+            if len(atoms) < 3 or atoms[2] != "thru_hole":
+                continue
+            layer_nodes = sexpr_nodes(board_text, pad, "layers")
+            if len(layer_nodes) != 1:
+                raise UnsupportedFabricationFormat("plated through pad has no unique layer set")
+            pad_layers = {value.casefold() for value in sexpr_atoms(board_text, layer_nodes[0])[1:]}
+            if (
+                "*.cu" not in pad_layers
+                and not {layer.casefold() for layer in copper_layers} <= pad_layers
+            ):
+                raise UnsupportedFabricationFormat(
+                    "fabrication connectivity supports only full-stack plated through pads"
+                )
+
+
+def _require_supported_board(board_text: str, contacts: tuple[Contact, ...]) -> tuple[str, ...]:
+    copper_layers = _source_copper_layers(board_text)
+    _require_full_span_plated_features(board_text, copper_layers)
     net_names = pcb_board_net_names(board_text)
     if net_names is None:
         raise UnsupportedFabricationFormat("board source has an incomplete named-net inventory")
@@ -51,6 +94,7 @@ def _require_supported_board(board_text: str, contacts: tuple[Contact, ...]) -> 
         contact.net not in declared and not contact.net.startswith("N/C:") for contact in contacts
     ):
         raise UnsupportedFabricationFormat("IPC-D-356 net names do not match the board source")
+    return copper_layers
 
 
 def _digest(data: bytes) -> str:
@@ -107,10 +151,10 @@ def analyze_fabrication_connectivity(
     try:
         board_text = board_bytes.decode("utf-8")
         gerber_paths, ipc_path, drill_paths = _source_inputs(fabrication_dir)
-        copper_paths = classify_copper_files(gerber_paths)
-        layers = tuple(parse_gerber(path, side) for path, side in copper_paths)
         contacts = parse_ipc356(ipc_path.read_text(encoding="utf-8", errors="replace"))
-        _require_supported_board(board_text, contacts)
+        copper_layers = _require_supported_board(board_text, contacts)
+        copper_paths = classify_copper_files(gerber_paths, copper_layers)
+        layers = tuple(parse_gerber(path, layer) for path, layer in copper_paths)
         plated: list[DrillHit] = []
         for path in drill_paths:
             if drill_file_is_plated(path):

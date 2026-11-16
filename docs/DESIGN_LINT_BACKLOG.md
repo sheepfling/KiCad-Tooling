@@ -30516,6 +30516,41 @@ acceptance threads while new lint features proceed:
   and playtest passed. Package and preview jobs were skipped under prerelease
   policy.
 
+#### LINT-536 — Extend FA-001 artifact connectivity to full-through multilayer boards
+
+- **Priority:** P1 fabrication-evidence coverage. FA-001 previously rejected
+  every stack with internal copper, so its artifact-level open/short check did
+  not cover common four-layer boards even when all plated features span the
+  full stack.
+- **Change:** Match each exported copper Gerber to the exact ordered source
+  stack, rasterize every layer, and join copper islands only through exported
+  plated drills whose source-board vias and through-hole pads span F.Cu to
+  B.Cu. Add an analyzer-version increment so retained artifact reports identify
+  the expanded behavior.
+- **Boundary:** Positive-polarity F.Cu, consecutively numbered InN.Cu layers,
+  and B.Cu are supported. Blind/buried vias and partial-span plated pads remain
+  `UNSUPPORTED`, because the separate Excellon output does not identify their
+  layer spans. This compares copper artwork with IPC-D-356 net domains; it
+  still cannot infer that separately named connector returns should be common.
+- **Fixtures:** Tooling-owned four-layer boards cover an inner-layer clean
+  route, a removed-route open, a cross-net short, and a blind-via unsupported
+  control. Native KiCad 10.0.0 and 10.0.5 Docker exports repeat all cases.
+  Existing two-layer fault/control fixtures remain in the same acceptance
+  lane. No cohort source, project, or proprietary board was added.
+- **Selection:** Run `tests/test_fabrication_connectivity.py` and
+  `tests/test_fabrication_connectivity_native.py` with
+  `design_lint and evidence_lint and pcb_lint`. Set
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` to execute both native fixture
+  versions.
+- **Local focused acceptance:** Scoped `scripts/ci.py` passed 18 selected tests
+  on 2026-11-16, including four exact Docker-native test cases on KiCad 10.0.0
+  and 10.0.5. Ruff, both Alphus profiles, Rumdl, module-size preflight, Linux
+  and Windows-targeted Pyright, wheel/sdist builds, source-distribution wheel
+  rebuild, and isolated installed-wheel origin/version checks passed. The
+  offline run skipped mdrepo and had no external project checkout; hosted tag
+  acceptance remains responsible for those checks. Logs are in
+  `build/ci/run-rtwc7ffq`.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
