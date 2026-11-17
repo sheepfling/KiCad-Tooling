@@ -30704,6 +30704,50 @@ acceptance threads while new lint features proceed:
   checks, external/adapted project verification, and playtest passed. Package
   and preview jobs were skipped under prerelease policy.
 
+#### LINT-540 — Bind IPC-D-356 VIA contacts to source PCB vias
+
+- **Priority:** P1 fabrication-evidence integrity. The source-bound contact
+  checks validate component pads, but VIA records were omitted from the
+  inventory comparison. A missing, extra, moved, or reassigned exported via
+  could therefore change the contact locations or connectivity evidence used
+  by the raster analysis.
+- **Change:** Match every IPC-D-356 `VIA` record one-to-one to a source PCB via
+  using its named net and drill center, including the format's inverted board
+  Y coordinate. Allow half of the declared coordinate unit plus 1 nm for
+  source-coordinate rounding. Missing, extra, duplicate, wrong-net, displaced,
+  and ambiguous records fail closed before rasterization. Analyzer version
+  advances to `6`.
+- **Boundary:** Source vias must have a named net and the existing adapter
+  continues to require a full-stack plated span. This binds exported contact
+  inventory to source objects; it does not prove copper continuity, drill
+  quality, or whether a via's net assignment expresses correct circuit intent.
+- **Regression coverage:** Tooling-owned synthetic fixtures cover exact
+  inventory, no-via control, missing/extra/duplicate records, wrong net,
+  displaced and rounding-boundary coordinates, ambiguous close source vias,
+  and invalid source net codes. Digest-pinned KiCad 10.0.0 and 10.0.5 Docker
+  exports validate native VIA records and missing/moved/duplicate mutations.
+- **Selection:** Run:
+
+  ```sh
+  python -I -m pytest tests/test_fabrication_contact_geometry.py \
+    tests/test_fabrication_contact_inventory.py \
+    tests/test_fabrication_via_binding.py \
+    tests/test_fabrication_connectivity.py \
+    -m 'design_lint and evidence_lint and pcb_lint'
+  ```
+
+  Exact-version native coverage is in
+  `tests/test_fabrication_via_binding_native.py` and
+  `tests/test_fabrication_connectivity_native.py` with
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
+- **Local scoped acceptance:** Passed on 2026-11-16 in
+  `build/ci/run-5dljxata`: 56 selected tests, including exact KiCad 10.0.0 and
+  10.0.5 Docker cases. Ruff, both Alphus checks, Rumdl, mdrepo, module-size
+  preflight, Linux and Windows-targeted Pyright, wheel/sdist builds,
+  source-distribution wheel rebuild, and isolated installed-wheel origin and
+  version checks passed. No external project checkout was supplied.
+- **Hosted scoped acceptance:** Pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

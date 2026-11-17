@@ -16,8 +16,6 @@ from .kicad_sexpr import (
 )
 from .pcb_footprint_reference_inventory import pcb_footprint_reference
 
-_NM_PER_MM = 1_000_000
-
 
 @dataclass(frozen=True, slots=True)
 class SourceComponentPad:
@@ -92,8 +90,8 @@ def _placement(document: str, footprint: SExprSpan, reference: str) -> tuple[flo
                 f"source footprint {reference} is not placed on a board copper side"
             )
         return (
-            _mm_to_nm(values[0]),
-            _mm_to_nm(values[1]),
+            millimeters_to_nanometers(values[0]),
+            millimeters_to_nanometers(values[1]),
             _finite_number(values[2]) if len(values) == 3 else 0.0,
         )
     except ValueError as exc:
@@ -108,7 +106,7 @@ def _pad_offset(document: str, pad: SExprSpan, reference: str, number: str) -> t
         if len(values) not in {2, 3}:
             raise ValueError("malformed pad position")
         _finite_number(values[2]) if len(values) == 3 else 0.0
-        return _mm_to_nm(values[0]), _mm_to_nm(values[1])
+        return millimeters_to_nanometers(values[0]), millimeters_to_nanometers(values[1])
     except ValueError as exc:
         raise ValueError(f"malformed pad position for {reference}.{number}") from exc
 
@@ -152,8 +150,9 @@ def _finite_number(value: str) -> float:
     return number
 
 
-def _mm_to_nm(value: str) -> float:
-    result = _finite_number(value) * _NM_PER_MM
+def millimeters_to_nanometers(value: str) -> float:
+    """Convert millimeters to nanometers while preserving source precision."""
+    result = _finite_number(value) * 1_000_000
     if not math.isfinite(result):
         raise ValueError("coordinate outside supported numeric range")
     return result

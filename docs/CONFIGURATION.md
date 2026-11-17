@@ -156,8 +156,15 @@ must be within half of its declared coordinate unit, plus 1 nm for source
 coordinate rounding. For example, CUST 0 permits up to 0.001271 mm per axis;
 SI/CUST 1 permits up to 0.000501 mm. A contact with no unique matching source
 center or a larger coordinate error is `UNSUPPORTED` before rasterization.
-This center check does not compare pad shapes, rotations, or copper coverage;
-the raster analysis remains a separate check.
+IPC-D-356 `VIA` records are also matched one-to-one with full-stack source PCB
+vias by named net and drill center, accounting for the format's inverted board
+Y coordinate. Center tolerance is half the record's declared coordinate unit
+plus 1 nm. Missing, extra, duplicated, displaced, wrong-net, or ambiguous VIA
+records are `UNSUPPORTED` before rasterization. This confirms that the exported
+contact inventory corresponds to the source via inventory; it does not prove
+copper continuity, drill quality, or the electrical purpose of a via.
+The pad-center check does not compare pad shapes, rotations, or copper
+coverage; the raster analysis remains a separate check.
 
 `review` (the default) retains findings in the export receipt without blocking
 the export. `block` fails the export when the analyzer reports an open, short,

@@ -5,6 +5,7 @@ from types import MappingProxyType
 PYTEST_NATIVE_LINT_SUITES = MappingProxyType(
     {
         "test_fabrication_connectivity_native.py": frozenset({"evidence_lint", "pcb_lint"}),
+        "test_fabrication_via_binding_native.py": frozenset({"evidence_lint", "pcb_lint"}),
         "test_electrical_test_access_evidence.py": frozenset({"evidence_lint", "pcb_lint"}),
         "test_pcb_reference_plane_native_fixture_lane.py": frozenset(
             {"pcb_lint", "return_path_lint"}

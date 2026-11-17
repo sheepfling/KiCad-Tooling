@@ -36,6 +36,8 @@ _OWNERS = (
     "fabrication_connectivity_models.py",
     "fabrication_connectivity.py",
     "fabrication_connectivity_raster.py",
+    "fabrication_via_binding.py",
+    "pcb_board_net_inventory.py",
 )
 
 
@@ -256,7 +258,7 @@ def test_artifact_connectivity_reports_opens_shorts_and_intentional_isolation(
     assert {item.code for item in report.findings} == expected
     assert not report.unsupported_reasons, report.unsupported_reasons
     assert report.status == status
-    assert report.analyzer_version == "5"
+    assert report.analyzer_version == "6"
     assert report.board_sha256
     assert "fabrication/board.d356" in report.artifact_sha256
 
@@ -420,3 +422,21 @@ def test_fabrication_modules_remain_theme_owned_and_bounded() -> None:
         assert "models" not in {
             node.module for node in ast.walk(ast.parse(source)) if isinstance(node, ast.ImportFrom)
         }
+
+
+def test_ipc356_via_without_source_board_via_fails_before_rasterization(
+    tmp_path: Path,
+) -> None:
+    board, fabrication = _export(tmp_path)
+    ipc = fabrication / "board.d356"
+    ipc.write_text(
+        ipc.read_text(encoding="utf-8").replace(
+            "999\n", _record("317", "SIGNAL", "VIA", "", 0, 5.0) + "\n999\n"
+        ),
+        encoding="utf-8",
+    )
+
+    result = analyze_fabrication_connectivity(board, fabrication, FabricationConnectivitySettings())
+
+    assert result.status == "UNSUPPORTED"
+    assert "VIA contact count differs from source PCB vias" in result.unsupported_reasons[0]

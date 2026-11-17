@@ -5,15 +5,15 @@ from __future__ import annotations
 from .kicad_sexpr import sexpr_atoms, sexpr_children, sexpr_root
 
 
-def pcb_board_net_names(document: str) -> tuple[str, ...] | None:
-    """Return unique top-level named nets, or ``None`` for incomplete inventory."""
+def pcb_board_net_map(document: str) -> tuple[tuple[int, str], ...] | None:
+    """Return the unique top-level net-code table, or ``None`` if incomplete."""
     try:
         root = sexpr_root(document, "kicad_pcb")
         children = sexpr_children(document, root.start + 1, root.end - 1)
     except ValueError:
         return None
 
-    names: list[str] = []
+    nets: list[tuple[int, str]] = []
     seen_codes: set[int] = set()
     seen_names: set[str] = set()
     found_net_record = False
@@ -33,11 +33,20 @@ def pcb_board_net_names(document: str) -> tuple[str, ...] | None:
             return None
         seen_codes.add(code)
         if code == 0 and name == "":
+            nets.append((code, name))
             continue
         if code == 0 or not name or name in seen_names:
             return None
         seen_names.add(name)
-        names.append(name)
+        nets.append((code, name))
     if not found_net_record:
         return None
-    return tuple(sorted(names))
+    return tuple(sorted(nets))
+
+
+def pcb_board_net_names(document: str) -> tuple[str, ...] | None:
+    """Return unique top-level named nets, or ``None`` for incomplete inventory."""
+    net_map = pcb_board_net_map(document)
+    if net_map is None:
+        return None
+    return tuple(sorted(name for code, name in net_map if code > 0))
