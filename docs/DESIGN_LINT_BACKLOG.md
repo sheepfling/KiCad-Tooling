@@ -19885,9 +19885,11 @@ and IPC-D-356 export. Project settings select `review` or `block`, raster
 density, and exact reasoned finding ignores; the receipt binds source,
 configuration, and per-run artifact hashes. Unsupported source stacks or
 artwork fail closed. The intentionally narrow subset does not support blind or
-buried vias, negative polarity, step-and-repeat, or unresolved gaps below the
-configured raster resolution. A `review` result records findings without
-blocking release; `block` turns findings into a gate failure.
+buried vias, negative polarity, step-and-repeat, non-circular drilled pads, or
+unresolved gaps below the configured raster resolution. Source PCB vias and
+circular plated/non-plated component-pad drills are bound to their matching
+Excellon outputs before rasterization. A `review` result records findings
+without blocking release; `block` turns findings into a gate failure.
 
 The digest-pinned KiCad 10.0.0 and 10.0.5 Docker acceptance fixtures produced
 the expected clean and intentionally isolated passes, disconnected same-net
@@ -30839,6 +30841,43 @@ acceptance threads while new lint features proceed:
   ```sh
   .venv/bin/python -I -m pytest \
     tests/test_fabrication_via_binding.py \
+    tests/test_fabrication_via_drill_binding.py \
+    tests/test_fabrication_connectivity.py \
+    tests/test_fabrication_connectivity_native.py \
+    -m 'design_lint and evidence_lint and pcb_lint'
+  ```
+
+  Exact-version native coverage uses `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
+
+#### LINT-543 — Bind drilled component pads to plated and non-plated Excellon
+
+- **Priority:** P1 fabrication-evidence integrity. FA-001 bound via hits to
+  source PCB vias, but a missing or altered through-hole connector pad drill
+  could still appear present in the drill artifact.
+- **Change:** Reuse source pad identity and transformed centers, then match
+  each supported circular `thru_hole` or `np_thru_hole` pad to an independent
+  hit in the correspondingly plated or non-plated Excellon output. Matching
+  uses the center and diameter tolerances declared by exported coordinate and
+  tool precision. Missing, displaced, wrong-size, wrong-plating, and reused
+  hits fail closed before rasterization. The report analyzer version advances
+  to `9`.
+- **Boundary:** This checks exported circular drill evidence for numbered
+  footprint pads. Oval/slot holes, drill offsets, anonymous pads, extra
+  artifact hits, mechanical fabrication quality, and the electrical intent of
+  the pad remain outside this check. KiCad DRC and project-authored drill
+  requirements retain their separate roles.
+- **Regression coverage:** Synthetic controls bind a rotated footprint's
+  plated and non-plated pad holes; faults cover missing, displaced,
+  wrong-size, wrong-plating, and one-hit-for-two-source-holes cases. Oval
+  source drills fail closed. The native fixture exports both plating classes
+  with pinned KiCad 10.0.0 and 10.0.5, then verifies repeatable missing-hit
+  failures.
+- **Selection:** Run:
+
+  ```sh
+  .venv/bin/python -I -m pytest \
+    tests/test_fabrication_pad_drill_binding.py \
+    tests/test_fabrication_pad_drill_binding_native.py \
     tests/test_fabrication_via_drill_binding.py \
     tests/test_fabrication_connectivity.py \
     tests/test_fabrication_connectivity_native.py \

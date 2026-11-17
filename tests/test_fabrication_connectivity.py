@@ -42,6 +42,7 @@ _OWNERS = (
     "fabrication_connectivity_models.py",
     "fabrication_connectivity.py",
     "fabrication_connectivity_raster.py",
+    "fabrication_pad_drill_binding.py",
     "fabrication_via_binding.py",
     "fabrication_via_drill_binding.py",
     "pcb_board_net_inventory.py",
@@ -185,7 +186,7 @@ def test_artifact_connectivity_reports_opens_shorts_and_intentional_isolation(
     assert {item.code for item in report.findings} == expected
     assert not report.unsupported_reasons, report.unsupported_reasons
     assert report.status == status
-    assert report.analyzer_version == "8"
+    assert report.analyzer_version == "9"
     assert report.board_sha256
     assert "fabrication/board.d356" in report.artifact_sha256
 

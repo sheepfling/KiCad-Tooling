@@ -22,6 +22,10 @@ from kicad_tooling.hwrepo.fabrication_contact_inventory import (
 )
 from kicad_tooling.hwrepo.fabrication_contact_layers import require_ipc356_source_pad_layers
 from kicad_tooling.hwrepo.fabrication_contact_source import source_component_pads
+from tests.fabrication_connectivity_native_support import (
+    export_fabrication_outputs,
+    run_kicad_cli,
+)
 from tests.native_kicad_support import execute_kicad_cli
 from tests.synthetic_design_lint_project import PINNED_NATIVE_KICAD_IMAGES
 
@@ -51,26 +55,6 @@ _MULTILAYER_EXPECTED = {
     "four-layer-short": ("REVIEW", {"SHORT"}),
     "four-layer-blind-via": ("UNSUPPORTED", set()),
 }
-
-
-def _run(
-    image: str,
-    work: Path,
-    fixture_directory: Path,
-    output_directory: Path,
-    board: Path,
-    arguments: tuple[str, ...],
-) -> None:
-    command = execute_kicad_cli(
-        image,
-        ("kicad-cli", *arguments, str(board)),
-        work,
-        home_directory="fabrication-connectivity-native",
-        fixture_directory=fixture_directory,
-        output_directory=output_directory,
-    )
-    assert command.returncode == 0, command.stderr
-    assert command.error is None
 
 
 def _copy_contact_position(line: str, source_line: str) -> str:
@@ -113,7 +97,7 @@ def _native_rotated_contact_controls(
         board.write_text(board_text, encoding="utf-8")
         fabrication = outputs / f"rotated-{side}" / "fabrication"
         fabrication.mkdir(parents=True)
-        _run(
+        run_kicad_cli(
             image,
             tmp_path,
             fixture_directory,
@@ -165,52 +149,8 @@ def test_native_gerber_ipc356_connectivity_fault_controls_repeat(
         shutil.copyfile(_FIXTURES / board.name, board)
         fabrication = outputs / name / "fabrication"
         fabrication.mkdir(parents=True)
-        _run(
-            image,
-            tmp_path,
-            fixture_directory,
-            fabrication,
-            board,
-            (
-                "pcb",
-                "export",
-                "gerbers",
-                "--layers",
-                "F.Cu,B.Cu",
-                "--no-protel-ext",
-                "--check-zones",
-                "--output",
-                str(fabrication),
-            ),
-        )
-        _run(
-            image,
-            tmp_path,
-            fixture_directory,
-            fabrication,
-            board,
-            (
-                "pcb",
-                "export",
-                "drill",
-                "--format",
-                "excellon",
-                "--excellon-separate-th",
-                "--drill-origin",
-                "absolute",
-                "--excellon-units",
-                "mm",
-                "--output",
-                str(fabrication),
-            ),
-        )
-        _run(
-            image,
-            tmp_path,
-            fixture_directory,
-            fabrication,
-            board,
-            ("pcb", "export", "ipcd356", "--output", str(fabrication / "board.d356")),
+        export_fabrication_outputs(
+            image, tmp_path, fixture_directory, fabrication, board, ("F.Cu", "B.Cu")
         )
 
         first = analyze_fabrication_connectivity(
@@ -324,8 +264,6 @@ def test_native_multilayer_inner_copper_connectivity_and_via_boundary_repeat(
     fixture_directory.mkdir()
     outputs = tmp_path / "outputs"
     outputs.mkdir()
-    layers = "F.Cu,In1.Cu,In2.Cu,B.Cu"
-
     version_result = execute_kicad_cli(
         image,
         ("kicad-cli", "version"),
@@ -343,52 +281,13 @@ def test_native_multilayer_inner_copper_connectivity_and_via_boundary_repeat(
         shutil.copyfile(source_dir / board.name, board)
         fabrication = outputs / name / "fabrication"
         fabrication.mkdir(parents=True)
-        _run(
+        export_fabrication_outputs(
             image,
             tmp_path,
             fixture_directory,
             fabrication,
             board,
-            (
-                "pcb",
-                "export",
-                "gerbers",
-                "--layers",
-                layers,
-                "--no-protel-ext",
-                "--check-zones",
-                "--output",
-                str(fabrication),
-            ),
-        )
-        _run(
-            image,
-            tmp_path,
-            fixture_directory,
-            fabrication,
-            board,
-            (
-                "pcb",
-                "export",
-                "drill",
-                "--format",
-                "excellon",
-                "--excellon-separate-th",
-                "--drill-origin",
-                "absolute",
-                "--excellon-units",
-                "mm",
-                "--output",
-                str(fabrication),
-            ),
-        )
-        _run(
-            image,
-            tmp_path,
-            fixture_directory,
-            fabrication,
-            board,
-            ("pcb", "export", "ipcd356", "--output", str(fabrication / "board.d356")),
+            ("F.Cu", "In1.Cu", "In2.Cu", "B.Cu"),
         )
 
         first = analyze_fabrication_connectivity(

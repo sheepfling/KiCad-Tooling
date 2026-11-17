@@ -4,6 +4,8 @@ PCB_EVIDENCE_LINT_TEST_MODULES = frozenset(
     {
         "tests/test_fabrication_connectivity.py",
         "tests/test_fabrication_connectivity_native.py",
+        "tests/test_fabrication_pad_drill_binding.py",
+        "tests/test_fabrication_pad_drill_binding_native.py",
         "tests/test_fabrication_via_drill_binding.py",
         "tests/test_fabrication_via_binding.py",
         "tests/test_fabrication_via_binding_native.py",
@@ -23,6 +25,8 @@ PCB_LINT_TEST_MODULES = frozenset(
     {
         "tests/test_fabrication_connectivity.py",
         "tests/test_fabrication_connectivity_native.py",
+        "tests/test_fabrication_pad_drill_binding.py",
+        "tests/test_fabrication_pad_drill_binding_native.py",
         "tests/test_fabrication_via_drill_binding.py",
         "tests/test_fabrication_via_binding.py",
         "tests/test_fabrication_via_binding_native.py",

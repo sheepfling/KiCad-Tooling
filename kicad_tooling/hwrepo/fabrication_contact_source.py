@@ -20,7 +20,7 @@ from .pcb_footprint_reference_inventory import pcb_footprint_reference
 
 @dataclass(frozen=True, slots=True)
 class SourceComponentPad:
-    """One source footprint pad, contact layer, and center in nanometers."""
+    """One source footprint pad and its board-space contact and drill geometry."""
 
     reference: str
     number: str
@@ -28,6 +28,9 @@ class SourceComponentPad:
     contact_layer: Literal["top", "bottom", "through"] | None
     x_nm: int
     y_nm: int
+    drill_nm: int | None = None
+    drill_plating: Literal["plated", "nonplated"] | None = None
+    drill_shape: Literal["circular", "unsupported"] | None = None
 
 
 def source_component_pads(board_text: str) -> tuple[SourceComponentPad, ...]:
@@ -74,8 +77,19 @@ def source_component_pads(board_text: str) -> tuple[SourceComponentPad, ...]:
                 local = _pad_offset(board_text, pad, reference, number)
                 x_nm = round(placement[0] + local[0] * cosine + local[1] * sine)
                 y_nm = round(placement[1] - local[0] * sine + local[1] * cosine)
+                drill_nm, drill_plating, drill_shape = _pad_drill(board_text, pad, atoms[2])
                 result.append(
-                    SourceComponentPad(reference, number, net_name, contact_layer, x_nm, y_nm)
+                    SourceComponentPad(
+                        reference,
+                        number,
+                        net_name,
+                        contact_layer,
+                        x_nm,
+                        y_nm,
+                        drill_nm,
+                        drill_plating,
+                        drill_shape,
+                    )
                 )
         return tuple(result)
     except UnsupportedFabricationFormat:
@@ -169,6 +183,28 @@ def _pad_contact_layer(document: str, pad: SExprSpan) -> Literal["top", "bottom"
     ):
         return None
     return "top" if "f.cu" in outer_copper else "bottom"
+
+
+def _pad_drill(
+    document: str, pad: SExprSpan, pad_type: str
+) -> tuple[
+    int | None, Literal["plated", "nonplated"] | None, Literal["circular", "unsupported"] | None
+]:
+    drill_nodes = sexpr_nodes(document, pad, "drill")
+    if pad_type not in {"thru_hole", "np_thru_hole"}:
+        if drill_nodes:
+            raise UnsupportedFabricationFormat("non-through-hole source pad declares a drill")
+        return None, None, None
+    plating: Literal["plated", "nonplated"] = "plated" if pad_type == "thru_hole" else "nonplated"
+    if len(drill_nodes) != 1:
+        raise UnsupportedFabricationFormat("source drilled pad has no unique drill definition")
+    values = sexpr_field(document, pad, "drill")
+    if len(values) != 1:
+        return None, plating, "unsupported"
+    drill_nm = round(millimeters_to_nanometers(values[0]))
+    if drill_nm <= 0:
+        raise UnsupportedFabricationFormat("source drilled pad has a non-positive drill size")
+    return drill_nm, plating, "circular"
 
 
 def _finite_number(value: str) -> float:

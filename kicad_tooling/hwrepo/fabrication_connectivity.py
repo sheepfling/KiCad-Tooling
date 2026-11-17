@@ -25,6 +25,7 @@ from .fabrication_contact_inventory import require_ipc356_source_pad_inventory
 from .fabrication_contact_layers import require_ipc356_source_pad_layers
 from .fabrication_contact_source import source_component_pads
 from .fabrication_excellon import DrillHit, parse_excellon
+from .fabrication_pad_drill_binding import require_excellon_source_pad_drills
 from .fabrication_via_binding import (
     require_ipc356_source_via_inventory,
     source_board_vias,
@@ -203,11 +204,15 @@ def analyze_fabrication_connectivity(
         copper_paths = classify_copper_files(gerber_paths, copper_layers)
         layers = tuple(parse_gerber(path, layer) for path, layer in copper_paths)
         plated: list[DrillHit] = []
+        nonplated: list[DrillHit] = []
         for path in drill_paths:
             if drill_file_is_plated(path):
                 _require_full_stack_drill_file(path, drill_file_function(path), copper_layers)
                 plated.extend(parse_excellon(path.read_text(encoding="utf-8", errors="replace")))
+            else:
+                nonplated.extend(parse_excellon(path.read_text(encoding="utf-8", errors="replace")))
         require_excellon_source_via_drills(source_vias, tuple(plated))
+        require_excellon_source_pad_drills(source_pads, tuple(plated), tuple(nonplated))
         try:
             from .fabrication_connectivity_raster import analyze_raster
         except ImportError as exc:
