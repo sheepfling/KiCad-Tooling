@@ -31710,7 +31710,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-560 — Validate standard Gerber aperture parameters before rasterization
 
-- **Status:** Implemented; scoped and hosted acceptance in progress.
+- **Status:** Complete; hosted acceptance passed.
 - **Priority:** P1 fabrication-evidence integrity. The bounded parser accepted
   rectangles and obrounds with only one dimension, which the raster treated as
   square, and accepted regular-polygon vertex counts that were fractional,
@@ -31754,7 +31754,13 @@ acceptance threads while new lint features proceed:
   wheel and sdist builds, installed-wheel identity, and separate-project
   verification. Ruff, formatting, Rumdl, and mdrepo checks passed. Retained
   logs are under `build/ci/run-brh1yg26/`.
-- **Hosted acceptance:** Pending.
+- **Hosted acceptance:** Tag `v0.5.3rc895` passed [GitHub Actions
+  run 44103368617](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44103368617)
+  at code commit `a7736f38ba065fd805b1bd03ca67673eff6d42fe`: 195 selected tests,
+  including all 12 exact-version native fabrication cases, Pyright and
+  Windows-targeted Pyright, wheel/sdist/sdist-wheel builds, and installed-wheel
+  external-project checks. Package and preview jobs were skipped under
+  prerelease policy.
 
 ## Completion and release gate
 
