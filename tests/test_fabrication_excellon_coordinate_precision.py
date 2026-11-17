@@ -51,6 +51,13 @@ def _hit(coordinates: str, tool_diameter: str = "0.300") -> DrillHit:
     return hit
 
 
+def _routed_slot_hit(start: str, end: str) -> DrillHit:
+    (hit,) = parse_excellon(
+        f"M48\n; FILE_FORMAT=3:0\nMETRIC,LZ\nT1C0.600\n%\nT1\nG00{start}\nM15\nG01{end}\nM16\nM30\n"
+    )
+    return hit
+
+
 @pytest.mark.parametrize(
     ("coordinates", "source_x_nm", "source_y_nm"),
     (
@@ -115,6 +122,84 @@ def test_slot_geometry_uses_per_axis_coordinate_precision(
     hit = _hit(coordinates, "0.600")
     source_pad = _source_oval_pad(width_nm, height_nm)
 
+    if reject:
+        with pytest.raises(UnsupportedFabricationFormat, match="slot geometry"):
+            require_excellon_source_drills((source_pad,), (), (hit,), ())
+    else:
+        assert require_excellon_source_drills((source_pad,), (), (hit,), ()) == ()
+
+
+@pytest.mark.parametrize(
+    (
+        "start",
+        "end",
+        "width_nm",
+        "height_nm",
+        "reject",
+        "x_resolution_nm",
+        "y_resolution_nm",
+    ),
+    (
+        (
+            "X10Y-19.950",
+            "X10.4Y-20.050",
+            1_000_000,
+            600_000,
+            True,
+            1_000_000,
+            1_000,
+        ),
+        (
+            "X10Y-20.000",
+            "X10.4Y-20.000",
+            1_000_000,
+            600_000,
+            False,
+            1_000_000,
+            1_000,
+        ),
+        (
+            "X9.950Y-20",
+            "X10.050Y-20.4",
+            600_000,
+            1_000_000,
+            True,
+            1_000,
+            1_000_000,
+        ),
+        (
+            "X10.000Y-20",
+            "X10.000Y-20.4",
+            600_000,
+            1_000_000,
+            False,
+            1_000,
+            1_000_000,
+        ),
+    ),
+    ids=(
+        "coarse-x-must-not-widen-precise-y-routed-slot",
+        "coarse-x-routed-slot-control",
+        "coarse-y-must-not-widen-precise-x-routed-slot",
+        "coarse-y-routed-slot-control",
+    ),
+)
+def test_routed_slot_geometry_uses_per_axis_coordinate_precision(
+    start: str,
+    end: str,
+    width_nm: int,
+    height_nm: int,
+    reject: bool,
+    x_resolution_nm: int,
+    y_resolution_nm: int,
+) -> None:
+    hit = _routed_slot_hit(start, end)
+    source_pad = _source_oval_pad(width_nm, height_nm)
+
+    assert (hit.x_coordinate_resolution_nm, hit.y_coordinate_resolution_nm) == (
+        x_resolution_nm,
+        y_resolution_nm,
+    )
     if reject:
         with pytest.raises(UnsupportedFabricationFormat, match="slot geometry"):
             require_excellon_source_drills((source_pad,), (), (hit,), ())

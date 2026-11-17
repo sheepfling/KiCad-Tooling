@@ -31454,6 +31454,29 @@ acceptance threads while new lint features proceed:
   installed-wheel external-project playtest. Package and preview jobs were
   skipped under prerelease policy.
 
+#### LINT-555 — Cover per-axis precision in G01-routed Excellon slots
+
+- **Priority:** P1 fabrication-evidence regression coverage. LINT-554 covers
+  circular hits and G85 slots, but Excellon also supports M15/G01 routed slots
+  through a separate parser path that tracks each endpoint's precision.
+- **Change:** Add mirrored synthetic fault/control cases for coarse X with
+  precise Y and coarse Y with precise X. Assert parser-recorded per-axis
+  precision as well as slot binding. No analyzer behavior changes; analyzer
+  version remains `19`.
+- **Boundary:** These cases verify the supported parser and source-board
+  comparison on synthetic data. They do not establish exporter frequency,
+  manufacturing tolerances, or physical slot quality.
+- **Selection:** Run
+  `tests/test_fabrication_excellon_coordinate_precision.py` with
+  `design_lint and evidence_lint and pcb_lint`; the tag-scoped evidence lane
+  also retains the exact-version native fabrication fixtures.
+- **Local validation:** The scoped evidence selection passed 125 tests with 12
+  native skips. The digest-pinned Docker lane passed all 137 selected tests,
+  including the 12 native cases on KiCad 10.0.0 and 10.0.5. PCB architecture,
+  pytest marker, theme-suite, and collection checks passed 29 tests. Ruff,
+  formatting, Rumdl, mdrepo, and the tag-scope resolver passed.
+- **Hosted acceptance:** Pending annotated prerelease tag.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
