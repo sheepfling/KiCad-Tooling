@@ -872,7 +872,14 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc887):** LINT-552
+- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc888):** LINT-553
+  rejects Excellon coordinates outside KiCad's signed nanometer range. The
+  final tag-scoped selection passed 125 tests, including 12 exact-version
+  native cases on KiCad 10.0.0 and 10.0.5. Hosted acceptance passed in GitHub
+  Actions run `44053230309`, including the installed-wheel rehearsal against a
+  separate project checkout and its playtest. Package and preview jobs were
+  skipped under prerelease policy.
+- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc887):** LINT-552
   bounds Excellon tool diameters to KiCad's signed nanometer range and rejects
   values that round to zero. The final tag-scoped selection passed 102 tests
   with 12 native skips; exact-version Docker coverage passed 12 tests on KiCad
@@ -880,7 +887,7 @@ standalone parity work when it closes a demonstrated feature regression.
   `44047274485`, including dependency installation and the external-project
   wheel rehearsal. Package and preview jobs were skipped under prerelease
   policy.
-- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc886):** LINT-551
+- **Earlier hosted-accepted lint-gate checkpoint (v0.5.3rc886):** LINT-551
   rejects malformed and unrepresentable Excellon tool tokens. The final local
   tag-scoped selection passed 94 tests with 12 native skips; exact-version
   Docker coverage passed 12 tests on KiCad 10.0.0 and 10.0.5. Hosted
@@ -31387,7 +31394,14 @@ acceptance threads while new lint features proceed:
   KiCad 10.0.0 and 10.0.5. The local installed-wheel stage could not resolve
   `pydantic==2.13.5` because sandbox DNS could not resolve `pypi.org`; hosted
   acceptance is pending.
-- **Hosted acceptance:** Pending annotated prerelease tag.
+- **Hosted acceptance:** GitHub Actions run `44053230309` passed for tag
+  `v0.5.3rc888` at code commit
+  `c691407610e9617cb9c8494c4c1382b1e00f1ad2`. The annotated scope selected
+  `design_lint and evidence_lint`; all 125 selected tests passed, including
+  the native artifact cases. Formatting, Ruff, both Alphus profiles, Rumdl,
+  mdrepo, module-size checks, Linux and Windows-target Pyright, wheel/sdist
+  builds, installed-wheel checks, and the external-project playtest passed.
+  Package and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
