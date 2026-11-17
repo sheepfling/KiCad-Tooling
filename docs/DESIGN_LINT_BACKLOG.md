@@ -31750,8 +31750,10 @@ acceptance threads while new lint features proceed:
   fabrication-area synthetic selection passed 211 tests, and the exact-version
   KiCad 10.0.0 and 10.0.5 native fabrication selection passed 12 tests.
   Marker, theme-suite, and collection architecture checks passed 17 tests.
-  Ruff, formatting, Rumdl, and mdrepo checks passed. Full tag-scoped CI is
-  pending.
+  Full tag-scoped CI passed 195 tests, Pyright and Windows-targeted Pyright,
+  wheel and sdist builds, installed-wheel identity, and separate-project
+  verification. Ruff, formatting, Rumdl, and mdrepo checks passed. Retained
+  logs are under `build/ci/run-brh1yg26/`.
 - **Hosted acceptance:** Pending.
 
 ## Completion and release gate
