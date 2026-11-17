@@ -31034,6 +31034,43 @@ acceptance threads while new lint features proceed:
   `tests/test_fabrication_cross_kind_drill_native.py` with
   `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` and the `native_kicad` marker.
 
+#### LINT-547 — Review Excellon hits without a source pad or via
+
+- **Priority:** P2 fabrication-artifact review. Once each drilled component pad
+  and via owns a distinct Excellon record, leftover records currently have no
+  report. They may be stale or misclassified output, or intentional holes that
+  are not represented by the analyzer's pad/via inventory.
+- **Change:** Emit a deterministic `UNBOUND_DRILL_HIT` finding for remaining
+  plated and non-plated hits. Report board-coordinate geometry, plating,
+  diameter, slot endpoints, and the multiplicity of identical hits. Use the
+  existing project `fabrication_connectivity.mode` (`review` or `block`) and
+  exact finding-fingerprint ignore lifecycle.
+- **Policy boundary:** The default is `REVIEW`; an extra artifact hit is a
+  review clue, not proof of a defect. It may represent a legitimate standalone
+  mechanical feature. Projects can block the finding or ignore its exact stable
+  fingerprint with a reason. A stale ignore remains a failure. This check does
+  not inventory mechanical source features or establish drill fabrication
+  quality.
+- **Regression coverage:** Synthetic controls cover plated holes, non-plated
+  slots, deterministic geometry, duplicate-hit multiplicity, `review` and
+  `block` policy, exact ignores, and stale-ignore failure. Native KiCad 10.0.0
+  and 10.0.5 exports retain their valid source-bound holes and report a
+  deliberately added artifact-only hit.
+- **Analyzer version:** `12`, because summaries now include the new finding
+  class and structured drill evidence.
+- **Selection:** Run
+
+  ```sh
+  .venv/bin/python -I -m pytest \
+    tests/test_fabrication_unbound_drill_hits.py \
+    tests/test_fabrication_cross_kind_drill_binding.py \
+    -m 'design_lint and evidence_lint and pcb_lint'
+  ```
+
+  Exact-version native coverage is in
+  `tests/test_fabrication_cross_kind_drill_native.py` with
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` and the `native_kicad` marker.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

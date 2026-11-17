@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 
 from .model_primitives import Digest, NonEmptyText, RepositoryPath, StrictModel
 
@@ -32,21 +32,38 @@ class FabricationConnectivitySettings(StrictModel):
         return self
 
 
+class FabricationConnectivityDrillEvidence(StrictModel):
+    """Physical geometry for an Excellon hit with no source pad/via owner."""
+
+    plating: Literal["plated", "nonplated"]
+    start_mm: tuple[float, float]
+    end_mm: tuple[float, float] | None = None
+    diameter_mm: float
+    multiplicity: Annotated[int, Field(ge=1)]
+
+
 class FabricationConnectivityFinding(StrictModel):
     """A source- and artifact-local connectivity observation."""
 
-    code: Literal["OPEN", "SHORT", "NO_COPPER", "NO_DRILL"]
+    code: Literal["OPEN", "SHORT", "NO_COPPER", "NO_DRILL", "UNBOUND_DRILL_HIT"]
     fingerprint: Digest
     net: NonEmptyText | None = None
     contacts: tuple[NonEmptyText, ...] = ()
     location_mm: tuple[float, float] | None = None
+    drill_evidence: FabricationConnectivityDrillEvidence | None = None
+
+    @model_validator(mode="after")
+    def drill_evidence_matches_code(self) -> FabricationConnectivityFinding:
+        if (self.code == "UNBOUND_DRILL_HIT") != (self.drill_evidence is not None):
+            raise ValueError("unbound drill findings require exactly one drill evidence record")
+        return self
 
 
 class FabricationConnectivitySummary(StrictModel):
     """Reproducible result whose input files are bound by SHA-256."""
 
     schema_version: Literal["1"] = "1"
-    analyzer_version: Literal["11"] = "11"
+    analyzer_version: Literal["12"] = "12"
     status: Literal["PASS", "REVIEW", "FAIL", "UNSUPPORTED"]
     board_sha256: Digest
     artifact_sha256: Mapping[RepositoryPath, Digest]

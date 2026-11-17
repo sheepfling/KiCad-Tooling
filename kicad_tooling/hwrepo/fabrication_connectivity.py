@@ -16,6 +16,7 @@ from .fabrication_artwork import (
     parse_ipc356,
 )
 from .fabrication_connectivity_models import (
+    FabricationConnectivityDrillEvidence,
     FabricationConnectivityFinding,
     FabricationConnectivitySettings,
     FabricationConnectivitySummary,
@@ -24,7 +25,7 @@ from .fabrication_contact_geometry import require_ipc356_source_pad_coordinates
 from .fabrication_contact_inventory import require_ipc356_source_pad_inventory
 from .fabrication_contact_layers import require_ipc356_source_pad_layers
 from .fabrication_contact_source import source_component_pads
-from .fabrication_drill_binding import require_excellon_source_drills
+from .fabrication_drill_binding import UnboundDrillHit, require_excellon_source_drills
 from .fabrication_excellon import DrillHit, parse_excellon
 from .fabrication_via_binding import (
     require_ipc356_source_via_inventory,
@@ -142,14 +143,22 @@ def _digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def _fingerprint(code: str, net: str | None, contacts: tuple[str, ...]) -> str:
-    payload = json.dumps(
-        {"code": code, "net": net, "contacts": sorted(contacts)},
+def _fingerprint(
+    code: str,
+    net: str | None,
+    contacts: tuple[str, ...],
+    drill_evidence: FabricationConnectivityDrillEvidence | None = None,
+) -> str:
+    payload: dict[str, object] = {"code": code, "net": net, "contacts": sorted(contacts)}
+    if drill_evidence is not None:
+        payload["drill_evidence"] = drill_evidence.model_dump(mode="json")
+    encoded = json.dumps(
+        payload,
         ensure_ascii=True,
         sort_keys=True,
         separators=(",", ":"),
     ).encode("ascii")
-    return hashlib.sha256(payload).hexdigest()
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def _finding(
@@ -157,15 +166,69 @@ def _finding(
     contact_labels: tuple[str, ...],
     net: str | None = None,
     location: tuple[float, float] | None = None,
+    drill_evidence: FabricationConnectivityDrillEvidence | None = None,
 ) -> FabricationConnectivityFinding:
     contacts = tuple(sorted(contact_labels))
     return FabricationConnectivityFinding(
         code=code,  # type: ignore[arg-type]
-        fingerprint=_fingerprint(code, net, contacts),
+        fingerprint=_fingerprint(code, net, contacts, drill_evidence),
         net=net,
         contacts=contacts,
         location_mm=location,
+        drill_evidence=drill_evidence,
     )
+
+
+def _unbound_drill_findings(
+    hits: tuple[UnboundDrillHit, ...],
+) -> tuple[FabricationConnectivityFinding, ...]:
+    """Group identical artifact-only hits and give them stable physical fingerprints."""
+    grouped: dict[tuple[str, int, int, int, bool, int, int], int] = {}
+    for item in hits:
+        hit = item.hit
+        start_x_nm = round(hit.x_mm * 1_000_000)
+        start_y_nm = round(-hit.y_mm * 1_000_000)
+        end_x_nm = end_y_nm = 0
+        has_end = hit.end_mm is not None
+        if hit.end_mm is not None:
+            end_x_nm = round(hit.end_mm[0] * 1_000_000)
+            end_y_nm = round(-hit.end_mm[1] * 1_000_000)
+            if (end_x_nm, end_y_nm) < (start_x_nm, start_y_nm):
+                start_x_nm, start_y_nm, end_x_nm, end_y_nm = (
+                    end_x_nm,
+                    end_y_nm,
+                    start_x_nm,
+                    start_y_nm,
+                )
+        key = (
+            item.plating,
+            start_x_nm,
+            start_y_nm,
+            round(hit.diameter_mm * 1_000_000),
+            has_end,
+            end_x_nm,
+            end_y_nm,
+        )
+        grouped[key] = grouped.get(key, 0) + 1
+
+    findings: list[FabricationConnectivityFinding] = []
+    for key, multiplicity in sorted(grouped.items()):
+        plating, start_x_nm, start_y_nm, diameter_nm, has_end, end_x_nm, end_y_nm = key
+        start = (start_x_nm / 1_000_000, start_y_nm / 1_000_000)
+        end = (end_x_nm / 1_000_000, end_y_nm / 1_000_000) if has_end else None
+        evidence = FabricationConnectivityDrillEvidence(
+            plating=plating,  # type: ignore[arg-type]
+            start_mm=start,
+            end_mm=end,
+            diameter_mm=diameter_nm / 1_000_000,
+            multiplicity=multiplicity,
+        )
+        center = (
+            (start[0] + (end[0] if end is not None else start[0])) / 2,
+            (start[1] + (end[1] if end is not None else start[1])) / 2,
+        )
+        findings.append(_finding("UNBOUND_DRILL_HIT", (), location=center, drill_evidence=evidence))
+    return tuple(findings)
 
 
 def _source_inputs(fabrication_dir: Path) -> tuple[tuple[Path, ...], Path, tuple[Path, ...]]:
@@ -210,12 +273,13 @@ def analyze_fabrication_connectivity(
                 plated.extend(parse_excellon(path.read_text(encoding="utf-8", errors="replace")))
             else:
                 nonplated.extend(parse_excellon(path.read_text(encoding="utf-8", errors="replace")))
-        require_excellon_source_drills(
+        unbound_drills = require_excellon_source_drills(
             source_pads,
             source_vias,
             tuple(plated),
             tuple(nonplated),
         )
+        findings.extend(_unbound_drill_findings(unbound_drills))
         try:
             from .fabrication_connectivity_raster import analyze_raster
         except ImportError as exc:

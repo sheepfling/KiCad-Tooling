@@ -78,6 +78,19 @@ def test_native_pad_and_coincident_via_require_distinct_pth_hits(
 
     hit_lines = [line for line in source.splitlines() if line.startswith("X")]
     assert len(hit_lines) == 2
+    pth.write_text(source.rstrip() + "\n" + hit_lines[0] + "\n", encoding="utf-8")
+    extra_hit = analyze_fabrication_connectivity(board, fabrication, settings)
+    repeated_extra_hit = analyze_fabrication_connectivity(board, fabrication, settings)
+    assert extra_hit == repeated_extra_hit
+    assert extra_hit.status == "REVIEW"
+    (unbound,) = tuple(
+        finding for finding in extra_hit.findings if finding.code == "UNBOUND_DRILL_HIT"
+    )
+    assert unbound.drill_evidence is not None
+    assert unbound.drill_evidence.plating == "plated"
+    assert unbound.drill_evidence.multiplicity == 1
+
+    pth.write_text(source, encoding="utf-8")
     missing_copy = False
     retained_lines: list[str] = []
     for line in source.splitlines():

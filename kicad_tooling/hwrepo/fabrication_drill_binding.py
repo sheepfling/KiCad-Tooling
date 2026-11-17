@@ -28,6 +28,14 @@ class SourceDrillRequirement:
     height_nm: int
 
 
+@dataclass(frozen=True, slots=True)
+class UnboundDrillHit:
+    """One exported drill hit not owned by a source pad or via."""
+
+    plating: Literal["plated", "nonplated"]
+    hit: DrillHit
+
+
 def source_drill_requirements(
     source_pads: tuple[SourceComponentPad, ...],
     source_vias: tuple[SourceVia, ...],
@@ -94,24 +102,32 @@ def require_excellon_source_drills(
     source_vias: tuple[SourceVia, ...],
     plated_drills: tuple[DrillHit, ...],
     nonplated_drills: tuple[DrillHit, ...],
-) -> None:
-    """Require a unique artifact hit for every source pad and via drill."""
+) -> tuple[UnboundDrillHit, ...]:
+    """Require unique source-hit ownership and return artifact-only drill hits."""
     requirements = source_drill_requirements(source_pads, source_vias)
-    for plating, hits in (
+    unmatched: list[UnboundDrillHit] = []
+    drill_sets: tuple[tuple[Literal["plated", "nonplated"], tuple[DrillHit, ...]], ...] = (
         ("plated", plated_drills),
         ("nonplated", nonplated_drills),
-    ):
+    )
+    for plating, hits in drill_sets:
         scoped = tuple(item for item in requirements if item.plating == plating)
-        _require_unique_hit_assignment(scoped, hits, plating)
+        assigned = _require_unique_hit_assignment(scoped, hits, plating)
+        unmatched.extend(
+            UnboundDrillHit(plating=plating, hit=hit)
+            for index, hit in enumerate(hits)
+            if index not in assigned
+        )
+    return tuple(unmatched)
 
 
 def _require_unique_hit_assignment(
     requirements: tuple[SourceDrillRequirement, ...],
     hits: tuple[DrillHit, ...],
     plating: str,
-) -> None:
+) -> frozenset[int]:
     if not requirements:
-        return
+        return frozenset()
 
     candidates_by_requirement: list[tuple[int, ...]] = []
     for requirement in requirements:
@@ -151,6 +167,7 @@ def _require_unique_hit_assignment(
             "Excellon drill hits cannot uniquely bind all source PCB pads and vias; "
             f"no independent hit remains for {requirement.source_identity}"
         )
+    return frozenset(owners_by_hit)
 
 
 def _center_matches(requirement: SourceDrillRequirement, hit: DrillHit) -> bool:
