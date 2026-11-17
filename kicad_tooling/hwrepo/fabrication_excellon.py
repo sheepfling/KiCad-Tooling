@@ -28,7 +28,8 @@ _TOOL_DEFINITION_RE = re.compile(
 )
 _TOOL_SELECTION_RE = re.compile(r"T([0-9]+)")
 _MAX_KICAD_TOOL_ID = 0x7FFFFFFF - 10
-_MAX_KICAD_DIAMETER_NM = 0x7FFFFFFF
+_KICAD_NANOMETER_INT_MAX = 0x7FFFFFFF
+_KICAD_NANOMETER_INT_MIN = -0x80000000
 
 
 def _coordinate_fields(raw: str) -> dict[str, str]:
@@ -123,9 +124,17 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
             raise UnsupportedFabricationFormat("Excellon coordinate is non-finite")
         if any(digit in "123456789" for digit in raw) and value == 0.0:
             raise UnsupportedFabricationFormat("Excellon coordinate underflows its unit conversion")
-        if not math.isfinite(value * 1_000_000):
+        coordinate_nm = value * 1_000_000
+        if not math.isfinite(coordinate_nm):
             raise UnsupportedFabricationFormat(
                 "Excellon coordinate exceeds the finite nanometer range"
+            )
+        if (
+            coordinate_nm >= _KICAD_NANOMETER_INT_MAX + 0.5
+            or coordinate_nm <= _KICAD_NANOMETER_INT_MIN - 0.5
+        ):
+            raise UnsupportedFabricationFormat(
+                "Excellon coordinate exceeds KiCad's signed nanometer range"
             )
         return value
 
@@ -171,7 +180,7 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
                 raise UnsupportedFabricationFormat(
                     f"Excellon tool T{tool_id} diameter rounds to zero at KiCad's nanometer resolution"
                 )
-            if diameter_nm >= _MAX_KICAD_DIAMETER_NM + 0.5:
+            if diameter_nm >= _KICAD_NANOMETER_INT_MAX + 0.5:
                 raise UnsupportedFabricationFormat(
                     f"Excellon tool T{tool_id} diameter exceeds KiCad's signed nanometer range"
                 )

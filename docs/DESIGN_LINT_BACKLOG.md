@@ -31350,6 +31350,45 @@ acceptance threads while new lint features proceed:
   installation and the external-project wheel rehearsal. Package and preview
   jobs were skipped under prerelease policy.
 
+#### LINT-553 — Reject Excellon coordinates outside KiCad's signed nanometer range
+
+- **Priority:** P1 fabrication-evidence integrity. The parser already rejected
+  non-finite coordinates, but finite values beyond KiCad's signed internal
+  range could still become an `UNBOUND_DRILL_HIT` `REVIEW` at the supported
+  25 px/mm setting. This retained a precise-looking location for an artifact
+  coordinate KiCad cannot represent.
+- **Change:** Convert each metric or inch coordinate to nanometers and reject
+  values that make KiCad's signed `int` rounding overflow before source drill
+  binding and rasterization. The rule applies to X and Y fields, including slot
+  endpoints.
+- **Boundary:** KiCad converts Excellon coordinates through `scaletoIU` or its
+  fixed-format path and `KiROUND` into signed internal integer units. The
+  accepted rounding interval is below `INT_MAX + 0.5` and above
+  `INT_MIN - 0.5`; the half-unit overflow boundaries are unsupported
+  ([KiCad coordinate conversion], [KiCad rounding]). This is representability
+  checking only. It does not validate a coordinate's relationship to the
+  physical board, drill table, supplier process, or manufacturing intent.
+- **Regression coverage:** Tooling-owned synthetic artifacts cover upper and
+  lower overflow on both axes, inch-to-millimeter overflow, exact signed
+  limits, values within the half-unit rounding margins, and an end-to-end
+  low-density case that previously returned `REVIEW` for an unrepresentable
+  location. No board source or project fixture is used.
+- **Analyzer version:** `18`, because coordinates previously kept as precise
+  floating-point values now return `UNSUPPORTED` when KiCad's native integer
+  conversion reports overflow.
+- **Selection:** `evidence_lint` and `pcb_lint` select the dedicated coordinate
+  range module. The exact-version artifact lane continues to use
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY` with KiCad 10.0.0 and 10.0.5.
+- **Local validation:** Annotated-scope-equivalent CI passed formatting, Ruff,
+  both Alphus profiles, Rumdl, mdrepo, module-size checks, 113 selected tests
+  with 12 exact-native skips, Linux and Windows-target Pyright, and wheel/sdist
+  builds. PCB architecture, pytest-marker, collection, and theme checks passed
+  29 tests. The exact-version Docker artifact selection passed 12 tests across
+  KiCad 10.0.0 and 10.0.5. The local installed-wheel stage could not resolve
+  `pydantic==2.13.5` because sandbox DNS could not resolve `pypi.org`; hosted
+  acceptance is pending.
+- **Hosted acceptance:** Pending annotated prerelease tag.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -31378,6 +31417,7 @@ quality, or first-article continuity.
 [Excellon reader]: https://docs.kicad.org/doxygen/excellon__read__drill__file_8cpp_source.html#l983
 [Excellon tool sizing]: https://docs.kicad.org/doxygen/excellon__read__drill__file_8cpp_source.html#l1627
 [KiCad rounding]: https://docs.kicad.org/doxygen/util_8h_source.html#l169
+[KiCad coordinate conversion]: https://docs.kicad.org/doxygen/rs274__read__XY__and__IJ__coordinates_8cpp_source.html#l106
 [kicad-device-library]: https://kicad.github.io/symbols/Device.html
 [kicad-thermistor-symbol-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Device.kicad_symdir/Thermistor.kicad_sym>
 [kicad-thermistor-ntc-symbol-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Device.kicad_symdir/Thermistor_NTC.kicad_sym>
