@@ -30799,6 +30799,14 @@ acceptance threads while new lint features proceed:
   checks passed, as did inventory and surface parity against a tooling-owned
   synthetic external project. A separate public template checkout is left to
   hosted CI.
+- **Hosted scoped acceptance:** Tag `v0.5.3rc876` passed GitHub Actions run
+  `43993752591`: 69 selected tests passed, including digest-pinned KiCad
+  10.0.0 and 10.0.5 Docker fixtures. Ruff, both Alphus profiles, Rumdl, mdrepo,
+  module-size preflight, Linux and Windows-targeted Pyright, wheel/sdist builds,
+  source-distribution wheel rebuild, installed-wheel origin and version checks,
+  external template inventory and surface checks, adapted-project verification,
+  and playtest all passed. Package and preview jobs were skipped under the
+  prerelease policy.
 
 ## Completion and release gate
 
