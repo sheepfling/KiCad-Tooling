@@ -31799,7 +31799,11 @@ acceptance threads while new lint features proceed:
   with `design_lint`, `evidence_lint`, and `pcb_lint`. The tag-scoped native
   fabrication lane remains `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
 - **Local validation (2026-11-17):** The focused coordinate-format suite passed
-  21 tests. Full fabrication-area and package checks are pending.
+  21 tests. Full tag-scoped CI passed 216 tests, including all 12 exact-version
+  KiCad 10.0.0/10.0.5 native cases. Ruff, formatting, both Alphus profiles,
+  module-size preflight, Rumdl, mdrepo, Pyright and Windows-targeted Pyright,
+  wheel/sdist/sdist-wheel builds, installed-origin, and separate-project
+  verification passed. Retained logs are under `build/ci/run-c9n4ykkh/`.
 - **Hosted acceptance:** Pending.
 
 ## Completion and release gate
