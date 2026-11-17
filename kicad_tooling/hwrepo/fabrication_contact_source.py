@@ -1,9 +1,10 @@
-"""Source component-pad identities, net assignments, and transformed centers."""
+"""Source pad identity, copper access, net assignment, and transformed center extraction."""
 
 from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import Literal
 
 from .fabrication_artwork import UnsupportedFabricationFormat
 from .kicad_sexpr import (
@@ -19,11 +20,12 @@ from .pcb_footprint_reference_inventory import pcb_footprint_reference
 
 @dataclass(frozen=True, slots=True)
 class SourceComponentPad:
-    """One source footprint pad and its board-space center in nanometers."""
+    """One source footprint pad, contact layer, and center in nanometers."""
 
     reference: str
     number: str
     net_name: str | None
+    contact_layer: Literal["top", "bottom", "through"] | None
     x_nm: int
     y_nm: int
 
@@ -68,10 +70,13 @@ def source_component_pads(board_text: str) -> tuple[SourceComponentPad, ...]:
                         f"source board assigns duplicate pad identity {reference}.{number} to different nets"
                     )
                 assignments[key] = net_name
+                contact_layer = _pad_contact_layer(board_text, pad)
                 local = _pad_offset(board_text, pad, reference, number)
                 x_nm = round(placement[0] + local[0] * cosine + local[1] * sine)
                 y_nm = round(placement[1] - local[0] * sine + local[1] * cosine)
-                result.append(SourceComponentPad(reference, number, net_name, x_nm, y_nm))
+                result.append(
+                    SourceComponentPad(reference, number, net_name, contact_layer, x_nm, y_nm)
+                )
         return tuple(result)
     except UnsupportedFabricationFormat:
         raise
@@ -141,6 +146,29 @@ def _pad_net_name(document: str, pad: SExprSpan, reference: str, number: str) ->
             f"source board has an unnamed net for {reference}.{number}"
         )
     return atoms[2]
+
+
+def _pad_contact_layer(document: str, pad: SExprSpan) -> Literal["top", "bottom", "through"] | None:
+    """Return the outer copper access for supported source pad types."""
+    atoms = sexpr_atoms(document, pad)
+    if len(atoms) < 3:
+        return None
+    if atoms[2] == "thru_hole":
+        return "through"
+    if atoms[2] != "smd":
+        return None
+    layer_nodes = sexpr_nodes(document, pad, "layers")
+    if len(layer_nodes) != 1:
+        return None
+    layers = {value.casefold() for value in sexpr_atoms(document, layer_nodes[0])[1:]}
+    if "*.cu" in layers:
+        return None
+    outer_copper = layers & {"f.cu", "b.cu"}
+    if len(outer_copper) != 1 or any(
+        layer.endswith(".cu") and layer not in outer_copper for layer in layers
+    ):
+        return None
+    return "top" if "f.cu" in outer_copper else "bottom"
 
 
 def _finite_number(value: str) -> float:

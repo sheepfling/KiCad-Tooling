@@ -30754,6 +30754,52 @@ acceptance threads while new lint features proceed:
   External/adapted project verification and playtest passed. Package and preview
   jobs were skipped under prerelease policy.
 
+#### LINT-541 — Bind IPC-D-356 contact layers to source PCB pads
+
+- **Priority:** P1 fabrication-evidence integrity. The raster analyzer selects
+  copper layers from the IPC-D-356 contact classification. Source identity,
+  net, and center checks did not confirm that a contact's top, bottom, or
+  through classification agreed with the PCB pad that produced it.
+- **Change:** Bind each component contact's parsed layer classification to its
+  source pad. Full-stack `thru_hole` pads require `through`; `smd` pads require
+  the sole declared outer copper side. Unsupported or ambiguous source pad
+  definitions fail closed when they have an exported contact. Analyzer version
+  advances to `7`.
+- **Boundary:** This validates a fabrication record against source pad type
+  and declared copper layers. It does not compare pad geometry, establish
+  physical copper continuity, validate electrical intent, or approve
+  fabrication. Ambiguous multilayer SMD definitions are unsupported.
+- **Regression coverage:** Synthetic fixtures exercise top, bottom, and
+  through controls; all mismatched access classes; ambiguous dual-sided SMD;
+  unmatched IPC contacts; and VIA exclusion from component-pad matching. The
+  analyzer integration rejects a mutated top contact before rasterization.
+  Digest-pinned KiCad 10.0.0 and 10.0.5 exports verify rotated top and bottom
+  SMD records, reject a mutated IPC access class, and retain full-stack
+  through-hole fixture coverage.
+- **Selection:** Run:
+
+  ```sh
+  python -I -m pytest tests/test_fabrication_contact_geometry.py \
+    tests/test_fabrication_contact_inventory.py \
+    tests/test_fabrication_contact_layers.py \
+    tests/test_fabrication_connectivity.py \
+    -m 'design_lint and evidence_lint and pcb_lint'
+  ```
+
+  Exact-version native coverage is in
+  `tests/test_fabrication_connectivity_native.py` with
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
+- **Local scoped acceptance:** The final focused source-bound suites passed 63
+  tests; theme and marker architecture checks passed 10 tests; digest-pinned
+  native suites passed 6 tests across KiCad 10.0.0 and 10.0.5. Ruff, both
+  Alphus profiles, Rumdl, mdrepo, module-size preflight, Linux and
+  Windows-targeted Pyright, wheel and sdist builds, and sdist-to-wheel rebuild
+  passed. The fresh-environment install first hit blocked DNS, then succeeded
+  with network authorization. Installed origin, version, CLI and MCP entrypoint
+  checks passed, as did inventory and surface parity against a tooling-owned
+  synthetic external project. A separate public template checkout is left to
+  hosted CI.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

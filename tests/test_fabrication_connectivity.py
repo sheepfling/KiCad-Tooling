@@ -32,6 +32,7 @@ _OWNERS = (
     "fabrication_artwork.py",
     "fabrication_contact_geometry.py",
     "fabrication_contact_inventory.py",
+    "fabrication_contact_layers.py",
     "fabrication_contact_source.py",
     "fabrication_connectivity_models.py",
     "fabrication_connectivity.py",
@@ -258,7 +259,7 @@ def test_artifact_connectivity_reports_opens_shorts_and_intentional_isolation(
     assert {item.code for item in report.findings} == expected
     assert not report.unsupported_reasons, report.unsupported_reasons
     assert report.status == status
-    assert report.analyzer_version == "6"
+    assert report.analyzer_version == "7"
     assert report.board_sha256
     assert "fabrication/board.d356" in report.artifact_sha256
 
@@ -440,3 +441,31 @@ def test_ipc356_via_without_source_board_via_fails_before_rasterization(
 
     assert result.status == "UNSUPPORTED"
     assert "VIA contact count differs from source PCB vias" in result.unsupported_reasons[0]
+
+
+@pytest.mark.parametrize(
+    ("mismatch", "expected_reason"),
+    (
+        ("artifact", "layer classification differs from source PCB pad"),
+        ("ambiguous-source", "unsupported or ambiguous copper-layer classification"),
+    ),
+)
+def test_ipc356_contact_layer_mismatch_fails_before_rasterization(
+    tmp_path: Path, mismatch: str, expected_reason: str
+) -> None:
+    board, fabrication = _export(tmp_path)
+    if mismatch == "artifact":
+        ipc = fabrication / "board.d356"
+        ipc.write_text(ipc.read_text(encoding="utf-8").replace("327", "317"), encoding="utf-8")
+    else:
+        board.write_text(
+            board.read_text(encoding="utf-8").replace(
+                '"F.Cu" "F.Mask"', '"F.Cu" "B.Cu" "F.Mask" "B.Mask"'
+            ),
+            encoding="utf-8",
+        )
+
+    result = analyze_fabrication_connectivity(board, fabrication, FabricationConnectivitySettings())
+
+    assert result.status == "UNSUPPORTED"
+    assert expected_reason in result.unsupported_reasons[0]

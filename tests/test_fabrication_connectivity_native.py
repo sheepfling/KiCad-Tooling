@@ -8,7 +8,10 @@ from pathlib import Path
 
 import pytest
 
-from kicad_tooling.hwrepo.fabrication_artwork import parse_ipc356
+from kicad_tooling.hwrepo.fabrication_artwork import (
+    UnsupportedFabricationFormat,
+    parse_ipc356,
+)
 from kicad_tooling.hwrepo.fabrication_connectivity import analyze_fabrication_connectivity
 from kicad_tooling.hwrepo.fabrication_connectivity_models import FabricationConnectivitySettings
 from kicad_tooling.hwrepo.fabrication_contact_geometry import (
@@ -17,6 +20,7 @@ from kicad_tooling.hwrepo.fabrication_contact_geometry import (
 from kicad_tooling.hwrepo.fabrication_contact_inventory import (
     require_ipc356_source_pad_inventory,
 )
+from kicad_tooling.hwrepo.fabrication_contact_layers import require_ipc356_source_pad_layers
 from kicad_tooling.hwrepo.fabrication_contact_source import source_component_pads
 from tests.native_kicad_support import execute_kicad_cli
 from tests.synthetic_design_lint_project import PINNED_NATIVE_KICAD_IMAGES
@@ -121,6 +125,15 @@ def _native_rotated_contact_controls(
         source_pads = source_component_pads(board_text)
         require_ipc356_source_pad_inventory(source_pads, contacts)
         require_ipc356_source_pad_coordinates(source_pads, contacts)
+        require_ipc356_source_pad_layers(source_pads, contacts)
+        if side == "top":
+            ipc_lines = (fabrication / "board.d356").read_text(encoding="utf-8").splitlines()
+            wrong_layer = "\n".join(
+                "317" + line[3:] if line.startswith("327") and line[27:31].strip() == "1" else line
+                for line in ipc_lines
+            )
+            with pytest.raises(UnsupportedFabricationFormat, match="layer classification differs"):
+                require_ipc356_source_pad_layers(source_pads, parse_ipc356(wrong_layer))
         coordinates = {contact.pin: (contact.x_mm, contact.y_mm) for contact in contacts}
         assert set(coordinates) == {"1", "2"}
         assert coordinates["1"] == pytest.approx((10.0, -10.0), abs=0.00003)
