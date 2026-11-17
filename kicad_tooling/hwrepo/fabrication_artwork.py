@@ -143,7 +143,31 @@ class GerberParser:
         return value * self.scale
 
     def _parse(self, text: str) -> None:
-        for match in re.finditer(r"%([^%]*)%|([^%*]*)\*", text):
+        tokens = tuple(re.finditer(r"%([^%]*)%|([^%*]*)\*", text))
+        end_markers: list[int] = [
+            index
+            for index, match in enumerate(tokens)
+            if match.group(1) is None and match.group(2).strip() == "M02"
+        ]
+        if not end_markers:
+            raise UnsupportedFabricationFormat(
+                f"Gerber is missing terminal M02 end-of-file marker in {self.name}"
+            )
+        if len(end_markers) > 1:
+            raise UnsupportedFabricationFormat(
+                f"Gerber has multiple M02 end-of-file markers in {self.name}"
+            )
+        marker = tokens[end_markers[0]]
+        if end_markers[0] != len(tokens) - 1:
+            raise UnsupportedFabricationFormat(
+                f"Gerber contains a command after M02 end-of-file marker in {self.name}"
+            )
+        if text[marker.end() :].strip():
+            raise UnsupportedFabricationFormat(
+                f"Gerber contains data after the M02 end-of-file marker in {self.name}"
+            )
+
+        for match in tokens:
             parameter, command = match.groups()
             if parameter is not None:
                 self._parameter(parameter.strip().rstrip("*"))

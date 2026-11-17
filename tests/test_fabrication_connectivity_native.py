@@ -152,6 +152,8 @@ def test_native_gerber_ipc356_connectivity_fault_controls_repeat(
         export_fabrication_outputs(
             image, tmp_path, fixture_directory, fabrication, board, ("F.Cu", "B.Cu")
         )
+        for gerber in fabrication.glob("*.gbr"):
+            assert gerber.read_text(encoding="utf-8").rstrip().endswith("M02*")
 
         first = analyze_fabrication_connectivity(
             board, fabrication, FabricationConnectivitySettings()

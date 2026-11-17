@@ -64,7 +64,7 @@ def test_malformed_or_unselectable_tool_token_is_unsupported(
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "20"
+    assert result.analyzer_version == "21"
     assert result.status == "UNSUPPORTED"
     assert reason in result.unsupported_reasons[0]
     assert result.findings == ()
@@ -94,7 +94,7 @@ def test_kicad_tool_syntax_and_t0_terminator_remain_reviewable(
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "20"
+    assert result.analyzer_version == "21"
     assert result.status == "REVIEW"
     (finding,) = result.findings
     assert finding.code == "UNBOUND_DRILL_HIT"
