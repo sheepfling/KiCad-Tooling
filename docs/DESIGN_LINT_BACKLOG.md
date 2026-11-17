@@ -872,7 +872,16 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc889):** LINT-554
+- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc890):** LINT-555
+  extends per-axis Excellon precision regression coverage to M15/G01 routed
+  slots, whose endpoint precision is tracked through a separate parser path.
+  The final tag-scoped selection passed 137 tests, including 12 exact-version
+  native cases on KiCad 10.0.0 and 10.0.5. Hosted acceptance passed in GitHub
+  Actions run `44064859555`: Pyright, wheel/sdist/sdist-wheel builds, and the
+  installed-wheel external-project inventory, surface, verification, and
+  playtest passed. Package and preview jobs were skipped under prerelease
+  policy.
+- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc889):** LINT-554
   prevents coarse precision on one Excellon axis from widening the other
   axis's tolerance for drill centers or routed-slot geometry. The final
   tag-scoped selection passed 133 tests, including 12 exact-version native
@@ -880,7 +889,7 @@ standalone parity work when it closes a demonstrated feature regression.
   run `44060309837`: dependency installation, Pyright, wheel and sdist builds,
   and the installed-wheel external-project playtest passed. Package and preview
   jobs were skipped under prerelease policy.
-- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc888):** LINT-553
+- **Earlier hosted-accepted lint-gate checkpoint (v0.5.3rc888):** LINT-553
   rejects Excellon coordinates outside KiCad's signed nanometer range. The
   final tag-scoped selection passed 125 tests, including 12 exact-version
   native cases on KiCad 10.0.0 and 10.0.5. Hosted acceptance passed in GitHub
@@ -31475,7 +31484,11 @@ acceptance threads while new lint features proceed:
   including the 12 native cases on KiCad 10.0.0 and 10.0.5. PCB architecture,
   pytest marker, theme-suite, and collection checks passed 29 tests. Ruff,
   formatting, Rumdl, mdrepo, and the tag-scope resolver passed.
-- **Hosted acceptance:** Pending annotated prerelease tag.
+- **Hosted acceptance:** Annotated tag `v0.5.3rc890` passed GitHub Actions run
+  `44064859555`: 137 scoped tests, Pyright, wheel/sdist/sdist-wheel builds, and
+  the installed-wheel external-project inventory, surface, verification, and
+  playtest all passed. Package and preview jobs were skipped under prerelease
+  policy.
 
 ## Completion and release gate
 
