@@ -208,6 +208,8 @@ def _pad_drill(
     plating: Literal["plated", "nonplated"] = "plated" if pad_type == "thru_hole" else "nonplated"
     if len(drill_nodes) != 1:
         raise UnsupportedFabricationFormat("source drilled pad has no unique drill definition")
+    # KiCad stores copper pad-shape offset metadata inside the drill node.
+    # It does not change the hole center exported to Excellon.
     values = sexpr_field(document, pad, "drill")
     if len(values) == 1:
         drill_nm = round(millimeters_to_nanometers(values[0]))

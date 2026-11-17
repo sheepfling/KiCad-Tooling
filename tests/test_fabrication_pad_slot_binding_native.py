@@ -30,11 +30,11 @@ _BOARD = Path(__file__).parent / "fixtures/fabrication-connectivity/drilled-pads
 
 
 @pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))
-def test_native_oval_pad_drills_bind_to_excellon_slots(tmp_path: Path, version: str) -> None:
+def test_native_pad_shape_offsets_keep_oval_drill_centers(tmp_path: Path, version: str) -> None:
     board_text = _BOARD.read_text(encoding="utf-8").replace(
-        "(drill 0.8)", "(drill oval 1.0 0.6)", 1
+        "(drill 0.8)", "(drill oval 1.0 0.6 (offset 0.2 0.1))", 1
     )
-    board_text = board_text.replace("(drill 1.0)", "(drill oval 0.6 1.0)", 1)
+    board_text = board_text.replace("(drill 1.0)", "(drill oval 0.6 1.0 (offset 0.1 -0.2))", 1)
     fixture_directory = tmp_path / "fixtures"
     fixture_directory.mkdir()
     outputs = tmp_path / "outputs"
@@ -75,6 +75,14 @@ def test_native_oval_pad_drills_bind_to_excellon_slots(tmp_path: Path, version: 
     assert nonplated_slots[0].end_mm is not None
     assert plated_slots[0].diameter_mm == pytest.approx(0.6)
     assert nonplated_slots[0].diameter_mm == pytest.approx(0.6)
+    assert (
+        (plated_slots[0].x_mm + plated_slots[0].end_mm[0]) / 2,
+        (plated_slots[0].y_mm + plated_slots[0].end_mm[1]) / 2,
+    ) == pytest.approx((10.0, -9.0))
+    assert (
+        (nonplated_slots[0].x_mm + nonplated_slots[0].end_mm[0]) / 2,
+        (nonplated_slots[0].y_mm + nonplated_slots[0].end_mm[1]) / 2,
+    ) == pytest.approx((10.0, -7.0))
 
     settings = FabricationConnectivitySettings()
     clean = analyze_fabrication_connectivity(board, fabrication, settings)

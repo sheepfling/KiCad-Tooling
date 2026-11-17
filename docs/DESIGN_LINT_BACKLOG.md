@@ -19895,7 +19895,7 @@ and IPC-D-356 export. Project settings select `review` or `block`, raster
 density, and exact reasoned finding ignores; the receipt binds source,
 configuration, and per-run artifact hashes. Unsupported source stacks or
 artwork fail closed. The intentionally narrow subset does not support blind or
-buried vias, negative polarity, step-and-repeat, offset drilled pads, or
+buried vias, negative polarity, step-and-repeat, offset copper pad shapes, or
 unresolved gaps below the configured raster resolution. Source PCB vias and
 circular or oval plated/non-plated component-pad drills are bound to their
 matching Excellon outputs before rasterization. A `review` result records
@@ -30872,10 +30872,11 @@ acceptance threads while new lint features proceed:
   hits fail closed before rasterization. The report analyzer version advances
   to `9`.
 - **Boundary:** The LINT-543 change initially checked circular holes only;
-  LINT-544 adds oval slots. Drill offsets, anonymous pads, extra artifact hits,
-  mechanical fabrication quality, and the electrical intent of the pad remain
-  outside this check. KiCad DRC and project-authored drill requirements retain
-  their separate roles.
+  LINT-544 adds oval slots. Copper pad-shape offsets are serialized inside the
+  drill field but do not change the hole center; LINT-545 guards this behavior.
+  Anonymous pads, extra artifact hits, mechanical fabrication quality, and the
+  electrical intent of the pad remain outside this check. KiCad DRC and
+  project-authored drill requirements retain their separate roles.
 - **Regression coverage:** Synthetic controls bind a rotated footprint's
   plated and non-plated pad holes; faults cover missing, displaced,
   wrong-size, wrong-plating, and one-hit-for-two-source-holes cases. The
@@ -30912,10 +30913,10 @@ acceptance threads while new lint features proceed:
   exported coordinate precision. Missing, displaced, wrong-length, wrong-axis,
   wrong-plating, or wrong-tool-size slots fail closed before rasterization.
   The report analyzer version advances to `10`.
-- **Boundary:** Drill offsets and anonymous pads remain unsupported. This
-  binds artifact geometry to the source PCB; it does not validate tool
-  selection, slot plating quality, fabrication capability, or electrical
-  intent.
+- **Boundary:** Copper pad-shape offsets do not move the hole center and are
+  outside this drill check; anonymous pads remain unsupported. This binds
+  artifact geometry to the source PCB; it does not validate tool selection,
+  slot plating quality, fabrication capability, or electrical intent.
 - **Regression coverage:** Synthetic controls cover horizontal plated and
   vertical non-plated slots, plus moved, wrong-length, wrong-axis, and
   wrong-tool-size faults. Native acceptance exports both plating classes and
@@ -30932,6 +30933,35 @@ acceptance threads while new lint features proceed:
     tests/test_fabrication_pad_drill_binding.py \
     tests/test_fabrication_pad_slot_binding_native.py \
     tests/test_fabrication_connectivity_native.py \
+    -m 'design_lint and evidence_lint and pcb_lint'
+  ```
+
+  Exact-version native coverage uses `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
+
+#### LINT-545 — Keep copper pad-shape offsets out of drill-center matching
+
+- **Priority:** P1 fabrication-evidence precision. KiCad serializes a copper
+  pad-shape offset inside the pad's drill expression for compatibility, as
+  noted in [its pad writer](https://docs.kicad.org/doxygen/pcb__writer__v10_8cpp_source.html).
+  The offset does not move the Excellon hole center; treating it as a hole
+  offset would reject valid fabrication output.
+- **Change:** Clarify the source parser's drill-position boundary and retain an
+  explicit synthetic valid control where nonzero pad-shape offsets still bind
+  to centered PTH and NPTH oval slots. The exact-version fixture confirms this
+  behavior with KiCad 10.0.0 and 10.0.5.
+- **Boundary:** This confirms hole-center matching only. It does not validate
+  copper pad shape geometry or whether the offset pad adequately surrounds its
+  hole.
+- **Regression coverage:** Synthetic source has different nonzero offsets for
+  horizontal plated and vertical non-plated oval pads, while centered Excellon
+  slots satisfy the drill contract. Native exports repeat this control in both
+  pinned KiCad versions.
+- **Selection:** Run:
+
+  ```sh
+  .venv/bin/python -I -m pytest \
+    tests/test_fabrication_pad_drill_binding.py \
+    tests/test_fabrication_pad_slot_binding_native.py \
     -m 'design_lint and evidence_lint and pcb_lint'
   ```
 

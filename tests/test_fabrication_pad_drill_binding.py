@@ -109,18 +109,20 @@ def test_one_excellon_hit_cannot_satisfy_two_source_pad_holes() -> None:
         )
 
 
-def test_source_oval_drill_binds_the_native_slot_geometry() -> None:
+def test_source_pad_shape_offset_binds_the_centered_oval_slot_geometry() -> None:
     board = _BOARD.read_text(encoding="utf-8")
-    board = board.replace("(drill 0.8)", "(drill oval 1.0 0.6)", 1)
-    board = board.replace("(drill 1.0)", "(drill oval 0.6 1.0)", 1)
+    board = board.replace("(drill 0.8)", "(drill oval 1.0 0.6 (offset 0.2 0.1))", 1)
+    board = board.replace("(drill 1.0)", "(drill oval 0.6 1.0 (offset 0.1 -0.2))", 1)
     source = source_component_pads(board)
     slot_pad = next(pad for pad in source if pad.reference == "J2" and pad.number == "1")
     nonplated_slot = next(pad for pad in source if pad.reference == "J2" and pad.number == "2")
 
     assert slot_pad.drill_shape == "oval"
+    assert (slot_pad.x_nm, slot_pad.y_nm) == (10_000_000, 9_000_000)
     assert slot_pad.drill_width_nm == 1_000_000
     assert slot_pad.drill_height_nm == 600_000
     assert nonplated_slot.drill_shape == "oval"
+    assert (nonplated_slot.x_nm, nonplated_slot.y_nm) == (10_000_000, 7_000_000)
     assert nonplated_slot.drill_width_nm == 600_000
     assert nonplated_slot.drill_height_nm == 1_000_000
 
