@@ -109,13 +109,47 @@ def test_one_excellon_hit_cannot_satisfy_two_source_pad_holes() -> None:
         )
 
 
-def test_source_oval_drill_fails_closed_until_slot_binding_is_supported() -> None:
-    board = _BOARD.read_text(encoding="utf-8").replace("(drill 0.8)", "(drill oval 0.8 0.5)", 1)
+def test_source_oval_drill_binds_the_native_slot_geometry() -> None:
+    board = _BOARD.read_text(encoding="utf-8")
+    board = board.replace("(drill 0.8)", "(drill oval 1.0 0.6)", 1)
+    board = board.replace("(drill 1.0)", "(drill oval 0.6 1.0)", 1)
+    source = source_component_pads(board)
+    slot_pad = next(pad for pad in source if pad.reference == "J2" and pad.number == "1")
+    nonplated_slot = next(pad for pad in source if pad.reference == "J2" and pad.number == "2")
+
+    assert slot_pad.drill_shape == "oval"
+    assert slot_pad.drill_width_nm == 1_000_000
+    assert slot_pad.drill_height_nm == 600_000
+    assert nonplated_slot.drill_shape == "oval"
+    assert nonplated_slot.drill_width_nm == 600_000
+    assert nonplated_slot.drill_height_nm == 1_000_000
+
+    require_excellon_source_pad_drills(
+        source,
+        _drills(("X9.8Y-9.0G85X10.2Y-9.0",), "0.600"),
+        _drills(("X10.0Y-6.8G85X10.0Y-7.2",), "0.600"),
+    )
+
+
+@pytest.mark.parametrize(
+    ("slot", "diameter", "reason"),
+    (
+        ("X9.8Y-9.1G85X10.2Y-9.1", "0.600", "no oval drill hit at source pad J2.1"),
+        ("X9.7Y-9.0G85X10.3Y-9.0", "0.600", "slot geometry at source pad J2.1"),
+        ("X10.0Y-8.8G85X10.0Y-9.2", "0.600", "slot geometry at source pad J2.1"),
+        ("X9.8Y-9.0G85X10.2Y-9.0", "0.700", "slot geometry at source pad J2.1"),
+    ),
+    ids=("displaced-slot", "wrong-length", "wrong-axis", "wrong-tool-size"),
+)
+def test_source_oval_drill_rejects_moved_or_wrong_geometry(
+    slot: str, diameter: str, reason: str
+) -> None:
+    board = _BOARD.read_text(encoding="utf-8").replace("(drill 0.8)", "(drill oval 1.0 0.6)", 1)
     source = source_component_pads(board)
 
-    with pytest.raises(UnsupportedFabricationFormat, match="unsupported drill shape"):
+    with pytest.raises(UnsupportedFabricationFormat, match=reason):
         require_excellon_source_pad_drills(
             source,
-            _drills(("X10.000Y-9.000",), "0.800"),
+            _drills((slot,), diameter),
             _drills(("X10.000Y-7.000",), "1.000"),
         )

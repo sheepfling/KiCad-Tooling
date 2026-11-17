@@ -21,31 +21,39 @@ def require_excellon_source_pad_drills(
 
     candidates_by_pad: list[tuple[int, ...]] = []
     for pad in drilled:
-        if pad.drill_shape != "circular" or pad.drill_nm is None:
+        if pad.drill_shape not in {"circular", "oval"} or pad.drill_nm is None:
             raise UnsupportedFabricationFormat(
                 f"source drilled pad {pad.reference}.{pad.number} has an unsupported drill shape"
             )
         output = plated_drills if pad.drill_plating == "plated" else nonplated_drills
         hit_offset = 0 if pad.drill_plating == "plated" else len(plated_drills)
-        circular = tuple((index, hit) for index, hit in enumerate(output) if hit.end_mm is None)
-        centered = tuple((index, hit) for index, hit in circular if _center_matches(pad, hit))
+        located = tuple(
+            (index, hit) for index, hit in enumerate(output) if _center_matches(pad, hit)
+        )
         matches = tuple(
-            index + hit_offset for index, hit in centered if _diameter_matches(pad, hit)
+            index + hit_offset for index, hit in located if _drill_geometry_matches(pad, hit)
         )
         if not matches:
             plating = pad.drill_plating
-            if centered:
+            if located and pad.drill_shape == "circular":
                 observed = ", ".join(
                     f"{hit.diameter_mm:g} mm"
-                    for _, hit in sorted(centered, key=lambda item: item[1].diameter_mm)
+                    for _, hit in sorted(located, key=lambda item: item[1].diameter_mm)
+                    if hit.end_mm is None
                 )
+                if observed:
+                    raise UnsupportedFabricationFormat(
+                        f"{plating} Excellon drill diameter at source pad "
+                        f"{pad.reference}.{pad.number} differs from source PCB "
+                        f"({observed}; expected {pad.drill_nm} nm)"
+                    )
+            if located and pad.drill_shape == "oval":
                 raise UnsupportedFabricationFormat(
-                    f"{plating} Excellon drill diameter at source pad "
-                    f"{pad.reference}.{pad.number} differs from source PCB "
-                    f"({observed}; expected {pad.drill_nm} nm)"
+                    f"{plating} Excellon slot geometry at source pad "
+                    f"{pad.reference}.{pad.number} differs from source PCB"
                 )
             raise UnsupportedFabricationFormat(
-                f"{plating} Excellon has no circular drill hit at source pad "
+                f"{plating} Excellon has no {pad.drill_shape} drill hit at source pad "
                 f"{pad.reference}.{pad.number} ({pad.x_nm} nm, {pad.y_nm} nm)"
             )
         candidates_by_pad.append(matches)
@@ -75,13 +83,35 @@ def require_excellon_source_pad_drills(
 
 def _center_matches(pad: SourceComponentPad, hit: DrillHit) -> bool:
     tolerance = hit.coordinate_resolution_nm // 2 + 1
+    hit_x_mm = hit.x_mm
+    hit_y_mm = hit.y_mm
+    if hit.end_mm is not None:
+        hit_x_mm = (hit.x_mm + hit.end_mm[0]) / 2
+        hit_y_mm = (hit.y_mm + hit.end_mm[1]) / 2
     return (
-        abs(round(hit.x_mm * _NM_PER_MM) - pad.x_nm) <= tolerance
-        and abs(round(hit.y_mm * _NM_PER_MM) + pad.y_nm) <= tolerance
+        abs(round(hit_x_mm * _NM_PER_MM) - pad.x_nm) <= tolerance
+        and abs(round(hit_y_mm * _NM_PER_MM) + pad.y_nm) <= tolerance
     )
 
 
-def _diameter_matches(pad: SourceComponentPad, hit: DrillHit) -> bool:
+def _drill_geometry_matches(pad: SourceComponentPad, hit: DrillHit) -> bool:
     assert pad.drill_nm is not None
-    tolerance = hit.diameter_resolution_nm // 2 + 1
-    return abs(round(hit.diameter_mm * _NM_PER_MM) - pad.drill_nm) <= tolerance
+    diameter_tolerance = hit.diameter_resolution_nm // 2 + 1
+    if abs(round(hit.diameter_mm * _NM_PER_MM) - pad.drill_nm) > diameter_tolerance:
+        return False
+    if pad.drill_shape == "circular":
+        return hit.end_mm is None
+    if hit.end_mm is None or pad.drill_width_nm is None or pad.drill_height_nm is None:
+        return False
+
+    coordinate_tolerance = hit.coordinate_resolution_nm + 2
+    delta_x_nm = round(abs(hit.end_mm[0] - hit.x_mm) * _NM_PER_MM)
+    delta_y_nm = round(abs(hit.end_mm[1] - hit.y_mm) * _NM_PER_MM)
+    expected_x_nm = abs(pad.drill_width_nm - pad.drill_height_nm)
+    expected_y_nm = 0
+    if pad.drill_height_nm > pad.drill_width_nm:
+        expected_x_nm, expected_y_nm = 0, expected_x_nm
+    return (
+        abs(delta_x_nm - expected_x_nm) <= coordinate_tolerance
+        and abs(delta_y_nm - expected_y_nm) <= coordinate_tolerance
+    )

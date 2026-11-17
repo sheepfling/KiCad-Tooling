@@ -19890,11 +19890,11 @@ and IPC-D-356 export. Project settings select `review` or `block`, raster
 density, and exact reasoned finding ignores; the receipt binds source,
 configuration, and per-run artifact hashes. Unsupported source stacks or
 artwork fail closed. The intentionally narrow subset does not support blind or
-buried vias, negative polarity, step-and-repeat, non-circular drilled pads, or
+buried vias, negative polarity, step-and-repeat, offset drilled pads, or
 unresolved gaps below the configured raster resolution. Source PCB vias and
-circular plated/non-plated component-pad drills are bound to their matching
-Excellon outputs before rasterization. A `review` result records findings
-without blocking release; `block` turns findings into a gate failure.
+circular or oval plated/non-plated component-pad drills are bound to their
+matching Excellon outputs before rasterization. A `review` result records
+findings without blocking release; `block` turns findings into a gate failure.
 
 The digest-pinned KiCad 10.0.0 and 10.0.5 Docker acceptance fixtures produced
 the expected clean and intentionally isolated passes, disconnected same-net
@@ -30866,17 +30866,16 @@ acceptance threads while new lint features proceed:
   tool precision. Missing, displaced, wrong-size, wrong-plating, and reused
   hits fail closed before rasterization. The report analyzer version advances
   to `9`.
-- **Boundary:** This checks exported circular drill evidence for numbered
-  footprint pads. Oval/slot holes, drill offsets, anonymous pads, extra
-  artifact hits, mechanical fabrication quality, and the electrical intent of
-  the pad remain outside this check. KiCad DRC and project-authored drill
-  requirements retain their separate roles.
+- **Boundary:** The LINT-543 change initially checked circular holes only;
+  LINT-544 adds oval slots. Drill offsets, anonymous pads, extra artifact hits,
+  mechanical fabrication quality, and the electrical intent of the pad remain
+  outside this check. KiCad DRC and project-authored drill requirements retain
+  their separate roles.
 - **Regression coverage:** Synthetic controls bind a rotated footprint's
   plated and non-plated pad holes; faults cover missing, displaced,
-  wrong-size, wrong-plating, and one-hit-for-two-source-holes cases. Oval
-  source drills fail closed. The native fixture exports both plating classes
-  with pinned KiCad 10.0.0 and 10.0.5, then verifies repeatable missing-hit
-  failures.
+  wrong-size, wrong-plating, and one-hit-for-two-source-holes cases. The
+  native fixture exports both plating classes with pinned KiCad 10.0.0 and
+  10.0.5, then verifies repeatable missing-hit failures.
 - **Hosted acceptance:** GitHub Actions run `44007418465` passed for tag
   `v0.5.3rc878` at code commit
   `9d3f272d5118e4773795a464172125a7c3de3d75`. Package and preview jobs were
@@ -30889,6 +30888,40 @@ acceptance threads while new lint features proceed:
     tests/test_fabrication_pad_drill_binding_native.py \
     tests/test_fabrication_via_drill_binding.py \
     tests/test_fabrication_connectivity.py \
+    tests/test_fabrication_connectivity_native.py \
+    -m 'design_lint and evidence_lint and pcb_lint'
+  ```
+
+  Exact-version native coverage uses `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
+
+#### LINT-544 — Bind oval component-pad drills to native Excellon slots
+
+- **Priority:** P1 fabrication-evidence completeness. LINT-543 bound circular
+  component-pad holes; common oval pad drills export as routed Excellon slots
+  and were previously rejected as unsupported.
+- **Change:** Parse the source oval drill width and height, then match the
+  center, tool diameter, and major-axis span to one `G85` Excellon slot in the
+  correct plated or non-plated file. KiCad 10.0.0 and 10.0.5 acceptance
+  fixtures confirm the oval dimensions map to Excellon's absolute X/Y axes,
+  including a rotated footprint. The endpoint tolerance uses the actual
+  exported coordinate precision. Missing, displaced, wrong-length, wrong-axis,
+  wrong-plating, or wrong-tool-size slots fail closed before rasterization.
+  The report analyzer version advances to `10`.
+- **Boundary:** Drill offsets and anonymous pads remain unsupported. This
+  binds artifact geometry to the source PCB; it does not validate tool
+  selection, slot plating quality, fabrication capability, or electrical
+  intent.
+- **Regression coverage:** Synthetic controls cover horizontal plated and
+  vertical non-plated slots, plus moved, wrong-length, wrong-axis, and
+  wrong-tool-size faults. Native acceptance exports both plating classes and
+  verifies deterministic slot matches and missing/moved failures on KiCad
+  10.0.0 and 10.0.5.
+- **Selection:** Run:
+
+  ```sh
+  .venv/bin/python -I -m pytest \
+    tests/test_fabrication_pad_drill_binding.py \
+    tests/test_fabrication_pad_slot_binding_native.py \
     tests/test_fabrication_connectivity_native.py \
     -m 'design_lint and evidence_lint and pcb_lint'
   ```
