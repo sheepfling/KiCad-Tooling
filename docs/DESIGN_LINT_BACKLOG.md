@@ -872,7 +872,22 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc882):** LINT-547
+- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc885):** LINT-550
+  rejects malformed or unrepresentable Excellon coordinates as unsupported
+  evidence. Local scoped CI passed 72 tests with 6 skipped; the exact-version
+  Docker selection passed 12 tests on KiCad 10.0.0 and 10.0.5. Hosted
+  acceptance passed in GitHub Actions run `44036937871`, including dependency
+  installation and the external-project wheel rehearsal. Package and preview
+  jobs were skipped under prerelease policy.
+- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc884):** LINT-549
+  rejects non-finite and nanometer-unrepresentable Excellon tool diameters.
+  Hosted acceptance passed in GitHub Actions run `44032103673`, including the
+  external-project wheel rehearsal; package and preview jobs were skipped.
+- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc883):** LINT-548
+  rejects missing, undefined, non-positive, and conflicting Excellon tool
+  definitions. Hosted acceptance passed in GitHub Actions run `44027391946`;
+  package and preview jobs were skipped.
+- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc882):** LINT-547
   reports unmatched Excellon hits as configurable review findings. The local
   focused pytest selection passed 75 tests, with 12 skipped and 51 deselected;
   all 12 selected exact-version native cases passed on KiCad 10.0.0 and 10.0.5.
@@ -31222,8 +31237,14 @@ acceptance threads while new lint features proceed:
   Windows-target Pyright, wheel/sdist builds, and the exact-version native
   Docker selection passed (12 tests across KiCad 10.0.0 and 10.0.5). The local
   normal dependency install could not resolve `pydantic==2.13.5` because
-  sandbox DNS could not resolve `pypi.org`; hosted installation remains the
-  release gate.
+  sandbox DNS could not resolve `pypi.org`; hosted dependency installation
+  and external-project wheel rehearsal passed.
+- **Hosted acceptance:** GitHub Actions run `44036937871` passed for tag
+  `v0.5.3rc885` at code commit
+  `fd689057a4339e0ba3fdb512af3b8db07c5acd53`. Tag-scope resolution, normal
+  dependency installation, the focused lint gate, and the external-project
+  wheel rehearsal passed. Package and preview jobs were skipped under
+  prerelease workflow policy.
 
 ## Completion and release gate
 
