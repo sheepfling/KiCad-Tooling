@@ -892,6 +892,13 @@ standalone parity work when it closes a demonstrated feature regression.
   native fabrication cases. GitHub Actions run `44086735827` passed Pyright,
   wheel/sdist/sdist-wheel builds, and the installed-wheel external-project
   checks. Package and preview jobs were skipped under prerelease policy.
+- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc894):** LINT-559
+  rejects non-finite or malformed Gerber aperture dimensions before geometry
+  analysis. The tag-scoped selection passed 175 tests, including all 12
+  exact-version native fabrication cases. GitHub Actions run `44094422122`
+  passed Pyright, wheel/sdist/sdist-wheel builds, and installed-wheel checks
+  against the separate public project checkout. Package and preview jobs were
+  skipped under prerelease policy.
 - **Earlier hosted-accepted lint-gate checkpoint (v0.5.3rc890):** LINT-555
   extends per-axis Excellon precision regression coverage to M15/G01 routed
   slots, whose endpoint precision is tracked through a separate parser path.
@@ -31689,10 +31696,17 @@ acceptance threads while new lint features proceed:
 - **Local validation (2026-11-17):** The focused aperture parser suite passed
   11 synthetic tests. The complete fabrication-area synthetic selection passed
   191 tests; the exact-version KiCad 10.0.0 and 10.0.5 native fabrication
-  selection passed 12 tests. Marker, theme-suite, and collection architecture
-  checks passed 17 tests. Ruff, formatting, Rumdl, and mdrepo checks passed.
-  Full tag-scoped CI remains pending.
-- **Hosted acceptance:** Pending.
+  selection passed 12 tests. Full tag-scoped CI passed 175 tests, including all
+  12 exact-version native cases, Linux and Windows-target Pyright, wheel/sdist
+  builds, and installed-wheel checks against the pinned external project
+  checkout. Ruff, formatting, Rumdl, and mdrepo checks passed. Logs are under
+  `build/ci/run-6srqj95p`.
+- **Hosted acceptance:** Tag `v0.5.3rc894` passed GitHub Actions run
+  `44094422122` at code commit
+  `ba697d6f556fdab1376c54c38bf76e1b150351bc`: 175 selected tests including all
+  12 exact-version native fabrication cases, Pyright, wheel/sdist/sdist-wheel
+  builds, and installed-wheel external-project checks. Package and preview jobs
+  were skipped under prerelease policy.
 
 ## Completion and release gate
 
