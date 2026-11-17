@@ -108,8 +108,12 @@ def _canvas(
     xs, ys = zip(*points, strict=True)
     margin = 1.0
     bounds = min(xs) - margin, min(ys) - margin, max(xs) + margin, max(ys) + margin
-    width = math.ceil((bounds[2] - bounds[0]) * density)
-    height = math.ceil((bounds[3] - bounds[1]) * density)
+    pixel_width = (bounds[2] - bounds[0]) * density
+    pixel_height = (bounds[3] - bounds[1]) * density
+    if not math.isfinite(pixel_width) or not math.isfinite(pixel_height):
+        raise ValueError("raster exceeds the configured analyzer pixel budget")
+    width = math.ceil(pixel_width)
+    height = math.ceil(pixel_height)
     if width <= 0 or height <= 0 or width * height * len(layers) > _PIXEL_LIMIT:
         raise ValueError("raster exceeds the configured analyzer pixel budget")
     return _Canvas(bounds, density, width, height)

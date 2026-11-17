@@ -31859,6 +31859,39 @@ acceptance threads while new lint features proceed:
   against the external project. Package and preview jobs were skipped under
   prerelease policy.
 
+#### LINT-563 — Reject raster geometry outside the pixel budget
+
+- **Status:** Implemented; local validation in progress.
+- **Priority:** P1 fabrication-evidence integrity. A finite Gerber aperture
+  dimension with numeric value 10 to the 308th power passed the parser, but
+  multiplying the resulting span by pixel density overflowed to infinity.
+  `math.ceil()` then raised an uncaught `OverflowError`, bypassing the
+  analyzer's structured unsupported result.
+- **Reference:** [Gerber data types][gerber-data-types] allow decimal values
+  that fit an IEEE double, while the raster analyzer declares a 24-million-
+  pixel budget. A finite value can still exceed that computational boundary,
+  so its dimension must be checked after conversion to pixel space.
+- **Change:** Compute pixel width and height before integer conversion and
+  reject non-finite spans as over-budget. The existing source-bound analyzer
+  maps this controlled `ValueError` to `UNSUPPORTED` with no findings.
+- **Boundary:** The 24-million-pixel budget and configured density are
+  unchanged. This does not resize or approximate oversized geometry, and it
+  does not claim that an otherwise supported raster proves fabrication quality.
+- **Regression coverage:** A tooling-owned synthetic board replaces one copper
+  aperture with a finite diameter whose numeric value is 10 to the 308th power;
+  analysis must return `UNSUPPORTED` with no findings instead of escaping with
+  an overflow. A normal-geometry control remains supported, alongside the
+  exact-version KiCad 10.0.0/10.0.5 Docker exports. No product or cohort data is
+  used.
+- **Analyzer version:** `27`, because inputs that previously escaped the
+  structured analyzer result now fail closed at raster sizing.
+- **Selection:** Run
+  `.venv/bin/python -I -m pytest -q tests/test_fabrication_raster_geometry_bounds.py`
+  with `design_lint`, `evidence_lint`, and `pcb_lint`. The tag-scoped native
+  fabrication lane remains `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
+- **Local validation:** Pending.
+- **Hosted acceptance:** Pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
