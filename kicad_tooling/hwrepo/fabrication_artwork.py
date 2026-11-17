@@ -13,6 +13,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
+from .fabrication_gerber_codes import parse_gerber_aperture_number
+
 
 class UnsupportedFabricationFormat(ValueError):
     """Input uses a fabrication feature outside this analyzer's declared subset."""
@@ -253,10 +255,21 @@ class GerberParser:
             self.units_seen = True
             self.scale = 25.4 if raw == "MOIN" else 1.0
         elif raw.startswith("AD"):
-            match = re.fullmatch(r"ADD(\d+)([A-Z]),?(.*)", raw)
+            match = re.fullmatch(r"ADD([0-9]+)([A-Z]),?(.*)", raw)
             if not match:
-                raise UnsupportedFabricationFormat(f"invalid aperture definition in {self.name}")
-            number, kind, raw_sizes = match.groups()
+                raise UnsupportedFabricationFormat(
+                    f"invalid Gerber aperture definition or D-code in {self.name}"
+                )
+            number_text, kind, raw_sizes = match.groups()
+            number = parse_gerber_aperture_number(number_text)
+            if number is None:
+                raise UnsupportedFabricationFormat(
+                    f"invalid Gerber aperture D-code {number_text!r} in {self.name}"
+                )
+            if number in self.apertures:
+                raise UnsupportedFabricationFormat(
+                    f"Gerber aperture D{number} cannot be reassigned in {self.name}"
+                )
             if kind not in {"C", "R", "O", "P"}:
                 raise UnsupportedFabricationFormat(f"unsupported {kind} aperture in {self.name}")
             raw_values = re.split(r"[Xx]", raw_sizes)
@@ -294,7 +307,7 @@ class GerberParser:
                     raise UnsupportedFabricationFormat(
                         f"invalid {kind} aperture parameters in {self.name}"
                     )
-            self.apertures[int(number)] = (kind, sizes)
+            self.apertures[number] = (kind, sizes)
         elif raw.startswith(("IPNEG", "LPC")):
             raise UnsupportedFabricationFormat(f"negative Gerber polarity in {self.name}")
         elif raw.startswith("SR") and re.search(r"(?:X|Y)[2-9]", raw):
@@ -332,8 +345,12 @@ class GerberParser:
             self.features.append(GerberFeature("region", tuple(self.region)))
             self.region = None
             return
-        if raw.startswith("D") and raw[1:].isdigit() and int(raw[1:]) >= 10:
-            number = int(raw[1:])
+        if raw.startswith("D") and raw[1:].isdigit():
+            number = parse_gerber_aperture_number(raw[1:])
+            if number is None:
+                raise UnsupportedFabricationFormat(
+                    f"invalid Gerber aperture D-code {raw[1:]!r} in {self.name}"
+                )
             if number not in self.apertures:
                 raise UnsupportedFabricationFormat(f"undefined aperture D{number} in {self.name}")
             self.aperture = number
@@ -447,37 +464,3 @@ def parse_ipc356(text: str) -> tuple[Contact, ...]:
     if not contacts:
         raise UnsupportedFabricationFormat("IPC-D-356 has no 317/327 contact records")
     return tuple(contacts)
-
-
-def drill_file_is_plated(path: Path) -> bool:
-    """Classify KiCad PTH/NPTH drill outputs without relying on file order."""
-    name = path.name.casefold()
-    text = path.read_text(encoding="utf-8", errors="replace")[:4000].casefold()
-    function = drill_file_function(path)
-    if function is not None:
-        if function[0] == "plated":
-            return True
-        if function[0] == "nonplated":
-            return False
-        raise UnsupportedFabricationFormat(f"unknown drill plating in {path.name} FileFunction")
-    if "nonplated" in text or "non-plated" in text or "npth" in name:
-        return False
-    if "plated" in text or "pth" in name:
-        return True
-    raise UnsupportedFabricationFormat(f"cannot determine drill plating for {path.name}")
-
-
-def drill_file_function(path: Path) -> tuple[str, ...] | None:
-    """Read one KiCad X2 drill FileFunction attribute when present."""
-    text = path.read_text(encoding="utf-8", errors="replace")[:4000]
-    matches = re.findall(r"TF\.FileFunction,([^*%\r\n]+)", text, flags=re.IGNORECASE)
-    if not matches:
-        return None
-    if len(matches) != 1:
-        raise UnsupportedFabricationFormat(
-            f"drill file has multiple FileFunction attributes in {path.name}"
-        )
-    fields = tuple(field.strip().casefold() for field in matches[0].split(","))
-    if not fields or any(not field for field in fields):
-        raise UnsupportedFabricationFormat(f"malformed drill FileFunction in {path.name}")
-    return fields

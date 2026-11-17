@@ -31812,6 +31812,40 @@ acceptance threads while new lint features proceed:
   external-project checks. Package and preview jobs were skipped under
   prerelease policy.
 
+#### LINT-562 — Enforce Gerber aperture identity and D-code bounds
+
+- **Status:** Implemented; local validation in progress.
+- **Priority:** P1 fabrication-evidence integrity. Gerber aperture numbers are
+  identities used to connect aperture definitions to later drawing and flash
+  commands. The bounded parser previously accepted reserved or out-of-range
+  numbers, Unicode digits, and repeated definitions that silently replaced an
+  earlier aperture in its dictionary.
+- **Reference:** The [Ucamco Gerber Layer Format Specification
+  2026.05][gerber-layer-spec-2026-05] reserves D00–D09, bounds aperture
+  identifiers to 10 through 2,147,483,647, requires identifiers to be unique,
+  and requires an aperture definition before its first use.
+- **Change:** Parse aperture identifiers as ASCII decimal integers, enforce
+  the standard range for both definitions and selections, and reject a second
+  definition of the same numeric identifier, including spellings with leading
+  zeroes.
+- **Boundary:** The analyzer still supports only standard C/R/O/P apertures
+  and its documented positive-polarity subset. This does not add macro or
+  block apertures or prove that a fabrication export matches the source board.
+- **Regression coverage:** Synthetic faults cover reserved and over-range
+  identifiers, Unicode digits, duplicate identifiers, and duplicate spellings
+  with leading zeroes. Controls preserve D10 and the signed 32-bit maximum.
+  A source-bound duplicate-definition mutation must return `UNSUPPORTED` with
+  no findings. Exact KiCad 10.0.0 and 10.0.5 fabrication exports are exercised
+  through the Docker acceptance lane. No product or cohort project data is used.
+- **Analyzer version:** `26`, because aperture definitions that were silently
+  reinterpreted now fail closed.
+- **Selection:** Run
+  `.venv/bin/python -I -m pytest -q tests/test_fabrication_gerber_aperture_identity.py`
+  with `design_lint`, `evidence_lint`, and `pcb_lint`. The tag-scoped native
+  fabrication lane remains `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
+- **Local validation:** Pending.
+- **Hosted acceptance:** Pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

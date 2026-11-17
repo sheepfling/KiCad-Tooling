@@ -10,8 +10,6 @@ from .fabrication_artwork import (
     Contact,
     UnsupportedFabricationFormat,
     classify_copper_files,
-    drill_file_function,
-    drill_file_is_plated,
     parse_gerber,
     parse_ipc356,
 )
@@ -26,6 +24,7 @@ from .fabrication_contact_inventory import require_ipc356_source_pad_inventory
 from .fabrication_contact_layers import require_ipc356_source_pad_layers
 from .fabrication_contact_source import source_component_pads
 from .fabrication_drill_binding import UnboundDrillHit, require_excellon_source_drills
+from .fabrication_drill_files import drill_file_function, drill_file_is_plated
 from .fabrication_excellon import DrillHit, parse_excellon
 from .fabrication_via_binding import (
     require_ipc356_source_via_inventory,

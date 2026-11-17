@@ -38,7 +38,9 @@ _OWNERS = (
     "fabrication_contact_inventory.py",
     "fabrication_contact_layers.py",
     "fabrication_contact_source.py",
+    "fabrication_drill_files.py",
     "fabrication_excellon.py",
+    "fabrication_gerber_codes.py",
     "fabrication_connectivity_models.py",
     "fabrication_connectivity.py",
     "fabrication_connectivity_raster.py",
@@ -186,7 +188,7 @@ def test_artifact_connectivity_reports_opens_shorts_and_intentional_isolation(
     assert {item.code for item in report.findings} == expected
     assert not report.unsupported_reasons, report.unsupported_reasons
     assert report.status == status
-    assert report.analyzer_version == "25"
+    assert report.analyzer_version == "26"
     assert report.board_sha256
     assert "fabrication/board.d356" in report.artifact_sha256
 
