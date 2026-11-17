@@ -226,13 +226,29 @@ class GerberParser:
                 raise UnsupportedFabricationFormat(
                     f"Gerber aperture parameters must be finite decimals in {self.name}"
                 )
-            maximum_sizes = {"C": 1, "R": 2, "O": 2, "P": 3}[kind]
-            if not sizes or len(sizes) > maximum_sizes:
+            if kind == "C" and (len(sizes) != 1 or sizes[0] < 0):
                 raise UnsupportedFabricationFormat(
-                    f"unsupported aperture parameters in {self.name}"
+                    f"invalid {kind} aperture parameters in {self.name}"
                 )
-            if kind == "P" and len(sizes) < 2:
-                raise UnsupportedFabricationFormat(f"incomplete polygon aperture in {self.name}")
+            if kind in {"R", "O"} and (len(sizes) != 2 or any(size <= 0 for size in sizes)):
+                raise UnsupportedFabricationFormat(
+                    f"invalid {kind} aperture parameters in {self.name}"
+                )
+            if kind == "P":
+                if len(sizes) not in {2, 3} or sizes[0] <= 0:
+                    raise UnsupportedFabricationFormat(
+                        f"invalid {kind} aperture parameters in {self.name}"
+                    )
+                vertex_token = raw_values[1]
+                if re.fullmatch(r"[0-9]+", vertex_token) is None:
+                    raise UnsupportedFabricationFormat(
+                        f"invalid {kind} aperture parameters in {self.name}"
+                    )
+                vertex_count_text = vertex_token.lstrip("0") or "0"
+                if len(vertex_count_text) > 2 or not 3 <= int(vertex_count_text) <= 12:
+                    raise UnsupportedFabricationFormat(
+                        f"invalid {kind} aperture parameters in {self.name}"
+                    )
             self.apertures[int(number)] = (kind, sizes)
         elif raw.startswith(("IPNEG", "LPC")):
             raise UnsupportedFabricationFormat(f"negative Gerber polarity in {self.name}")

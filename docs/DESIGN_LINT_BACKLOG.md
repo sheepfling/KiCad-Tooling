@@ -31708,6 +31708,52 @@ acceptance threads while new lint features proceed:
   builds, and installed-wheel external-project checks. Package and preview jobs
   were skipped under prerelease policy.
 
+#### LINT-560 — Validate standard Gerber aperture parameters before rasterization
+
+- **Status:** Implemented; scoped and hosted acceptance in progress.
+- **Priority:** P1 fabrication-evidence integrity. The bounded parser accepted
+  rectangles and obrounds with only one dimension, which the raster treated as
+  square, and accepted regular-polygon vertex counts that were fractional,
+  outside 3 through 12, or extremely large. It also used a polygon's vertex
+  count as a physical aperture dimension when calculating canvas bounds.
+- **Reference:** The [Ucamco Gerber Layer Format Specification
+  2026.05][gerber-layer-spec-2026-05] requires a circle diameter ≥0, two
+  positive rectangle/obround dimensions, and a polygon outer diameter >0 with
+  an integer vertex count from 3 to 12. A polygon's optional rotation is a
+  decimal. Aperture holes remain unsupported by this bounded raster parser.
+- **Change:** Validate each supported standard shape's parameter arity and
+  value ranges before storing it. Reject malformed polygons before raster
+  rendering and size polygon raster bounds from the outer diameter rather than
+  the vertex count.
+- **Boundary:** This validates the standard-aperture subset used by the source-
+  bound raster analyzer. It does not add aperture-hole or macro support, prove
+  that the exporter emitted every feature, or establish copper continuity or
+  fabrication quality.
+- **Regression coverage:** Tooling-owned synthetic faults cover missing
+  rectangle/obround dimensions, non-positive dimensions and polygon diameter,
+  fractional or out-of-range vertex counts, and very large vertex counts.
+  Controls preserve zero-diameter circles, positive rectangular and obround
+  dimensions, and 3- and 12-vertex polygons with and without rotation. A
+  source-bound mutation confirms malformed aperture definitions return
+  `UNSUPPORTED` with no findings. A raster-bounds regression confirms a
+  polygon's vertex count does not enlarge its physical bounds. Exact-version
+  KiCad 10.0.0 and 10.0.5 fabrication exports remain in the Docker acceptance
+  lane. No product or cohort project data is used.
+- **Analyzer version:** `24`, because malformed shape parameters that
+  previously produced supported geometry now fail closed before rasterization.
+- **Selection:** Run
+  `.venv/bin/python -I -m pytest -q tests/test_fabrication_gerber_aperture_values.py`
+  with `design_lint`, `evidence_lint`, and `pcb_lint`. The tag-scoped native
+  fabrication lane remains `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` and
+  covers KiCad 10.0.0 and 10.0.5.
+- **Local validation (2026-11-17):** The aperture suite passed 31 tests. The
+  fabrication-area synthetic selection passed 211 tests, and the exact-version
+  KiCad 10.0.0 and 10.0.5 native fabrication selection passed 12 tests.
+  Marker, theme-suite, and collection architecture checks passed 17 tests.
+  Ruff, formatting, Rumdl, and mdrepo checks passed. Full tag-scoped CI is
+  pending.
+- **Hosted acceptance:** Pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

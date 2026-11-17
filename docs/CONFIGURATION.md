@@ -158,6 +158,14 @@ offsets, malformed numbers, and unparsed data also make the artifact
 Aperture dimensions must be finite Gerber decimal values; non-decimal spellings,
 empty dimensions, and decimal values outside the finite IEEE double range are
 `UNSUPPORTED` before rasterization.
+Standard aperture parameters are checked against their supported shapes:
+circles have one nonnegative diameter, rectangles and obrounds have two
+positive dimensions, and regular polygons have a positive outer diameter and
+an integer vertex count from 3 through 12. Polygon rotation remains an optional
+finite decimal. Invalid shapes return `UNSUPPORTED`; aperture holes and macros
+remain outside this raster subset. Polygon raster bounds use the outer diameter,
+not the vertex count. These ranges follow the [Ucamco Gerber Layer Format
+Specification 2026.05][gerber-layer-spec-2026-05].
 This inventory check does not verify that each IPC-D-356 coordinate matches
 the source pad location. The analyzer also binds each present component contact
 to the source footprint placement and pad offset, including footprint rotation,
@@ -224,3 +232,5 @@ contract; unknown unpinned versions stop before downloading. The build needs a C
 bison and flex and retains stage logs under `build/ci-hosted/`. Normal CLI analysis accepts an
 explicit `--ngspice` executable; MCP uses its fixed startup environment. Neither changes Python
 imports or project search paths. Changing a simulator pin requires rerunning the relevant models.
+
+[gerber-layer-spec-2026-05]: <https://www.ucamco.com/files/downloads/file_en/554/gerber-layer-format-specification-revision-2026-05_en.pdf?326db511181711a85150ce4139bb1c23=>

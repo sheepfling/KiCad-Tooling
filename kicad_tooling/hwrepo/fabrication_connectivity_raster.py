@@ -81,7 +81,9 @@ def _coordinates(
         for feature in layer.features:
             points.extend(feature.points)
             if feature.aperture:
-                radius = max(feature.aperture[1][:2], default=0.0) / 2
+                kind, sizes = feature.aperture
+                extent = sizes[0] if kind == "P" else max(sizes[:2], default=0.0)
+                radius = extent / 2
                 x, y = feature.points[0]
                 points.extend(((x - radius, y - radius), (x + radius, y + radius)))
             elif feature.width_mm:
