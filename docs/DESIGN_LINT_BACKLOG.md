@@ -872,18 +872,25 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc885):** LINT-550
+- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc886):** LINT-551
+  rejects malformed and unrepresentable Excellon tool tokens. The final local
+  tag-scoped selection passed 94 tests with 12 native skips; exact-version
+  Docker coverage passed 12 tests on KiCad 10.0.0 and 10.0.5. Hosted
+  acceptance passed in GitHub Actions run `44042508156`, including dependency
+  installation and the external-project wheel rehearsal. Package and preview
+  jobs were skipped under prerelease policy.
+- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc885):** LINT-550
   rejects malformed or unrepresentable Excellon coordinates as unsupported
   evidence. Local scoped CI passed 72 tests with 6 skipped; the exact-version
   Docker selection passed 12 tests on KiCad 10.0.0 and 10.0.5. Hosted
   acceptance passed in GitHub Actions run `44036937871`, including dependency
   installation and the external-project wheel rehearsal. Package and preview
   jobs were skipped under prerelease policy.
-- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc884):** LINT-549
+- **Earlier hosted-accepted lint-gate checkpoint (v0.5.3rc884):** LINT-549
   rejects non-finite and nanometer-unrepresentable Excellon tool diameters.
   Hosted acceptance passed in GitHub Actions run `44032103673`, including the
   external-project wheel rehearsal; package and preview jobs were skipped.
-- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc883):** LINT-548
+- **Earlier hosted-accepted lint-gate checkpoint (v0.5.3rc883):** LINT-548
   rejects missing, undefined, non-positive, and conflicting Excellon tool
   definitions. Hosted acceptance passed in GitHub Actions run `44027391946`;
   package and preview jobs were skipped.
@@ -31246,6 +31253,52 @@ acceptance threads while new lint features proceed:
   wheel rehearsal passed. Package and preview jobs were skipped under
   prerelease workflow policy.
 
+#### LINT-551 — Reject malformed and unrepresentable Excellon tool tokens
+
+- **Priority:** P1 fabrication-evidence integrity. Malformed diameters and
+  extremely large tool identifiers could escape as uncaught `ValueError`s;
+  malformed decimal tokens could be partially interpreted, and `T0` handling
+  needed to preserve KiCad's special end-of-tool marker without reusing a
+  stale tool for a later hit.
+- **Change:** Strictly consume Excellon tool definitions and selections. Reject
+  malformed diameters, T0 tool definitions, and identifiers beyond KiCad's
+  signed D-code range as `UnsupportedFabricationFormat`. Accept KiCad's
+  feed/spindle fields around the diameter and its legal bare T0 special
+  command; clear the selected tool at T0 so a later hit cannot inherit the
+  preceding tool.
+- **Boundary:** This validates the supported tool-token grammar and numeric
+  range. It does not certify drill availability, supplier capability, or
+  manufacturing suitability. A valid unmatched hit remains `REVIEW`. KiCad
+  defines D-codes from `FIRST_DCODE` 10 through `LAST_DCODE` 0x7FFFFFFF, maps
+  positive Excellon tool numbers into that range, and documents T0 as a legal
+  special command rather than a normal tool selection ([D-code definitions],
+  [Excellon reader]).
+- **Regression coverage:** Synthetic artifacts cover multiple decimal points,
+  empty and scientific-notation diameters, huge and out-of-range IDs, T0
+  definitions, both feed/spindle parameter orders before and after diameter,
+  leading-zero IDs, the legal T0 terminator, and a hit after T0 that must not
+  reuse the previous tool. The unmatched valid drill remains `REVIEW`.
+- **Analyzer version:** `16`, because malformed or unrepresentable tool tokens
+  that could previously crash or be misread now return `UNSUPPORTED`.
+- **Selection:** The annotated tag selects `evidence_lint` and the fabrication
+  connectivity regression suites. Exact-version native compatibility uses
+  the existing suites with
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` and `native_kicad`.
+- **Local validation:** Final tag-scoped selection: 94 passed, 12 skipped.
+  PCB architecture, pytest-marker, and theme checks: 11 passed. Exact-version
+  native Docker selection: 12 passed across KiCad 10.0.0 and 10.0.5. Scoped
+  CI passed formatting, Ruff, both Alphus profiles, Rumdl, mdrepo, module-size
+  checks, 54 selected tests, Linux and Windows-target Pyright, and wheel/sdist
+  builds. The local installed-wheel stage could not resolve `pydantic==2.13.5`
+  because sandbox DNS could not resolve `pypi.org`; hosted acceptance passed
+  the normal dependency installation and external-project rehearsal.
+- **Hosted acceptance:** GitHub Actions run `44042508156` passed for tag
+  `v0.5.3rc886` at code commit
+  `7a0522e16ad42303e6edd576817f37c9d391823d`. Tag-scope resolution, normal
+  dependency installation, the focused lint gate, and the external-project
+  wheel rehearsal passed. Package and preview jobs were skipped under
+  prerelease workflow policy.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -31270,6 +31323,8 @@ quality, or first-article continuity.
 [happy-changelog]: https://github.com/aklofas/kicad-happy/blob/main/CHANGELOG.md
 [happy-analyzer]: https://github.com/aklofas/kicad-happy/blob/main/skills/kicad/scripts/signal_detectors.py#L3633-L3673
 [i2c-spec]: https://www.nxp.com/docs/en/user-guide/UM10204.pdf
+[D-code definitions]: https://docs.kicad.org/doxygen/dcode_8h_source.html#l62
+[Excellon reader]: https://docs.kicad.org/doxygen/excellon__read__drill__file_8cpp_source.html#l983
 [kicad-device-library]: https://kicad.github.io/symbols/Device.html
 [kicad-thermistor-symbol-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Device.kicad_symdir/Thermistor.kicad_sym>
 [kicad-thermistor-ntc-symbol-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Device.kicad_symdir/Thermistor_NTC.kicad_sym>
