@@ -872,14 +872,21 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc891):** LINT-556
+- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc891):** LINT-556
   rejects Excellon files missing a terminal `M30` or containing a command
   after it. The tag-scoped selection passed 141 tests, including all 12
   digest-pinned native fabrication cases. GitHub Actions run `44073410815`
   passed Pyright, wheel/sdist/sdist-wheel builds, and installed-wheel external
   project inventory, surface, verification, and playtest checks. Package and
   preview jobs were skipped under prerelease policy.
-- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc890):** LINT-555
+- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc892):** LINT-557
+  requires copper Gerbers to contain one terminal `M02` and rejects commands
+  or data after it. The tag-scoped selection passed 147 tests, including all 12
+  digest-pinned native fabrication cases. GitHub Actions run `44080374427`
+  passed Pyright, wheel/sdist/sdist-wheel builds, and the installed-wheel
+  external-project inventory, surface, verification, and playtest checks.
+  Package and preview jobs were skipped under prerelease policy.
+- **Earlier hosted-accepted lint-gate checkpoint (v0.5.3rc890):** LINT-555
   extends per-axis Excellon precision regression coverage to M15/G01 routed
   slots, whose endpoint precision is tracked through a separate parser path.
   The final tag-scoped selection passed 137 tests, including 12 exact-version
@@ -31541,6 +31548,49 @@ acceptance threads while new lint features proceed:
 - **Hosted acceptance:** GitHub Actions run `44073410815` passed for tag
   `v0.5.3rc891` at code commit `58d795e7d202138f658fd44ec6a3bd611cf880fe`.
   The 141-test scoped selection included all 12 exact-version native cases.
+  Pyright, wheel/sdist/sdist-wheel builds, installed-wheel checks against the
+  separate project checkout, and the external playtest passed. Package and
+  preview jobs were skipped under prerelease policy.
+
+#### LINT-557 — Require a terminal Gerber end-of-file marker
+
+- **Priority:** P1 fabrication-evidence integrity. The bounded Gerber parser
+  previously accepted copper artwork without requiring the `M02` end-of-file
+  command, and ignored raw bytes after its last parsed command. A truncated
+  Gerber could therefore contribute geometry to source-bound connectivity
+  analysis without proving that the exporter closed the artifact.
+- **Change:** Require exactly one `M02` command as the final parsed Gerber token.
+  Reject a missing or repeated marker, commands after it, or non-whitespace data
+  after it as `UNSUPPORTED`.
+- **Native behavior:** Exact KiCad 10.0.0 and 10.0.5 fabrication exports end
+  each copper Gerber with `M02*`; those outputs remain accepted by the analyzer.
+- **Boundary:** This checks the supported file-termination convention. It does
+  not prove that every intended manufacturing feature was exported, validate
+  electrical correctness, or establish fabrication quality. A Gerber that is
+  otherwise incomplete but still has a terminal `M02` remains outside this
+  check's scope.
+- **Regression coverage:** Synthetic controls verify a valid marker, permitted
+  trailing whitespace, and `UNSUPPORTED` outcomes for missing or repeated
+  markers, later commands, and raw trailing data. A source-bound mutation
+  confirms missing `M02` cannot produce a supported connectivity result.
+  Exact-version native tests assert KiCad 10.0.0 and 10.0.5 exports end every
+  copper Gerber with `M02*`. No project board or proprietary fixture is used.
+- **Analyzer version:** `21`, because Gerber inputs that previously parsed as
+  complete now return `UNSUPPORTED` when termination is absent or followed by
+  commands or data.
+- **Selection:** The annotated scope includes
+  `tests/test_fabrication_gerber_end_marker.py` and fabrication suites that
+  assert the analyzer version. Use `design_lint and evidence_lint`; exact-version
+  validation sets `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` and includes the
+  `native_kicad` marker on KiCad 10.0.0 and 10.0.5.
+- **Local validation:** The tag-scoped CI selection passed 147 tests, including
+  all 12 exact-version native cases. Linux and Windows-target Pyright,
+  wheel/sdist/sdist-wheel builds, installed-wheel origin/version checks, and the
+  external-project check passed. The focused PCB marker, theme-suite,
+  collection, catalog, and fixture-reachability checks passed 62 tests.
+- **Hosted acceptance:** GitHub Actions run `44080374427` passed for tag
+  `v0.5.3rc892` at code commit `ba1afd47c91652f829a50d866aefc36a1fd26c2c`.
+  The 147-test scoped selection included all 12 exact-version native cases.
   Pyright, wheel/sdist/sdist-wheel builds, installed-wheel checks against the
   separate project checkout, and the external playtest passed. Package and
   preview jobs were skipped under prerelease policy.
