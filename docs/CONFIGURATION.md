@@ -151,6 +151,10 @@ must match a source pad without a net; omitted no-connect pads are allowed.
 Each copper Gerber must contain one terminal `M02` end-of-file marker; a missing
 or repeated marker, or any command or data after it, makes the artifact
 `UNSUPPORTED`.
+Coordinate records must fully match the supported X/Y form and include one
+`D01`, `D02`, or `D03` operation. Repeated fields, unsupported axes or arc
+offsets, malformed numbers, and unparsed data also make the artifact
+`UNSUPPORTED`.
 This inventory check does not verify that each IPC-D-356 coordinate matches
 the source pad location. The analyzer also binds each present component contact
 to the source footprint placement and pad offset, including footprint rotation,

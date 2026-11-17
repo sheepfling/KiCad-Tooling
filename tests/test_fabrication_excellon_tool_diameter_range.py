@@ -52,7 +52,7 @@ def test_tool_diameter_outside_kicad_nanometer_range_is_unsupported(
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "21"
+    assert result.analyzer_version == "22"
     assert result.status == "UNSUPPORTED"
     assert reason in result.unsupported_reasons[0]
     assert result.findings == ()
@@ -85,7 +85,7 @@ def test_kicad_representable_tool_diameter_remains_reviewable(
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "21"
+    assert result.analyzer_version == "22"
     assert result.status == "REVIEW"
     (finding,) = result.findings
     assert finding.code == "UNBOUND_DRILL_HIT"

@@ -17,6 +17,14 @@ class UnsupportedFabricationFormat(ValueError):
     """Input uses a fabrication feature outside this analyzer's declared subset."""
 
 
+_GERBER_LINEAR_COMMAND = re.compile(
+    r"(?:(?P<interpolation>G01))?"
+    r"(?P<x>X[+-]?\d+)?"
+    r"(?P<y>Y[+-]?\d+)?"
+    r"(?P<operation>D0[123])?"
+)
+
+
 @dataclass(frozen=True)
 class GerberFeature:
     kind: Literal["stroke", "flash", "region"]
@@ -131,15 +139,12 @@ class GerberParser:
         self._parse(text)
 
     def _coordinate(self, raw: str, axis: str) -> float:
-        if "." in raw:
-            value = float(raw)
-        else:
-            integer, decimals = self.format[axis]
-            sign = -1 if raw.startswith("-") else 1
-            digits = raw.lstrip("+-")
-            width = integer + decimals
-            digits = digits.rjust(width, "0") if self.zero_mode == "L" else digits.ljust(width, "0")
-            value = sign * int(digits or "0") / 10**decimals
+        integer, decimals = self.format[axis]
+        sign = -1 if raw.startswith("-") else 1
+        digits = raw.lstrip("+-")
+        width = integer + decimals
+        digits = digits.rjust(width, "0") if self.zero_mode == "L" else digits.ljust(width, "0")
+        value = sign * int(digits or "0") / 10**decimals
         return value * self.scale
 
     def _parse(self, text: str) -> None:
@@ -166,6 +171,14 @@ class GerberParser:
             raise UnsupportedFabricationFormat(
                 f"Gerber contains data after the M02 end-of-file marker in {self.name}"
             )
+
+        offset = 0
+        for match in tokens:
+            if text[offset : match.start()].strip():
+                raise UnsupportedFabricationFormat(
+                    f"Gerber contains unparsed data before a command in {self.name}"
+                )
+            offset = match.end()
 
         for match in tokens:
             parameter, command = match.groups()
@@ -226,7 +239,7 @@ class GerberParser:
             return
         if re.search(r"G0?[234]|G0?7[45]", raw):
             raise UnsupportedFabricationFormat(f"arc or quadrant interpolation in {self.name}")
-        if raw in {"G01", "G1"}:
+        if raw == "G01":
             return
         if raw in {"G70", "MOIN"}:
             self.scale = 25.4
@@ -253,13 +266,21 @@ class GerberParser:
             return
         if raw == "M02":
             return
-        matches = {axis: value for axis, value in re.findall(r"([XY])([+-]?[\d.]+)", raw)}
-        operation = re.search(r"D0*([123])(?:$|[^\d])", raw)
-        if not matches and operation is None:
-            raise UnsupportedFabricationFormat(f"unsupported Gerber command {raw!r} in {self.name}")
-        nx = self._coordinate(matches["X"], "X") if "X" in matches else self.x
-        ny = self._coordinate(matches["Y"], "Y") if "Y" in matches else self.y
-        code = int(operation.group(1)) if operation else 1
+        command = _GERBER_LINEAR_COMMAND.fullmatch(raw)
+        if command is None:
+            raise UnsupportedFabricationFormat(
+                f"unsupported Gerber coordinate command {raw!r} in {self.name}"
+            )
+        x_coordinate = command.group("x")
+        y_coordinate = command.group("y")
+        operation = command.group("operation")
+        if (x_coordinate is not None or y_coordinate is not None) and operation is None:
+            raise UnsupportedFabricationFormat(
+                f"Gerber coordinate command {raw!r} is missing a D01/D02/D03 operation in {self.name}"
+            )
+        nx = self._coordinate(x_coordinate[1:], "X") if x_coordinate else self.x
+        ny = self._coordinate(y_coordinate[1:], "Y") if y_coordinate else self.y
+        code = int(operation[-1]) if operation else 1
         if code == 2:
             self.x, self.y = nx, ny
             if self.region is not None:
