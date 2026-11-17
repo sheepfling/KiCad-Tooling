@@ -31180,6 +31180,51 @@ acceptance threads while new lint features proceed:
   lint gate, normal dependency install, and external-project wheel rehearsal.
   Package and preview jobs were skipped by prerelease workflow policy.
 
+#### LINT-550 — Reject malformed and unrepresentable Excellon coordinates
+
+- **Priority:** P1 fabrication-evidence integrity. Oversized fixed-width
+  coordinates could raise `OverflowError`, oversized decimal coordinates
+  could become infinity, and malformed coordinate words could be partially
+  accepted as a different finite position.
+- **Change:** Require each coordinate line to consist entirely of unique,
+  well-formed X/Y fields. Reject non-finite, nanometer-unrepresentable, and
+  nonzero-underflow coordinates, as well as malformed or duplicate
+  `FILE_FORMAT` declarations, as `UnsupportedFabricationFormat` before drill
+  binding or finding assembly.
+- **Boundary:** This validates the parser's declared coordinate grammar and
+  numeric range; it does not impose a physical board-size limit or prove a hit
+  matches source geometry. A valid unmatched hit remains `REVIEW` under
+  LINT-547. KiCad's native reader accepts single-digit `FILE_FORMAT` fields
+  and supports at most eight fractional digits.
+- **Regression coverage:** Synthetic artifacts exercise fixed-width overflow,
+  decimal infinity and underflow, nanometer overflow, malformed or silently
+  truncated coordinate fields, malformed slot commands, repeated axes, and
+  malformed format declarations. A valid finite unmatched hit remains
+  `REVIEW`.
+- **Analyzer version:** `15`, because malformed coordinates that were
+  previously accepted or crashed now return `UNSUPPORTED`.
+- **Selection:** Run
+
+  ```sh
+  .venv/bin/python -I -m pytest \
+    tests/test_fabrication_excellon_coordinate_validation.py \
+    tests/test_fabrication_connectivity.py \
+    tests/test_fabrication_unbound_drill_hits.py \
+    -m 'design_lint and evidence_lint and pcb_lint'
+  ```
+
+  Exact-version native compatibility uses the existing fabrication
+  connectivity suites with `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` and
+  `native_kicad`.
+- **Local validation:** Focused Excellon and artifact-connectivity selection:
+  46 passed. PCB marker, theme, and module-size architecture checks: 11 passed.
+  Scoped CI: 72 passed, 6 skipped; Ruff, Alphus, Rumdl, mdrepo, Linux and
+  Windows-target Pyright, wheel/sdist builds, and the exact-version native
+  Docker selection passed (12 tests across KiCad 10.0.0 and 10.0.5). The local
+  normal dependency install could not resolve `pydantic==2.13.5` because
+  sandbox DNS could not resolve `pypi.org`; hosted installation remains the
+  release gate.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

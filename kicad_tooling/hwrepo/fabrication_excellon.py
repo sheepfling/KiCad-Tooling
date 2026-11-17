@@ -21,6 +21,26 @@ class DrillHit:
     diameter_resolution_nm: int = 1
 
 
+_COORDINATE_FIELD_RE = re.compile(r"([XY])([+-]?(?:\d+(?:\.\d*)?|\.\d+))")
+
+
+def _coordinate_fields(raw: str) -> dict[str, str]:
+    """Parse a complete X/Y field sequence without accepting ignored suffixes."""
+    fields: dict[str, str] = {}
+    cursor = 0
+    for match in _COORDINATE_FIELD_RE.finditer(raw):
+        if match.start() != cursor:
+            raise UnsupportedFabricationFormat("malformed Excellon coordinate fields")
+        axis, value = match.groups()
+        if axis in fields:
+            raise UnsupportedFabricationFormat(f"Excellon coordinate field {axis} is repeated")
+        fields[axis] = value
+        cursor = match.end()
+    if cursor != len(raw):
+        raise UnsupportedFabricationFormat("malformed Excellon coordinate fields")
+    return fields
+
+
 def _resolution_nm(raw: str, metric: bool, coordinate_format: tuple[int, int] | None) -> int:
     if "." in raw:
         decimals = len(raw.partition(".")[2])
@@ -41,21 +61,47 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
     x = y = 0.0
     x_resolution_nm = y_resolution_nm = 1
     slot_start: tuple[float, float] | None = None
-    header = re.search(r"FILE_FORMAT\s*=\s*(\d):(\d)", text)
-    if header:
+    format_lines = [line for line in text.splitlines() if "FILE_FORMAT" in line.upper()]
+    if len(format_lines) > 1:
+        raise UnsupportedFabricationFormat("Excellon has multiple FILE_FORMAT declarations")
+    if format_lines:
+        header = re.fullmatch(
+            r"\s*;?\s*FILE_FORMAT\s*=\s*(\d):([0-8])\s*",
+            format_lines[0],
+            flags=re.IGNORECASE,
+        )
+        if header is None:
+            raise UnsupportedFabricationFormat(
+                "Excellon has an unsupported FILE_FORMAT declaration"
+            )
         coordinate_format = int(header.group(1)), int(header.group(2))
 
     def coordinate(raw: str) -> float:
-        if "." in raw:
-            value = float(raw)
-        else:
-            integer, decimals = coordinate_format or ((3, 3) if metric else (2, 4))
-            sign = -1 if raw.startswith("-") else 1
-            digits = raw.lstrip("+-")
-            width = integer + decimals
-            digits = digits.ljust(width, "0") if zero_mode == "T" else digits.rjust(width, "0")
-            value = sign * int(digits or "0") / 10**decimals
-        return value if metric else value * 25.4
+        try:
+            if "." in raw:
+                value = float(raw)
+            else:
+                integer, decimals = coordinate_format or ((3, 3) if metric else (2, 4))
+                sign = -1 if raw.startswith("-") else 1
+                digits = raw.lstrip("+-")
+                width = integer + decimals
+                digits = digits.ljust(width, "0") if zero_mode == "T" else digits.rjust(width, "0")
+                value = sign * int(digits or "0") / 10**decimals
+        except (OverflowError, ValueError) as exc:
+            raise UnsupportedFabricationFormat("Excellon coordinate cannot be represented") from exc
+        if any(digit in "123456789" for digit in raw) and value == 0.0:
+            raise UnsupportedFabricationFormat("Excellon coordinate underflows its numeric format")
+        if not metric:
+            value *= 25.4
+        if not math.isfinite(value):
+            raise UnsupportedFabricationFormat("Excellon coordinate is non-finite")
+        if any(digit in "123456789" for digit in raw) and value == 0.0:
+            raise UnsupportedFabricationFormat("Excellon coordinate underflows its unit conversion")
+        if not math.isfinite(value * 1_000_000):
+            raise UnsupportedFabricationFormat(
+                "Excellon coordinate exceeds the finite nanometer range"
+            )
+        return value
 
     def selected_drill_geometry() -> tuple[float, int]:
         if selected is None:
@@ -119,7 +165,12 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
         if upper.startswith(("M48", "FMAT", "%", "G90", "G05", "M30")):
             continue
         slot_parts = re.split(r"G85", upper)
-        coords = {axis: value for axis, value in re.findall(r"([XY])([+-]?[\d.]+)", slot_parts[0])}
+        if len(slot_parts) > 2:
+            raise UnsupportedFabricationFormat("Excellon command has multiple G85 slot separators")
+        coordinate_text = slot_parts[0]
+        if upper.startswith(("G00", "G01")):
+            coordinate_text = coordinate_text[3:]
+        coords = _coordinate_fields(coordinate_text)
         if not coords:
             if upper.startswith(("G00", "G01")):
                 continue
@@ -137,9 +188,7 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
         coordinate_resolution_nm = max(x_resolution_nm, y_resolution_nm)
         if len(slot_parts) > 1:
             diameter, diameter_resolution_nm = selected_drill_geometry()
-            end_fields = {
-                axis: value for axis, value in re.findall(r"([XY])([+-]?[\d.]+)", slot_parts[1])
-            }
+            end_fields = _coordinate_fields(slot_parts[1])
             end = (
                 coordinate(end_fields["X"]) if "X" in end_fields else nx,
                 coordinate(end_fields["Y"]) if "Y" in end_fields else ny,

@@ -4,6 +4,7 @@ PCB_EVIDENCE_LINT_TEST_MODULES = frozenset(
     {
         "tests/test_fabrication_connectivity.py",
         "tests/test_fabrication_connectivity_native.py",
+        "tests/test_fabrication_excellon_coordinate_validation.py",
         "tests/test_fabrication_excellon_finite_tool_diameters.py",
         "tests/test_fabrication_excellon_tool_validation.py",
         "tests/test_fabrication_cross_kind_drill_binding.py",
@@ -31,6 +32,7 @@ PCB_LINT_TEST_MODULES = frozenset(
     {
         "tests/test_fabrication_connectivity.py",
         "tests/test_fabrication_connectivity_native.py",
+        "tests/test_fabrication_excellon_coordinate_validation.py",
         "tests/test_fabrication_excellon_finite_tool_diameters.py",
         "tests/test_fabrication_excellon_tool_validation.py",
         "tests/test_fabrication_cross_kind_drill_binding.py",
