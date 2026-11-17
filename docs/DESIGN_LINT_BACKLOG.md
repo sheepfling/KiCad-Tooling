@@ -886,6 +886,10 @@ standalone parity work when it closes a demonstrated feature regression.
   passed Pyright, wheel/sdist/sdist-wheel builds, and the installed-wheel
   external-project inventory, surface, verification, and playtest checks.
   Package and preview jobs were skipped under prerelease policy.
+- **Published prerelease candidate (v0.5.3rc893; hosted acceptance pending):**
+  LINT-558 rejects Gerber coordinate records the bounded parser cannot consume
+  exactly. The tag-scoped local CI selection passed 164 tests, including 12
+  digest-pinned native fabrication cases. Hosted run `44086735827` is in progress.
 - **Earlier hosted-accepted lint-gate checkpoint (v0.5.3rc890):** LINT-555
   extends per-axis Excellon precision regression coverage to M15/G01 routed
   slots, whose endpoint precision is tracked through a separate parser path.
@@ -31595,6 +31599,55 @@ acceptance threads while new lint features proceed:
   separate project checkout, and the external playtest passed. Package and
   preview jobs were skipped under prerelease policy.
 
+#### LINT-558 — Reject partially parsed Gerber coordinate commands
+
+- **Priority:** P1 fabrication-evidence integrity. The bounded Gerber parser
+  extracted any recognizable X, Y, and D substrings from a command, even when
+  duplicate axes, unsupported fields, extra text, or a missing operation code
+  were present. Its token scan could also skip unmatched bytes around a `%` and
+  continue parsing later commands. The analyzer could therefore accept
+  malformed artwork as supported geometry.
+- **Reference grammar:** [Ucamco Gerber Layer Format Specification
+  2026.05][gerber-layer-spec-2026-05]
+  defines coordinate values as integers and operations with explicit D01, D02,
+  or D03 codes. The tooling's bounded parser supports only linear X/Y records;
+  arc offsets remain unsupported.
+- **Change:** Require every non-whitespace byte to belong to a parsed token and
+  require each linear operation to fully match the supported X/Y grammar.
+  Reject duplicate axes or operation codes, unsupported axes and I/J offsets,
+  non-integer coordinates, missing operations, and trailing command text as
+  `UNSUPPORTED`.
+- **Native behavior:** Exact KiCad 10.0.0 and 10.0.5 exports use integer X/Y
+  fields and explicit D01/D02/D03 operations in the tested copper outputs; the
+  source-bound analyzer accepts both exporters' fixtures after the stricter
+  parse.
+- **Boundary:** This makes the supported record grammar fail closed. It does
+  not add arc or other Gerber syntax support, prove that every intended
+  manufacturing feature was exported, validate electrical correctness, or
+  establish fabrication quality.
+- **Regression coverage:** Synthetic controls cover X-only, Y-only, combined
+  X/Y, and G01-prefixed operations. Faults cover duplicate axes and operations,
+  unknown text, Z and I/J fields, missing/short operation codes, decimal or
+  malformed coordinates, and unmatched data skipped by the former tokenizer.
+  A source-bound mutation confirms malformed geometry returns `UNSUPPORTED`
+  with no connectivity findings. Exact-version native tests cover KiCad
+  10.0.0 and 10.0.5. No project board or proprietary fixture is used.
+- **Analyzer version:** `22`, because malformed Gerber records that previously
+  produced supported geometry now return `UNSUPPORTED`.
+- **Selection:** The annotated scope includes
+  `tests/test_fabrication_gerber_command_validation.py` plus prior fabrication
+  evidence suites that assert the analyzer version. Use
+  `design_lint and evidence_lint`; exact-version validation sets
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` and includes the `native_kicad`
+  marker for KiCad 10.0.0 and 10.0.5.
+- **Local validation:** The tag-scoped CI selection passed 164 tests, including
+  all 12 exact-version native cases. Linux and Windows-target Pyright,
+  wheel/sdist/sdist-wheel builds, installed-wheel origin/version checks, and the
+  external-project check passed. The focused PCB marker, theme-suite,
+  collection, catalog, and fixture-reachability checks passed 62 tests.
+- **Hosted acceptance:** Pending GitHub Actions run `44086735827` for tag
+  `v0.5.3rc893` at code commit `39e44b2a1fcd33b6c6d26149f26bc609e7b6a8a3`.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -31690,3 +31743,4 @@ quality, or first-article continuity.
 [happy-v301-diffpair-reference-via]: https://github.com/aklofas/kicad-happy/releases/tag/v3.0.1
 [kicad-source-mirror-releases]: https://github.com/KiCad/kicad-source-mirror/releases
 [kicad-docker-digests]: https://github.com/KiCad/kicad-docker/pkgs/container/kicad/versions?filters%5Bversion_type%5D=tagged
+[gerber-layer-spec-2026-05]: https://www.ucamco.com/files/downloads/file_en/554/gerber-layer-format-specification-revision-2026-05_en.pdf?eac6410808ad1d0b3f977429ddaab7d0=
