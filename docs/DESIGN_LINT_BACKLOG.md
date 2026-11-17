@@ -872,14 +872,22 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc886):** LINT-551
+- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc887):** LINT-552
+  bounds Excellon tool diameters to KiCad's signed nanometer range and rejects
+  values that round to zero. The final tag-scoped selection passed 102 tests
+  with 12 native skips; exact-version Docker coverage passed 12 tests on KiCad
+  10.0.0 and 10.0.5. Hosted acceptance passed in GitHub Actions run
+  `44047274485`, including dependency installation and the external-project
+  wheel rehearsal. Package and preview jobs were skipped under prerelease
+  policy.
+- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc886):** LINT-551
   rejects malformed and unrepresentable Excellon tool tokens. The final local
   tag-scoped selection passed 94 tests with 12 native skips; exact-version
   Docker coverage passed 12 tests on KiCad 10.0.0 and 10.0.5. Hosted
   acceptance passed in GitHub Actions run `44042508156`, including dependency
   installation and the external-project wheel rehearsal. Package and preview
   jobs were skipped under prerelease policy.
-- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc885):** LINT-550
+- **Earlier hosted-accepted lint-gate checkpoint (v0.5.3rc885):** LINT-550
   rejects malformed or unrepresentable Excellon coordinates as unsupported
   evidence. Local scoped CI passed 72 tests with 6 skipped; the exact-version
   Docker selection passed 12 tests on KiCad 10.0.0 and 10.0.5. Hosted
@@ -31299,6 +31307,49 @@ acceptance threads while new lint features proceed:
   wheel rehearsal passed. Package and preview jobs were skipped under
   prerelease workflow policy.
 
+#### LINT-552 — Bound Excellon tool diameters to KiCad's nanometer range
+
+- **Priority:** P1 fabrication-evidence integrity. The parser accepted
+  nonzero diameters below half a nanometer even though KiCad rounds the
+  diameter to zero internal units. Inch-mode upper bounds also used the wrong
+  scale, allowing an oversized tool to overflow while its finding was being
+  fingerprinted.
+- **Change:** Convert every tool diameter to millimeters and then nanometers
+  before range checks. Reject values that KiCad rounds to zero, overflow its
+  signed nanometer dimension, or become non-finite after unit conversion as
+  `UnsupportedFabricationFormat` before finding assembly.
+- **Boundary:** KiCad converts Excellon tool diameters to internal units with
+  `KiROUND`; its rounding rule sends half-way values away from zero. A
+  half-nanometer diameter therefore remains representable as one nanometer,
+  while values below that boundary become zero. This check validates numeric
+  representability; it does not establish drill availability, supplier
+  capability, or manufacturing suitability. A representable unmatched hit
+  remains `REVIEW` ([Excellon tool sizing], [KiCad rounding]).
+- **Regression coverage:** Synthetic artifacts cover metric and inch values
+  below the half-nanometer threshold, the exact half-nanometer control, the
+  signed integer overflow boundary, a valid maximum-range control, inch-mode
+  scale overflow, and valid unmatched holes that remain reviewable.
+- **Analyzer version:** `17`, because native-unrepresentable tool diameters
+  that were previously accepted or could crash finding assembly now return
+  `UNSUPPORTED`.
+- **Selection:** The annotated tag selects `evidence_lint` and the fabrication
+  connectivity regression suites. Exact-version native compatibility uses
+  the existing suites with
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` and `native_kicad`.
+- **Local validation:** Final tag-scoped selection: 102 passed, 12 skipped.
+  PCB architecture, pytest-marker, and theme checks: 11 passed. Exact-version
+  native Docker selection: 12 passed across KiCad 10.0.0 and 10.0.5. Scoped
+  CI passed formatting, Ruff, both Alphus profiles, Rumdl, mdrepo, module-size
+  checks, 102 selected tests, Linux and Windows-target Pyright, and wheel/sdist
+  builds. The local installed-wheel stage could not resolve `pydantic==2.13.5`
+  because sandbox DNS could not resolve `pypi.org`; the hosted run completed
+  that stage successfully.
+- **Hosted acceptance:** GitHub Actions run `44047274485` passed for tag
+  `v0.5.3rc887` at code commit
+  `2aace99669ab55ebce0ab5ad23ccd6d3bf1fbff9`, including dependency
+  installation and the external-project wheel rehearsal. Package and preview
+  jobs were skipped under prerelease policy.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -31325,6 +31376,8 @@ quality, or first-article continuity.
 [i2c-spec]: https://www.nxp.com/docs/en/user-guide/UM10204.pdf
 [D-code definitions]: https://docs.kicad.org/doxygen/dcode_8h_source.html#l62
 [Excellon reader]: https://docs.kicad.org/doxygen/excellon__read__drill__file_8cpp_source.html#l983
+[Excellon tool sizing]: https://docs.kicad.org/doxygen/excellon__read__drill__file_8cpp_source.html#l1627
+[KiCad rounding]: https://docs.kicad.org/doxygen/util_8h_source.html#l169
 [kicad-device-library]: https://kicad.github.io/symbols/Device.html
 [kicad-thermistor-symbol-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Device.kicad_symdir/Thermistor.kicad_sym>
 [kicad-thermistor-ntc-symbol-10.0.5]: <https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.5/Device.kicad_symdir/Thermistor_NTC.kicad_sym>
