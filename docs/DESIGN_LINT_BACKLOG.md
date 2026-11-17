@@ -31814,7 +31814,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-562 — Enforce Gerber aperture identity and D-code bounds
 
-- **Status:** Local acceptance passed; hosted acceptance pending.
+- **Status:** Complete; hosted acceptance passed.
 - **Priority:** P1 fabrication-evidence integrity. Gerber aperture numbers are
   identities used to connect aperture definitions to later drawing and flash
   commands. The bounded parser previously accepted reserved or out-of-range
@@ -31851,7 +31851,13 @@ acceptance threads while new lint features proceed:
   wheel/sdist/sdist-wheel builds, installed-wheel identity, external-project
   inventory/surface/verification, and the external playtest passed. Retained
   logs are under `build/ci/run-g846n4ll/`.
-- **Hosted acceptance:** Pending.
+- **Hosted acceptance:** Tag `v0.5.3rc897` passed [GitHub Actions
+  run 44159645439](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44159645439)
+  at code commit `d78b20b5a822b128ea040a665c08ac73b431ee42`: 228 selected tests,
+  including all 12 exact-version native fabrication cases; Linux and Windows-
+  targeted Pyright; wheel/sdist/sdist-wheel builds; and installed-wheel checks
+  against the external project. Package and preview jobs were skipped under
+  prerelease policy.
 
 ## Completion and release gate
 
