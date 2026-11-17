@@ -872,7 +872,14 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc890):** LINT-555
+- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc891):** LINT-556
+  rejects Excellon files missing a terminal `M30` or containing a command
+  after it. The tag-scoped selection passed 141 tests, including all 12
+  digest-pinned native fabrication cases. GitHub Actions run `44073410815`
+  passed Pyright, wheel/sdist/sdist-wheel builds, and installed-wheel external
+  project inventory, surface, verification, and playtest checks. Package and
+  preview jobs were skipped under prerelease policy.
+- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc890):** LINT-555
   extends per-axis Excellon precision regression coverage to M15/G01 routed
   slots, whose endpoint precision is tracked through a separate parser path.
   The final tag-scoped selection passed 137 tests, including 12 exact-version
@@ -881,7 +888,7 @@ standalone parity work when it closes a demonstrated feature regression.
   installed-wheel external-project inventory, surface, verification, and
   playtest passed. Package and preview jobs were skipped under prerelease
   policy.
-- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc889):** LINT-554
+- **Earlier hosted-accepted lint-gate checkpoint (v0.5.3rc889):** LINT-554
   prevents coarse precision on one Excellon axis from widening the other
   axis's tolerance for drill centers or routed-slot geometry. The final
   tag-scoped selection passed 133 tests, including 12 exact-version native
@@ -31531,7 +31538,12 @@ acceptance threads while new lint features proceed:
   Pyright, wheel/sdist/sdist-wheel builds, and fresh installed-wheel origin and
   version checks passed. The focused pytest marker, theme-suite, fixture
   reachability, and architecture selection passed 62 tests.
-- **Hosted acceptance:** Pending.
+- **Hosted acceptance:** GitHub Actions run `44073410815` passed for tag
+  `v0.5.3rc891` at code commit `58d795e7d202138f658fd44ec6a3bd611cf880fe`.
+  The 141-test scoped selection included all 12 exact-version native cases.
+  Pyright, wheel/sdist/sdist-wheel builds, installed-wheel checks against the
+  separate project checkout, and the external playtest passed. Package and
+  preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
