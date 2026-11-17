@@ -31762,6 +31762,46 @@ acceptance threads while new lint features proceed:
   external-project checks. Package and preview jobs were skipped under
   prerelease policy.
 
+#### LINT-561 — Validate Gerber unit and coordinate-format declarations
+
+- **Status:** Implemented; local validation in progress.
+- **Priority:** P1 fabrication-evidence integrity. The bounded Gerber parser
+  supplied default metric units and coordinate precision when required headers
+  were absent, accepted repeated or late declarations, and interpreted
+  coordinate strings longer than the declared precision. Unicode digit classes
+  also allowed non-ASCII coordinate characters through numeric parsing.
+- **Reference:** The [Ucamco Gerber Layer Format Specification
+  2026.05][gerber-layer-spec-2026-05] requires one `MO` and one `FS` declaration
+  in the header before the first operation. Its current `FS` form uses absolute
+  coordinates, leading-zero omission, equal X/Y integer precision from 1 to 6,
+  and six decimal digits.
+- **Change:** Require one metric or inch unit declaration and one supported
+  coordinate format before any Gerber operation. Reject duplicate/late headers,
+  unsupported or legacy unit forms, non-ASCII coordinate digits, and coordinate
+  strings longer than the declared integer-plus-decimal width.
+- **Boundary:** The parser supports only current absolute `FSLAXn6Yn6` format
+  declarations and `MOMM`/`MOIN` units. It does not add trailing-zero omission,
+  incremental coordinates, historical `G70`/`G71` commands, arc support, or
+  arbitrary Gerber extensions. `UNSUPPORTED` means this analyzer cannot
+  establish source-bound copper evidence; it is not an electrical finding.
+- **Regression coverage:** Synthetic faults cover absent, repeated, and late
+  `MO`/`FS` headers; invalid integer and decimal precision; trailing-zero mode;
+  legacy unit commands; over-width X/Y fields; and non-ASCII coordinate digits.
+  Controls cover metric and inch units, minimum/common/maximum integer widths,
+  and valid leading-zero-suppressed coordinates. Removing a required header from
+  source-bound fabrication artifacts returns `UNSUPPORTED` with no findings.
+  Exact KiCad 10.0.0 and 10.0.5 exports remain in the Docker acceptance lane.
+  No product or cohort project data is used.
+- **Analyzer version:** `25`, because required header and coordinate-format
+  validation changes the supported-artifact boundary.
+- **Selection:** Run
+  `.venv/bin/python -I -m pytest -q tests/test_fabrication_gerber_coordinate_format.py`
+  with `design_lint`, `evidence_lint`, and `pcb_lint`. The tag-scoped native
+  fabrication lane remains `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
+- **Local validation (2026-11-17):** The focused coordinate-format suite passed
+  21 tests. Full fabrication-area and package checks are pending.
+- **Hosted acceptance:** Pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

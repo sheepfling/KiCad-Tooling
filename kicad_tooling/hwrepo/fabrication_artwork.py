@@ -20,8 +20,8 @@ class UnsupportedFabricationFormat(ValueError):
 
 _GERBER_LINEAR_COMMAND = re.compile(
     r"(?:(?P<interpolation>G01))?"
-    r"(?P<x>X[+-]?\d+)?"
-    r"(?P<y>Y[+-]?\d+)?"
+    r"(?P<x>X[+-]?[0-9]+)?"
+    r"(?P<y>Y[+-]?[0-9]+)?"
     r"(?P<operation>D0[123])?"
 )
 _GERBER_APERTURE_DECIMAL = re.compile(r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)")
@@ -131,9 +131,10 @@ class GerberParser:
         self.name = name
         self.features: list[GerberFeature] = []
         self.apertures: dict[int, tuple[str, tuple[float, ...]]] = {}
-        self.zero_mode = "L"
         self.scale = 1.0
-        self.format = {"X": (2, 6), "Y": (2, 6)}
+        self.units_seen = False
+        self.format: dict[str, tuple[int, int]] | None = None
+        self.operations_started = False
         self.x = 0.0
         self.y = 0.0
         self.aperture: int | None = None
@@ -141,13 +142,29 @@ class GerberParser:
         self._parse(text)
 
     def _coordinate(self, raw: str, axis: str) -> float:
+        if self.format is None:
+            raise UnsupportedFabricationFormat(f"Gerber coordinate has no FS format in {self.name}")
         integer, decimals = self.format[axis]
         sign = -1 if raw.startswith("-") else 1
         digits = raw.lstrip("+-")
         width = integer + decimals
-        digits = digits.rjust(width, "0") if self.zero_mode == "L" else digits.ljust(width, "0")
+        if len(digits) > width:
+            raise UnsupportedFabricationFormat(
+                f"Gerber {axis} coordinate exceeds its declared FS precision in {self.name}"
+            )
+        digits = digits.rjust(width, "0")
         value = sign * int(digits or "0") / 10**decimals
         return value * self.scale
+
+    def _require_coordinate_header(self) -> None:
+        if not self.units_seen:
+            raise UnsupportedFabricationFormat(
+                f"Gerber operation precedes its MO unit declaration in {self.name}"
+            )
+        if self.format is None:
+            raise UnsupportedFabricationFormat(
+                f"Gerber operation precedes its FS format declaration in {self.name}"
+            )
 
     def _parse(self, text: str) -> None:
         tokens = tuple(re.finditer(r"%([^%]*)%|([^%*]*)\*", text))
@@ -188,24 +205,52 @@ class GerberParser:
                 self._parameter(parameter.strip().rstrip("*"))
             else:
                 self._command(command.strip())
+        if not self.units_seen:
+            raise UnsupportedFabricationFormat(
+                f"Gerber is missing its MO unit declaration in {self.name}"
+            )
+        if self.format is None:
+            raise UnsupportedFabricationFormat(
+                f"Gerber is missing its FS format declaration in {self.name}"
+            )
         if self.region is not None:
             raise UnsupportedFabricationFormat(f"unterminated region in {self.name}")
 
     def _parameter(self, raw: str) -> None:
         if raw.startswith("FS"):
-            match = re.fullmatch(r"FS([LT])([AI])X(\d)(\d)Y(\d)(\d)", raw)
-            if not match:
-                raise UnsupportedFabricationFormat(f"unsupported coordinate format in {self.name}")
-            zero, mode, xi, xd, yi, yd = match.groups()
-            if mode != "A":
-                raise UnsupportedFabricationFormat(f"incremental Gerber coordinates in {self.name}")
-            self.zero_mode = zero
-            if (xi, xd) != (yi, yd):
+            if self.format is not None:
+                raise UnsupportedFabricationFormat(
+                    f"Gerber has multiple FS format declarations in {self.name}"
+                )
+            if self.operations_started:
+                raise UnsupportedFabricationFormat(
+                    f"Gerber FS format declaration follows an operation in {self.name}"
+                )
+            match = re.fullmatch(r"FSLAX([0-9])6Y([0-9])6", raw)
+            if match is None:
+                raise UnsupportedFabricationFormat(
+                    f"unsupported Gerber coordinate format in {self.name}"
+                )
+            xi, yi = (int(value) for value in match.groups())
+            if not 1 <= xi <= 6 or not 1 <= yi <= 6:
+                raise UnsupportedFabricationFormat(
+                    f"unsupported Gerber coordinate precision in {self.name}"
+                )
+            if xi != yi:
                 raise UnsupportedFabricationFormat(f"different X/Y precision in {self.name}")
-            self.format = {"X": (int(xi), int(xd)), "Y": (int(yi), int(yd))}
+            self.format = {"X": (xi, 6), "Y": (yi, 6)}
         elif raw.startswith("MO"):
+            if self.units_seen:
+                raise UnsupportedFabricationFormat(
+                    f"Gerber has multiple MO unit declarations in {self.name}"
+                )
+            if self.operations_started:
+                raise UnsupportedFabricationFormat(
+                    f"Gerber MO unit declaration follows an operation in {self.name}"
+                )
             if raw not in {"MOMM", "MOIN"}:
                 raise UnsupportedFabricationFormat(f"unknown Gerber units in {self.name}")
+            self.units_seen = True
             self.scale = 25.4 if raw == "MOIN" else 1.0
         elif raw.startswith("AD"):
             match = re.fullmatch(r"ADD(\d+)([A-Z]),?(.*)", raw)
@@ -270,13 +315,13 @@ class GerberParser:
             raise UnsupportedFabricationFormat(f"arc or quadrant interpolation in {self.name}")
         if raw == "G01":
             return
-        if raw in {"G70", "MOIN"}:
-            self.scale = 25.4
-            return
-        if raw in {"G71", "MOMM"}:
-            self.scale = 1.0
-            return
+        if raw in {"G70", "G71", "MOIN", "MOMM"}:
+            raise UnsupportedFabricationFormat(
+                f"legacy Gerber unit command requires an MO header declaration in {self.name}"
+            )
         if raw in {"G36", "G036"}:
+            self._require_coordinate_header()
+            self.operations_started = True
             if self.region is not None:
                 raise UnsupportedFabricationFormat(f"nested Gerber region in {self.name}")
             self.region = []
@@ -303,6 +348,9 @@ class GerberParser:
         x_coordinate = command.group("x")
         y_coordinate = command.group("y")
         operation = command.group("operation")
+        if x_coordinate is not None or y_coordinate is not None or operation is not None:
+            self._require_coordinate_header()
+            self.operations_started = True
         if (x_coordinate is not None or y_coordinate is not None) and operation is None:
             raise UnsupportedFabricationFormat(
                 f"Gerber coordinate command {raw!r} is missing a D01/D02/D03 operation in {self.name}"

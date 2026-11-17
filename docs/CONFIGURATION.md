@@ -148,6 +148,16 @@ and assigned net. Missing, unexpected, over-repeated, or reassigned contacts
 are `UNSUPPORTED`, so a shortened contact file cannot shrink the expected
 copper universe and produce a misleading pass. A present no-connect contact
 must match a source pad without a net; omitted no-connect pads are allowed.
+Each copper Gerber must declare exactly one metric or inch `MO` unit and
+exactly one absolute `FS` coordinate format before its first operation. This
+subset accepts the current `%FSLAXn6Yn6*%` form, with equal X/Y integer widths
+from 1 through 6 and six decimal digits. Leading-zero omission is supported;
+trailing-zero and incremental modes are unsupported. Coordinate fields cannot
+exceed their declared integer-plus-decimal width. Missing, repeated, late, or
+unsupported unit/format declarations and over-width coordinates make the
+artifact `UNSUPPORTED`; historical `G70`/`G71` unit commands are outside this
+subset. These constraints follow the [Ucamco Gerber Layer Format Specification
+2026.05][gerber-layer-spec-2026-05].
 Each copper Gerber must contain one terminal `M02` end-of-file marker; a missing
 or repeated marker, or any command or data after it, makes the artifact
 `UNSUPPORTED`.
