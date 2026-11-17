@@ -176,10 +176,11 @@ def _center_matches(requirement: SourceDrillRequirement, hit: DrillHit) -> bool:
     if hit.end_mm is not None:
         x_mm = (hit.x_mm + hit.end_mm[0]) / 2
         y_mm = (hit.y_mm + hit.end_mm[1]) / 2
-    tolerance = hit.coordinate_resolution_nm // 2 + 1
+    x_tolerance = _coordinate_axis_resolution_nm(hit, "x") // 2 + 1
+    y_tolerance = _coordinate_axis_resolution_nm(hit, "y") // 2 + 1
     return (
-        abs(round(x_mm * _NM_PER_MM) - requirement.x_nm) <= tolerance
-        and abs(round(y_mm * _NM_PER_MM) + requirement.y_nm) <= tolerance
+        abs(round(x_mm * _NM_PER_MM) - requirement.x_nm) <= x_tolerance
+        and abs(round(y_mm * _NM_PER_MM) + requirement.y_nm) <= y_tolerance
     )
 
 
@@ -192,7 +193,8 @@ def _geometry_matches(requirement: SourceDrillRequirement, hit: DrillHit) -> boo
     if hit.end_mm is None:
         return False
 
-    coordinate_tolerance = hit.coordinate_resolution_nm + 2
+    x_coordinate_tolerance = _coordinate_axis_resolution_nm(hit, "x") + 2
+    y_coordinate_tolerance = _coordinate_axis_resolution_nm(hit, "y") + 2
     delta_x_nm = round(abs(hit.end_mm[0] - hit.x_mm) * _NM_PER_MM)
     delta_y_nm = round(abs(hit.end_mm[1] - hit.y_mm) * _NM_PER_MM)
     expected_x_nm = abs(requirement.width_nm - requirement.height_nm)
@@ -200,9 +202,16 @@ def _geometry_matches(requirement: SourceDrillRequirement, hit: DrillHit) -> boo
     if requirement.height_nm > requirement.width_nm:
         expected_x_nm, expected_y_nm = 0, expected_x_nm
     return (
-        abs(delta_x_nm - expected_x_nm) <= coordinate_tolerance
-        and abs(delta_y_nm - expected_y_nm) <= coordinate_tolerance
+        abs(delta_x_nm - expected_x_nm) <= x_coordinate_tolerance
+        and abs(delta_y_nm - expected_y_nm) <= y_coordinate_tolerance
     )
+
+
+def _coordinate_axis_resolution_nm(hit: DrillHit, axis: Literal["x", "y"]) -> int:
+    axis_resolution = (
+        hit.x_coordinate_resolution_nm if axis == "x" else hit.y_coordinate_resolution_nm
+    )
+    return hit.coordinate_resolution_nm if axis_resolution is None else axis_resolution
 
 
 def _raise_unmatched_requirement(

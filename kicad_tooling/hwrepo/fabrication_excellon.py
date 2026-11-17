@@ -19,6 +19,8 @@ class DrillHit:
     end_mm: tuple[float, float] | None = None
     coordinate_resolution_nm: int = 1
     diameter_resolution_nm: int = 1
+    x_coordinate_resolution_nm: int | None = None
+    y_coordinate_resolution_nm: int | None = None
 
 
 _COORDINATE_FIELD_RE = re.compile(r"([XY])([+-]?(?:\d+(?:\.\d*)?|\.\d+))")
@@ -225,6 +227,8 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
             if upper.startswith(("G00", "G01")):
                 continue
             raise UnsupportedFabricationFormat(f"unsupported Excellon command {line!r}")
+        previous_x_resolution_nm = x_resolution_nm
+        previous_y_resolution_nm = y_resolution_nm
         if "X" in coords:
             nx = coordinate(coords["X"])
             x_resolution_nm = _resolution_nm(coords["X"], metric, coordinate_format)
@@ -239,33 +243,49 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
         if len(slot_parts) > 1:
             diameter, diameter_resolution_nm = selected_drill_geometry()
             end_fields = _coordinate_fields(slot_parts[1])
+            end_x_resolution_nm = x_resolution_nm
+            end_y_resolution_nm = y_resolution_nm
             end = (
                 coordinate(end_fields["X"]) if "X" in end_fields else nx,
                 coordinate(end_fields["Y"]) if "Y" in end_fields else ny,
             )
+            if "X" in end_fields:
+                end_x_resolution_nm = _resolution_nm(end_fields["X"], metric, coordinate_format)
+            if "Y" in end_fields:
+                end_y_resolution_nm = _resolution_nm(end_fields["Y"], metric, coordinate_format)
+            hit_x_resolution_nm = max(x_resolution_nm, end_x_resolution_nm)
+            hit_y_resolution_nm = max(y_resolution_nm, end_y_resolution_nm)
             hits.append(
                 DrillHit(
                     nx,
                     ny,
                     diameter,
                     end,
-                    coordinate_resolution_nm,
+                    max(hit_x_resolution_nm, hit_y_resolution_nm),
                     diameter_resolution_nm,
+                    x_coordinate_resolution_nm=hit_x_resolution_nm,
+                    y_coordinate_resolution_nm=hit_y_resolution_nm,
                 )
             )
             x, y = end
+            x_resolution_nm = end_x_resolution_nm
+            y_resolution_nm = end_y_resolution_nm
         elif upper.startswith("G00"):
             x, y = nx, ny
         elif upper.startswith("G01") and slot_start is not None:
             diameter, diameter_resolution_nm = selected_drill_geometry()
+            hit_x_resolution_nm = max(previous_x_resolution_nm, x_resolution_nm)
+            hit_y_resolution_nm = max(previous_y_resolution_nm, y_resolution_nm)
             hits.append(
                 DrillHit(
                     x,
                     y,
                     diameter,
                     (nx, ny),
-                    coordinate_resolution_nm,
+                    max(hit_x_resolution_nm, hit_y_resolution_nm),
                     diameter_resolution_nm,
+                    x_coordinate_resolution_nm=hit_x_resolution_nm,
+                    y_coordinate_resolution_nm=hit_y_resolution_nm,
                 )
             )
             x, y = nx, ny
@@ -278,6 +298,8 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
                     diameter,
                     coordinate_resolution_nm=coordinate_resolution_nm,
                     diameter_resolution_nm=diameter_resolution_nm,
+                    x_coordinate_resolution_nm=x_resolution_nm,
+                    y_coordinate_resolution_nm=y_resolution_nm,
                 )
             )
             x, y = nx, ny

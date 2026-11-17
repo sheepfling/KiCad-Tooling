@@ -31403,6 +31403,47 @@ acceptance threads while new lint features proceed:
   builds, installed-wheel checks, and the external-project playtest passed.
   Package and preview jobs were skipped under prerelease policy.
 
+#### LINT-554 — Preserve per-axis precision when binding Excellon drills
+
+- **Priority:** P1 fabrication-evidence integrity. Excellon coordinates can
+  carry different printed precision on X and Y, but the drill matcher used the
+  coarser axis's resolution as the tolerance for both. A coarse X coordinate
+  could therefore make a precise Y mismatch look like a source-pad match, and
+  vice versa.
+- **Change:** Retain X and Y coordinate resolutions separately, including the
+  maximum endpoint resolution for routed slots. Compare source drill centers
+  and slot geometry against the corresponding per-axis tolerance. Keep the
+  legacy combined-resolution field as the maximum of both axes for compatible
+  consumers; manually constructed hits without axis fields retain the prior
+  fallback behavior.
+- **Boundary:** This checks source-board coordinates against the precision
+  declared by each Excellon coordinate. It does not choose a manufacturing
+  placement tolerance, check annular-ring adequacy, or prove fabrication
+  quality. A deliberately coarse coordinate remains acceptable within its
+  own rounding interval.
+- **Regression coverage:** Tooling-owned synthetic `FILE_FORMAT=3:0` artifacts
+  cover circular drill centers and routed-slot geometry with coarse X and
+  precise Y, then coarse Y and precise X. Faults move or extend only the
+  precisely encoded axis; controls preserve valid geometry and allow the
+  coarse axis's own rounding interval. No project board or proprietary fixture
+  is used.
+- **Analyzer version:** `19`, because drill artifacts that could previously
+  bind to a source feature using precision borrowed from the other axis are
+  now rejected as unsupported evidence.
+- **Selection:** Run
+  `tests/test_fabrication_excellon_coordinate_precision.py` with
+  `design_lint and evidence_lint and pcb_lint`. The exact-version artifact lane
+  remains `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` on KiCad 10.0.0 and 10.0.5.
+- **Local validation:** The scoped artifact selection passed 121 tests with 12
+  native skips; the digest-pinned Docker lane passed all 133 selected tests,
+  including the 12 native cases. PCB architecture, marker, theme, and
+  collection checks passed 25 tests. Full-repository Ruff check and formatting,
+  both Alphus profiles, and Linux and Windows-target Pyright passed. The local
+  editable reinstall could not resolve external package hosts because sandbox
+  DNS is unavailable; the existing editable install pointed to this worktree,
+  and hosted dependency installation remains part of acceptance.
+- **Hosted acceptance:** Pending annotated prerelease tag.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
