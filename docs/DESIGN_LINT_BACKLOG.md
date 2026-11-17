@@ -872,7 +872,12 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc878):** LINT-543
+- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc879):** LINT-544
+  binds oval component-pad drill geometry to plated or non-plated Excellon
+  slots. Local scoped acceptance passed 94 tests, including KiCad 10.0.0 and
+  10.0.5 Docker cases. Hosted acceptance passed in GitHub Actions run
+  `44010175688`; package and preview jobs were skipped under prerelease policy.
+- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc878):** LINT-543
   binds circular component-pad drills to plated or non-plated Excellon outputs.
   Local scoped acceptance passed 88 tests, including both pinned KiCad Docker
   versions. Hosted acceptance passed in GitHub Actions run `44007418465`;
@@ -30916,6 +30921,10 @@ acceptance threads while new lint features proceed:
   wrong-tool-size faults. Native acceptance exports both plating classes and
   verifies deterministic slot matches and missing/moved failures on KiCad
   10.0.0 and 10.0.5.
+- **Hosted acceptance:** GitHub Actions run `44010175688` passed for tag
+  `v0.5.3rc879` at code commit
+  `b544786c0536c9253aaa5116b51d78317d318da8`. Package and preview jobs were
+  skipped by the prerelease workflow policy.
 - **Selection:** Run:
 
   ```sh
