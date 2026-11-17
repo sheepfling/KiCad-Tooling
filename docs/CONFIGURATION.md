@@ -155,6 +155,9 @@ Coordinate records must fully match the supported X/Y form and include one
 `D01`, `D02`, or `D03` operation. Repeated fields, unsupported axes or arc
 offsets, malformed numbers, and unparsed data also make the artifact
 `UNSUPPORTED`.
+Aperture dimensions must be finite Gerber decimal values; non-decimal spellings,
+empty dimensions, and decimal values outside the finite IEEE double range are
+`UNSUPPORTED` before rasterization.
 This inventory check does not verify that each IPC-D-356 coordinate matches
 the source pad location. The analyzer also binds each present component contact
 to the source footprint placement and pad offset, including footprint rotation,

@@ -129,7 +129,7 @@ def test_malformed_command_blocks_source_bound_analysis(tmp_path: Path) -> None:
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "22"
+    assert result.analyzer_version == "23"
     assert result.status == "UNSUPPORTED"
     assert "Gerber coordinate command" in result.unsupported_reasons[0]
     assert result.findings == ()

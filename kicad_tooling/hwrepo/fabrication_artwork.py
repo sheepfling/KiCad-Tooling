@@ -7,6 +7,7 @@ Unsupported constructs fail closed instead of being approximated silently.
 
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -23,6 +24,7 @@ _GERBER_LINEAR_COMMAND = re.compile(
     r"(?P<y>Y[+-]?\d+)?"
     r"(?P<operation>D0[123])?"
 )
+_GERBER_APERTURE_DECIMAL = re.compile(r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)")
 
 
 @dataclass(frozen=True)
@@ -212,7 +214,18 @@ class GerberParser:
             number, kind, raw_sizes = match.groups()
             if kind not in {"C", "R", "O", "P"}:
                 raise UnsupportedFabricationFormat(f"unsupported {kind} aperture in {self.name}")
-            sizes = tuple(float(value) for value in re.split(r"[Xx]", raw_sizes) if value)
+            raw_values = re.split(r"[Xx]", raw_sizes)
+            if not raw_values or any(
+                _GERBER_APERTURE_DECIMAL.fullmatch(value) is None for value in raw_values
+            ):
+                raise UnsupportedFabricationFormat(
+                    f"Gerber aperture parameters must be finite decimals in {self.name}"
+                )
+            sizes = tuple(float(value) for value in raw_values)
+            if any(not math.isfinite(value) for value in sizes):
+                raise UnsupportedFabricationFormat(
+                    f"Gerber aperture parameters must be finite decimals in {self.name}"
+                )
             maximum_sizes = {"C": 1, "R": 2, "O": 2, "P": 3}[kind]
             if not sizes or len(sizes) > maximum_sizes:
                 raise UnsupportedFabricationFormat(

@@ -886,10 +886,12 @@ standalone parity work when it closes a demonstrated feature regression.
   passed Pyright, wheel/sdist/sdist-wheel builds, and the installed-wheel
   external-project inventory, surface, verification, and playtest checks.
   Package and preview jobs were skipped under prerelease policy.
-- **Published prerelease candidate (v0.5.3rc893; hosted acceptance pending):**
-  LINT-558 rejects Gerber coordinate records the bounded parser cannot consume
-  exactly. The tag-scoped local CI selection passed 164 tests, including 12
-  digest-pinned native fabrication cases. Hosted run `44086735827` is in progress.
+- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc893):** LINT-558
+  rejects Gerber coordinate records the bounded parser cannot consume exactly.
+  The tag-scoped selection passed 164 tests, including all 12 exact-version
+  native fabrication cases. GitHub Actions run `44086735827` passed Pyright,
+  wheel/sdist/sdist-wheel builds, and the installed-wheel external-project
+  checks. Package and preview jobs were skipped under prerelease policy.
 - **Earlier hosted-accepted lint-gate checkpoint (v0.5.3rc890):** LINT-555
   extends per-axis Excellon precision regression coverage to M15/G01 routed
   slots, whose endpoint precision is tracked through a separate parser path.
@@ -31645,8 +31647,52 @@ acceptance threads while new lint features proceed:
   wheel/sdist/sdist-wheel builds, installed-wheel origin/version checks, and the
   external-project check passed. The focused PCB marker, theme-suite,
   collection, catalog, and fixture-reachability checks passed 62 tests.
-- **Hosted acceptance:** Pending GitHub Actions run `44086735827` for tag
+- **Hosted acceptance:** GitHub Actions run `44086735827` passed for tag
   `v0.5.3rc893` at code commit `39e44b2a1fcd33b6c6d26149f26bc609e7b6a8a3`.
+  Its 164-test scoped selection included all 12 exact-version
+  native fabrication cases, Pyright, wheel/sdist/sdist-wheel builds, and the
+  installed-wheel external-project checks. Package and preview jobs were
+  skipped under prerelease policy.
+
+#### LINT-559 — Reject non-finite Gerber aperture dimensions
+
+- **Priority:** P1 fabrication-evidence integrity. Python's `float()` accepts
+  `nan`, `inf`, `-inf`, and decimal strings that overflow to infinity, although
+  these are not finite Gerber decimal values. The parser previously retained
+  them as supported aperture dimensions. An infinite aperture reached raster
+  canvas sizing and raised an uncaught `OverflowError` instead of returning a
+  controlled unsupported result.
+- **Reference:** [Gerber data types][gerber-data-types] define decimal tokens
+  and require them to fit an IEEE double. The bounded parser still supports
+  only circular, rectangular, obround, and polygon standard apertures.
+- **Change:** Require every supported aperture parameter token to fully match
+  Gerber decimal syntax and convert to a finite float. Reject non-decimal
+  spellings, empty separated dimensions, and decimal values outside the finite
+  double range as `UNSUPPORTED`.
+- **Boundary:** This prevents non-finite input from reaching raster analysis.
+  It does not validate every standard aperture's shape-specific ranges or
+  establish that a supported aperture matches the intended fabrication image.
+- **Regression coverage:** Synthetic fault cases cover NaN, positive and
+  negative infinity, exponent notation, overflow from a long decimal, and an
+  empty trailing dimension, and non-ASCII decimal digits. Controls cover
+  ordinary, leading-dot, and explicitly positive finite decimals. A
+  source-bound mutation confirms the analyzer returns `UNSUPPORTED` with no
+  findings instead of escaping with an exception. No product board or
+  proprietary fixture is used.
+- **Analyzer version:** `23`, because malformed aperture values that previously
+  reached geometry analysis now fail closed at parsing.
+- **Selection:** Use
+  `.venv/bin/python -I -m pytest -q tests/test_fabrication_gerber_aperture_values.py`
+  with `design_lint`, `evidence_lint`, and `pcb_lint`. Exact-version native
+  fabrication compatibility remains covered by the KiCad 10.0.0 and 10.0.5
+  artifact-connectivity lane.
+- **Local validation (2026-11-17):** The focused aperture parser suite passed
+  11 synthetic tests. The complete fabrication-area synthetic selection passed
+  191 tests; the exact-version KiCad 10.0.0 and 10.0.5 native fabrication
+  selection passed 12 tests. Marker, theme-suite, and collection architecture
+  checks passed 17 tests. Ruff, formatting, Rumdl, and mdrepo checks passed.
+  Full tag-scoped CI remains pending.
+- **Hosted acceptance:** Pending.
 
 ## Completion and release gate
 
@@ -31744,3 +31790,4 @@ quality, or first-article continuity.
 [kicad-source-mirror-releases]: https://github.com/KiCad/kicad-source-mirror/releases
 [kicad-docker-digests]: https://github.com/KiCad/kicad-docker/pkgs/container/kicad/versions?filters%5Bversion_type%5D=tagged
 [gerber-layer-spec-2026-05]: https://www.ucamco.com/files/downloads/file_en/554/gerber-layer-format-specification-revision-2026-05_en.pdf?eac6410808ad1d0b3f977429ddaab7d0=
+[gerber-data-types]: https://www.ucamco.com/files/downloads/file_en/554/gerber-layer-format-specification-revision-2026-05_en.pdf?eac6410808ad1d0b3f977429ddaab7d0=

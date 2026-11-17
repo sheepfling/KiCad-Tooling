@@ -17,6 +17,7 @@ PCB_THEME_SUITES = (
     "test_fabrication_excellon_end_marker.py",
     "test_fabrication_gerber_end_marker.py",
     "test_fabrication_gerber_command_validation.py",
+    "test_fabrication_gerber_aperture_values.py",
     "test_fabrication_excellon_coordinate_validation.py",
     "test_fabrication_excellon_coordinate_int_range.py",
     "test_fabrication_excellon_coordinate_precision.py",
