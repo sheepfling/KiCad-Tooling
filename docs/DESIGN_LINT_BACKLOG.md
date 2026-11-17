@@ -30977,6 +30977,54 @@ acceptance threads while new lint features proceed:
 
   Exact-version native coverage uses `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
 
+#### LINT-546 — Require unique Excellon hits across pads and vias
+
+- **Priority:** P1 fabrication-evidence integrity. Pad-drill and via-drill
+  validation previously ran as separate matchers. Each required a matching
+  Excellon hit, but a single hit could satisfy one source pad and one
+  coincident source via because uniqueness was enforced only within each
+  object type.
+- **Change:** Combine plated and non-plated component-pad drills and plated
+  via drills into one source inventory. Require a one-to-one assignment from
+  every source drill feature to a distinct Excellon hit in the correct plating
+  file. Use a maximum bipartite assignment so overlapping coordinate-precision
+  tolerances do not reject a valid global match. Existing pad-only and via-only
+  entry points call the shared matcher.
+- **Native behavior:** KiCad 10.0.0 and 10.0.5 preserve coincident pad/via
+  source holes as two equal PTH hits. A valid artifact with both records stays
+  supported; deleting either record makes the source inventory impossible to
+  bind one-to-one and returns `UNSUPPORTED` before rasterization.
+- **Boundary:** This checks source pad/via hole ownership only. It does not
+  reject unmatched extra drill hits, inventory standalone mechanical features,
+  establish hole fabrication quality, or prove electrical correctness.
+- **Regression coverage:** Synthetic unit cases cover the cross-kind collision,
+  its two-hit control, and overlapping coordinate tolerances where assignment
+  must preserve a constrained hit for the only source hole that can use it.
+  Exact-version native fixtures repeat the duplicate-record control and
+  single-record fault on both pinned KiCad versions.
+- **Analyzer version:** The report analyzer version advances to `11` because
+  source/artifact pairs previously accepted with reused hits now return
+  `UNSUPPORTED`.
+- **Local scoped acceptance:** `scripts/ci.py` passed at
+  `build/ci/run-976zqaga`: 58 selected tests, including exact-version Docker
+  fixtures on KiCad 10.0.0 and 10.0.5. Ruff formatting and lint, both Alphus
+  checks, Rumdl, module-size checks, Linux and Windows typing, wheel/sdist
+  builds, installation, and installed-origin/version checks passed. Mdrepo was
+  skipped locally.
+- **Selection:** Run:
+
+  ```sh
+  .venv/bin/python -I -m pytest \
+    tests/test_fabrication_cross_kind_drill_binding.py \
+    tests/test_fabrication_pad_drill_binding.py \
+    tests/test_fabrication_via_drill_binding.py \
+    -m 'design_lint and evidence_lint and pcb_lint'
+  ```
+
+  Exact-version native coverage adds
+  `tests/test_fabrication_cross_kind_drill_native.py` with
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` and the `native_kicad` marker.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

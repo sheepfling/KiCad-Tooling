@@ -24,13 +24,12 @@ from .fabrication_contact_geometry import require_ipc356_source_pad_coordinates
 from .fabrication_contact_inventory import require_ipc356_source_pad_inventory
 from .fabrication_contact_layers import require_ipc356_source_pad_layers
 from .fabrication_contact_source import source_component_pads
+from .fabrication_drill_binding import require_excellon_source_drills
 from .fabrication_excellon import DrillHit, parse_excellon
-from .fabrication_pad_drill_binding import require_excellon_source_pad_drills
 from .fabrication_via_binding import (
     require_ipc356_source_via_inventory,
     source_board_vias,
 )
-from .fabrication_via_drill_binding import require_excellon_source_via_drills
 from .kicad_sexpr import sexpr_atoms, sexpr_children, sexpr_nodes, sexpr_root
 from .pcb_board_net_inventory import pcb_board_net_names
 
@@ -211,8 +210,12 @@ def analyze_fabrication_connectivity(
                 plated.extend(parse_excellon(path.read_text(encoding="utf-8", errors="replace")))
             else:
                 nonplated.extend(parse_excellon(path.read_text(encoding="utf-8", errors="replace")))
-        require_excellon_source_via_drills(source_vias, tuple(plated))
-        require_excellon_source_pad_drills(source_pads, tuple(plated), tuple(nonplated))
+        require_excellon_source_drills(
+            source_pads,
+            source_vias,
+            tuple(plated),
+            tuple(nonplated),
+        )
         try:
             from .fabrication_connectivity_raster import analyze_raster
         except ImportError as exc:
