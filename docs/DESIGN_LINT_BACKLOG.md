@@ -30830,6 +30830,10 @@ acceptance threads while new lint features proceed:
   wrong tool size, and a slot that cannot stand in for a circular via. The
   analyzer rejects missing, displaced, and wrong-size mutations of native PTH
   exports from digest-pinned KiCad 10.0.0 and 10.0.5 with repeatable results.
+- **Hosted acceptance:** [Run 44002505384][lint542-hosted-run] passed for
+  tag `v0.5.3rc877` at code commit
+  `14ae7dadbdcb151305399954b398cb05ed468b89`. Package and preview jobs were
+  skipped by the prerelease workflow policy.
 - **Selection:** Run:
 
   ```sh
@@ -30910,6 +30914,7 @@ quality, or first-article continuity.
 [kicad-10.0.5-drc-items]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/drc/drc_item.cpp
 [kicad-10-drc-exclusions]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#design-rule-checking
 [kicad-10-cli-drc]: https://docs.kicad.org/10.0/en/cli/cli.html
+[lint542-hosted-run]: https://github.com/sheepfling/KiCad-Tooling/actions/runs/44002505384
 [arm-jtag-signals]: https://documentation-service.arm.com/static/5f900a61f86e16515cdc0610
 [arm-dstream-jtag-interface]: https://support.arm.com/documentation/dui0499/k/arm-dstream-target-interface-connections/the-arm-jtag-20-connector-pinouts-and-interface-signals/arm-jtag-20-interface-signals?lang=en
 [arm-swd-signals]: https://documentation-service.arm.com/static/5f900abff86e16515cdc063b
