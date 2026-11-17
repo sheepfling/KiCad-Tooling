@@ -31764,7 +31764,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-561 — Validate Gerber unit and coordinate-format declarations
 
-- **Status:** Implemented; local validation in progress.
+- **Status:** Complete; hosted acceptance passed.
 - **Priority:** P1 fabrication-evidence integrity. The bounded Gerber parser
   supplied default metric units and coordinate precision when required headers
   were absent, accepted repeated or late declarations, and interpreted
@@ -31804,7 +31804,13 @@ acceptance threads while new lint features proceed:
   module-size preflight, Rumdl, mdrepo, Pyright and Windows-targeted Pyright,
   wheel/sdist/sdist-wheel builds, installed-origin, and separate-project
   verification passed. Retained logs are under `build/ci/run-c9n4ykkh/`.
-- **Hosted acceptance:** Pending.
+- **Hosted acceptance:** Tag `v0.5.3rc896` passed [GitHub Actions
+  run 44111503807](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44111503807)
+  at code commit `f6ba07db809eb42b5f85d553267beb9691426432`: 216 selected tests,
+  including all 12 exact-version native fabrication cases, Pyright and
+  Windows-targeted Pyright, wheel/sdist/sdist-wheel builds, and installed-wheel
+  external-project checks. Package and preview jobs were skipped under
+  prerelease policy.
 
 ## Completion and release gate
 
