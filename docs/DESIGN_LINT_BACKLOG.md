@@ -872,7 +872,13 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc881):** LINT-546
+- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc882):** LINT-547
+  reports unmatched Excellon hits as configurable review findings. The local
+  focused pytest selection passed 75 tests, with 12 skipped and 51 deselected;
+  all 12 selected exact-version native cases passed on KiCad 10.0.0 and 10.0.5.
+  Hosted acceptance passed in GitHub Actions run `44023936605`; package and
+  preview jobs were skipped under prerelease policy.
+- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc881):** LINT-546
   enforces one-to-one Excellon hit ownership across source component pads and
   vias. Local scoped CI passed 58 selected tests, including KiCad 10.0.0 and
   10.0.5 native cases. Hosted acceptance passed in GitHub Actions run
@@ -31070,6 +31076,18 @@ acceptance threads while new lint features proceed:
   Exact-version native coverage is in
   `tests/test_fabrication_cross_kind_drill_native.py` with
   `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` and the `native_kicad` marker.
+- **Local focused results:** 75 passed, 12 skipped, and 51 deselected. Ruff,
+  Alphus, Rumdl, module-size checks, Linux and Windows typing, wheel, sdist,
+  and sdist-wheel stages passed. All 12 selected native cases passed in the
+  digest-pinned Docker images. The standard isolated install stage could not
+  resolve `pydantic==2.13.5` because this local sandbox could not resolve
+  `pypi.org`; the built wheel was separately installed with `--no-deps` into a
+  smoke environment and imported from that wheel.
+- **Hosted acceptance:** GitHub Actions run `44023936605` passed for tag
+  `v0.5.3rc882` at code commit
+  `0c8ac013af014ef8b448a659d18dee43eff471f6`, including the normal dependency
+  install and external-template wheel rehearsal. Package and preview jobs were
+  skipped under prerelease workflow policy.
 
 ## Completion and release gate
 
