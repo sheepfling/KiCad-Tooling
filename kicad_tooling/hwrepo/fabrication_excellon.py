@@ -28,6 +28,7 @@ _TOOL_DEFINITION_RE = re.compile(
 )
 _TOOL_SELECTION_RE = re.compile(r"T([0-9]+)")
 _MAX_KICAD_TOOL_ID = 0x7FFFFFFF - 10
+_MAX_KICAD_DIAMETER_NM = 0x7FFFFFFF
 
 
 def _coordinate_fields(raw: str) -> dict[str, str]:
@@ -160,12 +161,22 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
                 raise UnsupportedFabricationFormat(
                     f"Excellon tool T{tool_id} has a non-positive diameter"
                 )
-            if not math.isfinite(diameter * 1_000_000):
+            diameter_mm = diameter if metric else diameter * 25.4
+            diameter_nm = diameter_mm * 1_000_000
+            if not math.isfinite(diameter_mm) or not math.isfinite(diameter_nm):
                 raise UnsupportedFabricationFormat(
                     f"Excellon tool T{tool_id} diameter exceeds the finite nanometer range"
                 )
+            if diameter_nm < 0.5:
+                raise UnsupportedFabricationFormat(
+                    f"Excellon tool T{tool_id} diameter rounds to zero at KiCad's nanometer resolution"
+                )
+            if diameter_nm >= _MAX_KICAD_DIAMETER_NM + 0.5:
+                raise UnsupportedFabricationFormat(
+                    f"Excellon tool T{tool_id} diameter exceeds KiCad's signed nanometer range"
+                )
             geometry = (
-                diameter if metric else diameter * 25.4,
+                diameter_mm,
                 _resolution_nm(raw_diameter, metric, coordinate_format),
             )
             previous = tools.get(tool_id)
