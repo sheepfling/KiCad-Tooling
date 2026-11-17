@@ -9,18 +9,12 @@ import pytest
 from kicad_tooling.hwrepo.fabrication_connectivity import analyze_fabrication_connectivity
 from kicad_tooling.hwrepo.fabrication_connectivity_models import FabricationConnectivitySettings
 from kicad_tooling.hwrepo.fabrication_excellon import parse_excellon
-from tests.fabrication_connectivity_support import write_synthetic_fabrication
+from tests.fabrication_connectivity_support import (
+    write_pth_drill_artifact,
+    write_synthetic_fabrication,
+)
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.evidence_lint, pytest.mark.pcb_lint]
-
-_PTH_HEADER = "M48\n; #@! TF.FileFunction,Plated,1,2,PTH\nFMAT,2\nMETRIC\n%\n"
-
-
-def _write_pth(fabrication: Path, coordinates: str) -> None:
-    (fabrication / "board-PTH.drl").write_text(
-        _PTH_HEADER + f"T1C0.300\nT1\n{coordinates}\nM30\n",
-        encoding="utf-8",
-    )
 
 
 @pytest.mark.parametrize(
@@ -63,7 +57,7 @@ def test_unrepresentable_or_malformed_coordinate_is_unsupported(
     reason: str,
 ) -> None:
     board, fabrication = write_synthetic_fabrication(tmp_path)
-    _write_pth(fabrication, coordinates)
+    write_pth_drill_artifact(fabrication, f"T1C0.300\nT1\n{coordinates}\n")
 
     result = analyze_fabrication_connectivity(
         board,
@@ -71,7 +65,7 @@ def test_unrepresentable_or_malformed_coordinate_is_unsupported(
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "15"
+    assert result.analyzer_version == "16"
     assert result.status == "UNSUPPORTED"
     assert reason in result.unsupported_reasons[0]
     assert result.findings == ()
@@ -82,7 +76,7 @@ def test_valid_unmatched_excellon_coordinates_remain_reviewable(tmp_path: Path) 
     assert (hit.x_mm, hit.y_mm) == (12.0, -12.0)
 
     board, fabrication = write_synthetic_fabrication(tmp_path)
-    _write_pth(fabrication, "X12.000Y-12.000")
+    write_pth_drill_artifact(fabrication, "T1C0.300\nT1\nX12.000Y-12.000\n")
 
     result = analyze_fabrication_connectivity(
         board,
@@ -90,7 +84,7 @@ def test_valid_unmatched_excellon_coordinates_remain_reviewable(tmp_path: Path) 
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "15"
+    assert result.analyzer_version == "16"
     assert result.status == "REVIEW"
     (finding,) = result.findings
     assert finding.code == "UNBOUND_DRILL_HIT"

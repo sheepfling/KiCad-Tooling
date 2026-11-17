@@ -22,6 +22,12 @@ class DrillHit:
 
 
 _COORDINATE_FIELD_RE = re.compile(r"([XY])([+-]?(?:\d+(?:\.\d*)?|\.\d+))")
+_TOOL_DEFINITION_RE = re.compile(
+    r"T([0-9]+)(?:[FS][0-9]+)*C((?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+))"
+    r"(?:[FS][0-9]+)*"
+)
+_TOOL_SELECTION_RE = re.compile(r"T([0-9]+)")
+_MAX_KICAD_TOOL_ID = 0x7FFFFFFF - 10
 
 
 def _coordinate_fields(raw: str) -> dict[str, str]:
@@ -39,6 +45,25 @@ def _coordinate_fields(raw: str) -> dict[str, str]:
     if cursor != len(raw):
         raise UnsupportedFabricationFormat("malformed Excellon coordinate fields")
     return fields
+
+
+def _tool_identifier(raw: str, *, allow_zero: bool = False) -> int:
+    """Resolve a tool number that fits KiCad's signed D-code range."""
+    significant = raw.lstrip("0") or "0"
+    if significant == "0":
+        if allow_zero:
+            return 0
+        raise UnsupportedFabricationFormat("Excellon T0 is not a selectable drill tool")
+    if len(significant) > len(str(_MAX_KICAD_TOOL_ID)):
+        raise UnsupportedFabricationFormat(
+            "Excellon tool identifier exceeds the KiCad D-code range"
+        )
+    identifier = int(significant)
+    if identifier > _MAX_KICAD_TOOL_ID:
+        raise UnsupportedFabricationFormat(
+            "Excellon tool identifier exceeds the KiCad D-code range"
+        )
+    return identifier
 
 
 def _resolution_nm(raw: str, metric: bool, coordinate_format: tuple[int, int] | None) -> int:
@@ -122,9 +147,9 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
             metric = upper.startswith(("METRIC", "M71"))
             zero_mode = "T" if "TZ" in upper else "L"
             continue
-        tool = re.fullmatch(r"T(\d+)(?:F\d+S\d+)?C([\d.]+)", upper)
+        tool = _TOOL_DEFINITION_RE.fullmatch(upper)
         if tool:
-            tool_id = int(tool.group(1))
+            tool_id = _tool_identifier(tool.group(1))
             raw_diameter = tool.group(2)
             diameter = float(raw_diameter)
             if not math.isfinite(diameter):
@@ -150,9 +175,14 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
                 )
             tools[tool_id] = geometry
             continue
-        selection = re.fullmatch(r"T(\d+)", upper)
+        if upper.startswith("T") and "C" in upper:
+            raise UnsupportedFabricationFormat("malformed Excellon tool definition")
+        selection = _TOOL_SELECTION_RE.fullmatch(upper)
         if selection:
-            selected = int(selection.group(1))
+            selected = _tool_identifier(selection.group(1), allow_zero=True)
+            if selected == 0:
+                selected = None
+                continue
             if selected not in tools:
                 raise UnsupportedFabricationFormat(f"Excellon selects undefined tool T{selected}")
             continue

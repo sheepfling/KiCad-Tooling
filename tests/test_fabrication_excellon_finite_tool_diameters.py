@@ -8,18 +8,12 @@ import pytest
 
 from kicad_tooling.hwrepo.fabrication_connectivity import analyze_fabrication_connectivity
 from kicad_tooling.hwrepo.fabrication_connectivity_models import FabricationConnectivitySettings
-from tests.fabrication_connectivity_support import write_synthetic_fabrication
+from tests.fabrication_connectivity_support import (
+    write_pth_drill_artifact,
+    write_synthetic_fabrication,
+)
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.evidence_lint, pytest.mark.pcb_lint]
-
-_PTH_HEADER = "M48\n; #@! TF.FileFunction,Plated,1,2,PTH\nFMAT,2\nMETRIC\n%\n"
-
-
-def _write_pth(fabrication: Path, body: str) -> None:
-    (fabrication / "board-PTH.drl").write_text(
-        _PTH_HEADER + body + "M30\n",
-        encoding="utf-8",
-    )
 
 
 @pytest.mark.parametrize(
@@ -35,7 +29,7 @@ def test_unrepresentable_excellon_tool_diameter_is_unsupported_not_crash(
     reason: str,
 ) -> None:
     board, fabrication = write_synthetic_fabrication(tmp_path)
-    _write_pth(fabrication, f"T1C{diameter}\nT1\nX12.000Y-12.000\n")
+    write_pth_drill_artifact(fabrication, f"T1C{diameter}\nT1\nX12.000Y-12.000\n")
 
     result = analyze_fabrication_connectivity(
         board,
@@ -43,7 +37,7 @@ def test_unrepresentable_excellon_tool_diameter_is_unsupported_not_crash(
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "15"
+    assert result.analyzer_version == "16"
     assert result.status == "UNSUPPORTED"
     assert reason in result.unsupported_reasons[0]
     assert result.findings == ()
@@ -51,7 +45,7 @@ def test_unrepresentable_excellon_tool_diameter_is_unsupported_not_crash(
 
 def test_finite_unmatched_drill_diameter_remains_reviewable(tmp_path: Path) -> None:
     board, fabrication = write_synthetic_fabrication(tmp_path)
-    _write_pth(fabrication, "T1C0.300\nT1\nX12.000Y-12.000\n")
+    write_pth_drill_artifact(fabrication, "T1C0.300\nT1\nX12.000Y-12.000\n")
 
     result = analyze_fabrication_connectivity(
         board,
@@ -59,7 +53,7 @@ def test_finite_unmatched_drill_diameter_remains_reviewable(tmp_path: Path) -> N
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "15"
+    assert result.analyzer_version == "16"
     assert result.status == "REVIEW"
     (finding,) = result.findings
     assert finding.code == "UNBOUND_DRILL_HIT"

@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 _FIXTURES = Path(__file__).parent / "fixtures/fabrication-connectivity"
+_PTH_DRILL_HEADER = "M48\n; #@! TF.FileFunction,Plated,1,2,PTH\nFMAT,2\nMETRIC\n%\n"
 
 
 def format_ipc_contact(
@@ -26,6 +27,13 @@ def _gerber(side: str, features: str) -> str:
         "%ADD10C,0.500000*%\n%ADD11C,0.300000*%\n"
         f"{features}M02*\n"
     )
+
+
+def write_pth_drill_artifact(fabrication: Path, body: str) -> Path:
+    """Write one minimal plated Excellon artifact with a caller-supplied body."""
+    path = fabrication / "board-PTH.drl"
+    path.write_text(_PTH_DRILL_HEADER + body + "M30\n", encoding="utf-8")
+    return path
 
 
 def write_synthetic_fabrication(
@@ -71,18 +79,13 @@ def write_synthetic_fabrication(
     (fabrication / "board.d356").write_text(
         "P  UNITS CUST 0\n" + "\n".join(contacts) + "\n999\n", encoding="utf-8"
     )
-    drill = fabrication / "board-PTH.drl"
     if through and plated_drill:
-        drill.write_text(
-            "M48\n; #@! TF.FileFunction,Plated,1,2,PTH\nFMAT,2\nMETRIC\n%\n"
-            "G90\nG05\nT1C0.3\nT1\nX6.0Y-5.0\nM30\n",
-            encoding="utf-8",
+        write_pth_drill_artifact(
+            fabrication,
+            "G90\nG05\nT1C0.3\nT1\nX6.0Y-5.0\n",
         )
     elif not through:
-        drill.write_text(
-            "M48\n; #@! TF.FileFunction,Plated,1,2,PTH\nFMAT,2\nMETRIC\n%\nM30\n",
-            encoding="utf-8",
-        )
+        write_pth_drill_artifact(fabrication, "")
     if inner_layer:
         (fabrication / "board-In1_Cu.gbr").write_text(
             "%TF.FileFunction,Copper,L2,Inr*%\nM02*\n", encoding="utf-8"
