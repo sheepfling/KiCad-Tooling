@@ -31122,6 +31122,17 @@ acceptance threads while new lint features proceed:
 
   Exact-version native coverage uses the existing fabrication connectivity
   suites with `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` and `native_kicad`.
+- **Local validation:** Focused analyzer and architecture selection: 95 passed.
+  Exact-version native Docker coverage: 12 passed across KiCad 10.0.0 and
+  10.0.5. Scoped CI pytest: 80 passed, 12 skipped, 51 deselected; lint,
+  typing, and wheel/sdist build stages passed. The local standard dependency
+  install could not resolve `pydantic==2.13.5` because sandbox DNS could not
+  resolve `pypi.org`; the local wheel import smoke therefore used `--no-deps`.
+- **Hosted acceptance:** GitHub Actions run `44027391946` passed for tag
+  `v0.5.3rc883` at code commit `073aa126c224faa1c188676db260ebd2bd717341`.
+  The run completed the focused lint gate, normal dependency install, and
+  external-project wheel rehearsal. Package and preview jobs were skipped by
+  prerelease workflow policy.
 
 ## Completion and release gate
 
