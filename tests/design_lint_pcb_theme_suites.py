@@ -14,6 +14,7 @@ PCB_SOURCE_INTEGRITY_SUITES = (
 PCB_THEME_SUITES = (
     "test_fabrication_connectivity.py",
     "test_fabrication_connectivity_native.py",
+    "test_fabrication_via_drill_binding.py",
     *("test_fabrication_via_binding.py", "test_fabrication_via_binding_native.py"),
     "test_fabrication_contact_layers.py",
     *PCB_SOURCE_INTEGRITY_SUITES,

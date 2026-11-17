@@ -282,11 +282,37 @@ def test_native_gerber_ipc356_connectivity_fault_controls_repeat(
             assert "coordinates differ from source PCB pad centers" in moved.unsupported_reasons[0]
 
         if name == "via":
-            (fabrication / "via-PTH.drl").unlink()
+            drill = fabrication / "via-PTH.drl"
+            original_drill = drill.read_text(encoding="utf-8")
+            mutations = (
+                (original_drill.replace("T1C0.300", "T1C0.400", 1), "drill diameter"),
+                (
+                    "\n".join(
+                        line.replace("X6.0Y-5.0", "X6.1Y-5.0", 1) if line.startswith("X") else line
+                        for line in original_drill.splitlines()
+                    )
+                    + "\n",
+                    "no circular drill hit",
+                ),
+            )
+            for mutated_drill, reason in mutations:
+                assert mutated_drill != original_drill
+                drill.write_text(mutated_drill, encoding="utf-8")
+                mismatched = analyze_fabrication_connectivity(
+                    board, fabrication, FabricationConnectivitySettings()
+                )
+                repeated_mismatch = analyze_fabrication_connectivity(
+                    board, fabrication, FabricationConnectivitySettings()
+                )
+                assert mismatched == repeated_mismatch
+                assert mismatched.status == "UNSUPPORTED"
+                assert reason in mismatched.unsupported_reasons[0]
+            drill.unlink()
             missing_drill = analyze_fabrication_connectivity(
                 board, fabrication, FabricationConnectivitySettings()
             )
-            assert {item.code for item in missing_drill.findings} == {"NO_DRILL", "OPEN"}
+            assert missing_drill.status == "UNSUPPORTED"
+            assert "no circular drill hit" in missing_drill.unsupported_reasons[0]
 
 
 @pytest.mark.parametrize("version", ("10.0.0", "10.0.5"))

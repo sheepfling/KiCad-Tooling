@@ -1,4 +1,4 @@
-"""Strict parsers for the supported Gerber, Excellon, and IPC-D-356 subset.
+"""Strict parsers for the supported Gerber and IPC-D-356 subset.
 
 The initial geometry subset was adapted from studio-edul's MIT-licensed
 ``gerber_check.py`` (commit 62921624db3dffdb0afa097f6b270f68acde3c4d).
@@ -46,14 +46,6 @@ class Contact:
     @property
     def label(self) -> str:
         return f"{self.reference}-{self.pin}"
-
-
-@dataclass(frozen=True)
-class DrillHit:
-    x_mm: float
-    y_mm: float
-    diameter_mm: float
-    end_mm: tuple[float, float] | None = None
 
 
 def classify_copper_files(
@@ -333,88 +325,6 @@ def parse_ipc356(text: str) -> tuple[Contact, ...]:
     if not contacts:
         raise UnsupportedFabricationFormat("IPC-D-356 has no 317/327 contact records")
     return tuple(contacts)
-
-
-def parse_excellon(text: str) -> tuple[DrillHit, ...]:
-    """Read decimal and fixed-width Excellon coordinates used by KiCad exports."""
-    metric = True
-    zero_mode = "L"
-    coordinate_format: tuple[int, int] | None = None
-    tools: dict[int, float] = {}
-    selected: int | None = None
-    hits: list[DrillHit] = []
-    x = y = 0.0
-    slot_start: tuple[float, float] | None = None
-    header = re.search(r"FILE_FORMAT\s*=\s*(\d):(\d)", text)
-    if header:
-        coordinate_format = int(header.group(1)), int(header.group(2))
-
-    def coordinate(raw: str) -> float:
-        if "." in raw:
-            value = float(raw)
-        else:
-            integer, decimals = coordinate_format or ((3, 3) if metric else (2, 4))
-            sign = -1 if raw.startswith("-") else 1
-            digits = raw.lstrip("+-")
-            width = integer + decimals
-            digits = digits.ljust(width, "0") if zero_mode == "T" else digits.rjust(width, "0")
-            value = sign * int(digits or "0") / 10**decimals
-        return value if metric else value * 25.4
-
-    for raw_line in text.splitlines():
-        line = raw_line.strip()
-        upper = line.upper()
-        if not line or line.startswith(";"):
-            continue
-        if upper.startswith(("METRIC", "M71", "INCH", "M72")):
-            metric = upper.startswith(("METRIC", "M71"))
-            zero_mode = "T" if "TZ" in upper else "L"
-            continue
-        tool = re.fullmatch(r"T(\d+)(?:F\d+S\d+)?C([\d.]+)", upper)
-        if tool:
-            diameter = float(tool.group(2))
-            tools[int(tool.group(1))] = diameter if metric else diameter * 25.4
-            continue
-        selection = re.fullmatch(r"T(\d+)", upper)
-        if selection:
-            selected = int(selection.group(1))
-            continue
-        if upper.startswith("M15"):
-            slot_start = (x, y)
-            continue
-        if upper.startswith(("M16", "M17")):
-            slot_start = None
-            continue
-        if upper.startswith(("M48", "FMAT", "%", "G90", "G05", "M30")):
-            continue
-        slot_parts = re.split(r"G85", upper)
-        coords = {axis: value for axis, value in re.findall(r"([XY])([+-]?[\d.]+)", slot_parts[0])}
-        if not coords:
-            if upper.startswith(("G00", "G01")):
-                continue
-            raise UnsupportedFabricationFormat(f"unsupported Excellon command {line!r}")
-        nx = coordinate(coords["X"]) if "X" in coords else x
-        ny = coordinate(coords["Y"]) if "Y" in coords else y
-        diameter = tools.get(selected or -1, 0.0)
-        if len(slot_parts) > 1:
-            end_fields = {
-                axis: value for axis, value in re.findall(r"([XY])([+-]?[\d.]+)", slot_parts[1])
-            }
-            end = (
-                coordinate(end_fields["X"]) if "X" in end_fields else nx,
-                coordinate(end_fields["Y"]) if "Y" in end_fields else ny,
-            )
-            hits.append(DrillHit(nx, ny, diameter, end))
-            x, y = end
-        elif upper.startswith("G00"):
-            x, y = nx, ny
-        elif upper.startswith("G01") and slot_start is not None:
-            hits.append(DrillHit(x, y, diameter, (nx, ny)))
-            x, y = nx, ny
-        else:
-            hits.append(DrillHit(nx, ny, diameter))
-            x, y = nx, ny
-    return tuple(hits)
 
 
 def drill_file_is_plated(path: Path) -> bool:

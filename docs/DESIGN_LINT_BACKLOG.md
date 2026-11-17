@@ -19880,24 +19880,25 @@ candidate commit and installation inputs before any new runtime comparison.
 
 **FA-001 — Exported copper connectivity versus IPC-D-356 (implemented, opt-in):**
 The release exporter can reconstruct connectivity from its exact source PCB,
-two-layer positive-polarity F.Cu/B.Cu Gerbers, PTH/NPTH drill files, and
-IPC-D-356 export. Project settings select `review` or `block`, raster density,
-and exact reasoned finding ignores; the receipt binds source, configuration,
-and per-run artifact hashes. Unsupported source stacks or artwork fail closed.
-The intentionally narrow subset does not support multilayer boards, blind or
+one positive-polarity Gerber per source copper layer, PTH/NPTH drill files,
+and IPC-D-356 export. Project settings select `review` or `block`, raster
+density, and exact reasoned finding ignores; the receipt binds source,
+configuration, and per-run artifact hashes. Unsupported source stacks or
+artwork fail closed. The intentionally narrow subset does not support blind or
 buried vias, negative polarity, step-and-repeat, or unresolved gaps below the
 configured raster resolution. A `review` result records findings without
 blocking release; `block` turns findings into a gate failure.
 
 The digest-pinned KiCad 10.0.0 and 10.0.5 Docker acceptance fixtures produced
 the expected clean and intentionally isolated passes, disconnected same-net
-open, cross-net short, plated-via pass, and missing-drill finding. Repeat analysis was
-deterministic. Focused tests cover unsupported/mismatched evidence, source
-binding, policy, stale ignores, architecture boundaries, and release-export
-service wiring. The release-export regression confirms the opt-in summary is
-retained and recomputed by export verification. This is synthetic acceptance
-only; it is not a precision claim for field boards. Most importantly,
-IPC-D-356 defines the expected net domains: FA-001 cannot infer that
+open, cross-net short, and plated-via pass. Missing, displaced, or wrong-size
+via drills now fail closed as `UNSUPPORTED`. Repeat analysis was deterministic.
+Focused tests cover unsupported/mismatched evidence, source binding, policy,
+stale ignores, architecture boundaries, and release-export service wiring. The
+release-export regression confirms the opt-in summary is retained and
+recomputed by export verification. This is synthetic acceptance
+only; it is not a precision claim for field boards. IPC-D-356 defines the
+expected net domains: FA-001 cannot infer that
 separately named connector returns should have been connected. That requires
 an authored connector/ground contract or a separate review heuristic.
 The public MIT cohort trial informed this first-party implementation; no
@@ -30807,6 +30808,40 @@ acceptance threads while new lint features proceed:
   external template inventory and surface checks, adapted-project verification,
   and playtest all passed. Package and preview jobs were skipped under the
   prerelease policy.
+
+#### LINT-542 — Bind plated Excellon via drills to source PCB vias
+
+- **Priority:** P1 fabrication-evidence integrity. FA-001 checked that a
+  plated drill file existed near each IPC-D-356 via contact, but did not bind
+  the exported drill hit's center and tool diameter to the source via.
+- **Change:** Parse each source via's drill diameter and compare its board
+  center and diameter with circular hits in the full-stack plated Excellon
+  output. Coordinate tolerance is half the actual exported coordinate unit
+  plus 1 nm; drill-size tolerance is half the declared tool-size unit plus
+  1 nm. Missing, displaced, or wrong-size hits fail closed as `UNSUPPORTED`
+  before rasterization. The report analyzer version advances to `8`.
+- **Boundary:** Excellon has no via identity, so matching uses the source
+  center and drill size. This check does not reject extra drill hits or bind
+  non-plated mechanical holes, component-pad drill sizes, slots, or board-edge
+  routes. It validates exported via drill evidence, not the correctness of the
+  source via or its electrical intent.
+- **Regression coverage:** Tooling-owned synthetic cases cover matching
+  center/diameter, exported coordinate precision, missing and displaced hits,
+  wrong tool size, and a slot that cannot stand in for a circular via. The
+  analyzer rejects missing, displaced, and wrong-size mutations of native PTH
+  exports from digest-pinned KiCad 10.0.0 and 10.0.5 with repeatable results.
+- **Selection:** Run:
+
+  ```sh
+  .venv/bin/python -I -m pytest \
+    tests/test_fabrication_via_binding.py \
+    tests/test_fabrication_via_drill_binding.py \
+    tests/test_fabrication_connectivity.py \
+    tests/test_fabrication_connectivity_native.py \
+    -m 'design_lint and evidence_lint and pcb_lint'
+  ```
+
+  Exact-version native coverage uses `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
 
 ## Completion and release gate
 

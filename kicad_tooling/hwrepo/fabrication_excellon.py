@@ -1,0 +1,151 @@
+"""Read the bounded Excellon drill subset used by fabrication analysis."""
+
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass
+
+from .fabrication_artwork import UnsupportedFabricationFormat
+
+
+@dataclass(frozen=True)
+class DrillHit:
+    """One exported drill hit, with the precision declared by its source text."""
+
+    x_mm: float
+    y_mm: float
+    diameter_mm: float
+    end_mm: tuple[float, float] | None = None
+    coordinate_resolution_nm: int = 1
+    diameter_resolution_nm: int = 1
+
+
+def _resolution_nm(raw: str, metric: bool, coordinate_format: tuple[int, int] | None) -> int:
+    if "." in raw:
+        decimals = len(raw.partition(".")[2])
+    else:
+        decimals = (coordinate_format or ((3, 3) if metric else (2, 4)))[1]
+    millimeters = 1.0 if metric else 25.4
+    return max(1, round((10**-decimals) * millimeters * 1_000_000))
+
+
+def parse_excellon(text: str) -> tuple[DrillHit, ...]:
+    """Read decimal and fixed-width Excellon coordinates used by KiCad exports."""
+    metric = True
+    zero_mode = "L"
+    coordinate_format: tuple[int, int] | None = None
+    tools: dict[int, tuple[float, int]] = {}
+    selected: int | None = None
+    hits: list[DrillHit] = []
+    x = y = 0.0
+    x_resolution_nm = y_resolution_nm = 1
+    slot_start: tuple[float, float] | None = None
+    header = re.search(r"FILE_FORMAT\s*=\s*(\d):(\d)", text)
+    if header:
+        coordinate_format = int(header.group(1)), int(header.group(2))
+
+    def coordinate(raw: str) -> float:
+        if "." in raw:
+            value = float(raw)
+        else:
+            integer, decimals = coordinate_format or ((3, 3) if metric else (2, 4))
+            sign = -1 if raw.startswith("-") else 1
+            digits = raw.lstrip("+-")
+            width = integer + decimals
+            digits = digits.ljust(width, "0") if zero_mode == "T" else digits.rjust(width, "0")
+            value = sign * int(digits or "0") / 10**decimals
+        return value if metric else value * 25.4
+
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        upper = line.upper()
+        if not line or line.startswith(";"):
+            continue
+        if upper.startswith(("METRIC", "M71", "INCH", "M72")):
+            metric = upper.startswith(("METRIC", "M71"))
+            zero_mode = "T" if "TZ" in upper else "L"
+            continue
+        tool = re.fullmatch(r"T(\d+)(?:F\d+S\d+)?C([\d.]+)", upper)
+        if tool:
+            raw_diameter = tool.group(2)
+            diameter = float(raw_diameter)
+            tools[int(tool.group(1))] = (
+                diameter if metric else diameter * 25.4,
+                _resolution_nm(raw_diameter, metric, coordinate_format),
+            )
+            continue
+        selection = re.fullmatch(r"T(\d+)", upper)
+        if selection:
+            selected = int(selection.group(1))
+            continue
+        if upper.startswith("M15"):
+            slot_start = (x, y)
+            continue
+        if upper.startswith(("M16", "M17")):
+            slot_start = None
+            continue
+        if upper.startswith(("M48", "FMAT", "%", "G90", "G05", "M30")):
+            continue
+        slot_parts = re.split(r"G85", upper)
+        coords = {axis: value for axis, value in re.findall(r"([XY])([+-]?[\d.]+)", slot_parts[0])}
+        if not coords:
+            if upper.startswith(("G00", "G01")):
+                continue
+            raise UnsupportedFabricationFormat(f"unsupported Excellon command {line!r}")
+        if "X" in coords:
+            nx = coordinate(coords["X"])
+            x_resolution_nm = _resolution_nm(coords["X"], metric, coordinate_format)
+        else:
+            nx = x
+        if "Y" in coords:
+            ny = coordinate(coords["Y"])
+            y_resolution_nm = _resolution_nm(coords["Y"], metric, coordinate_format)
+        else:
+            ny = y
+        diameter, diameter_resolution_nm = tools.get(selected or -1, (0.0, 1))
+        coordinate_resolution_nm = max(x_resolution_nm, y_resolution_nm)
+        if len(slot_parts) > 1:
+            end_fields = {
+                axis: value for axis, value in re.findall(r"([XY])([+-]?[\d.]+)", slot_parts[1])
+            }
+            end = (
+                coordinate(end_fields["X"]) if "X" in end_fields else nx,
+                coordinate(end_fields["Y"]) if "Y" in end_fields else ny,
+            )
+            hits.append(
+                DrillHit(
+                    nx,
+                    ny,
+                    diameter,
+                    end,
+                    coordinate_resolution_nm,
+                    diameter_resolution_nm,
+                )
+            )
+            x, y = end
+        elif upper.startswith("G00"):
+            x, y = nx, ny
+        elif upper.startswith("G01") and slot_start is not None:
+            hits.append(
+                DrillHit(
+                    x,
+                    y,
+                    diameter,
+                    (nx, ny),
+                    coordinate_resolution_nm,
+                    diameter_resolution_nm,
+                )
+            )
+            x, y = nx, ny
+        else:
+            hits.append(
+                DrillHit(
+                    nx,
+                    ny,
+                    diameter,
+                    coordinate_resolution_nm=coordinate_resolution_nm,
+                    diameter_resolution_nm=diameter_resolution_nm,
+                )
+            )
+            x, y = nx, ny
+    return tuple(hits)

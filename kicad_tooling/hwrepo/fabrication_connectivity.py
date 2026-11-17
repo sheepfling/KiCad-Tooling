@@ -8,12 +8,10 @@ from pathlib import Path
 
 from .fabrication_artwork import (
     Contact,
-    DrillHit,
     UnsupportedFabricationFormat,
     classify_copper_files,
     drill_file_function,
     drill_file_is_plated,
-    parse_excellon,
     parse_gerber,
     parse_ipc356,
 )
@@ -26,10 +24,12 @@ from .fabrication_contact_geometry import require_ipc356_source_pad_coordinates
 from .fabrication_contact_inventory import require_ipc356_source_pad_inventory
 from .fabrication_contact_layers import require_ipc356_source_pad_layers
 from .fabrication_contact_source import source_component_pads
+from .fabrication_excellon import DrillHit, parse_excellon
 from .fabrication_via_binding import (
     require_ipc356_source_via_inventory,
     source_board_vias,
 )
+from .fabrication_via_drill_binding import require_excellon_source_via_drills
 from .kicad_sexpr import sexpr_atoms, sexpr_children, sexpr_nodes, sexpr_root
 from .pcb_board_net_inventory import pcb_board_net_names
 
@@ -198,7 +198,8 @@ def analyze_fabrication_connectivity(
         require_ipc356_source_pad_inventory(source_pads, contacts)
         require_ipc356_source_pad_coordinates(source_pads, contacts)
         require_ipc356_source_pad_layers(source_pads, contacts)
-        require_ipc356_source_via_inventory(source_board_vias(board_text), contacts)
+        source_vias = source_board_vias(board_text)
+        require_ipc356_source_via_inventory(source_vias, contacts)
         copper_paths = classify_copper_files(gerber_paths, copper_layers)
         layers = tuple(parse_gerber(path, layer) for path, layer in copper_paths)
         plated: list[DrillHit] = []
@@ -206,6 +207,7 @@ def analyze_fabrication_connectivity(
             if drill_file_is_plated(path):
                 _require_full_stack_drill_file(path, drill_file_function(path), copper_layers)
                 plated.extend(parse_excellon(path.read_text(encoding="utf-8", errors="replace")))
+        require_excellon_source_via_drills(source_vias, tuple(plated))
         try:
             from .fabrication_connectivity_raster import analyze_raster
         except ImportError as exc:

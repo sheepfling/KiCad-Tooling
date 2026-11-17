@@ -27,7 +27,7 @@ def test_source_via_net_code_and_board_center_match_ipc356() -> None:
     board = (_FIXTURES / "via.kicad_pcb").read_text(encoding="utf-8")
     source_vias = source_board_vias(board)
 
-    assert source_vias == (SourceVia("SIGNAL", 6_000_000, 5_000_000),)
+    assert source_vias == (SourceVia("SIGNAL", 6_000_000, 5_000_000, 300_000),)
     require_ipc356_source_via_inventory(source_vias, (_via_contact(),))
 
 
@@ -107,6 +107,15 @@ def test_source_via_with_unknown_net_code_fails_closed() -> None:
 
     with pytest.raises(UnsupportedFabricationFormat, match="unknown net assignment"):
         source_board_vias(board)
+
+
+def test_source_via_without_one_positive_drill_size_fails_closed() -> None:
+    board = (_FIXTURES / "via.kicad_pcb").read_text(encoding="utf-8")
+
+    for invalid in ("(drill 0)", "(drill 0.3 0.4)"):
+        malformed = board.replace("(drill 0.3)", invalid, 1)
+        with pytest.raises(UnsupportedFabricationFormat, match="drill size"):
+            source_board_vias(malformed)
 
 
 def test_named_net_map_retains_numeric_codes_for_source_objects() -> None:

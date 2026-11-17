@@ -11,7 +11,8 @@ import numpy as np
 from numpy.typing import NDArray
 from PIL import Image, ImageDraw
 
-from .fabrication_artwork import Contact, DrillHit, GerberFeature, GerberLayer
+from .fabrication_artwork import Contact, GerberFeature, GerberLayer
+from .fabrication_excellon import DrillHit
 
 _PIXEL_LIMIT = 24_000_000
 

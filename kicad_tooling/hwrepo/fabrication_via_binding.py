@@ -14,11 +14,12 @@ _NM_PER_MM = 1_000_000
 
 @dataclass(frozen=True, slots=True)
 class SourceVia:
-    """A source PCB via's named net and board-space drill center."""
+    """A source PCB via's named net, drill center, and drill diameter."""
 
     net_name: str
     x_nm: int
     y_nm: int
+    drill_nm: int
 
 
 def source_board_vias(board_text: str) -> tuple[SourceVia, ...]:
@@ -34,6 +35,12 @@ def source_board_vias(board_text: str) -> tuple[SourceVia, ...]:
             position = sexpr_field(board_text, via, "at")
             if len(position) != 2:
                 raise UnsupportedFabricationFormat("source via has an unsupported position")
+            drill = sexpr_field(board_text, via, "drill")
+            if len(drill) != 1:
+                raise UnsupportedFabricationFormat("source via has an unsupported drill size")
+            drill_nm = round(millimeters_to_nanometers(drill[0]))
+            if drill_nm <= 0:
+                raise UnsupportedFabricationFormat("source via has a non-positive drill size")
             net_nodes = sexpr_nodes(board_text, via, "net")
             if len(net_nodes) != 1:
                 raise UnsupportedFabricationFormat("source via has no unique net assignment")
@@ -54,6 +61,7 @@ def source_board_vias(board_text: str) -> tuple[SourceVia, ...]:
                     net_name,
                     round(millimeters_to_nanometers(position[0])),
                     round(millimeters_to_nanometers(position[1])),
+                    drill_nm,
                 )
             )
         return tuple(sorted(result, key=lambda item: (item.net_name, item.x_nm, item.y_nm)))

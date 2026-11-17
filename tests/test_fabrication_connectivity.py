@@ -24,6 +24,10 @@ from kicad_tooling.hwrepo.fabrication_connectivity_models import (
 from kicad_tooling.hwrepo.project_models import ProjectKind, ReleaseExportSettings
 from kicad_tooling.hwrepo.release_contract_models import EvidenceFile
 from kicad_tooling.hwrepo.source_state_models import SourceState
+from tests.fabrication_connectivity_support import (
+    format_ipc_contact,
+    write_synthetic_fabrication,
+)
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.evidence_lint, pytest.mark.pcb_lint]
 
@@ -34,92 +38,14 @@ _OWNERS = (
     "fabrication_contact_inventory.py",
     "fabrication_contact_layers.py",
     "fabrication_contact_source.py",
+    "fabrication_excellon.py",
     "fabrication_connectivity_models.py",
     "fabrication_connectivity.py",
     "fabrication_connectivity_raster.py",
     "fabrication_via_binding.py",
+    "fabrication_via_drill_binding.py",
     "pcb_board_net_inventory.py",
 )
-
-
-def _record(code: str, net: str, reference: str, pin: str, access: int, x_mm: float) -> str:
-    x = round(x_mm / 0.00254)
-    y = round(5.0 / 0.00254)
-    return (
-        f"{code}{net:<14}   {reference:<6} {pin:<4} "
-        f"A{access:02d}X{x:+07d}Y{-y:+07d}X0197Y0000R000S2"
-    )
-
-
-def _gerber(side: str, features: str) -> str:
-    level, label = ("L1", "Top") if side == "top" else ("L2", "Bot")
-    return (
-        f"%TF.FileFunction,Copper,{level},{label}*%\n"
-        "%FSLAX46Y46*%\n%MOMM*%\n%LPD*%\n"
-        "%ADD10C,0.500000*%\n%ADD11C,0.300000*%\n"
-        f"{features}M02*\n"
-    )
-
-
-def _export(
-    directory: Path,
-    *,
-    connected: bool = True,
-    second_net: str = "SIGNAL",
-    through: bool = False,
-    plated_drill: bool = True,
-    inner_layer: bool = False,
-) -> tuple[Path, Path]:
-    board = directory / "board.kicad_pcb"
-    fixture = "via-only.kicad_pcb" if through else "clean.kicad_pcb"
-    board.write_bytes((_ROOT / "tests/fixtures/fabrication-connectivity" / fixture).read_bytes())
-    if not through and second_net != "SIGNAL":
-        board.write_text(
-            board.read_text(encoding="utf-8").replace(
-                '(pad "2" smd circle (at 2 0) (size 1 1) (layers "F.Cu" "F.Mask") (net 1 "SIGNAL"))',
-                f'(pad "2" smd circle (at 2 0) (size 1 1) (layers "F.Cu" "F.Mask") (net 2 "{second_net}"))',
-            ),
-            encoding="utf-8",
-        )
-    fabrication = directory / "fabrication"
-    fabrication.mkdir()
-    if through:
-        top_features = "D10*X6000000Y-5000000D03*\n"
-        bottom_features = "D10*X6000000Y-5000000D03*\n"
-        contacts = (_record("317", "SIGNAL", "VIA", "", 0, 6.0),)
-    else:
-        top_features = "D10*X5000000Y-5000000D03*X7000000Y-5000000D03*\n" + (
-            "D11*X5000000Y-5000000D02*X7000000Y-5000000D01*\n" if connected else ""
-        )
-        bottom_features = ""
-        contacts = (
-            _record("327", "SIGNAL", "J1", "1", 1, 5.0),
-            _record("327", second_net, "J1", "2", 1, 7.0),
-        )
-    (fabrication / "board-F_Cu.gbr").write_text(_gerber("top", top_features), encoding="utf-8")
-    (fabrication / "board-B_Cu.gbr").write_text(
-        _gerber("bottom", bottom_features), encoding="utf-8"
-    )
-    (fabrication / "board.d356").write_text(
-        "P  UNITS CUST 0\n" + "\n".join(contacts) + "\n999\n", encoding="utf-8"
-    )
-    drill = fabrication / "board-PTH.drl"
-    if through and plated_drill:
-        drill.write_text(
-            "M48\n; #@! TF.FileFunction,Plated,1,2,PTH\nFMAT,2\nMETRIC\n%\n"
-            "G90\nG05\nT1C0.3\nT1\nX6.0Y-5.0\nM30\n",
-            encoding="utf-8",
-        )
-    elif not through:
-        drill.write_text(
-            "M48\n; #@! TF.FileFunction,Plated,1,2,PTH\nFMAT,2\nMETRIC\n%\nM30\n",
-            encoding="utf-8",
-        )
-    if inner_layer:
-        (fabrication / "board-In1_Cu.gbr").write_text(
-            "%TF.FileFunction,Copper,L2,Inr*%\nM02*\n", encoding="utf-8"
-        )
-    return board, fabrication
 
 
 def test_release_export_connectivity_is_an_identity_compatible_opt_in() -> None:
@@ -249,7 +175,7 @@ def test_release_export_records_and_rechecks_opt_in_connectivity(
 def test_artifact_connectivity_reports_opens_shorts_and_intentional_isolation(
     tmp_path: Path, kwargs: dict[str, bool | str], expected: set[str], status: str
 ) -> None:
-    board, fabrication = _export(tmp_path, **kwargs)
+    board, fabrication = write_synthetic_fabrication(tmp_path, **kwargs)
     settings = FabricationConnectivitySettings()
 
     report = analyze_fabrication_connectivity(board, fabrication, settings)
@@ -259,13 +185,13 @@ def test_artifact_connectivity_reports_opens_shorts_and_intentional_isolation(
     assert {item.code for item in report.findings} == expected
     assert not report.unsupported_reasons, report.unsupported_reasons
     assert report.status == status
-    assert report.analyzer_version == "7"
+    assert report.analyzer_version == "8"
     assert report.board_sha256
     assert "fabrication/board.d356" in report.artifact_sha256
 
 
 def test_configured_block_mode_and_exact_ignore_are_deterministic(tmp_path: Path) -> None:
-    board, fabrication = _export(tmp_path, connected=False)
+    board, fabrication = write_synthetic_fabrication(tmp_path, connected=False)
     review = analyze_fabrication_connectivity(board, fabrication, FabricationConnectivitySettings())
     finding = review.findings[0]
     ignored = analyze_fabrication_connectivity(
@@ -289,19 +215,6 @@ def test_configured_block_mode_and_exact_ignore_are_deterministic(tmp_path: Path
     assert blocked.findings == (finding,)
 
 
-def test_plated_via_joins_layers_and_missing_drill_is_visible(tmp_path: Path) -> None:
-    board, fabrication = _export(tmp_path, through=True)
-    clean = analyze_fabrication_connectivity(board, fabrication, FabricationConnectivitySettings())
-    (fabrication / "board-PTH.drl").unlink()
-    missing_drill = analyze_fabrication_connectivity(
-        board, fabrication, FabricationConnectivitySettings()
-    )
-
-    assert clean.status == "PASS"
-    assert not clean.findings
-    assert {item.code for item in missing_drill.findings} == {"NO_DRILL", "OPEN"}
-
-
 @pytest.mark.parametrize(
     ("replacement", "message"),
     [
@@ -319,7 +232,7 @@ def test_plated_via_joins_layers_and_missing_drill_is_visible(tmp_path: Path) ->
 def test_plated_drill_span_must_match_the_full_source_stack(
     tmp_path: Path, replacement: str | None, message: str
 ) -> None:
-    board, fabrication = _export(tmp_path, through=True)
+    board, fabrication = write_synthetic_fabrication(tmp_path, through=True)
     drill = fabrication / "board-PTH.drl"
     source = drill.read_text(encoding="utf-8")
     if replacement is None:
@@ -341,7 +254,7 @@ def test_plated_drill_span_must_match_the_full_source_stack(
 
 
 def test_inner_copper_layer_fails_closed_and_exposes_stale_ignores(tmp_path: Path) -> None:
-    board, fabrication = _export(tmp_path, inner_layer=True)
+    board, fabrication = write_synthetic_fabrication(tmp_path, inner_layer=True)
     unsupported = analyze_fabrication_connectivity(
         board, fabrication, FabricationConnectivitySettings()
     )
@@ -381,7 +294,7 @@ def test_multilayer_gerbers_follow_the_source_stack_and_missing_layers_block(
 
 
 def test_stale_ignore_on_supported_board_fails_policy(tmp_path: Path) -> None:
-    board, fabrication = _export(tmp_path)
+    board, fabrication = write_synthetic_fabrication(tmp_path)
     result = analyze_fabrication_connectivity(
         board,
         fabrication,
@@ -396,7 +309,7 @@ def test_stale_ignore_on_supported_board_fails_policy(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize("mismatch", ("stack", "net"))
 def test_source_stack_or_ipc_net_mismatch_fails_closed(tmp_path: Path, mismatch: str) -> None:
-    board, fabrication = _export(tmp_path)
+    board, fabrication = write_synthetic_fabrication(tmp_path)
     if mismatch == "stack":
         board.write_text(
             board.read_text(encoding="utf-8").replace(
@@ -428,11 +341,11 @@ def test_fabrication_modules_remain_theme_owned_and_bounded() -> None:
 def test_ipc356_via_without_source_board_via_fails_before_rasterization(
     tmp_path: Path,
 ) -> None:
-    board, fabrication = _export(tmp_path)
+    board, fabrication = write_synthetic_fabrication(tmp_path)
     ipc = fabrication / "board.d356"
     ipc.write_text(
         ipc.read_text(encoding="utf-8").replace(
-            "999\n", _record("317", "SIGNAL", "VIA", "", 0, 5.0) + "\n999\n"
+            "999\n", format_ipc_contact("317", "SIGNAL", "VIA", "", 0, 5.0) + "\n999\n"
         ),
         encoding="utf-8",
     )
@@ -453,7 +366,7 @@ def test_ipc356_via_without_source_board_via_fails_before_rasterization(
 def test_ipc356_contact_layer_mismatch_fails_before_rasterization(
     tmp_path: Path, mismatch: str, expected_reason: str
 ) -> None:
-    board, fabrication = _export(tmp_path)
+    board, fabrication = write_synthetic_fabrication(tmp_path)
     if mismatch == "artifact":
         ipc = fabrication / "board.d356"
         ipc.write_text(ipc.read_text(encoding="utf-8").replace("327", "317"), encoding="utf-8")
