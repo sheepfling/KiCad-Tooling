@@ -30913,8 +30913,8 @@ acceptance threads while new lint features proceed:
   wrong tool size, and a slot that cannot stand in for a circular via. The
   analyzer rejects missing, displaced, and wrong-size mutations of native PTH
   exports from digest-pinned KiCad 10.0.0 and 10.0.5 with repeatable results.
-- **Hosted acceptance:** [Run 44002505384][lint542-hosted-run] passed for
-  tag `v0.5.3rc877` at code commit
+- **Hosted acceptance:** GitHub Actions run `44002505384` passed for tag
+  `v0.5.3rc877` at code commit
   `14ae7dadbdcb151305399954b398cb05ed468b89`. Package and preview jobs were
   skipped by the prerelease workflow policy.
 - **Selection:** Run:
@@ -31490,6 +31490,49 @@ acceptance threads while new lint features proceed:
   playtest all passed. Package and preview jobs were skipped under prerelease
   policy.
 
+#### LINT-556 — Require a terminal Excellon end-of-file marker
+
+- **Priority:** P1 fabrication-evidence integrity. The bounded Excellon parser
+  previously accepted a drill artifact that contained plausible hits but had
+  been truncated before its `M30` end-of-file marker. Source-pad and via
+  binding could therefore treat an incomplete drill file as complete input.
+- **Change:** Require one exact `M30` command as the last non-comment,
+  non-blank command in each parsed Excellon artifact. Reject a missing marker
+  or any command after it as `UNSUPPORTED`; allow blank lines and semicolon
+  comments after the marker.
+- **Native behavior:** Exact KiCad 10.0.0 and 10.0.5 fabrication exports both
+  end their PTH drill file with `M30`. Their exported PTH data remains accepted
+  by the source-binding analyzer.
+- **Boundary:** This checks the supported file-termination convention. It does
+  not prove that every intended manufacturing feature was exported, validate
+  electrical correctness, or establish fabrication quality. An artifact that
+  is otherwise incomplete but still has a terminal `M30` remains outside this
+  check's scope.
+- **Regression coverage:** Synthetic controls verify a valid marker, comments
+  and whitespace after it, and `UNSUPPORTED` outcomes for a missing marker or
+  a later command. An end-to-end via-only source fixture confirms a matching
+  drill hit without `M30` cannot produce a supported connectivity result.
+  Exact-version native tests assert KiCad 10.0.0 and 10.0.5 exports end with
+  `M30`; the extra-hit mutation remains before the marker. No project board or
+  proprietary fixture is used.
+- **Analyzer version:** `20`, because Excellon inputs that previously parsed
+  as complete now return `UNSUPPORTED` when termination is missing or followed
+  by another command.
+- **Selection:** The annotated scope includes
+  `tests/test_fabrication_excellon_end_marker.py` and the existing Excellon and
+  artifact-connectivity tests that assert the analyzer version. Use
+  `design_lint and evidence_lint`; exact-version validation sets
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` and includes the
+  `native_kicad` marker on KiCad 10.0.0 and 10.0.5.
+- **Local validation:** Scoped CI passed in
+  `build/ci/run-s0jxyqnx`: 141 selected tests passed, including all 12
+  digest-pinned native fabrication cases. Ruff format and lint, both Alphus
+  profiles, Rumdl, mdrepo, module-size preflight, Linux and Windows-target
+  Pyright, wheel/sdist/sdist-wheel builds, and fresh installed-wheel origin and
+  version checks passed. The focused pytest marker, theme-suite, fixture
+  reachability, and architecture selection passed 62 tests.
+- **Hosted acceptance:** Pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -31562,7 +31605,6 @@ quality, or first-article continuity.
 [kicad-10.0.5-drc-items]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/drc/drc_item.cpp
 [kicad-10-drc-exclusions]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#design-rule-checking
 [kicad-10-cli-drc]: https://docs.kicad.org/10.0/en/cli/cli.html
-[lint542-hosted-run]: https://github.com/sheepfling/KiCad-Tooling/actions/runs/44002505384
 [arm-jtag-signals]: https://documentation-service.arm.com/static/5f900a61f86e16515cdc0610
 [arm-dstream-jtag-interface]: https://support.arm.com/documentation/dui0499/k/arm-dstream-target-interface-connections/the-arm-jtag-20-connector-pinouts-and-interface-signals/arm-jtag-20-interface-signals?lang=en
 [arm-swd-signals]: https://documentation-service.arm.com/static/5f900abff86e16515cdc063b

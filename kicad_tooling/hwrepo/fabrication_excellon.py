@@ -90,6 +90,7 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
     x = y = 0.0
     x_resolution_nm = y_resolution_nm = 1
     slot_start: tuple[float, float] | None = None
+    ended = False
     format_lines = [line for line in text.splitlines() if "FILE_FORMAT" in line.upper()]
     if len(format_lines) > 1:
         raise UnsupportedFabricationFormat("Excellon has multiple FILE_FORMAT declarations")
@@ -155,6 +156,13 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
         upper = line.upper()
         if not line or line.startswith(";"):
             continue
+        if ended:
+            raise UnsupportedFabricationFormat(
+                "Excellon contains a command after the M30 end-of-file marker"
+            )
+        if upper == "M30":
+            ended = True
+            continue
         if upper.startswith(("METRIC", "M71", "INCH", "M72")):
             metric = upper.startswith(("METRIC", "M71"))
             zero_mode = "T" if "TZ" in upper else "L"
@@ -214,7 +222,7 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
         if upper.startswith(("M16", "M17")):
             slot_start = None
             continue
-        if upper.startswith(("M48", "FMAT", "%", "G90", "G05", "M30")):
+        if upper.startswith(("M48", "FMAT", "%", "G90", "G05")):
             continue
         slot_parts = re.split(r"G85", upper)
         if len(slot_parts) > 2:
@@ -303,4 +311,6 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
                 )
             )
             x, y = nx, ny
+    if not ended:
+        raise UnsupportedFabricationFormat("Excellon is missing terminal M30 end-of-file marker")
     return tuple(hits)

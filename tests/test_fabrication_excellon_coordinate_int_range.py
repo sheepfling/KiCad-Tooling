@@ -55,7 +55,7 @@ def test_coordinate_outside_kicad_signed_range_is_unsupported(
     assert result.status == "UNSUPPORTED"
     assert "signed nanometer range" in result.unsupported_reasons[0]
     assert result.findings == ()
-    assert result.analyzer_version == "19"
+    assert result.analyzer_version == "20"
 
 
 @pytest.mark.parametrize(
@@ -80,5 +80,5 @@ def test_representable_large_coordinate_parses_without_native_overflow(
     coordinates: str,
     expected: tuple[float, float],
 ) -> None:
-    (hit,) = parse_excellon(f"{units}\nT1C0.300\nT1\n{coordinates}\n")
+    (hit,) = parse_excellon(f"{units}\nT1C0.300\nT1\n{coordinates}\nM30\n")
     assert (hit.x_mm, hit.y_mm) == pytest.approx(expected)

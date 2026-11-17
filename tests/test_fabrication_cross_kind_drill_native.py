@@ -66,6 +66,10 @@ def test_native_pad_and_coincident_via_require_distinct_pth_hits(
     )
     pth = next(fabrication.glob("*-PTH.drl"))
     source = pth.read_text(encoding="utf-8")
+    meaningful_lines = [
+        line.strip() for line in source.splitlines() if line.strip() and not line.startswith(";")
+    ]
+    assert meaningful_lines[-1].upper() == "M30"
     hits = parse_excellon(source)
     assert len(hits) == 2
     assert {(hit.x_mm, hit.y_mm, hit.diameter_mm) for hit in hits} == {(10.0, -9.0, 0.8)}
@@ -78,7 +82,14 @@ def test_native_pad_and_coincident_via_require_distinct_pth_hits(
 
     hit_lines = [line for line in source.splitlines() if line.startswith("X")]
     assert len(hit_lines) == 2
-    pth.write_text(source.rstrip() + "\n" + hit_lines[0] + "\n", encoding="utf-8")
+    source_lines = source.splitlines()
+    end_marker = next(
+        index
+        for index in range(len(source_lines) - 1, -1, -1)
+        if source_lines[index].strip().upper() == "M30"
+    )
+    source_lines.insert(end_marker, hit_lines[0])
+    pth.write_text("\n".join(source_lines) + "\n", encoding="utf-8")
     extra_hit = analyze_fabrication_connectivity(board, fabrication, settings)
     repeated_extra_hit = analyze_fabrication_connectivity(board, fabrication, settings)
     assert extra_hit == repeated_extra_hit

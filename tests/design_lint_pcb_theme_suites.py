@@ -14,6 +14,7 @@ PCB_SOURCE_INTEGRITY_SUITES = (
 PCB_THEME_SUITES = (
     "test_fabrication_connectivity.py",
     "test_fabrication_connectivity_native.py",
+    "test_fabrication_excellon_end_marker.py",
     "test_fabrication_excellon_coordinate_validation.py",
     "test_fabrication_excellon_coordinate_int_range.py",
     "test_fabrication_excellon_coordinate_precision.py",

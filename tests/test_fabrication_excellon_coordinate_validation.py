@@ -65,7 +65,7 @@ def test_unrepresentable_or_malformed_coordinate_is_unsupported(
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "19"
+    assert result.analyzer_version == "20"
     assert result.status == "UNSUPPORTED"
     assert reason in result.unsupported_reasons[0]
     assert result.findings == ()
@@ -84,7 +84,7 @@ def test_valid_unmatched_excellon_coordinates_remain_reviewable(tmp_path: Path) 
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "19"
+    assert result.analyzer_version == "20"
     assert result.status == "REVIEW"
     (finding,) = result.findings
     assert finding.code == "UNBOUND_DRILL_HIT"
