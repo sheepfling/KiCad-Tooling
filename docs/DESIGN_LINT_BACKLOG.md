@@ -31167,6 +31167,18 @@ acceptance threads while new lint features proceed:
   Exact-version native compatibility uses the existing fabrication
   connectivity suites with `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` and
   `native_kicad`.
+- **Local validation:** Focused Excellon and artifact-connectivity selection:
+  33 passed. PCB architecture and marker suites: 22 passed. Scoped CI pytest:
+  72 passed, 12 skipped; Ruff, Alphus, Rumdl, module-size checks, Linux and
+  Windows-target Pyright, and wheel/sdist builds passed. Exact-version native
+  Docker coverage: 12 passed across KiCad 10.0.0 and 10.0.5. The local normal
+  dependency install could not resolve `pydantic==2.13.5` because sandbox DNS
+  could not resolve `pypi.org`; hosted dependency installation passed.
+- **Hosted acceptance:** GitHub Actions run `44032103673` passed for tag
+  `v0.5.3rc884` at code commit
+  `54713d34c639610dc0c40fd9c8fa81968102b42c`. The run completed the focused
+  lint gate, normal dependency install, and external-project wheel rehearsal.
+  Package and preview jobs were skipped by prerelease workflow policy.
 
 ## Completion and release gate
 
