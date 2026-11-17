@@ -872,7 +872,15 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc888):** LINT-553
+- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc889):** LINT-554
+  prevents coarse precision on one Excellon axis from widening the other
+  axis's tolerance for drill centers or routed-slot geometry. The final
+  tag-scoped selection passed 133 tests, including 12 exact-version native
+  cases on KiCad 10.0.0 and 10.0.5. Hosted acceptance passed in GitHub Actions
+  run `44060309837`: dependency installation, Pyright, wheel and sdist builds,
+  and the installed-wheel external-project playtest passed. Package and preview
+  jobs were skipped under prerelease policy.
+- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc888):** LINT-553
   rejects Excellon coordinates outside KiCad's signed nanometer range. The
   final tag-scoped selection passed 125 tests, including 12 exact-version
   native cases on KiCad 10.0.0 and 10.0.5. Hosted acceptance passed in GitHub
@@ -31440,9 +31448,11 @@ acceptance threads while new lint features proceed:
   collection checks passed 25 tests. Full-repository Ruff check and formatting,
   both Alphus profiles, and Linux and Windows-target Pyright passed. The local
   editable reinstall could not resolve external package hosts because sandbox
-  DNS is unavailable; the existing editable install pointed to this worktree,
-  and hosted dependency installation remains part of acceptance.
-- **Hosted acceptance:** Pending annotated prerelease tag.
+  DNS is unavailable; the existing editable install pointed to this worktree.
+- **Hosted acceptance:** GitHub Actions run `44060309837` passed the
+  133-test tag-scoped selection, Pyright, wheel and sdist builds, and the
+  installed-wheel external-project playtest. Package and preview jobs were
+  skipped under prerelease policy.
 
 ## Completion and release gate
 
