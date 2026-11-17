@@ -56,6 +56,16 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
             value = sign * int(digits or "0") / 10**decimals
         return value if metric else value * 25.4
 
+    def selected_drill_geometry() -> tuple[float, int]:
+        if selected is None:
+            raise UnsupportedFabricationFormat("Excellon drill hit has no selected tool")
+        try:
+            return tools[selected]
+        except KeyError as exc:
+            raise UnsupportedFabricationFormat(
+                f"Excellon selects undefined tool T{selected}"
+            ) from exc
+
     for raw_line in text.splitlines():
         line = raw_line.strip()
         upper = line.upper()
@@ -67,16 +77,29 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
             continue
         tool = re.fullmatch(r"T(\d+)(?:F\d+S\d+)?C([\d.]+)", upper)
         if tool:
+            tool_id = int(tool.group(1))
             raw_diameter = tool.group(2)
             diameter = float(raw_diameter)
-            tools[int(tool.group(1))] = (
+            if diameter <= 0:
+                raise UnsupportedFabricationFormat(
+                    f"Excellon tool T{tool_id} has a non-positive diameter"
+                )
+            geometry = (
                 diameter if metric else diameter * 25.4,
                 _resolution_nm(raw_diameter, metric, coordinate_format),
             )
+            previous = tools.get(tool_id)
+            if previous is not None and previous != geometry:
+                raise UnsupportedFabricationFormat(
+                    f"Excellon tool T{tool_id} has conflicting diameter definitions"
+                )
+            tools[tool_id] = geometry
             continue
         selection = re.fullmatch(r"T(\d+)", upper)
         if selection:
             selected = int(selection.group(1))
+            if selected not in tools:
+                raise UnsupportedFabricationFormat(f"Excellon selects undefined tool T{selected}")
             continue
         if upper.startswith("M15"):
             slot_start = (x, y)
@@ -102,9 +125,9 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
             y_resolution_nm = _resolution_nm(coords["Y"], metric, coordinate_format)
         else:
             ny = y
-        diameter, diameter_resolution_nm = tools.get(selected or -1, (0.0, 1))
         coordinate_resolution_nm = max(x_resolution_nm, y_resolution_nm)
         if len(slot_parts) > 1:
+            diameter, diameter_resolution_nm = selected_drill_geometry()
             end_fields = {
                 axis: value for axis, value in re.findall(r"([XY])([+-]?[\d.]+)", slot_parts[1])
             }
@@ -126,6 +149,7 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
         elif upper.startswith("G00"):
             x, y = nx, ny
         elif upper.startswith("G01") and slot_start is not None:
+            diameter, diameter_resolution_nm = selected_drill_geometry()
             hits.append(
                 DrillHit(
                     x,
@@ -138,6 +162,7 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
             )
             x, y = nx, ny
         else:
+            diameter, diameter_resolution_nm = selected_drill_geometry()
             hits.append(
                 DrillHit(
                     nx,

@@ -31089,6 +31089,40 @@ acceptance threads while new lint features proceed:
   install and external-template wheel rehearsal. Package and preview jobs were
   skipped under prerelease workflow policy.
 
+#### LINT-548 — Reject Excellon hits without valid tool definitions
+
+- **Priority:** P1 fabrication-evidence integrity. The bounded Excellon parser
+  previously gave a hit a zero-millimeter diameter when its selected tool was
+  undefined. With unmatched-hit review enabled, malformed output could appear
+  as an ordinary extra-hole prompt instead of unsupported evidence.
+- **Change:** Reject a selected but undefined tool, a drill hit without a
+  selected tool, a non-positive tool diameter, and conflicting diameter
+  definitions for one tool ID. Identical repeated definitions remain
+  idempotent. The analyzer reports these inputs as `UNSUPPORTED` before
+  connectivity rasterization.
+- **Boundary:** A declared valid tool is not proof that its diameter matches
+  source geometry; source pad/via binding still establishes that comparison.
+  Well-formed unmatched hits remain `REVIEW` under LINT-547. This does not
+  judge unused tool declarations or manufacturing quality.
+- **Regression coverage:** Synthetic malformed files exercise all four
+  fail-closed cases. A valid defined-tool control still reports an unmatched
+  hole as `REVIEW`. Existing exact-version native fabrication exports verify
+  supported KiCad 10.0.0 and 10.0.5 tool tables remain accepted.
+- **Analyzer version:** `13`, because malformed hits that previously reached
+  review now return `UNSUPPORTED`.
+- **Selection:** Run
+
+  ```sh
+  .venv/bin/python -I -m pytest \
+    tests/test_fabrication_excellon_tool_validation.py \
+    tests/test_fabrication_unbound_drill_hits.py \
+    tests/test_fabrication_connectivity.py \
+    -m 'design_lint and evidence_lint and pcb_lint'
+  ```
+
+  Exact-version native coverage uses the existing fabrication connectivity
+  suites with `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` and `native_kicad`.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
