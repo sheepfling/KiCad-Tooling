@@ -31134,6 +31134,40 @@ acceptance threads while new lint features proceed:
   external-project wheel rehearsal. Package and preview jobs were skipped by
   prerelease workflow policy.
 
+#### LINT-549 — Reject unrepresentable Excellon tool diameters
+
+- **Priority:** P1 fabrication-evidence integrity. A syntactically numeric
+  diameter with enough digits converts to positive infinity in Python. The
+  parser previously accepted it, and unbound-hit fingerprinting later raised
+  `OverflowError` while converting that value to nanometers instead of
+  returning a typed unsupported-evidence report.
+- **Change:** Reject a non-finite or nanometer-unrepresentable selected-tool
+  diameter as `UnsupportedFabricationFormat` before drill binding or finding
+  assembly. The artifact-connectivity analyzer version advances to `14` because the
+  malformed artifact now returns `UNSUPPORTED` rather than terminating the
+  analysis call.
+- **Boundary:** This validates finite numeric and nanometer range for a
+  selected tool diameter. It does not establish that a finite diameter is
+  supported by the fabricator or matches the source-board hole; existing
+  source drill binding owns that comparison.
+- **Regression coverage:** Tooling-owned synthetic artifacts with an
+  overflowing diameter and a finite diameter whose nanometer conversion
+  overflows must return `UNSUPPORTED` with no findings. A finite 0.3 mm
+  unmatched hit remains `REVIEW` under LINT-547.
+- **Selection:** Run
+
+  ```sh
+  .venv/bin/python -I -m pytest \
+    tests/test_fabrication_excellon_finite_tool_diameters.py \
+    tests/test_fabrication_connectivity.py \
+    tests/test_fabrication_unbound_drill_hits.py \
+    -m 'design_lint and evidence_lint and pcb_lint'
+  ```
+
+  Exact-version native compatibility uses the existing fabrication
+  connectivity suites with `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` and
+  `native_kicad`.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

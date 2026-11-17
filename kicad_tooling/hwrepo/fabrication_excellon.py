@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass
 
@@ -80,9 +81,17 @@ def parse_excellon(text: str) -> tuple[DrillHit, ...]:
             tool_id = int(tool.group(1))
             raw_diameter = tool.group(2)
             diameter = float(raw_diameter)
+            if not math.isfinite(diameter):
+                raise UnsupportedFabricationFormat(
+                    f"Excellon tool T{tool_id} has a non-finite diameter"
+                )
             if diameter <= 0:
                 raise UnsupportedFabricationFormat(
                     f"Excellon tool T{tool_id} has a non-positive diameter"
+                )
+            if not math.isfinite(diameter * 1_000_000):
+                raise UnsupportedFabricationFormat(
+                    f"Excellon tool T{tool_id} diameter exceeds the finite nanometer range"
                 )
             geometry = (
                 diameter if metric else diameter * 25.4,
