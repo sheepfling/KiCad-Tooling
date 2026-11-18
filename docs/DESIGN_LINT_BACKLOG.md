@@ -872,15 +872,25 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc899):** LINT-564
-  bounds IPC-D-356 numeric fields before raster analysis. The tag-scoped
-  selection passed 263 tests, including all 12 exact-version KiCad 10.0.0 and
-  10.0.5 Docker cases. GitHub Actions run
+- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc900):** LINT-565
+  binds IPC-D-356 component-pad dimensions to source PCB geometry. The
+  tag-scoped selection passed 267 tests, including all 12 exact-version KiCad
+  10.0.0 and 10.0.5 Docker cases. GitHub Actions run
+  [44271717912](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44271717912)
+  passed Ruff, formatting, both Alphus profiles, module-size preflight, Rumdl,
+  mdrepo, Linux and Windows-targeted Pyright, wheel/sdist/sdist-wheel builds,
+  installed-wheel origin/version checks, and external-project inventory,
+  surface, verification, and playtest checks. Package and preview jobs were
+  skipped under prerelease policy.
+- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc899):** LINT-564
+  bounds IPC-D-356 numeric fields before raster analysis. Its selection passed
+  263 tests, including all 12 exact-version KiCad 10.0.0 and 10.0.5 Docker
+  cases. GitHub Actions run
   [44266572883](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44266572883)
   passed Pyright for Linux and Windows, wheel/sdist/sdist-wheel builds, and
   installed-wheel checks against the separate project checkout. Package and
   preview jobs were skipped under prerelease policy.
-- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc898):** LINT-563
+- **Earlier hosted-accepted lint-gate checkpoint (v0.5.3rc898):** LINT-563
   rejects finite Gerber raster geometry whose pixel span exceeds the analyzer
   budget. The tag-scoped selection passed 230 tests, including all 12
   digest-pinned KiCad 10.0.0 and 10.0.5 Docker cases. GitHub Actions run
@@ -31967,6 +31977,54 @@ acceptance threads while new lint features proceed:
   project inventory/surface/verification/playtest checks passed. Package and
   preview jobs were skipped under prerelease policy.
 
+#### LINT-565 — Bind IPC-D-356 pad dimensions to source geometry
+
+- **Status:** Complete; tagged hosted acceptance passed.
+- **Priority:** P1 fabrication-evidence integrity. The connectivity analyzer
+  bound IPC-D-356 component contacts to source pad identity, location, layer,
+  and net, but it rasterized exported pad dimensions without checking them
+  against the source PCB. A synthetic 1.0 mm circular source pad with a 1.5 mm
+  IPC-D-356 size still returned `PASS`.
+- **Reference:** KiCad's [IPC-D-356 exporter][kicad-ipc-d356-exporter] writes
+  pad dimensions in decimils. Circular pads encode zero for Y; other supported
+  pad shapes export both X and Y dimensions.
+- **Change:** Retain X/Y dimensions in parsed IPC-D-356 contacts and source pad
+  records. Bind each component contact's exported dimensions to its matching
+  source pad. Compare within half of the IPC-D-356 decimil resolution, plus a
+  one-nanometer conversion allowance. Circular pads expect the export's zero Y
+  dimension; other pad shapes compare both dimensions.
+- **Boundary:** This check covers component pads; via dimensions are not
+  compared. Its tolerance accounts only for export quantization and unit
+  conversion, not manufacturing variation. A mismatch returns
+  `UNSUPPORTED` with no findings because exported contact geometry cannot be
+  trusted for connectivity analysis. Matching dimensions do not prove
+  fabricated copper continuity, physical quality, or electrical approval.
+- **Regression coverage:** Synthetic faults cover mismatched circular-pad X
+  size and rectangular-pad Y size; a matching rectangular control remains
+  supported. A low-level oversized-contact regression continues to exercise
+  the raster pixel budget directly after source-size binding rejects that
+  input earlier in the full analysis pipeline. No product or cohort project
+  data is used.
+- **Analyzer version:** `29`, because source-bound reports now include an
+  IPC-D-356-to-source pad-dimension comparison.
+- **Selection:** The fabrication suites carry `design_lint`, `evidence_lint`,
+  and `pcb_lint`. The tag-scoped native lane remains
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
+- **Local validation (2026-11-18):** The full fabrication synthetic selection
+  passed 255 tests; the exact-version KiCad 10.0.0 and 10.0.5 Docker lane
+  passed 267 tests, including all 12 native cases. Ruff, formatting, targeted
+  Pyright, fabrication architecture, lint-suite-size, and module-size checks
+  passed.
+- **Hosted acceptance (2026-11-18):** Tag `v0.5.3rc900`, code commit
+  `896889aae7a8d4c8786bf7be705cba60214c69c1`, passed workflow run
+  [44271717912](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44271717912)
+  in 21m48s. All 267 scoped tests passed, including 12 exact-version native
+  KiCad 10.0.0 and 10.0.5 Docker cases. Ruff, formatting, both Alphus profiles,
+  module-size preflight, Rumdl, mdrepo, Linux and Windows-targeted Pyright,
+  wheel/sdist/sdist-wheel builds, installed-wheel origin/version checks, and
+  external/adapted project inventory, surface, verification, and playtest
+  checks passed. Package and preview jobs were skipped under prerelease policy.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -32064,3 +32122,4 @@ quality, or first-article continuity.
 [kicad-docker-digests]: https://github.com/KiCad/kicad-docker/pkgs/container/kicad/versions?filters%5Bversion_type%5D=tagged
 [gerber-layer-spec-2026-05]: https://www.ucamco.com/files/downloads/file_en/554/gerber-layer-format-specification-revision-2026-05_en.pdf?eac6410808ad1d0b3f977429ddaab7d0=
 [gerber-data-types]: https://www.ucamco.com/files/downloads/file_en/554/gerber-layer-format-specification-revision-2026-05_en.pdf?eac6410808ad1d0b3f977429ddaab7d0=
+[kicad-ipc-d356-exporter]: https://gitlab.com/kicad/code/kicad/-/blob/50eaba42111fd1ed5554df7aef7cb595624f3da8/pcbnew/exporters/export_d356.cpp
