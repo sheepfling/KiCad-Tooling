@@ -872,6 +872,14 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
+- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc898):** LINT-563
+  rejects finite Gerber raster geometry whose pixel span exceeds the analyzer
+  budget. The tag-scoped selection passed 230 tests, including all 12
+  digest-pinned KiCad 10.0.0 and 10.0.5 Docker cases. GitHub Actions run
+  [44225351269](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44225351269)
+  passed Linux and Windows-targeted Pyright, wheel/sdist/sdist-wheel builds,
+  and installed-wheel checks against the separate project checkout. Package
+  and preview jobs were skipped under prerelease policy.
 - **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc891):** LINT-556
   rejects Excellon files missing a terminal `M30` or containing a command
   after it. The tag-scoped selection passed 141 tests, including all 12
@@ -879,20 +887,20 @@ standalone parity work when it closes a demonstrated feature regression.
   passed Pyright, wheel/sdist/sdist-wheel builds, and installed-wheel external
   project inventory, surface, verification, and playtest checks. Package and
   preview jobs were skipped under prerelease policy.
-- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc892):** LINT-557
+- **Earlier hosted-accepted lint-gate checkpoint (v0.5.3rc892):** LINT-557
   requires copper Gerbers to contain one terminal `M02` and rejects commands
   or data after it. The tag-scoped selection passed 147 tests, including all 12
   digest-pinned native fabrication cases. GitHub Actions run `44080374427`
   passed Pyright, wheel/sdist/sdist-wheel builds, and the installed-wheel
   external-project inventory, surface, verification, and playtest checks.
   Package and preview jobs were skipped under prerelease policy.
-- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc893):** LINT-558
+- **Earlier hosted-accepted lint-gate checkpoint (v0.5.3rc893):** LINT-558
   rejects Gerber coordinate records the bounded parser cannot consume exactly.
   The tag-scoped selection passed 164 tests, including all 12 exact-version
   native fabrication cases. GitHub Actions run `44086735827` passed Pyright,
   wheel/sdist/sdist-wheel builds, and the installed-wheel external-project
   checks. Package and preview jobs were skipped under prerelease policy.
-- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc894):** LINT-559
+- **Earlier hosted-accepted lint-gate checkpoint (v0.5.3rc894):** LINT-559
   rejects non-finite or malformed Gerber aperture dimensions before geometry
   analysis. The tag-scoped selection passed 175 tests, including all 12
   exact-version native fabrication cases. GitHub Actions run `44094422122`
