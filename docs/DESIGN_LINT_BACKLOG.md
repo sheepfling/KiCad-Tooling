@@ -32332,6 +32332,44 @@ acceptance threads while new lint features proceed:
   and inventory, verification, and playtest against the separate public template
   checkout. Hosted run `44322983480` passed on tag `v0.5.3rc907`.
 
+#### LINT-573 — Review raster phase-sensitive copper connectivity
+
+- **Status:** Implementation and local acceptance complete; hosted acceptance
+  pending.
+- **Priority:** P1 fabrication-evidence coverage. The FA-001 raster analyzer
+  can report `PASS` when a narrow physical gap disappears at the configured
+  pixel density. Changing the grid alignment can expose this aliasing, but
+  raster agreement cannot establish exact copper continuity.
+- **Change:** Add an enabled-by-default, configurable phase-stability pass to
+  compare contact-to-island partitions at the normal raster origin and three
+  half-pixel offsets. Emit `RASTER_SENSITIVE` with the affected contacts and
+  phase when topology differs. The finding follows existing `review`/`block`
+  policy and supports exact fingerprint ignores. Bump the summary schema to 2
+  and analyzer version to 37.
+- **Boundary:** This is a deterministic raster-review heuristic. It can miss
+  gaps smaller than all sampled pixel phases and can report sensitivity for
+  other grid-alignment effects. It does not identify the physical cause, prove
+  connectivity, or infer whether two nets are intended to be common. Disabling
+  the option skips the extra passes; unsupported source remains unavailable.
+- **Fixtures:** A tooling-owned source-bound synthetic Gerber places a remote
+  flash to select the canvas phase and introduces an 85 µm gap that passes at
+  25 px/mm in the origin phase but changes topology under two alternate phases.
+  Tests cover repeatability, stable connected control, review and block modes,
+  and exact ignores. No project board or proprietary source is used.
+- **Selection:** Run
+  `tests/test_fabrication_raster_phase_stability.py` with
+  `design_lint`, `evidence_lint`, and `pcb_lint`; run the complete fabrication
+  evidence selection with `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` to retain
+  exact-version KiCad 10.0.0 and 10.0.5 compatibility coverage.
+- **Local validation (2026-11-18):** The focused phase-stability and
+  connectivity suites passed 25 tests. Full fabrication evidence passed 332
+  tests, including exact-version KiCad 10.0.0 and 10.0.5 Docker fixtures. The
+  PCB theme/module architecture and backlog catalog suites passed 26 tests.
+  Scoped CI passed formatting, Ruff, both Alphus profiles, Rumdl, mdrepo,
+  module-size preflight, Linux and Windows Pyright, wheel/sdist builds,
+  installed-wheel checks, and inventory, verification, and playtest against
+  the separate public template checkout.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

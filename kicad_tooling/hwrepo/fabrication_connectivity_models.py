@@ -22,6 +22,7 @@ class FabricationConnectivitySettings(StrictModel):
 
     mode: Literal["review", "block"] = "review"
     pixel_density: Literal[25, 50, 100] = 50
+    check_raster_phase_stability: bool = True
     ignores: tuple[FabricationConnectivityIgnore, ...] = ()
 
     @model_validator(mode="after")
@@ -45,29 +46,40 @@ class FabricationConnectivityDrillEvidence(StrictModel):
 class FabricationConnectivityFinding(StrictModel):
     """A source- and artifact-local connectivity observation."""
 
-    code: Literal["OPEN", "SHORT", "NO_COPPER", "NO_DRILL", "UNBOUND_DRILL_HIT"]
+    code: Literal[
+        "OPEN",
+        "SHORT",
+        "NO_COPPER",
+        "NO_DRILL",
+        "UNBOUND_DRILL_HIT",
+        "RASTER_SENSITIVE",
+    ]
     fingerprint: Digest
     net: NonEmptyText | None = None
     contacts: tuple[NonEmptyText, ...] = ()
     location_mm: tuple[float, float] | None = None
     drill_evidence: FabricationConnectivityDrillEvidence | None = None
+    raster_phase: Literal["x_half", "y_half", "xy_half"] | None = None
 
     @model_validator(mode="after")
     def drill_evidence_matches_code(self) -> FabricationConnectivityFinding:
         if (self.code == "UNBOUND_DRILL_HIT") != (self.drill_evidence is not None):
             raise ValueError("unbound drill findings require exactly one drill evidence record")
+        if (self.code == "RASTER_SENSITIVE") != (self.raster_phase is not None):
+            raise ValueError("raster-sensitive findings require exactly one raster phase")
         return self
 
 
 class FabricationConnectivitySummary(StrictModel):
     """Reproducible result whose input files are bound by SHA-256."""
 
-    schema_version: Literal["1"] = "1"
-    analyzer_version: Literal["36"] = "36"
+    schema_version: Literal["2"] = "2"
+    analyzer_version: Literal["37"] = "37"
     status: Literal["PASS", "REVIEW", "FAIL", "UNSUPPORTED"]
     board_sha256: Digest
     artifact_sha256: Mapping[RepositoryPath, Digest]
     pixel_density: Literal[25, 50, 100]
+    raster_phase_check: Literal["disabled", "checked", "unavailable"] = "unavailable"
     findings: tuple[FabricationConnectivityFinding, ...] = ()
     ignored_findings: tuple[FabricationConnectivityFinding, ...] = ()
     stale_ignore_fingerprints: tuple[Digest, ...] = ()

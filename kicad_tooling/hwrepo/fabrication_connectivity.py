@@ -154,10 +154,13 @@ def _fingerprint(
     net: str | None,
     contacts: tuple[str, ...],
     drill_evidence: FabricationConnectivityDrillEvidence | None = None,
+    raster_phase: str | None = None,
 ) -> str:
     payload: dict[str, object] = {"code": code, "net": net, "contacts": sorted(contacts)}
     if drill_evidence is not None:
         payload["drill_evidence"] = drill_evidence.model_dump(mode="json")
+    if raster_phase is not None:
+        payload["raster_phase"] = raster_phase
     encoded = json.dumps(
         payload,
         ensure_ascii=True,
@@ -173,15 +176,17 @@ def _finding(
     net: str | None = None,
     location: tuple[float, float] | None = None,
     drill_evidence: FabricationConnectivityDrillEvidence | None = None,
+    raster_phase: str | None = None,
 ) -> FabricationConnectivityFinding:
     contacts = tuple(sorted(contact_labels))
     return FabricationConnectivityFinding(
         code=code,  # type: ignore[arg-type]
-        fingerprint=_fingerprint(code, net, contacts, drill_evidence),
+        fingerprint=_fingerprint(code, net, contacts, drill_evidence, raster_phase),
         net=net,
         contacts=contacts,
         location_mm=location,
         drill_evidence=drill_evidence,
+        raster_phase=raster_phase,  # type: ignore[arg-type]
     )
 
 
@@ -258,6 +263,7 @@ def analyze_fabrication_connectivity(
     board_hash = _digest(board_bytes)
     reasons: list[str] = []
     findings: list[FabricationConnectivityFinding] = []
+    raster_phase_check: str = "unavailable" if settings.check_raster_phase_stability else "disabled"
     try:
         board_text = board_bytes.decode("utf-8")
         gerber_paths, ipc_path, drill_paths = _source_inputs(fabrication_dir)
@@ -290,7 +296,8 @@ def analyze_fabrication_connectivity(
         )
         findings.extend(_unbound_drill_findings(unbound_drills))
         try:
-            from .fabrication_connectivity_raster import analyze_raster
+            from .fabrication_connectivity_raster import RASTER_ALTERNATE_PHASES, analyze_raster
+            from .fabrication_connectivity_resolution import different_raster_contact_partitions
         except ImportError as exc:
             raise UnsupportedFabricationFormat(
                 "install the optional fabrication-connectivity dependencies to enable analysis"
@@ -301,6 +308,21 @@ def analyze_fabrication_connectivity(
             tuple(plated),
             settings.pixel_density,
         )
+        if settings.check_raster_phase_stability:
+            for phase in RASTER_ALTERNATE_PHASES:
+                phase_raster = analyze_raster(
+                    layers,
+                    contacts,
+                    tuple(plated),
+                    settings.pixel_density,
+                    phase,
+                )
+                changed_contacts = different_raster_contact_partitions(raster, phase_raster)
+                if changed_contacts:
+                    findings.append(
+                        _finding("RASTER_SENSITIVE", changed_contacts, raster_phase=phase)
+                    )
+            raster_phase_check = "checked"
         for net, endpoints in raster.opens:
             findings.append(_finding("OPEN", endpoints, net))
         for endpoints in raster.shorts:
@@ -355,6 +377,7 @@ def analyze_fabrication_connectivity(
         board_sha256=board_hash,
         artifact_sha256=artifact_hashes,
         pixel_density=settings.pixel_density,
+        raster_phase_check=raster_phase_check,  # type: ignore[arg-type]
         findings=active,
         ignored_findings=ignored,
         stale_ignore_fingerprints=stale,

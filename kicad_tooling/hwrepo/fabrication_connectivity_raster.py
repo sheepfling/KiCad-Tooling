@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 from importlib import import_module
-from typing import Protocol, cast
+from typing import Literal, Protocol, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -15,6 +15,14 @@ from .fabrication_artwork import Contact, GerberFeature, GerberLayer
 from .fabrication_excellon import DrillHit
 
 _PIXEL_LIMIT = 24_000_000
+RasterPhase = Literal["origin", "x_half", "y_half", "xy_half"]
+RASTER_ALTERNATE_PHASES: tuple[RasterPhase, ...] = ("x_half", "y_half", "xy_half")
+_RASTER_PHASE_OFFSETS: dict[RasterPhase, tuple[float, float]] = {
+    "origin": (0.0, 0.0),
+    "x_half": (0.5, 0.0),
+    "y_half": (0.0, 0.5),
+    "xy_half": (0.5, 0.5),
+}
 
 
 class _NdimageLabel(Protocol):
@@ -49,10 +57,15 @@ class _Canvas:
     density: int
     width: int
     height: int
+    phase: RasterPhase = "origin"
 
     def point(self, x_mm: float, y_mm: float) -> tuple[int, int]:
         x0, _, _, y1 = self.bounds
-        return round((x_mm - x0) * self.density), round((y1 - y_mm) * self.density)
+        phase_x, phase_y = _RASTER_PHASE_OFFSETS[self.phase]
+        return (
+            round((x_mm - x0) * self.density + phase_x),
+            round((y1 - y_mm) * self.density + phase_y),
+        )
 
 
 class _UnionFind:
@@ -126,6 +139,7 @@ def _canvas(
     contacts: tuple[Contact, ...],
     drills: tuple[DrillHit, ...],
     density: int,
+    phase: RasterPhase = "origin",
 ) -> _Canvas:
     points = _coordinates(layers, contacts, drills)
     if not points:
@@ -141,7 +155,7 @@ def _canvas(
     height = math.ceil(pixel_height)
     if width <= 0 or height <= 0 or width * height * len(layers) > _PIXEL_LIMIT:
         raise ValueError("raster exceeds the configured analyzer pixel budget")
-    return _Canvas(bounds, density, width, height)
+    return _Canvas(bounds, density, width, height, phase)
 
 
 def _draw_feature(draw: ImageDraw.ImageDraw, canvas: _Canvas, feature: GerberFeature) -> None:
@@ -231,9 +245,10 @@ def analyze_raster(
     contacts: tuple[Contact, ...],
     plated_drills: tuple[DrillHit, ...],
     density: int,
+    phase: RasterPhase = "origin",
 ) -> RasterAnalysis:
     """Return deterministic net-to-island differences across copper layers."""
-    canvas = _canvas(layers, contacts, plated_drills, density)
+    canvas = _canvas(layers, contacts, plated_drills, density, phase)
     labels: dict[str, np.ndarray] = {}
     base: dict[str, int] = {}
     component_count = 0

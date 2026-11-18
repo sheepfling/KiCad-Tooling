@@ -123,6 +123,7 @@ KiCad-generated IPC-D-356 file. Add the setting to the project's
     "fabrication_connectivity": {
       "mode": "review",
       "pixel_density": 50,
+      "check_raster_phase_stability": true,
       "ignores": []
     }
   }
@@ -240,6 +241,20 @@ or review it with a separate heuristic. Raster connectivity is bounded by the
 configured pixel density. This gate is artifact review evidence, not electrical
 approval, complete multilayer analysis, or a substitute for first-article
 continuity testing.
+
+`check_raster_phase_stability` defaults to `true`. It repeats the raster pass
+with three half-pixel grid offsets and compares the resulting contact-to-island
+partitions. A topology change adds a `RASTER_SENSITIVE` finding with the
+affected contacts and offset (`x_half`, `y_half`, or `xy_half`). In `review`
+mode this changes the result to `REVIEW`; in `block` mode it fails the release
+check unless the exact finding is ignored with a written reason. Set the option
+to `false` to skip these additional passes. The receipt records whether the
+phase check was `checked`, `disabled`, or `unavailable`.
+
+Phase sensitivity is a deterministic warning that raster alignment affects the
+observed topology; it does not identify the physical cause or prove a real
+copper gap. Agreement across all four phases still cannot rule out gaps smaller
+than the raster resolution or errors shared by every raster pass.
 
 ## Approve a different KiCad version
 
