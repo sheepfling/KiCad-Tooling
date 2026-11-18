@@ -187,6 +187,9 @@ not the vertex count. A zero-diameter circular aperture is valid in Gerber; its
 flashes and strokes add no copper pixels to connectivity analysis. These ranges
 and zero-size semantics follow the [Ucamco Gerber Layer Format
 Specification 2026.05][gerber-layer-spec-2026-05].
+Supported single-contour Gerber regions must repeat their starting coordinate
+at the final vertex. Open contours return `UNSUPPORTED`; multiple contours,
+cut-ins, and arc segments remain outside this raster subset.
 This inventory check does not verify that each IPC-D-356 coordinate matches
 the source pad location. The analyzer also binds each present component contact
 to the source footprint placement and pad offset, including footprint rotation,

@@ -339,7 +339,7 @@ class GerberParser:
     def _command(self, raw: str) -> None:
         if not raw or raw.startswith("G04"):
             return
-        if re.search(r"G0?[234]|G0?7[45]", raw):
+        if re.match(r"G0?(?:[234]|7[45])(?=$|[XYIJD])", raw):
             raise UnsupportedFabricationFormat(f"arc or quadrant interpolation in {self.name}")
         if raw == "G01":
             return
@@ -355,8 +355,10 @@ class GerberParser:
             self.region = []
             return
         if raw in {"G37", "G037"}:
-            if self.region is None or len(self.region) < 3:
-                raise UnsupportedFabricationFormat(f"invalid Gerber region in {self.name}")
+            if self.region is None or len(self.region) < 4 or self.region[0] != self.region[-1]:
+                raise UnsupportedFabricationFormat(
+                    f"Gerber region contour must be explicitly closed in {self.name}"
+                )
             self.features.append(GerberFeature("region", tuple(self.region)))
             self.region = None
             return

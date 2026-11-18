@@ -661,6 +661,9 @@ skipped under prerelease policy.
 - `bus.usb_unmapped_multi_pin_topology`
 - `bus.usb_generic_connector_phy_pair_review`
 - `bus.usb_superspeed_generic_connector_pair_review`
+- `bus.usb_unmapped_series_chain`
+- `bus.usb_unmapped_asymmetric_series`
+- `bus.usb_unmapped_series_resistor_value_mismatch`
 - `bus.usb_data_polarity_label_mismatch`
 - `bus.usb_c_superspeed_lane_label_mismatch`
 - `bus.usb_peer_data_pair_crossed`
@@ -32242,6 +32245,70 @@ acceptance threads while new lint features proceed:
 - **Hosted acceptance (2026-11-18):** GitHub Actions run `44306056517` passed
   the scoped lint gate and installed-wheel external-project check for tag
   `v0.5.3rc905`. Package and preview jobs were skipped under prerelease policy.
+
+#### LINT-571 — Require explicitly closed Gerber region contours
+
+- **Status:** Local release gate passed; hosted acceptance pending.
+- **Priority:** P1 fabrication-evidence integrity. The Gerber parser's broad
+  arc-code substring check matched `G36` as `G3`, so valid regions were rejected
+  as unsupported. The existing region path also accepted open contours and the
+  rasterizer then closed them implicitly, potentially adding copper that the
+  source artwork did not define.
+- **Reference:** The [Ucamco Gerber Layer Format Specification
+  2026.05][gerber-layer-spec-2026-05], section 4.10, says a region contour must
+  be explicitly closed; `G37` does not close it implicitly.
+- **Change:** Recognize arc and quadrant codes at command boundaries so `G36`
+  and `G37` reach region handling. Require a supported single contour to contain
+  at least three segments and repeat its first coordinate at the end. Preserve
+  fail-closed behavior for arc interpolation.
+- **Boundary:** The raster subset still supports only one contour per region.
+  Multiple contours, cut-ins, and arcs remain unsupported. Self-intersection
+  validation is an open gap tracked by LINT-572; this change does not establish
+  that an accepted contour matches design intent or fabricated copper.
+- **Fixtures:** Synthetic tooling-owned tests cover a closed region control, an
+  open-contour fault, source-bound `UNSUPPORTED` behavior, and the existing
+  unsupported-arc boundary. Exact-version KiCad 10.0.0 and 10.0.5 Docker
+  exports remain in the fabrication acceptance lane. No project board or
+  proprietary source is used.
+- **Analyzer version:** `35`, because valid single-contour regions become
+  supported while malformed open contours fail closed.
+- **Selection:** Run
+  `tests/test_fabrication_gerber_region_closure.py` with `design_lint`,
+  `evidence_lint`, and `pcb_lint`; run the complete fabrication-evidence
+  selection with `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` for exact-version
+  native compatibility.
+- **Local validation (2026-11-18):** The focused region and parser regressions
+  passed 21 tests. The complete fabrication-evidence selection passed 320 tests,
+  including 20 Docker exports on exact KiCad 10.0.0 and 10.0.5 images. The
+  marker/theme/module-size architecture selection passed 11 tests. Scoped CI
+  passed formatting, Ruff, both Alphus profiles, Rumdl, mdrepo, Linux and
+  Windows Pyright, wheel/sdist builds, installed-wheel checks, and inventory,
+  verification, and playtest against the separate public template checkout.
+  Tag-scope preflight resolves 36 fabrication test modules and the native
+  artifact-connectivity fixture. The backlog inventory regression also passes
+  after restoring three pre-existing USB series rules to its implemented list.
+- **Hosted acceptance:** Pending.
+
+#### LINT-572 — Reject self-intersecting Gerber region contours
+
+- **Status:** Planned.
+- **Priority:** P1 fabrication-evidence integrity. LINT-571 enables the bounded
+  single-contour region path and requires explicit closure. Ucamco's region
+  rules also require contours not to self-intersect, while the current raster
+  subset does not check that condition before Pillow fills the polygon.
+- **Reference:** The [Ucamco Gerber Layer Format Specification
+  2026.05][gerber-layer-spec-2026-05], section 4.10.
+- **Hypothesis:** Reject crossing, touching, repeated-vertex, and degenerate
+  contours as `UNSUPPORTED` before rasterization; retain valid simple polygon
+  controls including concave contours and reversed traversal.
+- **Boundary:** The implementation must keep intersection work bounded and
+  deterministic. Multiple contours, cut-ins, and arcs remain separate
+  unsupported syntax; no result establishes fabrication quality or electrical
+  intent.
+- **Fixtures:** Planned tooling-owned bow-tie and vertex-touch faults, plus
+  simple convex and concave controls. Add translation and traversal-order
+  metamorphic cases and exact-version native export compatibility before
+  release.
 
 ## Completion and release gate
 
