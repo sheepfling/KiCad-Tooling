@@ -15,14 +15,14 @@ def require_ipc356_source_pad_coordinates(
     source_pads: tuple[SourceComponentPad, ...], contacts: tuple[Contact, ...]
 ) -> None:
     """Fail closed when an IPC-D-356 component record is not at its source pad."""
-    _match_ipc356_source_pad_centers(source_pads, contacts)
+    match_ipc356_source_pad_centers(source_pads, contacts)
 
 
 def require_ipc356_source_pad_dimensions(
     source_pads: tuple[SourceComponentPad, ...], contacts: tuple[Contact, ...]
 ) -> None:
     """Fail closed when IPC-D-356 pad sizes differ at a matched source center."""
-    pairs = _match_ipc356_source_pad_centers(source_pads, contacts)
+    pairs = match_ipc356_source_pad_centers(source_pads, contacts)
     mismatches: list[str] = []
     for source, contact in pairs:
         if (
@@ -55,10 +55,15 @@ def require_ipc356_source_pad_dimensions(
         )
 
 
-def _match_ipc356_source_pad_centers(
+def match_ipc356_source_pad_centers(
     source_pads: tuple[SourceComponentPad, ...], contacts: tuple[Contact, ...]
 ) -> tuple[tuple[SourceComponentPad, Contact], ...]:
-    """Pair component contacts one-to-one by identity and quantized board center."""
+    """Pair component contacts one-to-one by identity and quantized board center.
+
+    The same source-bound pairs are shared by checks of dimensions, access layers,
+    and other contact properties so grouped inventories cannot hide crossed
+    per-center assignments.
+    """
     source_by_pad: dict[_PadKey, list[SourceComponentPad]] = defaultdict(list)
     contacts_by_pad: dict[_PadKey, list[Contact]] = defaultdict(list)
     for pad in source_pads:

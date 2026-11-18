@@ -32117,6 +32117,40 @@ acceptance threads while new lint features proceed:
   Scoped tests, type checks, package builds, and installed-wheel external-project
   checks passed. Package and preview jobs were skipped under prerelease policy.
 
+#### LINT-568 — Bind IPC-D-356 access layers to repeated pin centers
+
+- **Status:** In progress.
+- **Priority:** P1 fabrication-evidence integrity. LINT-541 compared layer
+  classes as a count per footprint reference and pad number, separate from
+  source-center matching. A repeated same-net pin with one top pad and one
+  through-hole pad accepted the two exported layer classes swapped between
+  their centers.
+- **Change:** Reuse the one-to-one source-center match for layer validation and
+  compare each `317`/`327` record's access class with the source pad at that
+  center. Preserve fail-closed behavior for ambiguous source centers and
+  unsupported layer classifications.
+- **Boundary:** This checks the KiCad source-to-IPC-D-356 layer assignment. It
+  does not prove that the corresponding copper artwork has coverage or that a
+  fabricated board has electrical continuity.
+- **Regression coverage:** A minimal synthetic footprint repeats pad number 1
+  on one top SMD pad and one through-hole pad on the same net. Matching records
+  pass; swapping their record classes preserves the old grouped counts but must
+  now return `UNSUPPORTED`. The exact-version native lane exports and mutates
+  the fixture on KiCad 10.0.0 and 10.0.5. No product or cohort project data is
+  used.
+- **Analyzer version:** `32`, because reports now reject per-center IPC-D-356
+  access-layer mismatches.
+- **Selection:** `tests/test_fabrication_contact_layers.py` and
+  `tests/test_fabrication_contact_layers_native.py` carry `design_lint`,
+  `evidence_lint`, and `pcb_lint`; the native suite is part of the
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` tag-scoped lane.
+- **Local validation (2026-11-18):** The complete fabrication evidence slice
+  passed 289 tests, including native KiCad 10.0.0 and 10.0.5 fixtures. The
+  dedicated contact-layer suites passed 14 tests. Targeted Pyright, Ruff,
+  formatting, pytest-marker/theme/native-fixture architecture, module-size, and
+  Rumdl checks passed. Tag-scope preflight resolved 34 test modules and the
+  native fixture switch.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

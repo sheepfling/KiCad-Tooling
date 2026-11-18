@@ -148,6 +148,9 @@ and assigned net. Missing, unexpected, over-repeated, or reassigned contacts
 are `UNSUPPORTED`, so a shortened contact file cannot shrink the expected
 copper universe and produce a misleading pass. A present no-connect contact
 must match a source pad without a net; omitted no-connect pads are allowed.
+Each contact's top, bottom, or through-hole access class is checked against the
+source pad at its matched board center, so reassigned layer classes cannot pass
+by preserving only the aggregate counts for a repeated pin number.
 Each copper Gerber must declare exactly one metric or inch `MO` unit and
 exactly one absolute `FS` coordinate format before its first operation. This
 subset accepts the current `%FSLAXn6Yn6*%` form, with equal X/Y integer widths

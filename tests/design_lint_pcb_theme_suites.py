@@ -34,6 +34,7 @@ PCB_THEME_SUITES = (
     "test_fabrication_via_drill_binding.py",
     *("test_fabrication_via_binding.py", "test_fabrication_via_binding_native.py"),
     "test_fabrication_contact_layers.py",
+    "test_fabrication_contact_layers_native.py",
     *PCB_SOURCE_INTEGRITY_SUITES,
     "test_ci_hosted_pcb_fixture_schedule.py",
     "test_pcb_reference_plane_native_fixture_lane.py",

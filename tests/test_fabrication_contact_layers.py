@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 from typing import Literal
 
@@ -17,6 +18,7 @@ from kicad_tooling.hwrepo.fabrication_contact_source import (
 pytestmark = [pytest.mark.design_lint, pytest.mark.evidence_lint, pytest.mark.pcb_lint]
 
 _FIXTURES = Path(__file__).parent / "fixtures/fabrication-connectivity"
+_REPEATED_LAYER_FIXTURE = _FIXTURES / "repeated-pad-layer-classes.kicad_pcb"
 _Layer = Literal["top", "bottom", "through"]
 
 
@@ -45,6 +47,27 @@ def _contacts(source: tuple[SourceComponentPad, ...], layer: _Layer) -> tuple[Co
         )
         for pad in source
     )
+
+
+def _source_contacts(source: tuple[SourceComponentPad, ...]) -> tuple[Contact, ...]:
+    contacts: list[Contact] = []
+    for pad in source:
+        if pad.contact_layer is None:
+            raise AssertionError("fixture pad must have an identifiable contact layer")
+        contacts.append(
+            Contact(
+                pad.net_name or f"N/C:{pad.reference}:{pad.number}",
+                pad.reference,
+                pad.number,
+                pad.x_nm / 1_000_000,
+                -pad.y_nm / 1_000_000,
+                pad.contact_layer,
+                (pad.size_x_nm or 0) / 1_000_000,
+                size_x_mm=(pad.size_x_nm or 0) / 1_000_000,
+                size_y_mm=0.0 if pad.pad_shape == "circle" else (pad.size_y_nm or 0) / 1_000_000,
+            )
+        )
+    return tuple(contacts)
 
 
 @pytest.mark.parametrize(
@@ -101,3 +124,18 @@ def test_ipc356_via_records_are_not_component_pad_layer_matches() -> None:
     via = Contact("SIGNAL", "VIA", "via", 1.0, -1.0, "through", 0.7)
 
     require_ipc356_source_pad_layers((), (via,))
+
+
+def test_repeated_pin_contact_layers_remain_bound_to_source_centers() -> None:
+    board = _REPEATED_LAYER_FIXTURE.read_text(encoding="utf-8")
+    source = source_component_pads(board)
+    assert tuple(pad.contact_layer for pad in source) == ("top", "through")
+    matching = _source_contacts(source)
+    require_ipc356_source_pad_layers(source, matching)
+
+    swapped = (
+        replace(matching[0], layer="through"),
+        replace(matching[1], layer="top"),
+    )
+    with pytest.raises(UnsupportedFabricationFormat, match="layer classification differs"):
+        require_ipc356_source_pad_layers(source, swapped)
