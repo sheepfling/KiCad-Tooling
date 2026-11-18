@@ -872,7 +872,16 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc900):** LINT-565
+- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc901):** LINT-566
+  binds IPC-D-356 VIA diameters to standard circular source-via sizes. The
+  tag-scoped selection passed, including the exact-version KiCad 10.0.0 and
+  10.0.5 Docker cases. GitHub Actions run
+  [44278554083](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44278554083)
+  passed the scoped tests, Linux and Windows type checks, wheel/sdist/sdist-wheel
+  builds, installed-wheel origin/version checks, and external-project inventory,
+  surface, verification, and playtest checks. Package and preview jobs were
+  skipped under prerelease policy.
+- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc900):** LINT-565
   binds IPC-D-356 component-pad dimensions to source PCB geometry. The
   tag-scoped selection passed 267 tests, including all 12 exact-version KiCad
   10.0.0 and 10.0.5 Docker cases. GitHub Actions run
@@ -32027,7 +32036,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-566 — Bind IPC-D-356 via diameters to source geometry
 
-- **Status:** In progress.
+- **Status:** Complete; tagged hosted acceptance passed.
 - **Priority:** P1 fabrication-evidence integrity. LINT-565 bound component-pad
   dimensions to source geometry, while VIA records were only checked for count,
   named net, and center. An IPC-D-356 via record with an altered copper
@@ -32051,6 +32060,17 @@ acceptance threads while new lint features proceed:
 - **Selection:** The dedicated suite carries `design_lint`, `evidence_lint`,
   and `pcb_lint`; the tag-scoped native lane remains
   `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
+- **Local validation (2026-11-18):** The fabrication evidence selection passed
+  281 tests, including the exact-version KiCad 10.0.0 and 10.0.5 Docker cases.
+  Targeted Pyright, Ruff, formatting, fabrication and lint-suite architecture,
+  module-size, Rumdl, and mdrepo checks passed. The proposed tag-scope preflight
+  resolved all 31 selected test modules and the native fixture switch.
+- **Hosted acceptance (2026-11-18):** Tag `v0.5.3rc901`, code commit
+  `a2c98b4040edcc5690711f9470b8f5f681dc7736`, passed GitHub Actions run
+  [44278554083](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44278554083).
+  The scoped test, type-check, package-build, and installed-wheel external
+  project stages passed. Package and preview jobs were skipped under prerelease
+  policy.
 
 ## Completion and release gate
 
