@@ -32297,7 +32297,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-572 — Reject self-intersecting Gerber region contours
 
-- **Status:** Implemented; hosted acceptance pending.
+- **Status:** Complete; hosted acceptance passed.
 - **Priority:** P1 fabrication-evidence integrity. LINT-571 enables the bounded
   single-contour region path and requires explicit closure. Ucamco's region
   rules also require contours not to self-intersect, while the current raster
@@ -32330,7 +32330,7 @@ acceptance threads while new lint features proceed:
   CI passed formatting, Ruff, both Alphus profiles, Rumdl, mdrepo, module-size
   checks, Linux and Windows Pyright, wheel/sdist builds, installed-wheel checks,
   and inventory, verification, and playtest against the separate public template
-  checkout. Hosted acceptance remains pending.
+  checkout. Hosted run `44322983480` passed on tag `v0.5.3rc907`.
 
 ## Completion and release gate
 
