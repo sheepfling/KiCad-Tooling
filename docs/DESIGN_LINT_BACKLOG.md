@@ -32615,6 +32615,10 @@ acceptance threads while new lint features proceed:
   cases. The focused lint architecture, marker, native-fixture inventory,
   backlog, and module-size selection passed 26 tests. Ruff, formatting, and
   `git diff --check` passed. The annotated-tag acceptance gate remains pending.
+- **Hosted follow-up:** The first scoped run, tag `v0.5.3rc915`, stopped at
+  Rumdl `MD060` because the new fixture row left both README tables
+  misaligned. The tables are now aligned and the affected README checks clean;
+  a fresh tagged acceptance run is pending.
 
 ## Completion and release gate
 
