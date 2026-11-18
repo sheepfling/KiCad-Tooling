@@ -31861,8 +31861,8 @@ acceptance threads while new lint features proceed:
 
 #### LINT-563 — Reject raster geometry outside the pixel budget
 
-- **Status:** Hosted acceptance pending; local installed-wheel stage was blocked
-  by DNS access to PyPI.
+- **Status:** Complete; tagged hosted acceptance passed. The local
+  installed-wheel stage remained blocked by DNS access to PyPI.
 - **Priority:** P1 fabrication-evidence integrity. A finite Gerber aperture
   dimension with numeric value 10 to the 308th power passed the parser, but
   multiplying the resulting span by pixel density overflowed to infinity.
@@ -31898,7 +31898,15 @@ acceptance threads while new lint features proceed:
   resolve `pypi.org` to fetch `pydantic==2.13.5`; installed-wheel and external-
   project checks therefore did not run locally. Logs are under
   `build/ci/run-ne6rcddq/`.
-- **Hosted acceptance:** Pending.
+- **Hosted acceptance (2026-11-18):** Tag `v0.5.3rc898`, code commit
+  `6253d9a8fd1e9f9e4e39bf724c22b62c070ded24`, passed workflow run
+  [44225351269](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44225351269).
+  All 230 scoped tests passed, including the 12 digest-pinned KiCad 10.0.0 and
+  10.0.5 Docker cases. Ruff, formatting, both Alphus profiles, module-size
+  preflight, Rumdl, mdrepo, Linux and Windows-targeted Pyright, wheel/sdist/
+  sdist-wheel builds, installed-wheel origin/version checks, and external
+  project inventory/surface/verification/playtest checks passed. Package and
+  preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
