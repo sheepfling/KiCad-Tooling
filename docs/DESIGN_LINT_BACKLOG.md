@@ -32528,8 +32528,8 @@ acceptance threads while new lint features proceed:
 
 #### LINT-577 — Review missing source oval and rectangular lands
 
-- **Status:** Local synthetic, exact-version native fault/control, and scoped
-  package acceptance passed; hosted acceptance pending.
+- **Status:** Complete; local synthetic, exact-version native fault/control,
+  scoped package acceptance, and hosted acceptance passed.
 - **Priority:** P1 fabrication-evidence integrity. LINT-576 covers circular
   through-hole lands; ordinary oval and rectangular PTH lands can also be
   masked by same-layer route copper after their source-shaped land flash is
