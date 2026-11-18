@@ -32624,6 +32624,45 @@ acceptance threads while new lint features proceed:
   rehearsal against the separate project. Package and preview jobs were
   skipped under prerelease policy.
 
+#### LINT-579 — Review source land geometries outside the flash matcher
+
+- **Status:** Implemented; local acceptance passed, scoped hosted acceptance
+  pending.
+- **Priority:** P1 fabrication-evidence coverage. A synthetic trapezoid pad
+  with matching IPC-D-356 evidence and routed artwork previously received
+  `PASS` because source-land requirements silently omitted pad shapes the
+  flash matcher did not understand.
+- **Predicate:** For every copper-bearing top, bottom, or plated-through pad,
+  emit `SOURCE_LAND_GEOMETRY_UNREVIEWED` when a custom padstack, unsupported
+  shape, missing dimensions, non-circular circle dimensions, or unsupported
+  non-cardinal rotation prevents standard source-flash matching. Report the
+  reason, shape, side, dimensions, rotation, contact, net, and source location.
+  Create this diagnostic before parsing Gerbers so the source coverage gap
+  remains visible when artifact parsing independently returns `UNSUPPORTED`.
+  Use the existing deterministic fingerprint, review/block mode, and exact
+  project ignore policy. Advance report schema to 8 and analyzer version to 43.
+- **Boundary:** This indicates that the land-flash matcher did not assess the
+  source pad geometry; it does not assert that the land is absent or prove its
+  copper outline, solder-mask opening, paste opening, or electrical
+  continuity. Non-plated through pads are excluded from copper-land review.
+- **Fixtures:** Synthetic controls keep supported circle/rectangle lands
+  `PASS`; a matching trapezoid source and artifact set must produce one
+  deterministic `REVIEW`, fail in block mode, and pass under its exact
+  fingerprint ignore. The exact-version native trapezoid fixture confirms the
+  review finding persists with KiCad 10.0.0 and 10.0.5 even though their
+  Gerber aperture macro currently leaves the overall analysis `UNSUPPORTED`.
+  The fixtures are tooling-owned and synthetic.
+- **Selection:** Run `tests/test_fabrication_land_coverage.py` for source
+  classification, false-pass prevention, deterministic reporting, and policy
+  controls. `tests/test_fabrication_land_coverage_native.py` is marked
+  `design_lint`, `evidence_lint`, `pcb_lint`, `native_kicad`, and `slow`; it
+  uses `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` in the Docker lane.
+- **Local validation (2026-11-18):** The focused lint architecture, marker,
+  native-fixture inventory, backlog, and module-size selection passed 63
+  tests. The complete fabrication selection passed 367 tests, including
+  exact-version KiCad 10.0.0/10.0.5 Docker cases. Ruff, formatting, Rumdl, and
+  `git diff --check` passed. Scoped hosted acceptance remains pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

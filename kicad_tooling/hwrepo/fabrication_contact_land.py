@@ -17,6 +17,13 @@ _GERBER_INCH_QUANTIZATION_TOLERANCE_NM = 13
 _BUCKET_NM = 26
 _SourceLandShape = Literal["circle", "oval", "rect"]
 _ApertureShape = Literal["C", "O", "R"]
+_LandCoverageReviewReason = Literal[
+    "custom_padstack",
+    "unsupported_pad_shape",
+    "missing_dimensions",
+    "circular_dimensions_mismatch",
+    "unsupported_rotation",
+]
 _LandFlashKey = tuple[_ApertureShape, int, int, int, int]
 _LandFlashPoint = tuple[int, int, int, int]
 
@@ -43,10 +50,34 @@ class MissingSourceLandFlashes:
     layers: tuple[str, ...]
 
 
-def source_land_requirements(
+@dataclass(frozen=True, slots=True)
+class UnreviewedSourceLandGeometry:
+    """A copper contact whose source land geometry is outside the matcher."""
+
+    contact: str
+    net: str | None
+    x_nm: int
+    y_nm: int
+    contact_layer: Literal["top", "bottom", "through"]
+    pad_shape: str | None
+    size_x_nm: int | None
+    size_y_nm: int | None
+    rotation_mdeg: int
+    reason: _LandCoverageReviewReason
+
+
+@dataclass(frozen=True, slots=True)
+class SourceLandAssessment:
+    """Supported flash requirements and source contacts needing geometry review."""
+
+    requirements: tuple[SourceLandRequirement, ...]
+    unreviewed: tuple[UnreviewedSourceLandGeometry, ...]
+
+
+def source_land_assessment(
     source_pads: tuple[SourceComponentPad, ...], source_vias: tuple[SourceVia, ...]
-) -> tuple[SourceLandRequirement, ...]:
-    """Select supported circular, oval, and rectangular source lands.
+) -> SourceLandAssessment:
+    """Separate supported flash checks from eligible contacts needing review.
 
     Gerber standard apertures preserve quarter-turn changes by swapping their
     dimensions. Other source rotations require a macro representation; the
@@ -55,25 +86,34 @@ def source_land_requirements(
     pads and vias apply to the complete copper stack.
     """
     requirements: list[SourceLandRequirement] = []
+    unreviewed: list[UnreviewedSourceLandGeometry] = []
     for pad in source_pads:
-        shape = _source_land_shape(pad.pad_shape)
-        if (
-            pad.contact_layer not in {"top", "bottom", "through"}
-            or (pad.contact_layer == "through" and pad.drill_plating != "plated")
-            or shape is None
-            or pad.has_custom_padstack
-            or pad.size_x_nm is None
-            or pad.size_y_nm is None
+        if pad.contact_layer not in {"top", "bottom", "through"} or (
+            pad.contact_layer == "through" and pad.drill_plating != "plated"
         ):
             continue
-        size_x_nm, size_y_nm = pad.size_x_nm, pad.size_y_nm
-        if shape == "circle":
-            if size_x_nm != size_y_nm:
-                continue
-        elif pad.land_rotation_mdeg == 90_000:
-            size_x_nm, size_y_nm = size_y_nm, size_x_nm
-        elif pad.land_rotation_mdeg != 0:
+        shape = _source_land_shape(pad.pad_shape)
+        reason = _land_coverage_review_reason(pad, shape)
+        if reason is not None:
+            unreviewed.append(
+                UnreviewedSourceLandGeometry(
+                    contact=f"{pad.reference}-{pad.number}",
+                    net=pad.net_name,
+                    x_nm=pad.x_nm,
+                    y_nm=-pad.y_nm,
+                    contact_layer=pad.contact_layer,
+                    pad_shape=pad.pad_shape,
+                    size_x_nm=pad.size_x_nm,
+                    size_y_nm=pad.size_y_nm,
+                    rotation_mdeg=pad.land_rotation_mdeg,
+                    reason=reason,
+                )
+            )
             continue
+        assert shape is not None and pad.size_x_nm is not None and pad.size_y_nm is not None
+        size_x_nm, size_y_nm = pad.size_x_nm, pad.size_y_nm
+        if shape != "circle" and pad.land_rotation_mdeg == 90_000:
+            size_x_nm, size_y_nm = size_y_nm, size_x_nm
         requirements.append(
             SourceLandRequirement(
                 contact=f"{pad.reference}-{pad.number}",
@@ -100,7 +140,7 @@ def source_land_requirements(
         for via in source_vias
         if via.copper_diameter_nm is not None
     )
-    return tuple(
+    ordered_requirements = tuple(
         sorted(
             requirements,
             key=lambda item: (
@@ -115,6 +155,42 @@ def source_land_requirements(
             ),
         )
     )
+    ordered_unreviewed = tuple(
+        sorted(
+            unreviewed,
+            key=lambda item: (
+                item.contact.casefold(),
+                item.net or "",
+                item.x_nm,
+                item.y_nm,
+                item.reason,
+            ),
+        )
+    )
+    return SourceLandAssessment(ordered_requirements, ordered_unreviewed)
+
+
+def source_land_requirements(
+    source_pads: tuple[SourceComponentPad, ...], source_vias: tuple[SourceVia, ...]
+) -> tuple[SourceLandRequirement, ...]:
+    """Return supported source flash requirements for compatibility callers."""
+    return source_land_assessment(source_pads, source_vias).requirements
+
+
+def _land_coverage_review_reason(
+    pad: SourceComponentPad, shape: _SourceLandShape | None
+) -> _LandCoverageReviewReason | None:
+    if pad.has_custom_padstack:
+        return "custom_padstack"
+    if shape is None:
+        return "unsupported_pad_shape"
+    if pad.size_x_nm is None or pad.size_y_nm is None:
+        return "missing_dimensions"
+    if shape == "circle" and pad.size_x_nm != pad.size_y_nm:
+        return "circular_dimensions_mismatch"
+    if shape != "circle" and pad.land_rotation_mdeg not in {0, 90_000}:
+        return "unsupported_rotation"
+    return None
 
 
 def missing_source_land_flashes(

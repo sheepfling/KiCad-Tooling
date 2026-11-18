@@ -48,6 +48,23 @@ class FabricationConnectivityDrillEvidence(StrictModel):
     multiplicity: Annotated[int, Field(ge=1)]
 
 
+class FabricationConnectivityLandCoverageEvidence(StrictModel):
+    """Source geometry details for a contact outside flash-matcher coverage."""
+
+    reason: Literal[
+        "custom_padstack",
+        "unsupported_pad_shape",
+        "missing_dimensions",
+        "circular_dimensions_mismatch",
+        "unsupported_rotation",
+    ]
+    pad_shape: NonEmptyText | None
+    contact_layer: Literal["top", "bottom", "through"]
+    size_x_nm: Annotated[int, Field(ge=1)] | None
+    size_y_nm: Annotated[int, Field(ge=1)] | None
+    rotation_mdeg: Annotated[int, Field(ge=0, lt=180_000)]
+
+
 class FabricationConnectivityFinding(StrictModel):
     """A source- and artifact-local connectivity observation."""
 
@@ -59,6 +76,7 @@ class FabricationConnectivityFinding(StrictModel):
         "UNBOUND_DRILL_HIT",
         "LAYER_COPPER_MISSING",
         "SOURCE_LAND_FLASH_MISSING",
+        "SOURCE_LAND_GEOMETRY_UNREVIEWED",
         "RASTER_SENSITIVE",
         "RASTER_RESOLUTION_SENSITIVE",
     ]
@@ -67,6 +85,7 @@ class FabricationConnectivityFinding(StrictModel):
     contacts: tuple[NonEmptyText, ...] = ()
     location_mm: tuple[float, float] | None = None
     drill_evidence: FabricationConnectivityDrillEvidence | None = None
+    land_coverage_evidence: FabricationConnectivityLandCoverageEvidence | None = None
     raster_phase: Literal["x_half", "y_half", "xy_half"] | None = None
     raster_density: RasterComparisonDensity | None = None
     missing_layers: tuple[NonEmptyText, ...] = ()
@@ -79,6 +98,12 @@ class FabricationConnectivityFinding(StrictModel):
             raise ValueError("raster-sensitive findings require exactly one raster phase")
         if (self.code == "RASTER_RESOLUTION_SENSITIVE") != (self.raster_density is not None):
             raise ValueError("resolution-sensitive findings require exactly one raster density")
+        if (self.code == "SOURCE_LAND_GEOMETRY_UNREVIEWED") != (
+            self.land_coverage_evidence is not None
+        ):
+            raise ValueError(
+                "unreviewed land-geometry findings require exactly one coverage record"
+            )
         if (self.code in {"LAYER_COPPER_MISSING", "SOURCE_LAND_FLASH_MISSING"}) != bool(
             self.missing_layers
         ):
@@ -91,8 +116,8 @@ class FabricationConnectivityFinding(StrictModel):
 class FabricationConnectivitySummary(StrictModel):
     """Reproducible result whose input files are bound by SHA-256."""
 
-    schema_version: Literal["7"] = "7"
-    analyzer_version: Literal["42"] = "42"
+    schema_version: Literal["8"] = "8"
+    analyzer_version: Literal["43"] = "43"
     status: Literal["PASS", "REVIEW", "FAIL", "UNSUPPORTED"]
     board_sha256: Digest
     artifact_sha256: Mapping[RepositoryPath, Digest]

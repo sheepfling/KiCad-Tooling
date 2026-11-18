@@ -168,7 +168,7 @@ def test_open_region_blocks_source_bound_connectivity(tmp_path: Path) -> None:
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "42"
+    assert result.analyzer_version == "43"
     assert result.status == "UNSUPPORTED"
     assert "region contour" in result.unsupported_reasons[0]
     assert result.findings == ()
@@ -184,7 +184,7 @@ def test_self_intersecting_region_blocks_source_bound_connectivity(tmp_path: Pat
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "42"
+    assert result.analyzer_version == "43"
     assert result.status == "UNSUPPORTED"
     assert "self-intersects" in result.unsupported_reasons[0]
     assert result.findings == ()

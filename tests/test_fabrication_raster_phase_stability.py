@@ -56,8 +56,8 @@ def test_raster_phase_check_catches_a_coarse_grid_false_pass(tmp_path: Path) -> 
     assert baseline.raster_phase_check == "disabled"
     assert checked.status == "REVIEW"
     assert checked.raster_phase_check == "checked"
-    assert checked.schema_version == "7"
-    assert checked.analyzer_version == "42"
+    assert checked.schema_version == "8"
+    assert checked.analyzer_version == "43"
     assert {item.code for item in checked.findings} == {"RASTER_SENSITIVE"}
     assert {item.raster_phase for item in checked.findings} == {"x_half", "xy_half"}
     assert all(item.contacts == ("SIGNAL:J1-1", "SIGNAL:J1-2") for item in checked.findings)

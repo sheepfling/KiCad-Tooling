@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import json
 from pathlib import Path
 
 from .fabrication_artwork import (
@@ -13,9 +12,11 @@ from .fabrication_artwork import (
     parse_gerber,
     parse_ipc356,
 )
+from .fabrication_connectivity_findings import make_connectivity_finding as _finding
 from .fabrication_connectivity_models import (
     FabricationConnectivityDrillEvidence,
     FabricationConnectivityFinding,
+    FabricationConnectivityLandCoverageEvidence,
     FabricationConnectivitySettings,
     FabricationConnectivitySummary,
     RasterCheckState,
@@ -28,7 +29,7 @@ from .fabrication_contact_inventory import require_ipc356_source_pad_inventory
 from .fabrication_contact_land import (
     missing_source_land_flashes,
     raster_visible_missing_layers,
-    source_land_requirements,
+    source_land_assessment,
 )
 from .fabrication_contact_layers import (
     require_ipc356_source_pad_access_codes,
@@ -155,69 +156,6 @@ def _digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def _fingerprint(
-    code: str,
-    net: str | None,
-    contacts: tuple[str, ...],
-    drill_evidence: FabricationConnectivityDrillEvidence | None = None,
-    raster_phase: str | None = None,
-    raster_density: int | None = None,
-    missing_layers: tuple[str, ...] = (),
-    identity_location_mm: tuple[float, float] | None = None,
-) -> str:
-    payload: dict[str, object] = {"code": code, "net": net, "contacts": sorted(contacts)}
-    if drill_evidence is not None:
-        payload["drill_evidence"] = drill_evidence.model_dump(mode="json")
-    if raster_phase is not None:
-        payload["raster_phase"] = raster_phase
-    if raster_density is not None:
-        payload["raster_density"] = raster_density
-    if missing_layers:
-        payload["missing_layers"] = sorted(missing_layers)
-    if code == "SOURCE_LAND_FLASH_MISSING" and identity_location_mm is not None:
-        payload["land_location_nm"] = [round(value * 1_000_000) for value in identity_location_mm]
-    encoded = json.dumps(
-        payload,
-        ensure_ascii=True,
-        sort_keys=True,
-        separators=(",", ":"),
-    ).encode("ascii")
-    return hashlib.sha256(encoded).hexdigest()
-
-
-def _finding(
-    code: str,
-    contact_labels: tuple[str, ...],
-    net: str | None = None,
-    location: tuple[float, float] | None = None,
-    drill_evidence: FabricationConnectivityDrillEvidence | None = None,
-    raster_phase: str | None = None,
-    raster_density: int | None = None,
-    missing_layers: tuple[str, ...] = (),
-) -> FabricationConnectivityFinding:
-    contacts = tuple(sorted(contact_labels))
-    return FabricationConnectivityFinding(
-        code=code,  # type: ignore[arg-type]
-        fingerprint=_fingerprint(
-            code,
-            net,
-            contacts,
-            drill_evidence,
-            raster_phase,
-            raster_density,
-            missing_layers,
-            location,
-        ),
-        net=net,
-        contacts=contacts,
-        location_mm=location,
-        drill_evidence=drill_evidence,
-        raster_phase=raster_phase,  # type: ignore[arg-type]
-        raster_density=raster_density,  # type: ignore[arg-type]
-        missing_layers=missing_layers,
-    )
-
-
 def _unbound_drill_findings(
     hits: tuple[UnboundDrillHit, ...],
 ) -> tuple[FabricationConnectivityFinding, ...]:
@@ -311,6 +249,25 @@ def analyze_fabrication_connectivity(
         source_vias = source_board_vias(board_text)
         require_ipc356_source_via_geometry(source_vias, contacts)
         require_ipc356_source_via_access_codes(source_vias, contacts)
+        land_assessment = source_land_assessment(source_pads, source_vias)
+        for unreviewed in land_assessment.unreviewed:
+            location = (unreviewed.x_nm / 1_000_000, unreviewed.y_nm / 1_000_000)
+            findings.append(
+                _finding(
+                    "SOURCE_LAND_GEOMETRY_UNREVIEWED",
+                    (unreviewed.contact,),
+                    unreviewed.net,
+                    location,
+                    land_coverage_evidence=FabricationConnectivityLandCoverageEvidence(
+                        reason=unreviewed.reason,
+                        pad_shape=unreviewed.pad_shape,
+                        contact_layer=unreviewed.contact_layer,
+                        size_x_nm=unreviewed.size_x_nm,
+                        size_y_nm=unreviewed.size_y_nm,
+                        rotation_mdeg=unreviewed.rotation_mdeg,
+                    ),
+                )
+            )
         copper_paths = classify_copper_files(gerber_paths, copper_layers)
         layers = tuple(parse_gerber(path, layer) for path, layer in copper_paths)
         plated: list[DrillHit] = []
@@ -341,8 +298,7 @@ def analyze_fabrication_connectivity(
             tuple(plated),
             settings.pixel_density,
         )
-        land_requirements = source_land_requirements(source_pads, source_vias)
-        for missing in missing_source_land_flashes(layers, land_requirements):
+        for missing in missing_source_land_flashes(layers, land_assessment.requirements):
             requirement = missing.requirement
             visible_layers = raster_visible_missing_layers(missing, raster.assignments)
             if not visible_layers:

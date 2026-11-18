@@ -254,13 +254,21 @@ substitute for a standard flash prompts for review rather than being treated as 
 finding uses the same `review`/`block` and exact-fingerprint ignore policy. It verifies the expected
 flash record, not the full surrounding copper shape or annular-ring adequacy.
 
+Eligible copper pads omitted from this matcher because they use a custom padstack, an unsupported
+shape or rotation, or incomplete dimensions produce `SOURCE_LAND_GEOMETRY_UNREVIEWED`. The
+source-bound finding records the pad shape, copper side, dimensions, rotation, contact, net, and
+location. It reports a coverage gap; it does not claim that the land is missing. The finding is
+assembled from the board source before Gerber parsing, so it remains visible when a separate
+Gerber-format limitation makes the overall analysis `UNSUPPORTED`.
+
 `review` (the default) retains findings in the export receipt without blocking
 the export. `block` fails the export when the analyzer reports an open, short,
-missing contact copper, missing source-shaped land flash, or missing plated drill. An
-intentional exception must use the exact finding fingerprint and a written
-reason; stale fingerprints fail closed. The receipt binds the board source,
-project settings, and each generated artifact hash. Release verification
-recomputes the analysis and rejects missing or mismatched evidence.
+missing contact copper, missing source-shaped land flash, unreviewed land
+geometry, or missing plated drill. An intentional exception must use the exact
+finding fingerprint and a written reason; stale fingerprints fail closed. The
+receipt binds the board source, project settings, and each generated artifact
+hash. Release verification recomputes the analysis and rejects missing or
+mismatched evidence.
 
 This comparison uses IPC-D-356 net names as its expected connectivity domains.
 It cannot infer that two separately named connector returns were intended to

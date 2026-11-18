@@ -139,7 +139,12 @@ def test_native_diagonal_rectangle_macro_remains_unsupported(tmp_path: Path, ver
     )
 
     assert report.status == "UNSUPPORTED"
-    assert report.findings == ()
+    assert len(report.findings) == 1
+    finding = report.findings[0]
+    assert finding.code == "SOURCE_LAND_GEOMETRY_UNREVIEWED"
+    assert finding.contacts == ("J1-3",)
+    assert finding.land_coverage_evidence is not None
+    assert finding.land_coverage_evidence.reason == "unsupported_rotation"
     assert any("RotRect" in reason for reason in report.unsupported_reasons)
 
 
@@ -160,5 +165,10 @@ def test_native_diagonal_oval_macro_remains_unsupported(tmp_path: Path, version:
     )
 
     assert report.status == "UNSUPPORTED"
-    assert report.findings == ()
+    assert len(report.findings) == 1
+    finding = report.findings[0]
+    assert finding.code == "SOURCE_LAND_GEOMETRY_UNREVIEWED"
+    assert finding.contacts == ("J1-1",)
+    assert finding.land_coverage_evidence is not None
+    assert finding.land_coverage_evidence.reason == "unsupported_rotation"
     assert report.unsupported_reasons

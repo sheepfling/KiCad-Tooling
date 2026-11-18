@@ -50,6 +50,7 @@ _OWNERS = (
     "fabrication_gerber_codes.py",
     "fabrication_ipc356.py",
     "fabrication_connectivity_models.py",
+    "fabrication_connectivity_findings.py",
     "fabrication_connectivity.py",
     "fabrication_connectivity_raster.py",
     "fabrication_connectivity_resolution.py",
@@ -204,7 +205,7 @@ def test_artifact_connectivity_reports_opens_shorts_and_intentional_isolation(
     assert {item.code for item in report.findings} == expected
     assert not report.unsupported_reasons, report.unsupported_reasons
     assert report.status == status
-    assert report.analyzer_version == "42"
+    assert report.analyzer_version == "43"
     assert report.board_sha256
     assert "fabrication/board.d356" in report.artifact_sha256
 
