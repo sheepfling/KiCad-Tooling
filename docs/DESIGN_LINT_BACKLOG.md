@@ -32476,7 +32476,7 @@ acceptance threads while new lint features proceed:
 #### LINT-576 — Review missing source circular land flashes
 
 - **Status:** Local full and scoped synthetic/native acceptance passed; hosted
-  acceptance pending.
+  acceptance passed.
 - **Priority:** P1 fabrication-evidence integrity. A source pad or via can have
   same-layer track copper at its center even after its circular land flash is
   removed. Raster contact presence can therefore remain true without the
@@ -32520,6 +32520,11 @@ acceptance threads while new lint features proceed:
   acceptance passed 32 tests, including both native KiCad versions; Linux and
   Windows Pyright, module-size checks, formatting, Ruff, Alphus, Rumdl, mdrepo,
   wheel build, and installed-wheel smoke checks all passed.
+- **Hosted acceptance (2026-11-18):** Tag `v0.5.3rc913` at code commit
+  `2fa811e8` passed GitHub Actions run
+  [44399363295](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44399363295).
+  The scoped evidence-lint gate and installed-wheel rehearsal passed; package
+  and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
