@@ -32297,24 +32297,40 @@ acceptance threads while new lint features proceed:
 
 #### LINT-572 — Reject self-intersecting Gerber region contours
 
-- **Status:** Planned.
+- **Status:** Implemented; hosted acceptance pending.
 - **Priority:** P1 fabrication-evidence integrity. LINT-571 enables the bounded
   single-contour region path and requires explicit closure. Ucamco's region
   rules also require contours not to self-intersect, while the current raster
   subset does not check that condition before Pillow fills the polygon.
 - **Reference:** The [Ucamco Gerber Layer Format Specification
   2026.05][gerber-layer-spec-2026-05], section 4.10.
-- **Hypothesis:** Reject crossing, touching, repeated-vertex, and degenerate
-  contours as `UNSUPPORTED` before rasterization; retain valid simple polygon
-  controls including concave contours and reversed traversal.
-- **Boundary:** The implementation must keep intersection work bounded and
-  deterministic. Multiple contours, cut-ins, and arcs remain separate
-  unsupported syntax; no result establishes fabrication quality or electrical
-  intent.
-- **Fixtures:** Planned tooling-owned bow-tie and vertex-touch faults, plus
-  simple convex and concave controls. Add translation and traversal-order
-  metamorphic cases and exact-version native export compatibility before
-  release.
+- **Change:** Validate each explicitly closed, linear contour on an integer
+  picometer grid. Reject crossings, non-adjacent touches, repeated vertices,
+  overlapping adjacent edges, zero-area shapes, non-finite coordinates, and
+  contours over 2,048 edges as `UNSUPPORTED` before rasterization. The analyzer
+  version is now `36`.
+- **Boundary:** The pairwise segment check is deterministic and bounded by the
+  2,048-edge ceiling. Larger contours fail closed. Multiple contours, cut-ins,
+  and arcs remain unsupported; accepted geometry does not establish design
+  intent or fabricated copper.
+- **Fixtures:** Tooling-owned tests cover bow-tie crossing, a non-adjacent
+  vertex touch, degenerate and repeated vertices, adjacent overlap, an explicit
+  edge-limit rejection, and convex/concave controls under translation and
+  reversed traversal. Source-bound analysis returns `UNSUPPORTED` for a
+  self-intersecting contour. Exact-version KiCad 10.0.0 and 10.0.5 Docker
+  exports remain in the fabrication acceptance lane; no project board or
+  proprietary source is used.
+- **Selection:** `tests/test_fabrication_gerber_region_closure.py` runs with
+  `design_lint`, `evidence_lint`, and `pcb_lint`; the scoped `evidence_lint`
+  prerelease selection includes all `tests/test_fabrication*.py` modules and
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY`.
+- **Local validation (2026-11-18):** The focused contour suite passed 13 tests.
+  Full fabrication evidence passed 329 tests, including Docker exports on exact
+  KiCad 10.0.0 and 10.0.5. The PCB test-theme architecture check passed. Scoped
+  CI passed formatting, Ruff, both Alphus profiles, Rumdl, mdrepo, module-size
+  checks, Linux and Windows Pyright, wheel/sdist builds, installed-wheel checks,
+  and inventory, verification, and playtest against the separate public template
+  checkout. Hosted acceptance remains pending.
 
 ## Completion and release gate
 

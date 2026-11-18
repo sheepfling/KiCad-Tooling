@@ -37,7 +37,7 @@ def test_unrepresentable_excellon_tool_diameter_is_unsupported_not_crash(
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "35"
+    assert result.analyzer_version == "36"
     assert result.status == "UNSUPPORTED"
     assert reason in result.unsupported_reasons[0]
     assert result.findings == ()
@@ -53,7 +53,7 @@ def test_finite_unmatched_drill_diameter_remains_reviewable(tmp_path: Path) -> N
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "35"
+    assert result.analyzer_version == "36"
     assert result.status == "REVIEW"
     (finding,) = result.findings
     assert finding.code == "UNBOUND_DRILL_HIT"

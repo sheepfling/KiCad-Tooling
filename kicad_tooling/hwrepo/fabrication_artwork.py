@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Literal
 
 from .fabrication_gerber_codes import parse_gerber_aperture_number
+from .fabrication_gerber_regions import gerber_region_issue
 
 
 class UnsupportedFabricationFormat(ValueError):
@@ -355,10 +356,10 @@ class GerberParser:
             self.region = []
             return
         if raw in {"G37", "G037"}:
-            if self.region is None or len(self.region) < 4 or self.region[0] != self.region[-1]:
-                raise UnsupportedFabricationFormat(
-                    f"Gerber region contour must be explicitly closed in {self.name}"
-                )
+            issue = gerber_region_issue(self.region)
+            if issue is not None:
+                raise UnsupportedFabricationFormat(f"{issue} in {self.name}")
+            assert self.region is not None
             self.features.append(GerberFeature("region", tuple(self.region)))
             self.region = None
             return

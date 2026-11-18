@@ -189,7 +189,11 @@ and zero-size semantics follow the [Ucamco Gerber Layer Format
 Specification 2026.05][gerber-layer-spec-2026-05].
 Supported single-contour Gerber regions must repeat their starting coordinate
 at the final vertex. Open contours return `UNSUPPORTED`; multiple contours,
-cut-ins, and arc segments remain outside this raster subset.
+cut-ins, and arc segments remain outside this raster subset. Contours with
+self-crossings, non-adjacent touches, repeated vertices, overlapping adjacent
+edges, or zero area also return `UNSUPPORTED`. Intersection checks use integer
+picometer coordinates and are capped at 2,048 straight edges per contour; larger
+contours return `UNSUPPORTED` before rasterization.
 This inventory check does not verify that each IPC-D-356 coordinate matches
 the source pad location. The analyzer also binds each present component contact
 to the source footprint placement and pad offset, including footprint rotation,
