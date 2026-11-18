@@ -32159,7 +32159,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-569 — Bind IPC-D-356 numeric access codes to source pads and vias
 
-- **Status:** In progress.
+- **Status:** Complete; tagged hosted acceptance passed.
 - **Priority:** P1 fabrication-evidence integrity. The parser reduced the
   numeric access code to a coarse top/bottom/through class and discarded the
   original code. A two-layer bottom-side pad exported as `A02` could be changed
@@ -32198,6 +32198,11 @@ acceptance threads while new lint features proceed:
   module-size architecture selection passed 33 tests. Targeted Pyright, Ruff,
   formatting, Rumdl, mdrepo, diff checks, and tag-scope preflight passed; the
   tag lane resolves 34 test modules and enables native fixtures.
+- **Hosted acceptance (2026-11-18):** GitHub Actions run
+  [44297904129](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44297904129)
+  passed the scoped lint gate and installed-wheel external-project check for
+  tag `v0.5.3rc904`. Package and preview jobs were skipped under prerelease
+  policy.
 
 ## Completion and release gate
 
