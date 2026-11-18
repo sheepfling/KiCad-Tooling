@@ -37,6 +37,20 @@ def _set_first_pad_as_rectangle(board: Path, fabrication: Path, y_size: str) -> 
         source.replace(marker, '(pad "1" smd rect (at 0 0) (size 2 1)'), encoding="utf-8"
     )
 
+    gerber = fabrication / "board-F_Cu.gbr"
+    copper = gerber.read_text(encoding="utf-8")
+    aperture = "%ADD15C,1.000000*%"
+    flashes = "D15*X5000000Y-5000000D03*X7000000Y-5000000D03*"
+    assert copper.count(aperture) == 1
+    assert copper.count(flashes) == 1
+    copper = copper.replace(aperture, f"{aperture}\n%ADD16R,2.000000X1.000000*%", 1)
+    copper = copper.replace(
+        flashes,
+        "D16*X5000000Y-5000000D03*D15*X7000000Y-5000000D03*",
+        1,
+    )
+    gerber.write_text(copper, encoding="utf-8")
+
     ipc = fabrication / "board.d356"
     lines = ipc.read_text(encoding="utf-8").splitlines()
     updated, count = re.subn(

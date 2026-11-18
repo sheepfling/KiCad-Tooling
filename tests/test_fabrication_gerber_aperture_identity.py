@@ -120,7 +120,7 @@ def test_reassigned_aperture_blocks_source_bound_connectivity(tmp_path: Path) ->
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "41"
+    assert result.analyzer_version == "42"
     assert result.status == "UNSUPPORTED"
     assert "aperture" in result.unsupported_reasons[0]
     assert result.findings == ()

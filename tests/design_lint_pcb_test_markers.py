@@ -4,6 +4,8 @@ PCB_EVIDENCE_LINT_TEST_MODULES = frozenset(
     {
         "tests/test_fabrication_connectivity.py",
         "tests/test_fabrication_connectivity_native.py",
+        "tests/test_fabrication_contact_land.py",
+        "tests/test_fabrication_smd_land_native.py",
         "tests/test_fabrication_excellon_end_marker.py",
         "tests/test_fabrication_gerber_end_marker.py",
         "tests/test_fabrication_gerber_command_validation.py",
@@ -44,6 +46,8 @@ PCB_LINT_TEST_MODULES = frozenset(
     {
         "tests/test_fabrication_connectivity.py",
         "tests/test_fabrication_connectivity_native.py",
+        "tests/test_fabrication_contact_land.py",
+        "tests/test_fabrication_smd_land_native.py",
         "tests/test_fabrication_excellon_end_marker.py",
         "tests/test_fabrication_gerber_end_marker.py",
         "tests/test_fabrication_gerber_command_validation.py",

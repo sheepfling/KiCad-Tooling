@@ -29,12 +29,29 @@ def _write_repeated_pin_ipc(fabrication: Path, *, swapped_sizes: bool) -> None:
     )
 
 
+def _write_repeated_pin_land_flashes(fabrication: Path) -> None:
+    gerber = fabrication / "board-F_Cu.gbr"
+    source = gerber.read_text(encoding="utf-8")
+    aperture = "%ADD15C,1.000000*%"
+    flashes = "D15*X5000000Y-5000000D03*X7000000Y-5000000D03*"
+    assert source.count(aperture) == 1
+    assert source.count(flashes) == 1
+    source = source.replace(aperture, f"{aperture}\n%ADD16C,2.000000*%", 1)
+    source = source.replace(
+        flashes,
+        "D15*X5000000Y-5000000D03*D16*X7000000Y-5000000D03*",
+        1,
+    )
+    gerber.write_text(source, encoding="utf-8")
+
+
 @pytest.mark.parametrize("swapped_sizes", (False, True), ids=("matching", "swapped-by-center"))
 def test_analyzer_requires_each_repeated_pin_size_at_its_source_center(
     tmp_path: Path, swapped_sizes: bool
 ) -> None:
     board, fabrication = write_synthetic_fabrication(tmp_path)
     board.write_bytes(_FIXTURE.read_bytes())
+    _write_repeated_pin_land_flashes(fabrication)
     _write_repeated_pin_ipc(fabrication, swapped_sizes=swapped_sizes)
 
     report = analyze_fabrication_connectivity(board, fabrication, FabricationConnectivitySettings())

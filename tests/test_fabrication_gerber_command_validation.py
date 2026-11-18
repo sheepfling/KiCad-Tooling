@@ -85,8 +85,12 @@ def _rewrite_first_flash(tmp_path: Path, replacement: str) -> tuple[Path, Path, 
     board, fabrication = write_synthetic_fabrication(tmp_path)
     gerber = fabrication / "board-F_Cu.gbr"
     source = gerber.read_text(encoding="utf-8")
-    assert source.count(_FIRST_FLASH) == 1
-    gerber.write_text(source.replace(_FIRST_FLASH, replacement, 1), encoding="utf-8")
+    first_source_flash = f"D15*{_FIRST_FLASH}"
+    assert source.count(first_source_flash) == 1
+    gerber.write_text(
+        source.replace(first_source_flash, f"D15*{replacement}", 1),
+        encoding="utf-8",
+    )
     return board, fabrication, gerber
 
 
@@ -129,7 +133,7 @@ def test_malformed_command_blocks_source_bound_analysis(tmp_path: Path) -> None:
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "41"
+    assert result.analyzer_version == "42"
     assert result.status == "UNSUPPORTED"
     assert "Gerber coordinate command" in result.unsupported_reasons[0]
     assert result.findings == ()

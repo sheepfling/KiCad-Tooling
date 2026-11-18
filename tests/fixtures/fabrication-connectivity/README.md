@@ -41,6 +41,7 @@ approval.
 | `multilayer/four-layer-clean.kicad_pcb`                  | PASS                | Two full-stack through-hole pads connect through an In1.Cu route.                   |
 | `multilayer/four-layer-land-flash.kicad_pcb`             | PASS                | Same-layer In2.Cu route remains if both source D03 flashes are removed.             |
 | `multilayer/four-layer-shaped-land-flash.kicad_pcb`      | PASS                | Oval and rectangular lands use 0°/90° orientations over retained inner routes.      |
+| `multilayer/four-layer-smd-land-flash.kicad_pcb`          | PASS                | Top circle/rectangle and bottom quarter-turn oval lands are crossed by outer-layer routes. |
 | `multilayer/four-layer-via.kicad_pcb`                    | PASS                | A full-stack via shares the In1.Cu route between the through-hole pads.             |
 | `multilayer/four-layer-bottom-pad-access-code.kicad_pcb` | Access-code control | A bottom-side SMD pad exports access code `A04` on a four-layer board.              |
 | `multilayer/four-layer-open.kicad_pcb`                   | REVIEW / `OPEN`     | Removes only the In1.Cu route.                                                      |
@@ -57,6 +58,7 @@ plated drill, source via, and routed connectivity remain present.
 | `multilayer/four-layer-clean.kicad_pcb`                  | `c1a066ec478600c8fc9031c53e8d7f4a827e11ce770c9d8086917c986d9db719` |
 | `multilayer/four-layer-land-flash.kicad_pcb`             | `ac1800f5dd50c4b7f51d6d0516c29aa840444f05d4849c35561efa821bfebcae` |
 | `multilayer/four-layer-shaped-land-flash.kicad_pcb`      | `cc6335a99b211579a8f1c9a135a1f1d9ca87c42476f8c82f3d33af3fbd012d41` |
+| `multilayer/four-layer-smd-land-flash.kicad_pcb`          | `8256500dfc397f9ecaeaa3c5adf2b05b77c13a288c4fb9e402da16d10cb1a334` |
 | `multilayer/four-layer-via.kicad_pcb`                    | `7917df50c740bbcaa831f7ce05acbc65da6e526e5f1e6dec9768cc9907dc877b` |
 | `multilayer/four-layer-bottom-pad-access-code.kicad_pcb` | `d1d5890475438afc01d34fcbf5c9c6b78d9543c4b57edd28ee01e413c59d7990` |
 | `multilayer/four-layer-open.kicad_pcb`                   | `6fde51d4e7ac915465987032dadf4d3a174409bd35d5a9d9e2dceacbcc94dc81` |
@@ -73,3 +75,10 @@ at 0 degrees, and a rectangular pad at 90 degrees. Its native fault removes
 only those three `In2.Cu` D03 flashes; routed copper and the other copper-layer
 lands remain. A 45-degree oval or rectangle exports a Gerber aperture macro
 outside the current parser subset and must remain `UNSUPPORTED`.
+
+The SMD land control connects a full-stack through contact to top-side circular
+and rectangular pads and a bottom-side 90-degree oval pad. Its native fault
+removes only the two top `F.Cu` SMD flashes and the bottom `B.Cu` SMD flash;
+outer-layer routes still cross each pad center. The source-land check reports
+only the assigned outer copper layer for each SMD pad and does not require SMD
+lands on inner copper layers.

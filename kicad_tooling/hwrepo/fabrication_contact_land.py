@@ -1,4 +1,4 @@
-"""Source-bound checks for simple plated through-contact land flashes."""
+"""Source-bound checks for standard component and via land flashes."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ _LandFlashPoint = tuple[int, int, int, int]
 
 @dataclass(frozen=True, slots=True)
 class SourceLandRequirement:
-    """A source-mapped simple plated contact land expected on every copper layer."""
+    """A source-mapped standard land expected on its assigned copper layer(s)."""
 
     contact: str
     net: str | None
@@ -32,6 +32,7 @@ class SourceLandRequirement:
     shape: _SourceLandShape
     size_x_nm: int
     size_y_nm: int
+    contact_layer: Literal["top", "bottom", "through"] = "through"
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,18 +46,20 @@ class MissingSourceLandFlashes:
 def source_land_requirements(
     source_pads: tuple[SourceComponentPad, ...], source_vias: tuple[SourceVia, ...]
 ) -> tuple[SourceLandRequirement, ...]:
-    """Select circular, oval, and rectangular full-stack plated source lands.
+    """Select supported circular, oval, and rectangular source lands.
 
     Gerber standard apertures preserve quarter-turn changes by swapping their
     dimensions. Other source rotations require a macro representation; the
     current parser reports those artifacts as unsupported instead of guessing.
+    Surface-mount lands apply only to their outer copper layer; plated through
+    pads and vias apply to the complete copper stack.
     """
     requirements: list[SourceLandRequirement] = []
     for pad in source_pads:
         shape = _source_land_shape(pad.pad_shape)
         if (
-            pad.contact_layer != "through"
-            or pad.drill_plating != "plated"
+            pad.contact_layer not in {"top", "bottom", "through"}
+            or (pad.contact_layer == "through" and pad.drill_plating != "plated")
             or shape is None
             or pad.has_custom_padstack
             or pad.size_x_nm is None
@@ -80,6 +83,7 @@ def source_land_requirements(
                 shape=shape,
                 size_x_nm=size_x_nm,
                 size_y_nm=size_y_nm,
+                contact_layer=pad.contact_layer,
             )
         )
     requirements.extend(
@@ -91,6 +95,7 @@ def source_land_requirements(
             shape="circle",
             size_x_nm=via.copper_diameter_nm,
             size_y_nm=via.copper_diameter_nm,
+            contact_layer="through",
         )
         for via in source_vias
         if via.copper_diameter_nm is not None
@@ -103,6 +108,7 @@ def source_land_requirements(
                 item.net or "",
                 item.x_nm,
                 item.y_nm,
+                item.contact_layer,
                 item.shape,
                 item.size_x_nm,
                 item.size_y_nm,
@@ -115,7 +121,7 @@ def missing_source_land_flashes(
     layers: tuple[GerberLayer, ...],
     requirements: tuple[SourceLandRequirement, ...],
 ) -> tuple[MissingSourceLandFlashes, ...]:
-    """Find source-shaped D03 flashes missing from any source copper layer.
+    """Find source-shaped D03 flashes missing from required source copper layers.
 
     The accepted Gerber coordinate format has six decimal places. This allows
     half of one six-decimal inch unit (12.7 nm), rounded up, when matching
@@ -127,6 +133,8 @@ def missing_source_land_flashes(
     for layer in layers:
         available = _land_flash_index(layer.features)
         for requirement, missing in unmatched:
+            if not _requirement_applies_to_layer(requirement, layer.layer):
+                continue
             match = _take_matching_flash(available, requirement)
             if match is None:
                 missing.append(layer.layer)
@@ -135,6 +143,13 @@ def missing_source_land_flashes(
         for requirement, missing in unmatched
         if missing
     )
+
+
+def _requirement_applies_to_layer(requirement: SourceLandRequirement, layer: str) -> bool:
+    if requirement.contact_layer == "through":
+        return True
+    expected = "f.cu" if requirement.contact_layer == "top" else "b.cu"
+    return layer.casefold() == expected
 
 
 def raster_visible_missing_layers(

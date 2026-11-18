@@ -32576,6 +32576,46 @@ acceptance threads while new lint features proceed:
   The scoped evidence-lint gate and installed-wheel rehearsal passed; package
   and preview jobs were skipped under prerelease policy.
 
+#### LINT-578 — Review missing source SMD land flashes
+
+- **Status:** Local fabrication, exact-version native, and architecture gates
+  passed; scoped hosted acceptance pending.
+- **Priority:** P1 fabrication-evidence integrity. A top- or bottom-side SMD
+  land can be omitted while a route crossing its center leaves raster contact
+  presence intact, the same masking failure already covered for through lands.
+- **Predicate:** Extend `SOURCE_LAND_FLASH_MISSING` to standard circular, oval,
+  and rectangular SMD pads without custom padstacks. Bind shape, dimensions,
+  transformed source center, and total footprint-plus-pad orientation. Require
+  the matching source flash only on the assigned `F.Cu` or `B.Cu` layer; do not
+  require SMD lands on inner copper layers. Keep through-pad and via checks on
+  every copper layer. Preserve the 13 nm matching bound, review/block modes,
+  and exact-fingerprint ignores. Report schema advances to 7 and analyzer
+  version to 42.
+- **Boundary:** This proves the expected standard aperture flash exists on the
+  assigned outer layer when raster copper would hide its absence. It does not
+  compare the full copper outline, solder-mask or paste openings, annular-ring
+  sizing, or continuity. Custom padstacks and unsupported shapes remain outside
+  the check. Non-cardinal oval/rectangular rotations still rely on Gerber macros
+  that leave the analyzer `UNSUPPORTED`; region substitutes prompt for review.
+- **Fixtures:** A tooling-owned four-layer board connects a full-stack through
+  pad to top-side circular and rectangular SMD pads and a bottom-side 90-degree
+  oval SMD pad. Native faults remove only the three assigned outer-layer D03
+  flashes while F.Cu/B.Cu tracks remain across each center. Tests assert exact
+  per-contact outer-layer findings, determinism, REVIEW, block, exact ignore,
+  restored-output control, and no inner-layer SMD requirement using pinned
+  KiCad 10.0.0 and 10.0.5. No external or proprietary project data is used.
+- **Selection:** Run `tests/test_fabrication_contact_land.py` and
+  `tests/test_fabrication_connectivity.py` for source, layer-scope, matching,
+  and policy checks. `tests/test_fabrication_smd_land_native.py` uses
+  `design_lint`, `evidence_lint`, `pcb_lint`, `native_kicad`, and `slow` and
+  runs in the Docker lane with
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
+- **Local validation (2026-11-18):** The full fabrication selection passed
+  363 tests, including the exact KiCad 10.0.0/10.0.5 Docker fault/control
+  cases. The focused lint architecture, marker, native-fixture inventory,
+  backlog, and module-size selection passed 26 tests. Ruff, formatting, and
+  `git diff --check` passed. The annotated-tag acceptance gate remains pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

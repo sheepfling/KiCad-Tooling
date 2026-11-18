@@ -48,7 +48,7 @@ def test_unbound_plated_hit_is_stable_review_blockable_and_exactly_ignorable(
     repeated = analyze_fabrication_connectivity(board, fabrication, settings)
 
     assert result == repeated
-    assert result.analyzer_version == "41"
+    assert result.analyzer_version == "42"
     assert result.status == "REVIEW"
     assert not result.unsupported_reasons
     (finding,) = _unbound(result)

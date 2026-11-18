@@ -112,6 +112,71 @@ def test_requirements_include_only_supported_full_stack_plated_standard_lands() 
     )
 
 
+def test_surface_mount_requirements_keep_source_outer_copper_access() -> None:
+    pads = (
+        SourceComponentPad(
+            "J2",
+            "1",
+            "SIGNAL",
+            "top",
+            9_000_000,
+            10_000_000,
+            pad_shape="circle",
+            size_x_nm=1_200_000,
+            size_y_nm=1_200_000,
+        ),
+        SourceComponentPad(
+            "J3",
+            "1",
+            "SIGNAL",
+            "top",
+            13_000_000,
+            10_000_000,
+            pad_shape="rect",
+            size_x_nm=1_600_000,
+            size_y_nm=1_000_000,
+        ),
+        SourceComponentPad(
+            "J4",
+            "1",
+            "SIGNAL",
+            "bottom",
+            17_000_000,
+            10_000_000,
+            pad_shape="oval",
+            size_x_nm=1_600_000,
+            size_y_nm=1_000_000,
+            land_rotation_mdeg=90_000,
+        ),
+        SourceComponentPad(
+            "J5",
+            "1",
+            "SIGNAL",
+            "top",
+            21_000_000,
+            10_000_000,
+            pad_shape="rect",
+            size_x_nm=1_600_000,
+            size_y_nm=1_000_000,
+            has_custom_padstack=True,
+        ),
+    )
+
+    requirements = source_land_requirements(pads, ())
+
+    assert requirements == (
+        SourceLandRequirement(
+            "J2-1", "SIGNAL", 9_000_000, -10_000_000, "circle", 1_200_000, 1_200_000, "top"
+        ),
+        SourceLandRequirement(
+            "J3-1", "SIGNAL", 13_000_000, -10_000_000, "rect", 1_600_000, 1_000_000, "top"
+        ),
+        SourceLandRequirement(
+            "J4-1", "SIGNAL", 17_000_000, -10_000_000, "oval", 1_000_000, 1_600_000, "bottom"
+        ),
+    )
+
+
 def test_source_pad_parser_preserves_quarter_turn_land_orientations() -> None:
     fixture = Path(__file__).parent / (
         "fixtures/fabrication-connectivity/multilayer/four-layer-shaped-land-flash.kicad_pcb"
@@ -140,6 +205,25 @@ def test_source_pad_parser_preserves_quarter_turn_land_orientations() -> None:
     ]
 
 
+def test_source_land_requirements_map_smd_geometry_to_its_outer_layer() -> None:
+    fixture = Path(__file__).parent / (
+        "fixtures/fabrication-connectivity/multilayer/four-layer-smd-land-flash.kicad_pcb"
+    )
+    pads = source_component_pads(fixture.read_text(encoding="utf-8"))
+
+    requirements = source_land_requirements(pads, ())
+
+    assert tuple(
+        (item.contact, item.contact_layer, item.shape, item.size_x_nm, item.size_y_nm)
+        for item in requirements
+    ) == (
+        ("J1-1", "through", "circle", 1_600_000, 1_600_000),
+        ("J2-1", "top", "circle", 1_200_000, 1_200_000),
+        ("J3-1", "top", "rect", 1_600_000, 1_000_000),
+        ("J4-1", "bottom", "oval", 1_000_000, 1_600_000),
+    )
+
+
 def test_source_flash_must_match_center_and_aperture_size_on_every_layer() -> None:
     requirement = SourceLandRequirement(
         "J1-1", "SIGNAL", 5_000_000, -5_000_000, "circle", 1_000_000, 1_000_000
@@ -155,6 +239,35 @@ def test_source_flash_must_match_center_and_aperture_size_on_every_layer() -> No
     assert len(missing) == 1
     assert missing[0].requirement == requirement
     assert missing[0].layers == ("In1.Cu", "In2.Cu")
+
+
+def test_surface_mount_flash_requirements_apply_only_to_assigned_outer_layers() -> None:
+    top = SourceLandRequirement(
+        "J2-1", "SIGNAL", 9_000_000, -10_000_000, "circle", 1_200_000, 1_200_000, "top"
+    )
+    bottom = SourceLandRequirement(
+        "J4-1", "SIGNAL", 17_000_000, -10_000_000, "oval", 1_000_000, 1_600_000, "bottom"
+    )
+    controls = (
+        _layer("F.Cu", _flash(9.0, -10.0, 1.2)),
+        _layer("In1.Cu"),
+        _layer("In2.Cu"),
+        _layer("B.Cu", _shaped_flash("O", 17.0, -10.0, 1.0, 1.6)),
+    )
+
+    assert missing_source_land_flashes(controls, (top, bottom)) == ()
+
+    faulted = (
+        _layer("F.Cu"),
+        controls[1],
+        controls[2],
+        _layer("B.Cu"),
+    )
+    missing = missing_source_land_flashes(faulted, (top, bottom))
+    assert tuple((item.requirement.contact, item.layers) for item in missing) == (
+        ("J2-1", ("F.Cu",)),
+        ("J4-1", ("B.Cu",)),
+    )
 
 
 def test_oval_and_rectangular_flashes_match_source_shape_and_oriented_dimensions() -> None:
