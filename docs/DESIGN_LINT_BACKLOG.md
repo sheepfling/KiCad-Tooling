@@ -31861,7 +31861,8 @@ acceptance threads while new lint features proceed:
 
 #### LINT-563 — Reject raster geometry outside the pixel budget
 
-- **Status:** Implemented; local validation in progress.
+- **Status:** Hosted acceptance pending; local installed-wheel stage was blocked
+  by DNS access to PyPI.
 - **Priority:** P1 fabrication-evidence integrity. A finite Gerber aperture
   dimension with numeric value 10 to the 308th power passed the parser, but
   multiplying the resulting span by pixel density overflowed to infinity.
@@ -31889,7 +31890,14 @@ acceptance threads while new lint features proceed:
   `.venv/bin/python -I -m pytest -q tests/test_fabrication_raster_geometry_bounds.py`
   with `design_lint`, `evidence_lint`, and `pcb_lint`. The tag-scoped native
   fabrication lane remains `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
-- **Local validation:** Pending.
+- **Local validation (2026-11-17):** The fabrication synthetic selection passed
+  246 tests and the exact-version KiCad 10.0.0/10.0.5 Docker lane passed 12.
+  Tag-scoped CI passed 230 tests, Ruff, formatting, both Alphus profiles,
+  module-size preflight, Rumdl, mdrepo, Linux and Windows-targeted Pyright, and
+  wheel/sdist/sdist-wheel builds. Its isolated wheel-install step could not
+  resolve `pypi.org` to fetch `pydantic==2.13.5`; installed-wheel and external-
+  project checks therefore did not run locally. Logs are under
+  `build/ci/run-ne6rcddq/`.
 - **Hosted acceptance:** Pending.
 
 ## Completion and release gate
