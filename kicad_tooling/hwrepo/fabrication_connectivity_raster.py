@@ -69,6 +69,19 @@ class _UnionFind:
         self.parent[self.find(right)] = self.find(left)
 
 
+def _has_raster_area(feature: GerberFeature) -> bool:
+    if feature.kind == "stroke":
+        return feature.width_mm > 0.0
+    if (
+        feature.kind == "flash"
+        and feature.aperture is not None
+        and feature.aperture[0] == "C"
+        and feature.aperture[1]
+    ):
+        return feature.aperture[1][0] > 0.0
+    return True
+
+
 def _coordinates(
     layers: tuple[GerberLayer, ...], contacts: tuple[Contact, ...], drills: tuple[DrillHit, ...]
 ) -> list[tuple[float, float]]:
@@ -89,6 +102,8 @@ def _coordinates(
             points.append(hit.end_mm)
     for layer in layers:
         for feature in layer.features:
+            if not _has_raster_area(feature):
+                continue
             points.extend(feature.points)
             if feature.aperture:
                 kind, sizes = feature.aperture
@@ -130,6 +145,8 @@ def _canvas(
 
 
 def _draw_feature(draw: ImageDraw.ImageDraw, canvas: _Canvas, feature: GerberFeature) -> None:
+    if not _has_raster_area(feature):
+        return
     points = [canvas.point(x, y) for x, y in feature.points]
     if feature.kind == "region":
         draw.polygon(points, fill=255)

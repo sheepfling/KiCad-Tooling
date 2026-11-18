@@ -183,7 +183,9 @@ positive dimensions, and regular polygons have a positive outer diameter and
 an integer vertex count from 3 through 12. Polygon rotation remains an optional
 finite decimal. Invalid shapes return `UNSUPPORTED`; aperture holes and macros
 remain outside this raster subset. Polygon raster bounds use the outer diameter,
-not the vertex count. These ranges follow the [Ucamco Gerber Layer Format
+not the vertex count. A zero-diameter circular aperture is valid in Gerber; its
+flashes and strokes add no copper pixels to connectivity analysis. These ranges
+and zero-size semantics follow the [Ucamco Gerber Layer Format
 Specification 2026.05][gerber-layer-spec-2026-05].
 This inventory check does not verify that each IPC-D-356 coordinate matches
 the source pad location. The analyzer also binds each present component contact

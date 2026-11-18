@@ -94,6 +94,6 @@ def test_normal_ipc_numeric_fields_remain_supported(tmp_path: Path) -> None:
 
     result = analyze_fabrication_connectivity(board, fabrication, FabricationConnectivitySettings())
 
-    assert result.analyzer_version == "33"
+    assert result.analyzer_version == "34"
     assert result.status == "PASS"
     assert result.unsupported_reasons == ()

@@ -188,7 +188,7 @@ def test_artifact_connectivity_reports_opens_shorts_and_intentional_isolation(
     assert {item.code for item in report.findings} == expected
     assert not report.unsupported_reasons, report.unsupported_reasons
     assert report.status == status
-    assert report.analyzer_version == "33"
+    assert report.analyzer_version == "34"
     assert report.board_sha256
     assert "fabrication/board.d356" in report.artifact_sha256
 

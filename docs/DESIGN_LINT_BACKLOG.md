@@ -32204,6 +32204,43 @@ acceptance threads while new lint features proceed:
   tag `v0.5.3rc904`. Package and preview jobs were skipped under prerelease
   policy.
 
+#### LINT-570 — Exclude zero-size Gerber objects from copper rasterization
+
+- **Status:** Implemented; scoped local acceptance passed.
+- **Priority:** P1 fabrication-evidence integrity. The bounded parser correctly
+  accepted a zero-diameter circular aperture, but raster rendering assigned a
+  minimum one-pixel width to both flashes and strokes. That could invent copper
+  and report a short where the Gerber object has no area.
+- **Reference:** The [Ucamco Gerber Layer Format Specification 2026.05]
+  [gerber-zero-size-spec-2026-05] allows zero-diameter circular apertures and
+  states that zero-size objects do not affect the image. Other standard aperture
+  templates do not allow zero-size apertures.
+- **Change:** Keep valid zero-diameter circular apertures parseable, and omit
+  their zero-size flashes and strokes from both raster drawing and bounds
+  calculation. Positive-size objects retain their existing raster behavior.
+- **Boundary:** This corrects rasterized image area for the supported Gerber
+  subset. It does not turn metadata-only Gerber objects into copper or validate
+  that the manufacturing artwork is electrically correct.
+- **Fixtures:** Synthetic Gerber sources exercise zero-size flashes and strokes
+  against coincident contacts on different nets; each must leave both contacts
+  without copper and produce no short. Positive-size versions are valid controls
+  that still produce the expected short. A distant zero-size flash also cannot
+  expand raster bounds or consume the pixel budget. No project or cohort board
+  data is used.
+- **Analyzer version:** `34`, because the rasterized connectivity result changes
+  for valid zero-size Gerber objects.
+- **Selection:** `tests/test_fabrication_gerber_zero_size_objects.py` carries
+  `design_lint`, `evidence_lint`, and `pcb_lint` markers. The complete fabrication
+  evidence selection checks existing parser, source-binding, and native-lane
+  regressions as well.
+- **Local validation (2026-11-18):** The focused fabrication-evidence selection
+  passed 316 tests with exact KiCad 10.0.0 and 10.0.5 Docker fixtures enabled.
+  The marker and module-size architecture selection passed 10 tests. Scoped CI
+  passed formatting, Ruff, Alphus module and duplication checks, Rumdl, mdrepo,
+  Linux and Windows Pyright, wheel and sdist builds, and installed-wheel checks
+  against the separate public template checkout.
+- **Hosted acceptance:** Pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
@@ -32276,6 +32313,7 @@ quality, or first-article continuity.
 [kicad-10.0.5-drc-items]: https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/drc/drc_item.cpp
 [kicad-10-drc-exclusions]: https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#design-rule-checking
 [kicad-10-cli-drc]: https://docs.kicad.org/10.0/en/cli/cli.html
+[gerber-zero-size-spec-2026-05]: https://www.ucamco.com/files/downloads/file_en/554/gerber-layer-format-specification-revision-2026-05_en.pdf
 [arm-jtag-signals]: https://documentation-service.arm.com/static/5f900a61f86e16515cdc0610
 [arm-dstream-jtag-interface]: https://support.arm.com/documentation/dui0499/k/arm-dstream-target-interface-connections/the-arm-jtag-20-connector-pinouts-and-interface-signals/arm-jtag-20-interface-signals?lang=en
 [arm-swd-signals]: https://documentation-service.arm.com/static/5f900abff86e16515cdc063b
