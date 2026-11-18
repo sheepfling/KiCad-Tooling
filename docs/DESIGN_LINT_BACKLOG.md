@@ -32416,7 +32416,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-575 — Review missing copper on individual source layers
 
-- **Status:** Code complete; hosted acceptance pending.
+- **Status:** Complete; hosted acceptance passed.
 - **Priority:** P1 fabrication-evidence integrity. The analyzer previously
   accepted a through contact when it found copper on any source layer. A missing
   pad land on one inner-layer Gerber could therefore remain unreported while
@@ -32451,7 +32451,11 @@ acceptance threads while new lint features proceed:
   preflight, Linux and Windows Pyright, wheel/sdist builds, installed-wheel
   checks, and inventory, verification, and playtest against the separate public
   template checkout.
-- **Hosted acceptance:** pending.
+- **Hosted acceptance (2026-11-18):** Annotated tag `v0.5.3rc910` at code
+  commit `db3bca3b` passed GitHub Actions run
+  [44378696497](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44378696497).
+  The scoped evidence-lint gate and installed-wheel rehearsal passed; package
+  and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
