@@ -97,6 +97,23 @@ def require_ipc356_source_via_geometry(
     _require_ipc356_source_via_dimensions(_matched_ipc356_source_vias(source_vias, contacts))
 
 
+def require_ipc356_source_via_access_codes(
+    source_vias: tuple[SourceVia, ...], contacts: tuple[Contact, ...]
+) -> None:
+    """Require supported full-stack via records to use the through-access code."""
+    for via, contact in _matched_ipc356_source_vias(source_vias, contacts):
+        if contact.access_code is None:
+            raise UnsupportedFabricationFormat(
+                f"IPC-D-356 access code is unavailable for VIA on {via.net_name}"
+            )
+        if contact.access_code != 0:
+            raise UnsupportedFabricationFormat(
+                "IPC-D-356 access code differs from full-stack source PCB via "
+                f"on {via.net_name} at ({via.x_nm}, {-via.y_nm}) nm "
+                f"(expected A00; observed A{contact.access_code:02d})"
+            )
+
+
 def _matched_ipc356_source_vias(
     source_vias: tuple[SourceVia, ...], contacts: tuple[Contact, ...]
 ) -> tuple[tuple[SourceVia, Contact], ...]:

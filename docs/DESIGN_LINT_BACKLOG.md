@@ -32157,6 +32157,48 @@ acceptance threads while new lint features proceed:
   external-project check passed. Package and preview jobs were skipped under
   prerelease policy.
 
+#### LINT-569 — Bind IPC-D-356 numeric access codes to source pads and vias
+
+- **Status:** In progress.
+- **Priority:** P1 fabrication-evidence integrity. The parser reduced the
+  numeric access code to a coarse top/bottom/through class and discarded the
+  original code. A two-layer bottom-side pad exported as `A02` could be changed
+  to `A03` and still be interpreted as bottom-side access.
+- **Change:** Preserve the numeric access code and compare it with each matched
+  source pad and copper-stack depth: `A00` for through access, `A01` for F.Cu,
+  and the copper-layer count for B.Cu. Supported full-stack vias must use
+  `A00`; partial-span vias are unsupported. Inner-only pad access codes remain
+  outside this analyzer's supported subset. Pad mapping follows the exact
+  [KiCad 10.0.0 exporter](https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/exporters/export_d356.cpp#L56-83)
+  and
+  [KiCad 10.0.5 exporter](https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/exporters/export_d356.cpp#L56-83).
+  Full-stack via mapping follows the access-code calculation in the
+  [KiCad 10.0.0 exporter](https://gitlab.com/kicad/code/kicad/-/blob/10.0.0/pcbnew/exporters/export_d356.cpp#L155-160)
+  and
+  [KiCad 10.0.5 exporter](https://gitlab.com/kicad/code/kicad/-/blob/10.0.5/pcbnew/exporters/export_d356.cpp#L155-160).
+- **Boundary:** This checks exported access-code assignments against source
+  pad layers and supported full-stack via spans. It does not prove artwork
+  coverage or physical electrical continuity.
+- **Regression coverage:** Synthetic top, bottom, and through controls compare
+  the numeric code with source layer metadata and reject mismatches, including
+  bottom `A03` on a two-layer board and `A03` on a four-layer board. Exact-version
+  Docker exports on KiCad 10.0.0 and 10.0.5 verify native `A02` and `A04`
+  controls, plus a mutated access-code fault for each layer depth. Synthetic
+  and exact-version native via tests verify `A00` and reject an `A01` mutation.
+  No product or cohort project data is used.
+- **Analyzer version:** `33`, because reports now reject source-inconsistent
+  IPC-D-356 numeric access codes.
+- **Selection:** `tests/test_fabrication_contact_layers.py` and
+  `tests/test_fabrication_contact_layers_native.py` carry `design_lint`,
+  `evidence_lint`, and `pcb_lint`; the native suite is part of the
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` tag-scoped lane.
+- **Local validation (2026-11-18):** The full fabrication-evidence selection
+  passed 311 tests, including exact KiCad 10.0.0 and 10.0.5 Docker fixtures
+  with pad and VIA access-code mutations. The marker/theme/native-fixture and
+  module-size architecture selection passed 33 tests. Targeted Pyright, Ruff,
+  formatting, Rumdl, mdrepo, diff checks, and tag-scope preflight passed; the
+  tag lane resolves 34 test modules and enables native fixtures.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

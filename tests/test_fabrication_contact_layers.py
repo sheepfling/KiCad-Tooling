@@ -8,12 +8,20 @@ from typing import Literal
 
 import pytest
 
-from kicad_tooling.hwrepo.fabrication_artwork import Contact, UnsupportedFabricationFormat
-from kicad_tooling.hwrepo.fabrication_contact_layers import require_ipc356_source_pad_layers
+from kicad_tooling.hwrepo.fabrication_artwork import (
+    Contact,
+    UnsupportedFabricationFormat,
+    parse_ipc356,
+)
+from kicad_tooling.hwrepo.fabrication_contact_layers import (
+    require_ipc356_source_pad_access_codes,
+    require_ipc356_source_pad_layers,
+)
 from kicad_tooling.hwrepo.fabrication_contact_source import (
     SourceComponentPad,
     source_component_pads,
 )
+from tests.fabrication_connectivity_support import format_ipc_contact
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.evidence_lint, pytest.mark.pcb_lint]
 
@@ -25,6 +33,10 @@ _Layer = Literal["top", "bottom", "through"]
 def _source(side: str) -> tuple[SourceComponentPad, ...]:
     if side == "through":
         board = (_FIXTURES / "multilayer/four-layer-clean.kicad_pcb").read_text(encoding="utf-8")
+    elif side == "bottom-four-layer":
+        board = (_FIXTURES / "multilayer/four-layer-bottom-pad-access-code.kicad_pcb").read_text(
+            encoding="utf-8"
+        )
     else:
         board = (_FIXTURES / "clean.kicad_pcb").read_text(encoding="utf-8")
         if side == "bottom":
@@ -65,6 +77,7 @@ def _source_contacts(source: tuple[SourceComponentPad, ...]) -> tuple[Contact, .
                 (pad.size_x_nm or 0) / 1_000_000,
                 size_x_mm=(pad.size_x_nm or 0) / 1_000_000,
                 size_y_mm=0.0 if pad.pad_shape == "circle" else (pad.size_y_nm or 0) / 1_000_000,
+                access_code={"through": 0, "top": 1, "bottom": 2}[pad.contact_layer],
             )
         )
     return tuple(contacts)
@@ -139,3 +152,61 @@ def test_repeated_pin_contact_layers_remain_bound_to_source_centers() -> None:
     )
     with pytest.raises(UnsupportedFabricationFormat, match="layer classification differs"):
         require_ipc356_source_pad_layers(source, swapped)
+
+
+@pytest.mark.parametrize(
+    ("source_side", "access_code", "copper_layer_count"),
+    (
+        ("top", 1, 2),
+        ("bottom", 2, 2),
+        ("bottom-four-layer", 4, 4),
+        ("through", 0, 4),
+    ),
+)
+def test_numeric_access_code_matches_source_pad_and_copper_stack(
+    source_side: str, access_code: int, copper_layer_count: int
+) -> None:
+    source = _source(source_side)
+    contacts = tuple(
+        replace(contact, access_code=access_code) for contact in _source_contacts(source)
+    )
+
+    require_ipc356_source_pad_access_codes(source, contacts, copper_layer_count)
+
+
+@pytest.mark.parametrize(
+    ("source_side", "access_code", "copper_layer_count"),
+    (
+        ("top", 0, 2),
+        ("top", 2, 2),
+        ("bottom", 1, 2),
+        ("bottom", 3, 2),
+        ("bottom-four-layer", 3, 4),
+        ("through", 1, 4),
+    ),
+)
+def test_numeric_access_code_mismatch_fails_closed(
+    source_side: str, access_code: int, copper_layer_count: int
+) -> None:
+    source = _source(source_side)
+    contacts = tuple(
+        replace(contact, access_code=access_code) for contact in _source_contacts(source)
+    )
+
+    with pytest.raises(UnsupportedFabricationFormat, match="access code differs"):
+        require_ipc356_source_pad_access_codes(source, contacts, copper_layer_count)
+
+
+@pytest.mark.parametrize(
+    ("record_type", "access_code", "expected_layer"),
+    (("317", 0, "through"), ("327", 0, "through"), ("327", 1, "top"), ("327", 2, "bottom")),
+)
+def test_ipc356_parser_retains_numeric_access_code_and_decodes_layer(
+    record_type: str, access_code: int, expected_layer: _Layer
+) -> None:
+    record = format_ipc_contact(record_type, "SIGNAL", "J1", "1", access_code, 5.0)
+
+    (contact,) = parse_ipc356(f"P  UNITS CUST 0\n{record}\n999\n")
+
+    assert contact.layer == expected_layer
+    assert contact.access_code == access_code

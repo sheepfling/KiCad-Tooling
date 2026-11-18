@@ -24,12 +24,16 @@ from .fabrication_contact_geometry import (
     require_ipc356_source_pad_dimensions,
 )
 from .fabrication_contact_inventory import require_ipc356_source_pad_inventory
-from .fabrication_contact_layers import require_ipc356_source_pad_layers
+from .fabrication_contact_layers import (
+    require_ipc356_source_pad_access_codes,
+    require_ipc356_source_pad_layers,
+)
 from .fabrication_contact_source import source_component_pads
 from .fabrication_drill_binding import UnboundDrillHit, require_excellon_source_drills
 from .fabrication_drill_files import drill_file_function, drill_file_is_plated
 from .fabrication_excellon import DrillHit, parse_excellon
 from .fabrication_via_binding import (
+    require_ipc356_source_via_access_codes,
     require_ipc356_source_via_geometry,
     source_board_vias,
 )
@@ -263,9 +267,11 @@ def analyze_fabrication_connectivity(
         require_ipc356_source_pad_inventory(source_pads, contacts)
         require_ipc356_source_pad_coordinates(source_pads, contacts)
         require_ipc356_source_pad_dimensions(source_pads, contacts)
+        require_ipc356_source_pad_access_codes(source_pads, contacts, len(copper_layers))
         require_ipc356_source_pad_layers(source_pads, contacts)
         source_vias = source_board_vias(board_text)
         require_ipc356_source_via_geometry(source_vias, contacts)
+        require_ipc356_source_via_access_codes(source_vias, contacts)
         copper_paths = classify_copper_files(gerber_paths, copper_layers)
         layers = tuple(parse_gerber(path, layer) for path, layer in copper_paths)
         plated: list[DrillHit] = []

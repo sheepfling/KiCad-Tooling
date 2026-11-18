@@ -150,7 +150,13 @@ copper universe and produce a misleading pass. A present no-connect contact
 must match a source pad without a net; omitted no-connect pads are allowed.
 Each contact's top, bottom, or through-hole access class is checked against the
 source pad at its matched board center, so reassigned layer classes cannot pass
-by preserving only the aggregate counts for a repeated pin number.
+by preserving only the aggregate counts for a repeated pin number. The numeric
+IPC-D-356 access code is also checked against the source pad and copper stack:
+`00` means through access, `01` means front-side access, and the copper-layer
+count identifies back-side access in KiCad's exporter. Other access codes are
+unsupported by this outer-layer subset. This catches altered codes that would
+otherwise collapse to the same coarse top/bottom class. Supported full-stack
+source vias must use `A00`; partial-span vias are unsupported by this analyzer.
 Each copper Gerber must declare exactly one metric or inch `MO` unit and
 exactly one absolute `FS` coordinate format before its first operation. This
 subset accepts the current `%FSLAXn6Yn6*%` form, with equal X/Y integer widths

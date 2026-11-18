@@ -14,6 +14,7 @@ from kicad_tooling.hwrepo.fabrication_artwork import (
     parse_ipc356,
 )
 from kicad_tooling.hwrepo.fabrication_via_binding import (
+    require_ipc356_source_via_access_codes,
     require_ipc356_source_via_geometry,
     source_board_vias,
 )
@@ -110,6 +111,18 @@ def test_native_ipc356_via_records_match_source_inventory_and_reject_mutations(
     source_vias = source_board_vias(board.read_text(encoding="utf-8"))
     contacts = parse_ipc356(ipc_text)
     require_ipc356_source_via_geometry(source_vias, contacts)
+    require_ipc356_source_via_access_codes(source_vias, contacts)
+
+    wrong_access_lines = [
+        line.replace("A00X", "A01X", 1)
+        if line.startswith(("317", "327")) and line[20:26].strip() == "VIA"
+        else line
+        for line in lines
+    ]
+    wrong_access = parse_ipc356("\n".join(wrong_access_lines) + "\n")
+    require_ipc356_source_via_geometry(source_vias, wrong_access)
+    with pytest.raises(UnsupportedFabricationFormat, match="access code differs"):
+        require_ipc356_source_via_access_codes(source_vias, wrong_access)
 
     without_via = parse_ipc356("\n".join(line for line in lines if line != via_lines[0]) + "\n")
     with pytest.raises(UnsupportedFabricationFormat, match="count differs"):

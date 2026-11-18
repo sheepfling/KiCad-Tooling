@@ -56,6 +56,7 @@ class Contact:
     coordinate_resolution_nm: int = 2_540
     size_x_mm: float | None = None
     size_y_mm: float | None = None
+    access_code: int | None = None
 
     @property
     def label(self) -> str:
@@ -460,16 +461,19 @@ def parse_ipc356(text: str) -> tuple[Contact, ...]:
             raise UnsupportedFabricationFormat("unrecognized IPC-D-356 contact record")
         pin = pin or "via"
         access, x, y, size_x, size_y = coords.groups()
+        access_code = int(access)
         size_x_mm = _ipc356_scaled_integer(size_x, unit_mm, "X pad size") if size_x else None
         size_y_mm = _ipc356_scaled_integer(size_y, unit_mm, "Y pad size") if size_y else None
         size_mm = max(size_x_mm or 0.0, size_y_mm or 0.0)
         if not net or net == "N/C":
             net = f"N/C:{reference}:{pin}"
         layer: Literal["top", "bottom", "through"]
-        if line.startswith("317"):
+        if line.startswith("317") or access_code == 0:
             layer = "through"
+        elif access_code == 1:
+            layer = "top"
         else:
-            layer = "top" if int(access) <= 1 else "bottom"
+            layer = "bottom"
         contacts.append(
             Contact(
                 net=net,
@@ -482,6 +486,7 @@ def parse_ipc356(text: str) -> tuple[Contact, ...]:
                 coordinate_resolution_nm=round(unit_mm * 1_000_000),
                 size_x_mm=size_x_mm,
                 size_y_mm=size_y_mm,
+                access_code=access_code,
             )
         )
     if not contacts:
