@@ -32072,6 +32072,33 @@ acceptance threads while new lint features proceed:
   project stages passed. Package and preview jobs were skipped under prerelease
   policy.
 
+#### LINT-567 — Keep IPC-D-356 pad dimensions bound to repeated pin centers
+
+- **Status:** In progress.
+- **Priority:** P1 fabrication-evidence integrity. LINT-565 compared component
+  pad dimensions within each reference/pad-number group as a size multiset,
+  independently from the center check. For repeated pad numbers at different
+  centers, swapping two exported sizes still returned `PASS`.
+- **Change:** Reuse one-to-one source-center matching for coordinate and size
+  checks. Compare each contact's X/Y dimensions only with the source pad at its
+  uniquely matched center. For coincident records, use dimensions only to
+  disambiguate otherwise identical-location candidates; unresolved non-identical
+  candidates fail closed.
+- **Boundary:** This closes an IPC-D-356 source-to-export association gap. The
+  existing quantization tolerance remains half the record unit plus 1 nm. It
+  does not verify pad shape, copper coverage, or fabricated continuity.
+- **Regression coverage:** A synthetic repeated-pin footprint has two same-net
+  pads of different sizes at different centers. The matching control passes;
+  swapping IPC-D-356 sizes passes the old logic and must now return
+  `UNSUPPORTED`. Exact-version KiCad 10.0.0 and 10.0.5 exports exercise the
+  matching records and mutated-size fault. No product or cohort project data is
+  used.
+- **Analyzer version:** `31`, because reports now bind each component-pad size
+  to the unique source pad center rather than comparing size inventories.
+- **Selection:** The dedicated synthetic and native suites carry
+  `design_lint`, `evidence_lint`, and `pcb_lint`; the tag-scoped native lane
+  remains `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

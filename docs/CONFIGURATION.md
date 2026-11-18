@@ -184,6 +184,13 @@ must be within half of its declared coordinate unit, plus 1 nm for source
 coordinate rounding. For example, CUST 0 permits up to 0.001271 mm per axis;
 SI/CUST 1 permits up to 0.000501 mm. A contact with no unique matching source
 center or a larger coordinate error is `UNSUPPORTED` before rasterization.
+Component-pad X/Y dimensions are compared with the dimensions at that same
+matched source center using half the declared coordinate unit plus 1 nm. This
+keeps repeated footprint pad numbers from being checked only as an unordered
+size inventory. If the IPC-D-356 coordinate precision leaves multiple
+non-identical source pads as possible matches, the result is `UNSUPPORTED`.
+This does not compare source pad shape or rotation, or establish fabricated
+copper coverage.
 IPC-D-356 `VIA` records are also matched one-to-one with full-stack source PCB
 vias by named net and drill center, accounting for the format's inverted board
 Y coordinate. Center tolerance is half the record's declared coordinate unit
