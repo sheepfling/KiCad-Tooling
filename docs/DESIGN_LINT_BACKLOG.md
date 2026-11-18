@@ -32206,7 +32206,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-570 — Exclude zero-size Gerber objects from copper rasterization
 
-- **Status:** Implemented; scoped local acceptance passed.
+- **Status:** Complete; tagged hosted acceptance passed.
 - **Priority:** P1 fabrication-evidence integrity. The bounded parser correctly
   accepted a zero-diameter circular aperture, but raster rendering assigned a
   minimum one-pixel width to both flashes and strokes. That could invent copper
@@ -32239,7 +32239,9 @@ acceptance threads while new lint features proceed:
   passed formatting, Ruff, Alphus module and duplication checks, Rumdl, mdrepo,
   Linux and Windows Pyright, wheel and sdist builds, and installed-wheel checks
   against the separate public template checkout.
-- **Hosted acceptance:** Pending.
+- **Hosted acceptance (2026-11-18):** GitHub Actions run `44306056517` passed
+  the scoped lint gate and installed-wheel external-project check for tag
+  `v0.5.3rc905`. Package and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
