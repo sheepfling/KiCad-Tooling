@@ -32626,8 +32626,8 @@ acceptance threads while new lint features proceed:
 
 #### LINT-579 — Review source land geometries outside the flash matcher
 
-- **Status:** Implemented; local acceptance passed, scoped hosted acceptance
-  pending.
+- **Status:** Complete. Local, exact-version native, architecture, and scoped
+  hosted acceptance gates passed.
 - **Priority:** P1 fabrication-evidence coverage. A synthetic trapezoid pad
   with matching IPC-D-356 evidence and routed artwork previously received
   `PASS` because source-land requirements silently omitted pad shapes the
@@ -32661,7 +32661,12 @@ acceptance threads while new lint features proceed:
   native-fixture inventory, backlog, and module-size selection passed 63
   tests. The complete fabrication selection passed 367 tests, including
   exact-version KiCad 10.0.0/10.0.5 Docker cases. Ruff, formatting, Rumdl, and
-  `git diff --check` passed. Scoped hosted acceptance remains pending.
+  `git diff --check` passed.
+- **Hosted follow-up:** Annotated tag `v0.5.3rc917` passed GitHub Actions run
+  [44421852855](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44421852855).
+  The scoped evidence-lint gate, exact-version native fixtures, and installed
+  wheel rehearsal against the separate acceptance project passed. Package and
+  preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
