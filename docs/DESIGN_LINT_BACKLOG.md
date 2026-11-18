@@ -872,7 +872,14 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc901):** LINT-566
+- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc902):** LINT-567
+  binds IPC-D-356 component-pad sizes to their unique source centers. The
+  local fabrication evidence selection passed 286 tests, including exact-version
+  KiCad 10.0.0 and 10.0.5 Docker cases. GitHub Actions run `44283806089`
+  passed the scoped tests, type checks, package builds, and installed-wheel
+  external-project checks. Package and preview jobs were skipped under
+  prerelease policy.
+- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc901):** LINT-566
   binds IPC-D-356 VIA diameters to standard circular source-via sizes. The
   tag-scoped selection passed, including the exact-version KiCad 10.0.0 and
   10.0.5 Docker cases. GitHub Actions run
@@ -32074,7 +32081,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-567 — Keep IPC-D-356 pad dimensions bound to repeated pin centers
 
-- **Status:** In progress.
+- **Status:** Complete.
 - **Priority:** P1 fabrication-evidence integrity. LINT-565 compared component
   pad dimensions within each reference/pad-number group as a size multiset,
   independently from the center check. For repeated pad numbers at different
@@ -32098,6 +32105,17 @@ acceptance threads while new lint features proceed:
 - **Selection:** The dedicated synthetic and native suites carry
   `design_lint`, `evidence_lint`, and `pcb_lint`; the tag-scoped native lane
   remains `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
+- **Local validation (2026-11-18):** The fabrication evidence selection passed
+  286 tests, including the exact-version KiCad 10.0.0 and 10.0.5 Docker cases.
+  The dedicated native suite passed both versions. Targeted Pyright, Ruff,
+  formatting, fabrication and lint-suite architecture, module-size, Rumdl, and
+  mdrepo checks passed. Tag-scope preflight resolved 33 test modules and the
+  native fixture switch.
+- **Hosted acceptance (2026-11-18):** Tag `v0.5.3rc902`, code commit
+  `91cfa9d8174e03aa65e691dcfd991fc90a4b62ab`, passed GitHub Actions run
+  `44283806089`.
+  Scoped tests, type checks, package builds, and installed-wheel external-project
+  checks passed. Package and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
