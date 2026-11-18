@@ -72,7 +72,17 @@ class _UnionFind:
 def _coordinates(
     layers: tuple[GerberLayer, ...], contacts: tuple[Contact, ...], drills: tuple[DrillHit, ...]
 ) -> list[tuple[float, float]]:
-    points = [(contact.x_mm, contact.y_mm) for contact in contacts]
+    points: list[tuple[float, float]] = []
+    for contact in contacts:
+        points.append((contact.x_mm, contact.y_mm))
+        if contact.size_mm:
+            radius = contact.size_mm / 2
+            points.extend(
+                (
+                    (contact.x_mm - radius, contact.y_mm - radius),
+                    (contact.x_mm + radius, contact.y_mm + radius),
+                )
+            )
     for hit in drills:
         points.append((hit.x_mm, hit.y_mm))
         if hit.end_mm:

@@ -60,6 +60,18 @@ class Contact:
         return f"{self.reference}-{self.pin}"
 
 
+def _ipc356_scaled_integer(raw: str, unit_mm: float, field: str) -> float:
+    try:
+        value = int(raw.replace(" ", "")) * unit_mm
+    except (OverflowError, ValueError) as exc:
+        raise UnsupportedFabricationFormat(
+            f"IPC-D-356 numeric field {field} is unrepresentable"
+        ) from exc
+    if not math.isfinite(value):
+        raise UnsupportedFabricationFormat(f"IPC-D-356 numeric field {field} is non-finite")
+    return value
+
+
 def classify_copper_files(
     paths: tuple[Path, ...], copper_layers: tuple[str, ...]
 ) -> tuple[tuple[Path, str], ...]:
@@ -437,7 +449,7 @@ def parse_ipc356(text: str) -> tuple[Contact, ...]:
         net = line[3:17].strip()
         reference = line[20:26].strip()
         pin = line[27:31].strip()
-        coords = re.search(r"A(\d\d)X([ +-]?\d+)Y([ +-]?\d+)(?:X(\d+))?", line[31:])
+        coords = re.search(r"A([0-9]{2})X([ +-]?[0-9]+)Y([ +-]?[0-9]+)(?:X([0-9]+))?", line[31:])
         if not coords or not reference or (not pin and reference != "VIA"):
             raise UnsupportedFabricationFormat("unrecognized IPC-D-356 contact record")
         pin = pin or "via"
@@ -454,10 +466,10 @@ def parse_ipc356(text: str) -> tuple[Contact, ...]:
                 net=net,
                 reference=reference,
                 pin=pin,
-                x_mm=int(x.replace(" ", "")) * unit_mm,
-                y_mm=int(y.replace(" ", "")) * unit_mm,
+                x_mm=_ipc356_scaled_integer(x, unit_mm, "X coordinate"),
+                y_mm=_ipc356_scaled_integer(y, unit_mm, "Y coordinate"),
                 layer=layer,
-                size_mm=int(size) * unit_mm if size else 0.0,
+                size_mm=_ipc356_scaled_integer(size, unit_mm, "pad size") if size else 0.0,
                 coordinate_resolution_nm=round(unit_mm * 1_000_000),
             )
         )

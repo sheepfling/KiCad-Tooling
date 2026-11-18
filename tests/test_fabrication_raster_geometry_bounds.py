@@ -32,7 +32,7 @@ def test_finite_aperture_geometry_respects_raster_budget(tmp_path: Path, oversiz
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "27"
+    assert result.analyzer_version == "28"
     assert result.findings == ()
     if oversized:
         assert result.status == "UNSUPPORTED"

@@ -31916,6 +31916,41 @@ acceptance threads while new lint features proceed:
   project inventory/surface/verification/playtest checks passed. Package and
   preview jobs were skipped under prerelease policy.
 
+#### LINT-564 — Bound IPC-D-356 numeric fields before raster analysis
+
+- **Status:** Local implementation complete; tagged hosted acceptance pending.
+- **Priority:** P1 fabrication-evidence integrity. IPC-D-356 coordinates and
+  pad sizes were parsed as unbounded decimal integers and multiplied by a
+  floating unit scale. A 309-digit coordinate escaped the source-bound
+  analyzer as `OverflowError`; a 100-digit but finite pad size was omitted from
+  raster bounds and could still produce `PASS`.
+- **Change:** Require ASCII decimal digits for coordinate fields, translate
+  integer conversion overflow or digit-limit errors into
+  `UNSUPPORTED`, and include reported pad-size extents in canvas sizing so
+  oversized finite values fail the existing raster pixel budget.
+- **Boundary:** This validates representability and bounded raster work. It
+  does not compare IPC-D-356 pad sizes with source pad geometry, establish a
+  manufacturing tolerance, or prove that fabrication output matches design
+  intent. A finite pad-size discrepancy that remains within the raster budget
+  is outside this check.
+- **Regression coverage:** Synthetic faults cover 309-digit coordinate and
+  pad-size fields, a 100-digit finite size, and non-ASCII coordinate digits. A
+  normal KiCad-style record remains supported, and the exact-version KiCad
+  10.0.0/10.0.5 fabrication controls remain in the Docker lane. No product or
+  cohort data is used.
+- **Analyzer version:** `28`, because malformed or out-of-budget contact
+  geometry that previously escaped or appeared supported now returns
+  `UNSUPPORTED` with no findings.
+- **Selection:** The dedicated suite
+  `tests/test_fabrication_ipc356_numeric_bounds.py` carries `design_lint`,
+  `evidence_lint`, and `pcb_lint`. The tag-scoped native fabrication lane
+  remains `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
+- **Local validation (2026-11-18):** The focused fabrication selection passed
+  263 tests, including all 12 digest-pinned KiCad 10.0.0 and 10.0.5 Docker
+  cases. Targeted Pyright, Ruff, formatting, module-size, lint-suite
+  architecture, and fabrication module-boundary checks passed.
+- **Hosted acceptance:** Pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version
