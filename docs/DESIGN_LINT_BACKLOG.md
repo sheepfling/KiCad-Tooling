@@ -32248,7 +32248,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-571 — Require explicitly closed Gerber region contours
 
-- **Status:** Local release gate passed; hosted acceptance pending.
+- **Status:** Complete; hosted acceptance passed.
 - **Priority:** P1 fabrication-evidence integrity. The Gerber parser's broad
   arc-code substring check matched `G36` as `G3`, so valid regions were rejected
   as unsupported. The existing region path also accepted open contours and the
@@ -32287,7 +32287,13 @@ acceptance threads while new lint features proceed:
   Tag-scope preflight resolves 36 fabrication test modules and the native
   artifact-connectivity fixture. The backlog inventory regression also passes
   after restoring three pre-existing USB series rules to its implemented list.
-- **Hosted acceptance:** Pending.
+- **Hosted acceptance (2026-11-18):** Annotated tag `v0.5.3rc906` at code
+  commit `670638ff` passed GitHub Actions run `44314843221`.
+  The tag-scoped unit lane passed 320 tests. Formatting, Ruff, Rumdl, mdrepo,
+  module-size preflight, Linux and Windows Pyright, wheel/sdist builds,
+  installed-wheel checks, and external and adapted public-template inventory,
+  verification, and playtest passed. Package and preview jobs were skipped
+  under prerelease policy.
 
 #### LINT-572 — Reject self-intersecting Gerber region contours
 
