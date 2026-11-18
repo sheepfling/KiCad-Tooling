@@ -32375,7 +32375,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-574 — Review raster resolution-sensitive copper connectivity
 
-- **Status:** Local validation passed; hosted acceptance pending.
+- **Status:** Complete; hosted acceptance passed.
 - **Priority:** P1 fabrication-evidence coverage. The LINT-573 phase check
   samples grid alignment at one density, so it can miss a narrow break that
   remains connected at the configured density but opens when rasterized more
@@ -32409,6 +32409,10 @@ acceptance threads while new lint features proceed:
   Alphus profiles, Rumdl, mdrepo, module-size checks, Linux and Windows
   Pyright, wheel/sdist builds, installed-wheel checks, and inventory,
   verification, and playtest against the separate public template checkout.
+- **Hosted acceptance (2026-11-18):** Annotated tag `v0.5.3rc909` at code
+  commit `1c1dad93` passed GitHub Actions run `44369454992`. The scoped lint
+  gate and installed-wheel rehearsal passed; package and preview jobs were
+  skipped under prerelease policy.
 
 ## Completion and release gate
 
