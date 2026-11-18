@@ -32119,7 +32119,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-568 — Bind IPC-D-356 access layers to repeated pin centers
 
-- **Status:** In progress.
+- **Status:** Complete.
 - **Priority:** P1 fabrication-evidence integrity. LINT-541 compared layer
   classes as a count per footprint reference and pad number, separate from
   source-center matching. A repeated same-net pin with one top pad and one
@@ -32150,6 +32150,12 @@ acceptance threads while new lint features proceed:
   formatting, pytest-marker/theme/native-fixture architecture, module-size, and
   Rumdl checks passed. Tag-scope preflight resolved 34 test modules and the
   native fixture switch.
+- **Hosted acceptance (2026-11-18):** Tag `v0.5.3rc903`, code commit
+  `311be98ab856fe29b4b3bd4236e12860c0c84998`, passed GitHub Actions run
+  [44290244744](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44290244744).
+  The scoped lint gate, type checks, package builds, and installed-wheel
+  external-project check passed. Package and preview jobs were skipped under
+  prerelease policy.
 
 ## Completion and release gate
 
