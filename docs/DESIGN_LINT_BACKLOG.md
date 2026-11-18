@@ -32570,6 +32570,11 @@ acceptance threads while new lint features proceed:
   Tag-scoped package acceptance passed 38 tests; Linux and Windows Pyright,
   module-size checks, formatting, Ruff, Alphus, Rumdl, mdrepo, wheel build, and
   installed-wheel smoke checks all passed.
+- **Hosted acceptance (2026-11-18):** Tag `v0.5.3rc914` at code commit
+  `b10f0f89` passed GitHub Actions run
+  [44408557731](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44408557731).
+  The scoped evidence-lint gate and installed-wheel rehearsal passed; package
+  and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
