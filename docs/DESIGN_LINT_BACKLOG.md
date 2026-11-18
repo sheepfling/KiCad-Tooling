@@ -32578,8 +32578,8 @@ acceptance threads while new lint features proceed:
 
 #### LINT-578 — Review missing source SMD land flashes
 
-- **Status:** Local fabrication, exact-version native, and architecture gates
-  passed; scoped hosted acceptance pending.
+- **Status:** Complete. Local fabrication, exact-version native, architecture,
+  and scoped hosted acceptance gates passed.
 - **Priority:** P1 fabrication-evidence integrity. A top- or bottom-side SMD
   land can be omitted while a route crossing its center leaves raster contact
   presence intact, the same masking failure already covered for through lands.
@@ -32617,8 +32617,12 @@ acceptance threads while new lint features proceed:
   `git diff --check` passed. The annotated-tag acceptance gate remains pending.
 - **Hosted follow-up:** The first scoped run, tag `v0.5.3rc915`, stopped at
   Rumdl `MD060` because the new fixture row left both README tables
-  misaligned. The tables are now aligned and the affected README checks clean;
-  a fresh tagged acceptance run is pending.
+  misaligned. After aligning the tables, tag `v0.5.3rc916` passed GitHub Actions
+  run [44415548989](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44415548989).
+  The run passed the focused evidence-lint gate, both exact-version native
+  fixtures, Linux and Windows Pyright, wheel/sdist checks, and installed-wheel
+  rehearsal against the separate project. Package and preview jobs were
+  skipped under prerelease policy.
 
 ## Completion and release gate
 
