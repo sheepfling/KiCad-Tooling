@@ -33,6 +33,9 @@ class SourceComponentPad:
     drill_shape: Literal["circular", "oval", "unsupported"] | None = None
     drill_width_nm: int | None = None
     drill_height_nm: int | None = None
+    pad_shape: str | None = None
+    size_x_nm: int | None = None
+    size_y_nm: int | None = None
 
 
 def source_component_pads(board_text: str) -> tuple[SourceComponentPad, ...]:
@@ -77,6 +80,7 @@ def source_component_pads(board_text: str) -> tuple[SourceComponentPad, ...]:
                 assignments[key] = net_name
                 contact_layer = _pad_contact_layer(board_text, pad)
                 local = _pad_offset(board_text, pad, reference, number)
+                size_x_nm, size_y_nm = _pad_size(board_text, pad, reference, number)
                 x_nm = round(placement[0] + local[0] * cosine + local[1] * sine)
                 y_nm = round(placement[1] - local[0] * sine + local[1] * cosine)
                 drill_nm, drill_plating, drill_shape, drill_width_nm, drill_height_nm = _pad_drill(
@@ -95,6 +99,9 @@ def source_component_pads(board_text: str) -> tuple[SourceComponentPad, ...]:
                         drill_shape,
                         drill_width_nm,
                         drill_height_nm,
+                        atoms[3],
+                        size_x_nm,
+                        size_y_nm,
                     )
                 )
         return tuple(result)
@@ -134,6 +141,17 @@ def _pad_offset(document: str, pad: SExprSpan, reference: str, number: str) -> t
         return millimeters_to_nanometers(values[0]), millimeters_to_nanometers(values[1])
     except ValueError as exc:
         raise ValueError(f"malformed pad position for {reference}.{number}") from exc
+
+
+def _pad_size(document: str, pad: SExprSpan, reference: str, number: str) -> tuple[int, int]:
+    values = sexpr_field(document, pad, "size")
+    if len(values) != 2:
+        raise UnsupportedFabricationFormat(f"source pad {reference}.{number} has no 2D size")
+    size_x_nm = round(millimeters_to_nanometers(values[0]))
+    size_y_nm = round(millimeters_to_nanometers(values[1]))
+    if size_x_nm <= 0 or size_y_nm <= 0:
+        raise UnsupportedFabricationFormat(f"source pad {reference}.{number} has non-positive size")
+    return size_x_nm, size_y_nm
 
 
 def _pad_net_name(document: str, pad: SExprSpan, reference: str, number: str) -> str | None:

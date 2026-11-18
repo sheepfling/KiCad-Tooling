@@ -62,7 +62,7 @@ def test_unrepresentable_ipc_pad_size_returns_unsupported(tmp_path: Path) -> Non
     assert "IPC-D-356 numeric field" in result.unsupported_reasons[0]
 
 
-def test_oversized_finite_ipc_pad_size_exceeds_raster_budget(tmp_path: Path) -> None:
+def test_oversized_finite_ipc_pad_size_mismatch_returns_unsupported(tmp_path: Path) -> None:
     board, fabrication = write_synthetic_fabrication(tmp_path)
     _mutate_first_contact(
         fabrication,
@@ -73,7 +73,7 @@ def test_oversized_finite_ipc_pad_size_exceeds_raster_budget(tmp_path: Path) -> 
 
     assert result.status == "UNSUPPORTED"
     assert result.findings == ()
-    assert "raster exceeds" in result.unsupported_reasons[0]
+    assert "pad dimensions differ" in result.unsupported_reasons[0]
 
 
 def test_ipc_coordinates_require_ascii_digits(tmp_path: Path) -> None:
@@ -94,6 +94,6 @@ def test_normal_ipc_numeric_fields_remain_supported(tmp_path: Path) -> None:
 
     result = analyze_fabrication_connectivity(board, fabrication, FabricationConnectivitySettings())
 
-    assert result.analyzer_version == "28"
+    assert result.analyzer_version == "29"
     assert result.status == "PASS"
     assert result.unsupported_reasons == ()

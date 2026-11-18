@@ -6,8 +6,10 @@ from pathlib import Path
 
 import pytest
 
+from kicad_tooling.hwrepo.fabrication_artwork import Contact, GerberLayer
 from kicad_tooling.hwrepo.fabrication_connectivity import analyze_fabrication_connectivity
 from kicad_tooling.hwrepo.fabrication_connectivity_models import FabricationConnectivitySettings
+from kicad_tooling.hwrepo.fabrication_connectivity_raster import analyze_raster
 from tests.fabrication_connectivity_support import write_synthetic_fabrication
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.evidence_lint, pytest.mark.pcb_lint]
@@ -32,7 +34,7 @@ def test_finite_aperture_geometry_respects_raster_budget(tmp_path: Path, oversiz
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "28"
+    assert result.analyzer_version == "29"
     assert result.findings == ()
     if oversized:
         assert result.status == "UNSUPPORTED"
@@ -40,3 +42,10 @@ def test_finite_aperture_geometry_respects_raster_budget(tmp_path: Path, oversiz
     else:
         assert result.status == "PASS"
         assert result.unsupported_reasons == ()
+
+
+def test_finite_contact_geometry_exceeding_raster_budget_is_rejected() -> None:
+    contact = Contact("SIGNAL", "J1", "1", 0.0, 0.0, "top", 1e100)
+
+    with pytest.raises(ValueError, match="raster exceeds"):
+        analyze_raster((GerberLayer("synthetic-F_Cu.gbr", "F.Cu", ()),), (contact,), (), 50)

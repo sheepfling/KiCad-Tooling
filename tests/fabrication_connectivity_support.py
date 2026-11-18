@@ -9,13 +9,22 @@ _PTH_DRILL_HEADER = "M48\n; #@! TF.FileFunction,Plated,1,2,PTH\nFMAT,2\nMETRIC\n
 
 
 def format_ipc_contact(
-    code: str, net: str, reference: str, pin: str, access: int, x_mm: float
+    code: str,
+    net: str,
+    reference: str,
+    pin: str,
+    access: int,
+    x_mm: float,
+    size_x_mm: float = 1.0,
+    size_y_mm: float = 0.0,
 ) -> str:
     x = round(x_mm / 0.00254)
     y = round(5.0 / 0.00254)
+    size_x = round(size_x_mm / 0.00254)
+    size_y = round(size_y_mm / 0.00254)
     return (
         f"{code}{net:<14}   {reference:<6} {pin:<4} "
-        f"A{access:02d}X{x:+07d}Y{-y:+07d}X0197Y0000R000S2"
+        f"A{access:02d}X{x:+07d}Y{-y:+07d}X{size_x:04d}Y{size_y:04d}R000S2"
     )
 
 

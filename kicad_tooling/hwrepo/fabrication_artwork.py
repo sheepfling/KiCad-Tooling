@@ -54,6 +54,8 @@ class Contact:
     layer: Literal["top", "bottom", "through"]
     size_mm: float
     coordinate_resolution_nm: int = 2_540
+    size_x_mm: float | None = None
+    size_y_mm: float | None = None
 
     @property
     def label(self) -> str:
@@ -449,11 +451,18 @@ def parse_ipc356(text: str) -> tuple[Contact, ...]:
         net = line[3:17].strip()
         reference = line[20:26].strip()
         pin = line[27:31].strip()
-        coords = re.search(r"A([0-9]{2})X([ +-]?[0-9]+)Y([ +-]?[0-9]+)(?:X([0-9]+))?", line[31:])
+        coords = re.search(
+            r"A([0-9]{2})X([ +-]?[0-9]+)Y([ +-]?[0-9]+)"
+            r"(?:X([0-9]+)Y([0-9]+)R[0-9]{3}S[0-9])?",
+            line[31:],
+        )
         if not coords or not reference or (not pin and reference != "VIA"):
             raise UnsupportedFabricationFormat("unrecognized IPC-D-356 contact record")
         pin = pin or "via"
-        access, x, y, size = coords.groups()
+        access, x, y, size_x, size_y = coords.groups()
+        size_x_mm = _ipc356_scaled_integer(size_x, unit_mm, "X pad size") if size_x else None
+        size_y_mm = _ipc356_scaled_integer(size_y, unit_mm, "Y pad size") if size_y else None
+        size_mm = max(size_x_mm or 0.0, size_y_mm or 0.0)
         if not net or net == "N/C":
             net = f"N/C:{reference}:{pin}"
         layer: Literal["top", "bottom", "through"]
@@ -469,8 +478,10 @@ def parse_ipc356(text: str) -> tuple[Contact, ...]:
                 x_mm=_ipc356_scaled_integer(x, unit_mm, "X coordinate"),
                 y_mm=_ipc356_scaled_integer(y, unit_mm, "Y coordinate"),
                 layer=layer,
-                size_mm=_ipc356_scaled_integer(size, unit_mm, "pad size") if size else 0.0,
+                size_mm=size_mm,
                 coordinate_resolution_nm=round(unit_mm * 1_000_000),
+                size_x_mm=size_x_mm,
+                size_y_mm=size_y_mm,
             )
         )
     if not contacts:

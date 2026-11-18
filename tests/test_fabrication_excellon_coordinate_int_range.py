@@ -55,7 +55,7 @@ def test_coordinate_outside_kicad_signed_range_is_unsupported(
     assert result.status == "UNSUPPORTED"
     assert "signed nanometer range" in result.unsupported_reasons[0]
     assert result.findings == ()
-    assert result.analyzer_version == "28"
+    assert result.analyzer_version == "29"
 
 
 @pytest.mark.parametrize(
