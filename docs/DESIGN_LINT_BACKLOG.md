@@ -32334,8 +32334,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-573 — Review raster phase-sensitive copper connectivity
 
-- **Status:** Implementation and local acceptance complete; hosted acceptance
-  pending.
+- **Status:** Complete; hosted acceptance passed.
 - **Priority:** P1 fabrication-evidence coverage. The FA-001 raster analyzer
   can report `PASS` when a narrow physical gap disappears at the configured
   pixel density. Changing the grid alignment can expose this aliasing, but
@@ -32369,6 +32368,10 @@ acceptance threads while new lint features proceed:
   module-size preflight, Linux and Windows Pyright, wheel/sdist builds,
   installed-wheel checks, and inventory, verification, and playtest against
   the separate public template checkout.
+- **Hosted acceptance (2026-11-18):** Annotated tag `v0.5.3rc908` at code
+  commit `16c2b4a4` passed GitHub Actions run `44359546892`. The scoped lint
+  gate and installed-wheel rehearsal passed; package and preview jobs were
+  skipped under prerelease policy.
 
 ## Completion and release gate
 
