@@ -36,6 +36,7 @@ class SourceComponentPad:
     pad_shape: str | None = None
     size_x_nm: int | None = None
     size_y_nm: int | None = None
+    has_custom_padstack: bool = False
 
 
 def source_component_pads(board_text: str) -> tuple[SourceComponentPad, ...]:
@@ -81,6 +82,7 @@ def source_component_pads(board_text: str) -> tuple[SourceComponentPad, ...]:
                 contact_layer = _pad_contact_layer(board_text, pad)
                 local = _pad_offset(board_text, pad, reference, number)
                 size_x_nm, size_y_nm = _pad_size(board_text, pad, reference, number)
+                has_custom_padstack = bool(sexpr_nodes(board_text, pad, "padstack"))
                 x_nm = round(placement[0] + local[0] * cosine + local[1] * sine)
                 y_nm = round(placement[1] - local[0] * sine + local[1] * cosine)
                 drill_nm, drill_plating, drill_shape, drill_width_nm, drill_height_nm = _pad_drill(
@@ -102,6 +104,7 @@ def source_component_pads(board_text: str) -> tuple[SourceComponentPad, ...]:
                         atoms[3],
                         size_x_nm,
                         size_y_nm,
+                        has_custom_padstack,
                     )
                 )
         return tuple(result)

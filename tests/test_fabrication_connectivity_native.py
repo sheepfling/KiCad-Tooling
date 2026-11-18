@@ -27,6 +27,7 @@ from kicad_tooling.hwrepo.fabrication_contact_layers import require_ipc356_sourc
 from kicad_tooling.hwrepo.fabrication_contact_source import source_component_pads
 from tests.fabrication_connectivity_native_support import (
     export_fabrication_outputs,
+    remove_native_gerber_flash,
     run_kicad_cli,
 )
 from tests.native_kicad_support import execute_kicad_cli
@@ -83,13 +84,6 @@ def _copy_contact_position(line: str, source_line: str) -> str:
     start, _, _, end, _, _ = target_fields
     replacement = source_fields[4] + source_fields[5]
     return line[:start] + replacement + line[end:]
-
-
-def _remove_native_gerber_contact_flash(text: str, x_mm: int, y_mm: int) -> str:
-    command = f"X{x_mm * 1_000_000}Y{-y_mm * 1_000_000}D03*"
-    if text.count(command) != 1:
-        raise AssertionError(f"expected one native Gerber contact flash {command!r}")
-    return text.replace(command, "", 1)
 
 
 def _native_rotated_contact_controls(
@@ -183,7 +177,7 @@ def test_native_gerber_ipc356_connectivity_fault_controls_repeat(
             in2_gerber = next(fabrication.glob("*In2_Cu.gbr"))
             original_in2 = in2_gerber.read_text(encoding="utf-8")
             in2_gerber.write_text(
-                _remove_native_gerber_contact_flash(original_in2, 5, 5),
+                remove_native_gerber_flash(original_in2, 5, 5),
                 encoding="utf-8",
             )
             missing_layer = analyze_fabrication_connectivity(
@@ -387,7 +381,7 @@ def test_native_multilayer_inner_copper_connectivity_and_via_boundary_repeat(
             in2_gerber = next(fabrication.glob("*In2_Cu.gbr"))
             original_in2 = in2_gerber.read_text(encoding="utf-8")
             in2_gerber.write_text(
-                _remove_native_gerber_contact_flash(original_in2, 6, 5),
+                remove_native_gerber_flash(original_in2, 6, 5),
                 encoding="utf-8",
             )
             missing_via_layer = analyze_fabrication_connectivity(

@@ -39,6 +39,7 @@ approval.
 | Board                                                    | Expected result     | Controlled case                                                                     |
 | -------------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------- |
 | `multilayer/four-layer-clean.kicad_pcb`                  | PASS                | Two full-stack through-hole pads connect through an In1.Cu route.                   |
+| `multilayer/four-layer-land-flash.kicad_pcb`             | PASS                | Same-layer In2.Cu route remains if both source D03 flashes are removed.             |
 | `multilayer/four-layer-via.kicad_pcb`                    | PASS                | A full-stack via shares the In1.Cu route between the through-hole pads.             |
 | `multilayer/four-layer-bottom-pad-access-code.kicad_pcb` | Access-code control | A bottom-side SMD pad exports access code `A04` on a four-layer board.              |
 | `multilayer/four-layer-open.kicad_pcb`                   | REVIEW / `OPEN`     | Removes only the In1.Cu route.                                                      |
@@ -48,13 +49,19 @@ approval.
 The native lane exports all four copper layers, drills, and IPC-D-356 twice
 with each digest-pinned KiCad version. The `four-layer-via` native control is
 also mutated by removing only the via flash from `In2.Cu`; the other layer lands,
-plated drill, source via, and routed connectivity remain present. Source SHA-256 values:
+plated drill, source via, and routed connectivity remain present.
 
 | Board                                                    | SHA-256                                                            |
 | -------------------------------------------------------- | ------------------------------------------------------------------ |
 | `multilayer/four-layer-clean.kicad_pcb`                  | `c1a066ec478600c8fc9031c53e8d7f4a827e11ce770c9d8086917c986d9db719` |
+| `multilayer/four-layer-land-flash.kicad_pcb`             | `ac1800f5dd50c4b7f51d6d0516c29aa840444f05d4849c35561efa821bfebcae` |
 | `multilayer/four-layer-via.kicad_pcb`                    | `7917df50c740bbcaa831f7ce05acbc65da6e526e5f1e6dec9768cc9907dc877b` |
 | `multilayer/four-layer-bottom-pad-access-code.kicad_pcb` | `d1d5890475438afc01d34fcbf5c9c6b78d9543c4b57edd28ee01e413c59d7990` |
 | `multilayer/four-layer-open.kicad_pcb`                   | `6fde51d4e7ac915465987032dadf4d3a174409bd35d5a9d9e2dceacbcc94dc81` |
 | `multilayer/four-layer-short.kicad_pcb`                  | `77ae0433992abbe43323e79727b5fc25dc2c1478564d5543c65eaf961c387397` |
 | `multilayer/four-layer-blind-via.kicad_pcb`              | `a8ee8f8f89ab06dd2d75b80522e87956d2ceee13a0ca5a264998f5caed1f34ba` |
+
+The native source-land fault removes only the `In2.Cu` circular D03 flashes
+from `four-layer-land-flash.kicad_pcb`; both inner-layer routes remain. Raster
+connectivity and per-layer contact-presence checks therefore remain satisfied,
+while the source-shaped land check reports the two missing round flashes.

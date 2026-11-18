@@ -84,3 +84,11 @@ def export_fabrication_outputs(
         board,
         ("pcb", "export", "ipcd356", "--output", str(output_directory / "board.d356")),
     )
+
+
+def remove_native_gerber_flash(text: str, x_mm: int, y_mm: int) -> str:
+    """Remove exactly one KiCad-emitted D03 flash at the given board point."""
+    command = f"X{x_mm * 1_000_000}Y{-y_mm * 1_000_000}D03*"
+    if text.count(command) != 1:
+        raise AssertionError(f"expected one native Gerber contact flash {command!r}")
+    return text.replace(command, "", 1)

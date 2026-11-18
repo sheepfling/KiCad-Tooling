@@ -8,7 +8,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from kicad_tooling.hwrepo import exports, models
+from kicad_tooling.hwrepo import (
+    exports,
+    fabrication_artwork,
+    fabrication_artwork_models,
+    models,
+)
 from kicad_tooling.hwrepo.command_evidence_models import CommandEvidence
 from kicad_tooling.hwrepo.evidence import digest
 from kicad_tooling.hwrepo.fabrication_artwork import (
@@ -34,13 +39,16 @@ pytestmark = [pytest.mark.design_lint, pytest.mark.evidence_lint, pytest.mark.pc
 _ROOT = Path(__file__).parents[1]
 _OWNERS = (
     "fabrication_artwork.py",
+    "fabrication_artwork_models.py",
     "fabrication_contact_geometry.py",
     "fabrication_contact_inventory.py",
     "fabrication_contact_layers.py",
+    "fabrication_contact_land.py",
     "fabrication_contact_source.py",
     "fabrication_drill_files.py",
     "fabrication_excellon.py",
     "fabrication_gerber_codes.py",
+    "fabrication_ipc356.py",
     "fabrication_connectivity_models.py",
     "fabrication_connectivity.py",
     "fabrication_connectivity_raster.py",
@@ -53,6 +61,13 @@ _OWNERS = (
 
 
 def test_release_export_connectivity_is_an_identity_compatible_opt_in() -> None:
+    assert fabrication_artwork.Contact is fabrication_artwork_models.Contact
+    assert fabrication_artwork.GerberFeature is fabrication_artwork_models.GerberFeature
+    assert fabrication_artwork.GerberLayer is fabrication_artwork_models.GerberLayer
+    assert (
+        fabrication_artwork.UnsupportedFabricationFormat
+        is fabrication_artwork_models.UnsupportedFabricationFormat
+    )
     assert models.ReleaseExportSettings is ReleaseExportSettings
     base = {
         "gerber_layers": ("F.Cu", "B.Cu"),
@@ -189,7 +204,7 @@ def test_artifact_connectivity_reports_opens_shorts_and_intentional_isolation(
     assert {item.code for item in report.findings} == expected
     assert not report.unsupported_reasons, report.unsupported_reasons
     assert report.status == status
-    assert report.analyzer_version == "39"
+    assert report.analyzer_version == "40"
     assert report.board_sha256
     assert "fabrication/board.d356" in report.artifact_sha256
 

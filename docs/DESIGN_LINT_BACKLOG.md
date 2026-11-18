@@ -32473,6 +32473,54 @@ acceptance threads while new lint features proceed:
   The scoped evidence-lint gate and installed-wheel rehearsal passed; package
   and preview jobs were skipped under prerelease policy.
 
+#### LINT-576 — Review missing source circular land flashes
+
+- **Status:** Local full and scoped synthetic/native acceptance passed; hosted
+  acceptance pending.
+- **Priority:** P1 fabrication-evidence integrity. A source pad or via can have
+  same-layer track copper at its center even after its circular land flash is
+  removed. Raster contact presence can therefore remain true without the
+  source-shaped component land being present in that layer's Gerber.
+- **Predicate:** For each ordinary source via and each circular, plated,
+  full-stack through-hole pad without a custom padstack, require a circular D03
+  flash matching source center and diameter on every source copper layer.
+  Report `SOURCE_LAND_FLASH_MISSING` only on a layer where the existing raster
+  still sees copper for that contact; a layer with no contact copper remains
+  covered by LINT-575. Use a 13 nm comparison bound, which permits half of a
+  six-decimal inch unit after rounding. Normalize MOIN aperture sizes to
+  millimeters before comparison; larger encoded aperture-size differences
+  remain findings rather than being hidden as manufacturing tolerance. Review
+  is the default; `block` and exact fingerprint ignores use the existing
+  fabrication-connectivity policy. Summary schema advances to 5 and analyzer
+  version to 40.
+- **Boundary:** This is source-flash evidence, not a pixel-by-pixel pad-shape
+  comparison, annular-ring check, or copper-continuity proof. It does not cover
+  oval/rectangular component lands or custom padstacks. A region-based
+  substitute for a circular D03 flash prompts for review when raster copper is
+  present. Unsupported Gerber syntax remains `UNSUPPORTED`.
+- **Fixtures:** Synthetic tests cover exact center/diameter matching,
+  six-decimal inch coordinate/aperture quantization, MOIN aperture conversion,
+  wrong-sized flashes, duplicate coincident source lands, shape exclusion, and
+  the overlap boundary with raster `missing_layers`. A tooling-owned
+  four-layer source retains In1.Cu and
+  In2.Cu routes between two round through-hole pads. Removing only the two
+  In2.Cu D03 flashes leaves the old connectivity and layer-presence checks
+  satisfied but creates two source-land findings. The control, fault, block,
+  exact-ignore, and restored-output cases run against digest-pinned KiCad
+  10.0.0 and 10.0.5. No external or proprietary project data is used.
+- **Selection:** Run `tests/test_fabrication_contact_land.py` and
+  `tests/test_fabrication_connectivity.py` for the deterministic source and
+  policy checks. `tests/test_fabrication_contact_land_native.py` uses the
+  `design_lint`, `evidence_lint`, `pcb_lint`, `native_kicad`, and `slow` markers
+  and runs in the Docker lane with
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
+- **Local validation (2026-11-18):** The full fabrication selection passed 350
+  tests, including exact-version KiCad 10.0.0 and 10.0.5 Docker fixtures. The
+  focused architecture and selector suites passed 47 tests. Tag-scoped package
+  acceptance passed 32 tests, including both native KiCad versions; Linux and
+  Windows Pyright, module-size checks, formatting, Ruff, Alphus, Rumdl, mdrepo,
+  wheel build, and installed-wheel smoke checks all passed.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

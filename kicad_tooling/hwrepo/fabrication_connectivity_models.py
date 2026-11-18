@@ -58,6 +58,7 @@ class FabricationConnectivityFinding(StrictModel):
         "NO_DRILL",
         "UNBOUND_DRILL_HIT",
         "LAYER_COPPER_MISSING",
+        "SOURCE_LAND_FLASH_MISSING",
         "RASTER_SENSITIVE",
         "RASTER_RESOLUTION_SENSITIVE",
     ]
@@ -78,18 +79,20 @@ class FabricationConnectivityFinding(StrictModel):
             raise ValueError("raster-sensitive findings require exactly one raster phase")
         if (self.code == "RASTER_RESOLUTION_SENSITIVE") != (self.raster_density is not None):
             raise ValueError("resolution-sensitive findings require exactly one raster density")
-        if (self.code == "LAYER_COPPER_MISSING") != bool(self.missing_layers):
-            raise ValueError("layer-copper findings require at least one missing copper layer")
+        if (self.code in {"LAYER_COPPER_MISSING", "SOURCE_LAND_FLASH_MISSING"}) != bool(
+            self.missing_layers
+        ):
+            raise ValueError("copper-layer findings require at least one missing layer")
         if len(set(self.missing_layers)) != len(self.missing_layers):
-            raise ValueError("layer-copper findings cannot repeat a missing copper layer")
+            raise ValueError("copper-layer findings cannot repeat a missing layer")
         return self
 
 
 class FabricationConnectivitySummary(StrictModel):
     """Reproducible result whose input files are bound by SHA-256."""
 
-    schema_version: Literal["4"] = "4"
-    analyzer_version: Literal["39"] = "39"
+    schema_version: Literal["5"] = "5"
+    analyzer_version: Literal["40"] = "40"
     status: Literal["PASS", "REVIEW", "FAIL", "UNSUPPORTED"]
     board_sha256: Digest
     artifact_sha256: Mapping[RepositoryPath, Digest]

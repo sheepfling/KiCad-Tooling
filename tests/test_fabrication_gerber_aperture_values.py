@@ -95,7 +95,7 @@ def test_non_finite_aperture_blocks_source_bound_analysis(tmp_path: Path) -> Non
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "39"
+    assert result.analyzer_version == "40"
     assert result.status == "UNSUPPORTED"
     assert "aperture" in result.unsupported_reasons[0]
     assert result.findings == ()
@@ -187,7 +187,7 @@ def test_invalid_polygon_parameters_block_source_bound_analysis(tmp_path: Path) 
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "39"
+    assert result.analyzer_version == "40"
     assert result.status == "UNSUPPORTED"
     assert "aperture" in result.unsupported_reasons[0]
     assert result.findings == ()

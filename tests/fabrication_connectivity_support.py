@@ -33,7 +33,7 @@ def _gerber(side: str, features: str) -> str:
     return (
         f"%TF.FileFunction,Copper,{level},{label}*%\n"
         "%FSLAX46Y46*%\n%MOMM*%\n%LPD*%\n"
-        "%ADD10C,0.500000*%\n%ADD11C,0.300000*%\n"
+        "%ADD10C,0.500000*%\n%ADD11C,0.300000*%\n%ADD14C,0.600000*%\n"
         f"{features}M02*\n"
     )
 
@@ -69,8 +69,8 @@ def write_synthetic_fabrication(
     fabrication = directory / "fabrication"
     fabrication.mkdir()
     if through:
-        top_features = "D10*X6000000Y-5000000D03*\n"
-        bottom_features = "D10*X6000000Y-5000000D03*\n"
+        top_features = "D14*X6000000Y-5000000D03*\n"
+        bottom_features = "D14*X6000000Y-5000000D03*\n"
         contacts = (format_ipc_contact("317", "SIGNAL", "VIA", "", 0, 6.0, size_x_mm=0.6),)
     else:
         top_features = "D10*X5000000Y-5000000D03*X7000000Y-5000000D03*\n" + (

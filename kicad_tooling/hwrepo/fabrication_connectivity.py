@@ -25,6 +25,11 @@ from .fabrication_contact_geometry import (
     require_ipc356_source_pad_dimensions,
 )
 from .fabrication_contact_inventory import require_ipc356_source_pad_inventory
+from .fabrication_contact_land import (
+    circular_land_requirements,
+    missing_circular_land_flashes,
+    raster_visible_missing_layers,
+)
 from .fabrication_contact_layers import (
     require_ipc356_source_pad_access_codes,
     require_ipc356_source_pad_layers,
@@ -158,6 +163,7 @@ def _fingerprint(
     raster_phase: str | None = None,
     raster_density: int | None = None,
     missing_layers: tuple[str, ...] = (),
+    identity_location_mm: tuple[float, float] | None = None,
 ) -> str:
     payload: dict[str, object] = {"code": code, "net": net, "contacts": sorted(contacts)}
     if drill_evidence is not None:
@@ -168,6 +174,8 @@ def _fingerprint(
         payload["raster_density"] = raster_density
     if missing_layers:
         payload["missing_layers"] = sorted(missing_layers)
+    if code == "SOURCE_LAND_FLASH_MISSING" and identity_location_mm is not None:
+        payload["land_location_nm"] = [round(value * 1_000_000) for value in identity_location_mm]
     encoded = json.dumps(
         payload,
         ensure_ascii=True,
@@ -198,6 +206,7 @@ def _finding(
             raster_phase,
             raster_density,
             missing_layers,
+            location,
         ),
         net=net,
         contacts=contacts,
@@ -332,6 +341,22 @@ def analyze_fabrication_connectivity(
             tuple(plated),
             settings.pixel_density,
         )
+        land_requirements = circular_land_requirements(source_pads, source_vias)
+        for missing in missing_circular_land_flashes(layers, land_requirements):
+            requirement = missing.requirement
+            visible_layers = raster_visible_missing_layers(missing, raster.assignments)
+            if not visible_layers:
+                continue
+            location = (requirement.x_nm / 1_000_000, requirement.y_nm / 1_000_000)
+            findings.append(
+                _finding(
+                    "SOURCE_LAND_FLASH_MISSING",
+                    (requirement.contact,),
+                    requirement.net,
+                    location,
+                    missing_layers=visible_layers,
+                )
+            )
         for assignment in raster.assignments:
             if (
                 assignment.contact.layer == "through"
