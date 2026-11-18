@@ -32463,6 +32463,15 @@ acceptance threads while new lint features proceed:
   [44378696497](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44378696497).
   The scoped evidence-lint gate and installed-wheel rehearsal passed; package
   and preview jobs were skipped under prerelease policy.
+- **Tag preflight correction (2026-11-18):** `v0.5.3rc911` failed before tests
+  because its annotated message omitted the required `Lint-Area` selector. The
+  corrected `v0.5.3rc912` message declares `evidence_lint`, the exact native
+  fixture switch, and the two relevant test paths.
+- **VIA coverage hosted acceptance (2026-11-18):** Tag `v0.5.3rc912` at code
+  commit `9ffbfa7d` passed GitHub Actions run
+  [44384590060](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44384590060).
+  The scoped evidence-lint gate and installed-wheel rehearsal passed; package
+  and preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
