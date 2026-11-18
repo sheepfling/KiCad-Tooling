@@ -40,6 +40,7 @@ _label_components = cast(_ScipyNdimage, import_module("scipy.ndimage")).label
 class PadAssignment:
     contact: Contact
     components: tuple[int, ...]
+    missing_layers: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -286,14 +287,23 @@ def analyze_raster(
             contact_layers = (layers[0].layer,)
         else:
             contact_layers = (layers[-1].layer,)
-        parts = tuple(
-            part
-            for layer in contact_layers
-            if (part := node(layer, contact.x_mm, contact.y_mm, contact.size_mm)) is not None
-        )
+        parts: list[int] = []
+        missing_layers: list[str] = []
+        for layer in contact_layers:
+            part = node(layer, contact.x_mm, contact.y_mm, contact.size_mm)
+            if part is None:
+                missing_layers.append(layer)
+            else:
+                parts.append(part)
         if not parts:
             no_copper.append(contact)
-        assignments.append(PadAssignment(contact, tuple(union.find(part) for part in parts)))
+        assignments.append(
+            PadAssignment(
+                contact,
+                tuple(union.find(part) for part in parts),
+                tuple(missing_layers),
+            )
+        )
         if contact.layer == "through" and not any(
             math.dist((contact.x_mm, contact.y_mm), sample) <= max(contact.size_mm / 2, 0.20)
             for hit in plated_drills

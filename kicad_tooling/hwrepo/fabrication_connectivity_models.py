@@ -57,6 +57,7 @@ class FabricationConnectivityFinding(StrictModel):
         "NO_COPPER",
         "NO_DRILL",
         "UNBOUND_DRILL_HIT",
+        "LAYER_COPPER_MISSING",
         "RASTER_SENSITIVE",
         "RASTER_RESOLUTION_SENSITIVE",
     ]
@@ -67,6 +68,7 @@ class FabricationConnectivityFinding(StrictModel):
     drill_evidence: FabricationConnectivityDrillEvidence | None = None
     raster_phase: Literal["x_half", "y_half", "xy_half"] | None = None
     raster_density: RasterComparisonDensity | None = None
+    missing_layers: tuple[NonEmptyText, ...] = ()
 
     @model_validator(mode="after")
     def drill_evidence_matches_code(self) -> FabricationConnectivityFinding:
@@ -76,14 +78,18 @@ class FabricationConnectivityFinding(StrictModel):
             raise ValueError("raster-sensitive findings require exactly one raster phase")
         if (self.code == "RASTER_RESOLUTION_SENSITIVE") != (self.raster_density is not None):
             raise ValueError("resolution-sensitive findings require exactly one raster density")
+        if (self.code == "LAYER_COPPER_MISSING") != bool(self.missing_layers):
+            raise ValueError("layer-copper findings require at least one missing copper layer")
+        if len(set(self.missing_layers)) != len(self.missing_layers):
+            raise ValueError("layer-copper findings cannot repeat a missing copper layer")
         return self
 
 
 class FabricationConnectivitySummary(StrictModel):
     """Reproducible result whose input files are bound by SHA-256."""
 
-    schema_version: Literal["3"] = "3"
-    analyzer_version: Literal["38"] = "38"
+    schema_version: Literal["4"] = "4"
+    analyzer_version: Literal["39"] = "39"
     status: Literal["PASS", "REVIEW", "FAIL", "UNSUPPORTED"]
     board_sha256: Digest
     artifact_sha256: Mapping[RepositoryPath, Digest]

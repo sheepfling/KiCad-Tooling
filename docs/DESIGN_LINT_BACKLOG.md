@@ -32414,6 +32414,45 @@ acceptance threads while new lint features proceed:
   gate and installed-wheel rehearsal passed; package and preview jobs were
   skipped under prerelease policy.
 
+#### LINT-575 — Review missing copper on individual source layers
+
+- **Status:** Code complete; hosted acceptance pending.
+- **Priority:** P1 fabrication-evidence integrity. The analyzer previously
+  accepted a through contact when it found copper on any source layer. A missing
+  pad land on one inner-layer Gerber could therefore remain unreported while
+  the other layers still connected the contact and the rest of the net.
+- **Change:** Preserve the layer assignment for every IPC-D-356 contact and add
+  `LAYER_COPPER_MISSING` when a supported through contact has copper on at least
+  one source layer but none within the bounded contact search on another source
+  layer. The finding names the contact, net, and missing layer and follows the
+  existing `review`/`block` and exact-ignore policy. A contact with no copper on
+  any layer remains represented by `NO_COPPER`. Bump summary schema to 4 and
+  analyzer version to 39.
+- **Boundary:** This checks contact presence with the existing raster and
+  geometric search tolerance. It does not compare pad shape, annular-ring
+  dimensions, full layer artwork, or prove continuity. It applies only to
+  supported through contacts whose source board and native IPC-D-356 evidence
+  bind to a full-stack copper span.
+- **Fixtures:** A tooling-owned raster fault omits `In2.Cu` contact copper while
+  retaining the other three layer lands. The exact-version native fixture
+  removes one pad flash from the KiCad-exported `In2.Cu` Gerber while preserving
+  connectivity through other layers; the clean source export is the valid
+  control. Tests cover deterministic findings, exact ignore, and blocking.
+  No external or proprietary project data is used.
+- **Selection:** `tests/test_fabrication_layer_copper_coverage.py` carries
+  `design_lint`, `evidence_lint`, and `pcb_lint`. The native fault/control is in
+  `tests/test_fabrication_connectivity_native.py` and runs only in the
+  digest-pinned KiCad 10.0.0/10.0.5 acceptance lane.
+- **Local validation (2026-11-18):** The focused per-layer raster cases passed 2
+  tests. Architecture, marker, lint-suite-size, and backlog selections passed
+  22 tests. The complete fabrication evidence selection passed 340 tests,
+  including exact-version KiCad 10.0.0 and 10.0.5 Docker fixtures. Scoped CI
+  passed formatting, Ruff, both Alphus profiles, Rumdl, mdrepo, module-size
+  preflight, Linux and Windows Pyright, wheel/sdist builds, installed-wheel
+  checks, and inventory, verification, and playtest against the separate public
+  template checkout.
+- **Hosted acceptance:** pending.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

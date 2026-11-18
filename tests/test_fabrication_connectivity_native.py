@@ -13,7 +13,10 @@ from kicad_tooling.hwrepo.fabrication_artwork import (
     parse_ipc356,
 )
 from kicad_tooling.hwrepo.fabrication_connectivity import analyze_fabrication_connectivity
-from kicad_tooling.hwrepo.fabrication_connectivity_models import FabricationConnectivitySettings
+from kicad_tooling.hwrepo.fabrication_connectivity_models import (
+    FabricationConnectivityIgnore,
+    FabricationConnectivitySettings,
+)
 from kicad_tooling.hwrepo.fabrication_contact_geometry import (
     require_ipc356_source_pad_coordinates,
 )
@@ -79,6 +82,13 @@ def _copy_contact_position(line: str, source_line: str) -> str:
     start, _, _, end, _, _ = target_fields
     replacement = source_fields[4] + source_fields[5]
     return line[:start] + replacement + line[end:]
+
+
+def _remove_native_gerber_contact_flash(text: str, x_mm: int, y_mm: int) -> str:
+    command = f"X{x_mm * 1_000_000}Y{-y_mm * 1_000_000}D03*"
+    if text.count(command) != 1:
+        raise AssertionError(f"expected one native Gerber contact flash {command!r}")
+    return text.replace(command, "", 1)
 
 
 def _native_rotated_contact_controls(
@@ -167,6 +177,54 @@ def test_native_gerber_ipc356_connectivity_fault_controls_repeat(
             expected_status,
             expected_codes,
         )
+
+        if name == "four-layer-clean":
+            in2_gerber = next(fabrication.glob("*In2_Cu.gbr"))
+            original_in2 = in2_gerber.read_text(encoding="utf-8")
+            in2_gerber.write_text(
+                _remove_native_gerber_contact_flash(original_in2, 5, 5),
+                encoding="utf-8",
+            )
+            missing_layer = analyze_fabrication_connectivity(
+                board, fabrication, FabricationConnectivitySettings()
+            )
+            repeated_missing_layer = analyze_fabrication_connectivity(
+                board, fabrication, FabricationConnectivitySettings()
+            )
+            assert missing_layer == repeated_missing_layer
+            assert missing_layer.status == "REVIEW"
+            assert {item.code for item in missing_layer.findings} == {"LAYER_COPPER_MISSING"}
+            finding = missing_layer.findings[0]
+            assert finding.net == "SIGNAL"
+            assert finding.contacts == ("J1-1",)
+            assert finding.missing_layers == ("In2.Cu",)
+
+            blocked_layer = analyze_fabrication_connectivity(
+                board, fabrication, FabricationConnectivitySettings(mode="block")
+            )
+            ignored_layer = analyze_fabrication_connectivity(
+                board,
+                fabrication,
+                FabricationConnectivitySettings(
+                    mode="block",
+                    ignores=(
+                        FabricationConnectivityIgnore(
+                            fingerprint=finding.fingerprint,
+                            reason="synthetic exact-fingerprint anti-control",
+                        ),
+                    ),
+                ),
+            )
+            assert blocked_layer.status == "FAIL"
+            assert ignored_layer.status == "PASS"
+            assert ignored_layer.ignored_findings == (finding,)
+
+            in2_gerber.write_text(original_in2, encoding="utf-8")
+            restored_layer = analyze_fabrication_connectivity(
+                board, fabrication, FabricationConnectivitySettings()
+            )
+            assert restored_layer.status == "PASS"
+            assert restored_layer.findings == ()
 
         if name == "clean":
             _native_rotated_contact_controls(image, tmp_path, fixture_directory, outputs)

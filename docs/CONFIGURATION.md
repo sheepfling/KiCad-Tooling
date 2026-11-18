@@ -227,13 +227,25 @@ does not verify fabricated via plating, annular-ring quality, or continuity.
 The pad-center check does not compare pad shapes, rotations, or copper
 coverage; the raster analysis remains a separate check.
 
+For supported through-hole pads and vias, the source declares a full-stack
+copper span. When a contact has copper on at least one layer, the raster
+comparison checks whether it is assigned to copper on every source copper
+layer. A missing inner layer adds a `LAYER_COPPER_MISSING` finding naming the
+contact, net, and missing layer. This catches a missing land even when the same
+contact remains connected through the other layers. A contact with no copper
+on any layer remains covered by `NO_COPPER`. The check uses the analyzer's
+bounded raster and contact search tolerance, so it does not verify pad shape,
+annular-ring dimensions, or a complete copper outline. The finding follows the
+configured `review`/`block` mode and can be ignored only by its exact fingerprint
+with a written reason.
+
 `review` (the default) retains findings in the export receipt without blocking
 the export. `block` fails the export when the analyzer reports an open, short,
-missing copper at a contact, or missing plated drill. An intentional exception
-must use the exact finding fingerprint and a written reason; stale fingerprints
-fail closed. The receipt binds the board source, project settings, and each
-generated artifact hash. Release verification recomputes the analysis and
-rejects missing or mismatched evidence.
+missing copper at a contact or source copper layer, or missing plated drill. An
+intentional exception must use the exact finding fingerprint and a written
+reason; stale fingerprints fail closed. The receipt binds the board source,
+project settings, and each generated artifact hash. Release verification
+recomputes the analysis and rejects missing or mismatched evidence.
 
 This comparison uses IPC-D-356 net names as its expected connectivity domains.
 It cannot infer that two separately named connector returns were intended to

@@ -157,6 +157,7 @@ def _fingerprint(
     drill_evidence: FabricationConnectivityDrillEvidence | None = None,
     raster_phase: str | None = None,
     raster_density: int | None = None,
+    missing_layers: tuple[str, ...] = (),
 ) -> str:
     payload: dict[str, object] = {"code": code, "net": net, "contacts": sorted(contacts)}
     if drill_evidence is not None:
@@ -165,6 +166,8 @@ def _fingerprint(
         payload["raster_phase"] = raster_phase
     if raster_density is not None:
         payload["raster_density"] = raster_density
+    if missing_layers:
+        payload["missing_layers"] = sorted(missing_layers)
     encoded = json.dumps(
         payload,
         ensure_ascii=True,
@@ -182,17 +185,27 @@ def _finding(
     drill_evidence: FabricationConnectivityDrillEvidence | None = None,
     raster_phase: str | None = None,
     raster_density: int | None = None,
+    missing_layers: tuple[str, ...] = (),
 ) -> FabricationConnectivityFinding:
     contacts = tuple(sorted(contact_labels))
     return FabricationConnectivityFinding(
         code=code,  # type: ignore[arg-type]
-        fingerprint=_fingerprint(code, net, contacts, drill_evidence, raster_phase, raster_density),
+        fingerprint=_fingerprint(
+            code,
+            net,
+            contacts,
+            drill_evidence,
+            raster_phase,
+            raster_density,
+            missing_layers,
+        ),
         net=net,
         contacts=contacts,
         location_mm=location,
         drill_evidence=drill_evidence,
         raster_phase=raster_phase,  # type: ignore[arg-type]
         raster_density=raster_density,  # type: ignore[arg-type]
+        missing_layers=missing_layers,
     )
 
 
@@ -319,6 +332,20 @@ def analyze_fabrication_connectivity(
             tuple(plated),
             settings.pixel_density,
         )
+        for assignment in raster.assignments:
+            if (
+                assignment.contact.layer == "through"
+                and assignment.components
+                and assignment.missing_layers
+            ):
+                findings.append(
+                    _finding(
+                        "LAYER_COPPER_MISSING",
+                        (assignment.contact.label,),
+                        assignment.contact.net,
+                        missing_layers=assignment.missing_layers,
+                    )
+                )
         if settings.check_raster_phase_stability:
             for phase in RASTER_ALTERNATE_PHASES:
                 phase_raster = analyze_raster(
