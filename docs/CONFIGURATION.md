@@ -239,21 +239,22 @@ annular-ring dimensions, or a complete copper outline. The finding follows the
 configured `review`/`block` mode and can be ignored only by its exact fingerprint
 with a written reason.
 
-For ordinary vias and circular, plated through-hole pads without custom padstacks, the analyzer also
-requires a source-sized circular Gerber D03 flash at the source center on every copper layer. It
-reports `SOURCE_LAND_FLASH_MISSING` only when raster analysis still sees copper at that contact on a
-layer where the source flash is absent. This catches a missing round land that a same-layer track or
-other artwork would otherwise make look present. Matching allows 13 nm for the supported six-decimal
-inch coordinate and aperture quantization. Larger encoded aperture-size differences prompt review
-rather than being absorbed as manufacturing tolerance. Oval, rectangular, and custom-padstack lands
-are outside this check. A region-based substitute for a round flash prompts for review rather than
-being treated as equivalent; an unsupported artwork form still leaves the overall analyzer
-`UNSUPPORTED`. This finding uses the same `review`/`block` and exact-fingerprint ignore policy. It
+For ordinary vias and circular, oval, or rectangular plated through-hole pads without custom
+padstacks, the analyzer also requires a source-sized Gerber D03 flash at the source center on every
+copper layer. Quarter-turn pad orientations are compared with their exported aperture dimensions;
+non-circular pads at other angles use Gerber macros the current parser does not support, so the
+overall analyzer remains `UNSUPPORTED`. It reports `SOURCE_LAND_FLASH_MISSING` only when raster
+analysis still sees copper at that contact on a layer where the source flash is absent. This catches
+a missing land that same-layer track or other artwork would otherwise make look present. Matching
+allows 13 nm for supported six-decimal inch coordinate and aperture quantization. Larger encoded
+aperture-size differences prompt review rather than being absorbed as manufacturing tolerance. A
+region-based substitute for a standard flash prompts for review rather than being treated as
+equivalent. This finding uses the same `review`/`block` and exact-fingerprint ignore policy. It
 verifies the expected flash record, not the full surrounding copper shape or annular-ring adequacy.
 
 `review` (the default) retains findings in the export receipt without blocking
 the export. `block` fails the export when the analyzer reports an open, short,
-missing contact copper, missing source-land flash, or missing plated drill. An
+missing contact copper, missing source-shaped land flash, or missing plated drill. An
 intentional exception must use the exact finding fingerprint and a written
 reason; stale fingerprints fail closed. The receipt binds the board source,
 project settings, and each generated artifact hash. Release verification

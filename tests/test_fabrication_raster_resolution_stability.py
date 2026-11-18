@@ -74,8 +74,8 @@ def test_resolution_check_catches_topology_changes_and_is_repeatable(tmp_path: P
 
     assert result.status == "REVIEW"
     assert result.raster_resolution_check == "checked"
-    assert result.schema_version == "5"
-    assert result.analyzer_version == "40"
+    assert result.schema_version == "6"
+    assert result.analyzer_version == "41"
     assert {item.code for item in result.findings} == {"RASTER_RESOLUTION_SENSITIVE"}
     assert {item.raster_density for item in result.findings} == {50, 100}
     assert all(item.contacts == ("SIGNAL:J1-1", "SIGNAL:J1-2") for item in result.findings)

@@ -37,6 +37,7 @@ class SourceComponentPad:
     size_x_nm: int | None = None
     size_y_nm: int | None = None
     has_custom_padstack: bool = False
+    land_rotation_mdeg: int = 0
 
 
 def source_component_pads(board_text: str) -> tuple[SourceComponentPad, ...]:
@@ -80,11 +81,14 @@ def source_component_pads(board_text: str) -> tuple[SourceComponentPad, ...]:
                     )
                 assignments[key] = net_name
                 contact_layer = _pad_contact_layer(board_text, pad)
-                local = _pad_offset(board_text, pad, reference, number)
+                local_x_nm, local_y_nm, pad_rotation_deg = _pad_offset(
+                    board_text, pad, reference, number
+                )
                 size_x_nm, size_y_nm = _pad_size(board_text, pad, reference, number)
                 has_custom_padstack = bool(sexpr_nodes(board_text, pad, "padstack"))
-                x_nm = round(placement[0] + local[0] * cosine + local[1] * sine)
-                y_nm = round(placement[1] - local[0] * sine + local[1] * cosine)
+                x_nm = round(placement[0] + local_x_nm * cosine + local_y_nm * sine)
+                y_nm = round(placement[1] - local_x_nm * sine + local_y_nm * cosine)
+                land_rotation_mdeg = round((placement[2] + pad_rotation_deg) * 1000) % 180_000
                 drill_nm, drill_plating, drill_shape, drill_width_nm, drill_height_nm = _pad_drill(
                     board_text, pad, atoms[2]
                 )
@@ -105,6 +109,7 @@ def source_component_pads(board_text: str) -> tuple[SourceComponentPad, ...]:
                         size_x_nm,
                         size_y_nm,
                         has_custom_padstack,
+                        land_rotation_mdeg,
                     )
                 )
         return tuple(result)
@@ -135,13 +140,19 @@ def _placement(document: str, footprint: SExprSpan, reference: str) -> tuple[flo
         raise ValueError(f"malformed placement for {reference}") from exc
 
 
-def _pad_offset(document: str, pad: SExprSpan, reference: str, number: str) -> tuple[float, float]:
+def _pad_offset(
+    document: str, pad: SExprSpan, reference: str, number: str
+) -> tuple[float, float, float]:
     try:
         values = sexpr_field(document, pad, "at")
         if len(values) not in {2, 3}:
             raise ValueError("malformed pad position")
-        _finite_number(values[2]) if len(values) == 3 else 0.0
-        return millimeters_to_nanometers(values[0]), millimeters_to_nanometers(values[1])
+        rotation_deg = _finite_number(values[2]) if len(values) == 3 else 0.0
+        return (
+            millimeters_to_nanometers(values[0]),
+            millimeters_to_nanometers(values[1]),
+            rotation_deg,
+        )
     except ValueError as exc:
         raise ValueError(f"malformed pad position for {reference}.{number}") from exc
 

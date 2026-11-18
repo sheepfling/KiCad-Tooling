@@ -32526,6 +32526,51 @@ acceptance threads while new lint features proceed:
   The scoped evidence-lint gate and installed-wheel rehearsal passed; package
   and preview jobs were skipped under prerelease policy.
 
+#### LINT-577 — Review missing source oval and rectangular lands
+
+- **Status:** Local synthetic, exact-version native fault/control, and scoped
+  package acceptance passed; hosted acceptance pending.
+- **Priority:** P1 fabrication-evidence integrity. LINT-576 covers circular
+  through-hole lands; ordinary oval and rectangular PTH lands can also be
+  masked by same-layer route copper after their source-shaped land flash is
+  removed.
+- **Predicate:** Extend `SOURCE_LAND_FLASH_MISSING` to full-stack plated
+  through-hole pads with standard oval or rectangular shapes and no custom
+  padstack. Bind the shape, source dimensions, transformed center, and total
+  footprint-plus-pad orientation. For 0/90-degree orientations, compare the
+  matching O/R aperture and swap dimensions for quarter-turns. Preserve the
+  13 nm source-size/position bound, raster-visible-layer filter, review/block
+  modes, and exact-fingerprint ignores. Report schema advances to 6 and
+  analyzer version to 41.
+- **Boundary:** This is a source-flash check, not exact raster comparison of
+  pad copper, annular-ring sizing, or copper continuity. Custom padstacks,
+  non-cardinal oval/rectangle rotations, and non-standard land shapes remain
+  outside the check. KiCad 10 emits `AMRotRect` macros for the tested 45-degree
+  cases; the parser must keep these inputs `UNSUPPORTED` rather than silently
+  treating them as complete. Region-based substitutes prompt for review.
+- **Fixtures:** Synthetic tests cover source orientation capture, exact O/R
+  shape and dimension matching, shape mismatch, and unchanged circular/via
+  behavior. A tooling-owned four-layer board contains a 90-degree oval, a
+  0-degree rectangle, and a 90-degree rectangle, with In1.Cu and In2.Cu routes
+  across all three contacts. Removing only the In2.Cu D03 land flashes leaves
+  raster connectivity and per-layer contact-presence intact while producing
+  three source-land findings. Default REVIEW, block, exact ignore, and restored
+  output pass on digest-pinned KiCad 10.0.0 and 10.0.5. Separate 45-degree
+  oval and rectangle controls remain `UNSUPPORTED` on both versions. No
+  external or proprietary project data is used.
+- **Selection:** Run `tests/test_fabrication_contact_land.py` and
+  `tests/test_fabrication_connectivity.py` for deterministic source, matching,
+  and policy checks. `tests/test_fabrication_non_circular_land_native.py` uses
+  `design_lint`, `evidence_lint`, `pcb_lint`, `native_kicad`, and `slow` and
+  runs in the Docker lane with
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
+- **Local validation (2026-11-18):** The full fabrication selection passed 358
+  tests, including six exact-version shaped-land native tests on KiCad 10.0.0
+  and 10.0.5. Focused architecture and selector suites passed 47 tests.
+  Tag-scoped package acceptance passed 38 tests; Linux and Windows Pyright,
+  module-size checks, formatting, Ruff, Alphus, Rumdl, mdrepo, wheel build, and
+  installed-wheel smoke checks all passed.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

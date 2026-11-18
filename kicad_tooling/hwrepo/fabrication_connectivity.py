@@ -26,9 +26,9 @@ from .fabrication_contact_geometry import (
 )
 from .fabrication_contact_inventory import require_ipc356_source_pad_inventory
 from .fabrication_contact_land import (
-    circular_land_requirements,
-    missing_circular_land_flashes,
+    missing_source_land_flashes,
     raster_visible_missing_layers,
+    source_land_requirements,
 )
 from .fabrication_contact_layers import (
     require_ipc356_source_pad_access_codes,
@@ -341,8 +341,8 @@ def analyze_fabrication_connectivity(
             tuple(plated),
             settings.pixel_density,
         )
-        land_requirements = circular_land_requirements(source_pads, source_vias)
-        for missing in missing_circular_land_flashes(layers, land_requirements):
+        land_requirements = source_land_requirements(source_pads, source_vias)
+        for missing in missing_source_land_flashes(layers, land_requirements):
             requirement = missing.requirement
             visible_layers = raster_visible_missing_layers(missing, raster.assignments)
             if not visible_layers:
