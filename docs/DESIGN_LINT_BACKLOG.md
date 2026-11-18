@@ -872,7 +872,15 @@ reviewer evidence, focused selection, and exact-native boundaries. Run CLI/MCP
 parity as the acceptance gate when a change affects those operations; advance
 standalone parity work when it closes a demonstrated feature regression.
 
-- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc898):** LINT-563
+- **Latest hosted-accepted lint-gate checkpoint (v0.5.3rc899):** LINT-564
+  bounds IPC-D-356 numeric fields before raster analysis. The tag-scoped
+  selection passed 263 tests, including all 12 exact-version KiCad 10.0.0 and
+  10.0.5 Docker cases. GitHub Actions run
+  [44266572883](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44266572883)
+  passed Pyright for Linux and Windows, wheel/sdist/sdist-wheel builds, and
+  installed-wheel checks against the separate project checkout. Package and
+  preview jobs were skipped under prerelease policy.
+- **Previous hosted-accepted lint-gate checkpoint (v0.5.3rc898):** LINT-563
   rejects finite Gerber raster geometry whose pixel span exceeds the analyzer
   budget. The tag-scoped selection passed 230 tests, including all 12
   digest-pinned KiCad 10.0.0 and 10.0.5 Docker cases. GitHub Actions run
@@ -31918,7 +31926,7 @@ acceptance threads while new lint features proceed:
 
 #### LINT-564 — Bound IPC-D-356 numeric fields before raster analysis
 
-- **Status:** Local implementation complete; tagged hosted acceptance pending.
+- **Status:** Complete; tagged hosted acceptance passed.
 - **Priority:** P1 fabrication-evidence integrity. IPC-D-356 coordinates and
   pad sizes were parsed as unbounded decimal integers and multiplied by a
   floating unit scale. A 309-digit coordinate escaped the source-bound
@@ -31949,7 +31957,15 @@ acceptance threads while new lint features proceed:
   263 tests, including all 12 digest-pinned KiCad 10.0.0 and 10.0.5 Docker
   cases. Targeted Pyright, Ruff, formatting, module-size, lint-suite
   architecture, and fabrication module-boundary checks passed.
-- **Hosted acceptance:** Pending.
+- **Hosted acceptance (2026-11-18):** Tag `v0.5.3rc899`, code commit
+  `ecfeb43cffdb9d154d96cf4c8a0009409e24a2e7`, passed workflow run
+  [44266572883](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44266572883).
+  All 263 scoped tests passed, including the 12 digest-pinned KiCad 10.0.0 and
+  10.0.5 Docker cases. Ruff, formatting, both Alphus profiles, module-size
+  preflight, Rumdl, mdrepo, Linux and Windows-targeted Pyright, wheel/sdist/
+  sdist-wheel builds, installed-wheel origin/version checks, and external
+  project inventory/surface/verification/playtest checks passed. Package and
+  preview jobs were skipped under prerelease policy.
 
 ## Completion and release gate
 
