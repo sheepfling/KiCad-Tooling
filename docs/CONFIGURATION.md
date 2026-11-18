@@ -191,6 +191,12 @@ plus 1 nm. Missing, extra, duplicated, displaced, wrong-net, or ambiguous VIA
 records are `UNSUPPORTED` before rasterization. This confirms that the exported
 contact inventory corresponds to the source via inventory; it does not prove
 copper continuity, drill quality, or the electrical purpose of a via.
+For standard circular vias, the exported IPC-D-356 X diameter must also match
+the source via's scalar copper size; the Y size must be zero. Size tolerance is
+half the record's declared coordinate unit plus 1 nm. Missing or mismatched
+dimensions and custom via padstacks with layer-specific sizes are
+`UNSUPPORTED` before rasterization. This checks source-to-export geometry; it
+does not verify fabricated via plating, annular-ring quality, or continuity.
 The pad-center check does not compare pad shapes, rotations, or copper
 coverage; the raster analysis remains a separate check.
 

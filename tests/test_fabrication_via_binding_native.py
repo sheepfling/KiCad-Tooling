@@ -14,7 +14,7 @@ from kicad_tooling.hwrepo.fabrication_artwork import (
     parse_ipc356,
 )
 from kicad_tooling.hwrepo.fabrication_via_binding import (
-    require_ipc356_source_via_inventory,
+    require_ipc356_source_via_geometry,
     source_board_vias,
 )
 from tests.native_kicad_support import execute_kicad_cli
@@ -54,6 +54,15 @@ def _replace_via_coordinates(line: str) -> str:
     start = 31 + match.start()
     end = 31 + match.end()
     replacement = match.group(1) + "+999999Y-999999"
+    return line[:start] + replacement + line[end:]
+
+
+def _replace_via_size(line: str) -> str:
+    match = re.search(r"(A\d\dX[ +-]?\d+Y[ +-]?\d+X)\d+Y\d+(R\d{3}S\d)", line[31:])
+    assert match is not None
+    start = 31 + match.start()
+    end = 31 + match.end()
+    replacement = match.group(1) + "0394Y0000" + match.group(2)
     return line[:start] + replacement + line[end:]
 
 
@@ -100,20 +109,25 @@ def test_native_ipc356_via_records_match_source_inventory_and_reject_mutations(
     assert len(via_lines) == 1
     source_vias = source_board_vias(board.read_text(encoding="utf-8"))
     contacts = parse_ipc356(ipc_text)
-    require_ipc356_source_via_inventory(source_vias, contacts)
+    require_ipc356_source_via_geometry(source_vias, contacts)
 
     without_via = parse_ipc356("\n".join(line for line in lines if line != via_lines[0]) + "\n")
     with pytest.raises(UnsupportedFabricationFormat, match="count differs"):
-        require_ipc356_source_via_inventory(source_vias, without_via)
+        require_ipc356_source_via_geometry(source_vias, without_via)
 
     moved_lines = [
         _replace_via_coordinates(line) if line == via_lines[0] else line for line in lines
     ]
     moved = parse_ipc356("\n".join(moved_lines) + "\n")
     with pytest.raises(UnsupportedFabricationFormat, match="no matching source via"):
-        require_ipc356_source_via_inventory(source_vias, moved)
+        require_ipc356_source_via_geometry(source_vias, moved)
 
     duplicate_lines = [*lines[:-1], via_lines[0], lines[-1]]
     duplicate = parse_ipc356("\n".join(duplicate_lines) + "\n")
     with pytest.raises(UnsupportedFabricationFormat, match="count differs"):
-        require_ipc356_source_via_inventory(source_vias, duplicate)
+        require_ipc356_source_via_geometry(source_vias, duplicate)
+
+    wrong_size_lines = [_replace_via_size(line) if line == via_lines[0] else line for line in lines]
+    wrong_size = parse_ipc356("\n".join(wrong_size_lines) + "\n")
+    with pytest.raises(UnsupportedFabricationFormat, match="dimensions differ"):
+        require_ipc356_source_via_geometry(source_vias, wrong_size)

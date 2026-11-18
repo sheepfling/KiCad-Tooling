@@ -32025,6 +32025,33 @@ acceptance threads while new lint features proceed:
   external/adapted project inventory, surface, verification, and playtest
   checks passed. Package and preview jobs were skipped under prerelease policy.
 
+#### LINT-566 — Bind IPC-D-356 via diameters to source geometry
+
+- **Status:** In progress.
+- **Priority:** P1 fabrication-evidence integrity. LINT-565 bound component-pad
+  dimensions to source geometry, while VIA records were only checked for count,
+  named net, and center. An IPC-D-356 via record with an altered copper
+  diameter could therefore change the raster contact geometry while remaining
+  accepted.
+- **Change:** Compare the IPC-D-356 X diameter and zero Y dimension with each
+  matching standard circular source via's scalar copper size. Reuse the existing
+  one-to-one net-and-center match and apply half-record-unit plus 1 nm
+  quantization tolerance.
+- **Boundary:** Custom via padstacks with layer-specific sizes are unsupported
+  and fail closed. This verifies source-to-export geometry only; it does not
+  establish fabricated annular-ring quality, plating, electrical intent, or
+  copper continuity.
+- **Regression coverage:** Synthetic matching, oversized, noncircular,
+  unavailable, zero, malformed, and custom-padstack cases are isolated in
+  `tests/test_fabrication_via_dimensions.py`. Exact-version KiCad 10.0.0 and
+  10.0.5 Docker exports exercise a matching control and a mutated-diameter
+  fault. No project or cohort design data is used.
+- **Analyzer version:** `30`, because source-bound reports now include an
+  IPC-D-356-to-source VIA-diameter comparison.
+- **Selection:** The dedicated suite carries `design_lint`, `evidence_lint`,
+  and `pcb_lint`; the tag-scoped native lane remains
+  `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1`.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

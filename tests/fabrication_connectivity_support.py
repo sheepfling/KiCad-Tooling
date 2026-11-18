@@ -71,7 +71,7 @@ def write_synthetic_fabrication(
     if through:
         top_features = "D10*X6000000Y-5000000D03*\n"
         bottom_features = "D10*X6000000Y-5000000D03*\n"
-        contacts = (format_ipc_contact("317", "SIGNAL", "VIA", "", 0, 6.0),)
+        contacts = (format_ipc_contact("317", "SIGNAL", "VIA", "", 0, 6.0, size_x_mm=0.6),)
     else:
         top_features = "D10*X5000000Y-5000000D03*X7000000Y-5000000D03*\n" + (
             "D11*X5000000Y-5000000D02*X7000000Y-5000000D01*\n" if connected else ""

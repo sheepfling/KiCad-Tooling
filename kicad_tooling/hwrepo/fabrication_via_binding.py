@@ -14,12 +14,13 @@ _NM_PER_MM = 1_000_000
 
 @dataclass(frozen=True, slots=True)
 class SourceVia:
-    """A source PCB via's named net, drill center, and drill diameter."""
+    """A source PCB via's named net, center, drill, and circular copper size."""
 
     net_name: str
     x_nm: int
     y_nm: int
     drill_nm: int
+    copper_diameter_nm: int | None = None
 
 
 def source_board_vias(board_text: str) -> tuple[SourceVia, ...]:
@@ -32,9 +33,19 @@ def source_board_vias(board_text: str) -> tuple[SourceVia, ...]:
         names_by_code = dict(net_map)
         result: list[SourceVia] = []
         for via in sexpr_nodes(board_text, root, "via"):
+            if sexpr_nodes(board_text, via, "padstack"):
+                raise UnsupportedFabricationFormat(
+                    "source via has a custom padstack with unsupported layer-specific sizes"
+                )
             position = sexpr_field(board_text, via, "at")
             if len(position) != 2:
                 raise UnsupportedFabricationFormat("source via has an unsupported position")
+            size = sexpr_field(board_text, via, "size", required=False)
+            if len(size) != 1:
+                raise UnsupportedFabricationFormat("source via has an unsupported copper size")
+            copper_diameter_nm = round(millimeters_to_nanometers(size[0]))
+            if copper_diameter_nm <= 0:
+                raise UnsupportedFabricationFormat("source via has a non-positive copper size")
             drill = sexpr_field(board_text, via, "drill")
             if len(drill) != 1:
                 raise UnsupportedFabricationFormat("source via has an unsupported drill size")
@@ -62,6 +73,7 @@ def source_board_vias(board_text: str) -> tuple[SourceVia, ...]:
                     round(millimeters_to_nanometers(position[0])),
                     round(millimeters_to_nanometers(position[1])),
                     drill_nm,
+                    copper_diameter_nm,
                 )
             )
         return tuple(sorted(result, key=lambda item: (item.net_name, item.x_nm, item.y_nm)))
@@ -75,6 +87,20 @@ def require_ipc356_source_via_inventory(
     source_vias: tuple[SourceVia, ...], contacts: tuple[Contact, ...]
 ) -> None:
     """Require a one-to-one net-and-center match for each source and exported via."""
+    _matched_ipc356_source_vias(source_vias, contacts)
+
+
+def require_ipc356_source_via_geometry(
+    source_vias: tuple[SourceVia, ...], contacts: tuple[Contact, ...]
+) -> None:
+    """Require matching source via identity, center, and circular copper size."""
+    _require_ipc356_source_via_dimensions(_matched_ipc356_source_vias(source_vias, contacts))
+
+
+def _matched_ipc356_source_vias(
+    source_vias: tuple[SourceVia, ...], contacts: tuple[Contact, ...]
+) -> tuple[tuple[SourceVia, Contact], ...]:
+    """Return unique source-to-artifact VIA matches using net and quantized center."""
     via_contacts = tuple(
         sorted(
             (_via_contact(item) for item in contacts if _is_via(item)),
@@ -89,6 +115,7 @@ def require_ipc356_source_via_inventory(
         )
 
     matched: set[int] = set()
+    pairs: list[tuple[SourceVia, Contact]] = []
     for contact in via_contacts:
         observed_x_nm = round(contact.x_mm * _NM_PER_MM)
         observed_y_nm = round(contact.y_mm * _NM_PER_MM)
@@ -114,6 +141,38 @@ def require_ipc356_source_via_inventory(
                 f"multiple IPC-D-356 VIA contacts match source via on {contact.net}"
             )
         matched.add(matches[0])
+        pairs.append((source[matches[0]], contact))
+    return tuple(pairs)
+
+
+def _require_ipc356_source_via_dimensions(pairs: tuple[tuple[SourceVia, Contact], ...]) -> None:
+    """Compare matched circular source vias with their IPC-D-356 dimensions."""
+    mismatches: list[str] = []
+    for via, contact in pairs:
+        if via.copper_diameter_nm is None:
+            raise UnsupportedFabricationFormat(
+                f"source via copper size is unavailable on {via.net_name}"
+            )
+        if contact.size_x_mm is None or contact.size_y_mm is None:
+            raise UnsupportedFabricationFormat(
+                f"IPC-D-356 VIA dimensions are unavailable on {contact.net}"
+            )
+        observed_x_nm = round(contact.size_x_mm * _NM_PER_MM)
+        observed_y_nm = round(contact.size_y_mm * _NM_PER_MM)
+        tolerance_nm = contact.coordinate_resolution_nm // 2 + 1
+        if (
+            abs(observed_x_nm - via.copper_diameter_nm) > tolerance_nm
+            or abs(observed_y_nm) > tolerance_nm
+        ):
+            mismatches.append(
+                f"{contact.net} exports VIA size ({observed_x_nm}, {observed_y_nm}) nm; "
+                f"expected ({via.copper_diameter_nm}, 0) nm"
+            )
+    if mismatches:
+        raise UnsupportedFabricationFormat(
+            "IPC-D-356 VIA dimensions differ from source PCB via geometry: "
+            + "; ".join(sorted(mismatches))
+        )
 
 
 def _is_via(contact: Contact) -> bool:

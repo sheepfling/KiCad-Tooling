@@ -9,6 +9,7 @@ import pytest
 from kicad_tooling.hwrepo.fabrication_artwork import Contact, UnsupportedFabricationFormat
 from kicad_tooling.hwrepo.fabrication_via_binding import (
     SourceVia,
+    require_ipc356_source_via_geometry,
     require_ipc356_source_via_inventory,
     source_board_vias,
 )
@@ -20,15 +21,16 @@ _FIXTURES = Path(__file__).parent / "fixtures/fabrication-connectivity"
 
 
 def _via_contact(x_mm: float = 6.0, y_mm: float = -5.0, net: str = "SIGNAL") -> Contact:
-    return Contact(net, "VIA", "via", x_mm, y_mm, "through", 0.7)
+    return Contact(net, "VIA", "via", x_mm, y_mm, "through", 0.7, size_x_mm=0.7, size_y_mm=0.0)
 
 
 def test_source_via_net_code_and_board_center_match_ipc356() -> None:
     board = (_FIXTURES / "via.kicad_pcb").read_text(encoding="utf-8")
     source_vias = source_board_vias(board)
 
-    assert source_vias == (SourceVia("SIGNAL", 6_000_000, 5_000_000, 300_000),)
+    assert source_vias == (SourceVia("SIGNAL", 6_000_000, 5_000_000, 300_000, 700_000),)
     require_ipc356_source_via_inventory(source_vias, (_via_contact(),))
+    require_ipc356_source_via_geometry(source_vias, (_via_contact(),))
 
 
 def test_source_board_without_vias_accepts_no_via_contacts() -> None:

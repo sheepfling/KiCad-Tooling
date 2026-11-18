@@ -76,7 +76,7 @@ def test_missing_gerber_end_marker_blocks_source_bound_analysis(tmp_path: Path) 
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "29"
+    assert result.analyzer_version == "30"
     assert result.status == "UNSUPPORTED"
     assert "missing terminal M02" in result.unsupported_reasons[0]
     assert result.findings == ()

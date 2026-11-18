@@ -30,7 +30,7 @@ from .fabrication_drill_binding import UnboundDrillHit, require_excellon_source_
 from .fabrication_drill_files import drill_file_function, drill_file_is_plated
 from .fabrication_excellon import DrillHit, parse_excellon
 from .fabrication_via_binding import (
-    require_ipc356_source_via_inventory,
+    require_ipc356_source_via_geometry,
     source_board_vias,
 )
 from .kicad_sexpr import sexpr_atoms, sexpr_children, sexpr_nodes, sexpr_root
@@ -265,7 +265,7 @@ def analyze_fabrication_connectivity(
         require_ipc356_source_pad_dimensions(source_pads, contacts)
         require_ipc356_source_pad_layers(source_pads, contacts)
         source_vias = source_board_vias(board_text)
-        require_ipc356_source_via_inventory(source_vias, contacts)
+        require_ipc356_source_via_geometry(source_vias, contacts)
         copper_paths = classify_copper_files(gerber_paths, copper_layers)
         layers = tuple(parse_gerber(path, layer) for path, layer in copper_paths)
         plated: list[DrillHit] = []
