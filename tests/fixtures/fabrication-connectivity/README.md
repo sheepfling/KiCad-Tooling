@@ -39,17 +39,21 @@ approval.
 | Board                                                    | Expected result     | Controlled case                                                                     |
 | -------------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------- |
 | `multilayer/four-layer-clean.kicad_pcb`                  | PASS                | Two full-stack through-hole pads connect through an In1.Cu route.                   |
+| `multilayer/four-layer-via.kicad_pcb`                    | PASS                | A full-stack via shares the In1.Cu route between the through-hole pads.             |
 | `multilayer/four-layer-bottom-pad-access-code.kicad_pcb` | Access-code control | A bottom-side SMD pad exports access code `A04` on a four-layer board.              |
 | `multilayer/four-layer-open.kicad_pcb`                   | REVIEW / `OPEN`     | Removes only the In1.Cu route.                                                      |
 | `multilayer/four-layer-short.kicad_pcb`                  | REVIEW / `SHORT`    | Assigns the second through-hole pad to `RETURN` while retaining the `SIGNAL` route. |
 | `multilayer/four-layer-blind-via.kicad_pcb`              | UNSUPPORTED         | Adds a plated via spanning only F.Cu to In1.Cu.                                     |
 
 The native lane exports all four copper layers, drills, and IPC-D-356 twice
-with each digest-pinned KiCad version. Source SHA-256 values:
+with each digest-pinned KiCad version. The `four-layer-via` native control is
+also mutated by removing only the via flash from `In2.Cu`; the other layer lands,
+plated drill, source via, and routed connectivity remain present. Source SHA-256 values:
 
 | Board                                                    | SHA-256                                                            |
 | -------------------------------------------------------- | ------------------------------------------------------------------ |
 | `multilayer/four-layer-clean.kicad_pcb`                  | `c1a066ec478600c8fc9031c53e8d7f4a827e11ce770c9d8086917c986d9db719` |
+| `multilayer/four-layer-via.kicad_pcb`                    | `7917df50c740bbcaa831f7ce05acbc65da6e526e5f1e6dec9768cc9907dc877b` |
 | `multilayer/four-layer-bottom-pad-access-code.kicad_pcb` | `d1d5890475438afc01d34fcbf5c9c6b78d9543c4b57edd28ee01e413c59d7990` |
 | `multilayer/four-layer-open.kicad_pcb`                   | `6fde51d4e7ac915465987032dadf4d3a174409bd35d5a9d9e2dceacbcc94dc81` |
 | `multilayer/four-layer-short.kicad_pcb`                  | `77ae0433992abbe43323e79727b5fc25dc2c1478564d5543c65eaf961c387397` |

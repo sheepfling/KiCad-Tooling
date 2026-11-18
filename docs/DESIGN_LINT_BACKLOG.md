@@ -32434,11 +32434,12 @@ acceptance threads while new lint features proceed:
   supported through contacts whose source board and native IPC-D-356 evidence
   bind to a full-stack copper span.
 - **Fixtures:** A tooling-owned raster fault omits `In2.Cu` contact copper while
-  retaining the other three layer lands. The exact-version native fixture
-  removes one pad flash from the KiCad-exported `In2.Cu` Gerber while preserving
-  connectivity through other layers; the clean source export is the valid
-  control. Tests cover deterministic findings, exact ignore, and blocking.
-  No external or proprietary project data is used.
+  retaining the other three layer lands. Exact-version native faults remove one
+  component-pad flash and one source-via flash from KiCad-exported `In2.Cu`
+  Gerbers while preserving connectivity through other layers. The clean exports
+  are valid controls. Tests cover deterministic findings, exact ignore, and
+  blocking for the component-pad case, plus native source-VIA binding and layer
+  identification. No external or proprietary project data is used.
 - **Selection:** `tests/test_fabrication_layer_copper_coverage.py` carries
   `design_lint`, `evidence_lint`, and `pcb_lint`. The native fault/control is in
   `tests/test_fabrication_connectivity_native.py` and runs only in the
@@ -32451,6 +32452,12 @@ acceptance threads while new lint features proceed:
   preflight, Linux and Windows Pyright, wheel/sdist builds, installed-wheel
   checks, and inventory, verification, and playtest against the separate public
   template checkout.
+- **VIA coverage follow-up (2026-11-18):** The source-bound native multilayer
+  VIA fault/control passed against digest-pinned KiCad 10.0.0 and 10.0.5 Docker
+  images (`2 passed`). Removing only the `In2.Cu` via flash yields the specific
+  `VIA-via` / `In2.Cu` finding; restoring the exported copper returns `PASS`.
+  The focused per-layer/backlog/scope regression selection passed 47 tests;
+  suite/module-size architecture checks passed 5 tests; Ruff and Rumdl passed.
 - **Hosted acceptance (2026-11-18):** Annotated tag `v0.5.3rc910` at code
   commit `db3bca3b` passed GitHub Actions run
   [44378696497](https://github.com/sheepfling/KiCad-Tooling/actions/runs/44378696497).

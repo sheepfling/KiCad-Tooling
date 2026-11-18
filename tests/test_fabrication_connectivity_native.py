@@ -54,6 +54,7 @@ _EXPECTED = {
 }
 _MULTILAYER_EXPECTED = {
     "four-layer-clean": ("PASS", set()),
+    "four-layer-via": ("PASS", set()),
     "four-layer-open": ("REVIEW", {"OPEN"}),
     "four-layer-short": ("REVIEW", {"SHORT"}),
     "four-layer-blind-via": ("UNSUPPORTED", set()),
@@ -382,6 +383,33 @@ def test_native_multilayer_inner_copper_connectivity_and_via_boundary_repeat(
             assert mismatched.status == "UNSUPPORTED"
             assert "full source copper stack" in mismatched.unsupported_reasons[0]
             drill_path.write_text(drill_source, encoding="utf-8")
+        if name == "four-layer-via":
+            in2_gerber = next(fabrication.glob("*In2_Cu.gbr"))
+            original_in2 = in2_gerber.read_text(encoding="utf-8")
+            in2_gerber.write_text(
+                _remove_native_gerber_contact_flash(original_in2, 6, 5),
+                encoding="utf-8",
+            )
+            missing_via_layer = analyze_fabrication_connectivity(
+                board, fabrication, FabricationConnectivitySettings()
+            )
+            repeated_missing_via_layer = analyze_fabrication_connectivity(
+                board, fabrication, FabricationConnectivitySettings()
+            )
+            assert missing_via_layer == repeated_missing_via_layer
+            assert missing_via_layer.status == "REVIEW"
+            assert {item.code for item in missing_via_layer.findings} == {"LAYER_COPPER_MISSING"}
+            finding = missing_via_layer.findings[0]
+            assert finding.net == "SIGNAL"
+            assert finding.contacts == ("VIA-via",)
+            assert finding.missing_layers == ("In2.Cu",)
+
+            in2_gerber.write_text(original_in2, encoding="utf-8")
+            restored_via = analyze_fabrication_connectivity(
+                board, fabrication, FabricationConnectivitySettings()
+            )
+            assert restored_via.status == "PASS"
+            assert restored_via.findings == ()
         if name == "four-layer-blind-via":
             assert "full-stack" in " ".join(first.unsupported_reasons)
         else:
