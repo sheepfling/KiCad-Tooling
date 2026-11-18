@@ -146,7 +146,7 @@ def test_missing_coordinate_header_blocks_source_bound_analysis(
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "37"
+    assert result.analyzer_version == "38"
     assert result.status == "UNSUPPORTED"
     assert "declaration" in result.unsupported_reasons[0]
     assert result.findings == ()

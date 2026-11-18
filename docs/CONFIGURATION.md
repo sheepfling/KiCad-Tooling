@@ -124,6 +124,7 @@ KiCad-generated IPC-D-356 file. Add the setting to the project's
       "mode": "review",
       "pixel_density": 50,
       "check_raster_phase_stability": true,
+      "check_raster_resolution_stability": false,
       "ignores": []
     }
   }
@@ -255,6 +256,23 @@ Phase sensitivity is a deterministic warning that raster alignment affects the
 observed topology; it does not identify the physical cause or prove a real
 copper gap. Agreement across all four phases still cannot rule out gaps smaller
 than the raster resolution or errors shared by every raster pass.
+
+`check_raster_resolution_stability` defaults to `false`. When enabled, the
+analyzer compares contact-to-island partitions against every supported higher
+density: 25 px/mm compares with 50 and 100, while 50 compares with 100. A
+change adds a `RASTER_RESOLUTION_SENSITIVE` finding carrying the compared
+density and affected contacts. It follows the same `review`/`block` policy and
+exact-ignore behavior as phase findings. Enabling the check at 100 px/mm is
+`UNSUPPORTED`, because no higher supported comparison is available. If a
+higher-resolution raster exceeds the analyzer pixel budget, the comparison is
+also marked unavailable and the result is `UNSUPPORTED`; it never silently
+counts as a clean resolution check.
+
+Resolution sensitivity is a deterministic review heuristic, not proof of a
+physical open. Raster agreement across sampled densities still cannot rule out
+gaps smaller than all sampled pixels or shared parser/rendering errors. Keep
+the check opt-in for boards whose dimensions make the additional raster passes
+too expensive.
 
 ## Approve a different KiCad version
 

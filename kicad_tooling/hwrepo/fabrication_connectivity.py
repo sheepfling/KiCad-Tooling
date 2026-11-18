@@ -18,6 +18,7 @@ from .fabrication_connectivity_models import (
     FabricationConnectivityFinding,
     FabricationConnectivitySettings,
     FabricationConnectivitySummary,
+    RasterCheckState,
 )
 from .fabrication_contact_geometry import (
     require_ipc356_source_pad_coordinates,
@@ -155,12 +156,15 @@ def _fingerprint(
     contacts: tuple[str, ...],
     drill_evidence: FabricationConnectivityDrillEvidence | None = None,
     raster_phase: str | None = None,
+    raster_density: int | None = None,
 ) -> str:
     payload: dict[str, object] = {"code": code, "net": net, "contacts": sorted(contacts)}
     if drill_evidence is not None:
         payload["drill_evidence"] = drill_evidence.model_dump(mode="json")
     if raster_phase is not None:
         payload["raster_phase"] = raster_phase
+    if raster_density is not None:
+        payload["raster_density"] = raster_density
     encoded = json.dumps(
         payload,
         ensure_ascii=True,
@@ -177,16 +181,18 @@ def _finding(
     location: tuple[float, float] | None = None,
     drill_evidence: FabricationConnectivityDrillEvidence | None = None,
     raster_phase: str | None = None,
+    raster_density: int | None = None,
 ) -> FabricationConnectivityFinding:
     contacts = tuple(sorted(contact_labels))
     return FabricationConnectivityFinding(
         code=code,  # type: ignore[arg-type]
-        fingerprint=_fingerprint(code, net, contacts, drill_evidence, raster_phase),
+        fingerprint=_fingerprint(code, net, contacts, drill_evidence, raster_phase, raster_density),
         net=net,
         contacts=contacts,
         location_mm=location,
         drill_evidence=drill_evidence,
         raster_phase=raster_phase,  # type: ignore[arg-type]
+        raster_density=raster_density,  # type: ignore[arg-type]
     )
 
 
@@ -263,7 +269,12 @@ def analyze_fabrication_connectivity(
     board_hash = _digest(board_bytes)
     reasons: list[str] = []
     findings: list[FabricationConnectivityFinding] = []
-    raster_phase_check: str = "unavailable" if settings.check_raster_phase_stability else "disabled"
+    raster_phase_check: RasterCheckState = (
+        "unavailable" if settings.check_raster_phase_stability else "disabled"
+    )
+    raster_resolution_check: RasterCheckState = (
+        "unavailable" if settings.check_raster_resolution_stability else "disabled"
+    )
     try:
         board_text = board_bytes.decode("utf-8")
         gerber_paths, ipc_path, drill_paths = _source_inputs(fabrication_dir)
@@ -323,6 +334,41 @@ def analyze_fabrication_connectivity(
                         _finding("RASTER_SENSITIVE", changed_contacts, raster_phase=phase)
                     )
             raster_phase_check = "checked"
+        if settings.check_raster_resolution_stability:
+            comparison_densities = tuple(
+                density for density in (50, 100) if density > settings.pixel_density
+            )
+            if not comparison_densities:
+                reasons.append(
+                    "raster resolution stability check has no supported density above 100 px/mm"
+                )
+            else:
+                raster_resolution_check = "checked"
+                for density in comparison_densities:
+                    try:
+                        comparison_raster = analyze_raster(
+                            layers,
+                            contacts,
+                            tuple(plated),
+                            density,
+                        )
+                    except ValueError as exc:
+                        raster_resolution_check = "unavailable"
+                        reasons.append(
+                            f"raster resolution stability check is unavailable at {density} px/mm: {exc}"
+                        )
+                        break
+                    changed_contacts = different_raster_contact_partitions(
+                        raster, comparison_raster
+                    )
+                    if changed_contacts:
+                        findings.append(
+                            _finding(
+                                "RASTER_RESOLUTION_SENSITIVE",
+                                changed_contacts,
+                                raster_density=density,
+                            )
+                        )
         for net, endpoints in raster.opens:
             findings.append(_finding("OPEN", endpoints, net))
         for endpoints in raster.shorts:
@@ -377,7 +423,8 @@ def analyze_fabrication_connectivity(
         board_sha256=board_hash,
         artifact_sha256=artifact_hashes,
         pixel_density=settings.pixel_density,
-        raster_phase_check=raster_phase_check,  # type: ignore[arg-type]
+        raster_phase_check=raster_phase_check,
+        raster_resolution_check=raster_resolution_check,
         findings=active,
         ignored_findings=ignored,
         stale_ignore_fingerprints=stale,

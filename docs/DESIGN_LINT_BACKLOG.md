@@ -32373,6 +32373,43 @@ acceptance threads while new lint features proceed:
   gate and installed-wheel rehearsal passed; package and preview jobs were
   skipped under prerelease policy.
 
+#### LINT-574 — Review raster resolution-sensitive copper connectivity
+
+- **Status:** Local validation passed; hosted acceptance pending.
+- **Priority:** P1 fabrication-evidence coverage. The LINT-573 phase check
+  samples grid alignment at one density, so it can miss a narrow break that
+  remains connected at the configured density but opens when rasterized more
+  finely.
+- **Change:** Add an opt-in comparison against supported higher pixel
+  densities. A topology change emits `RASTER_RESOLUTION_SENSITIVE`, including
+  the comparison density and affected contacts. Findings follow `review` and
+  `block` policy with exact fingerprint ignores. Bump summary schema to 3 and
+  analyzer version to 38.
+- **Boundary:** The check defaults off because higher densities increase
+  memory and runtime and may exceed the pixel budget. At 25 px/mm it compares
+  with 50 and 100; at 50 it compares with 100. At 100 there is no supported
+  higher density, so an enabled check reports `UNSUPPORTED`. A pixel-budget
+  failure also reports the comparison unavailable rather than passing. This
+  remains a deterministic review heuristic; agreement does not prove copper
+  continuity.
+- **Fixtures:** The tooling-owned source-bound Gerber has a 58 µm synthetic
+  break that passes at 25 px/mm and opens at both 50 and 100 px/mm. Tests cover
+  stable connected control, repeatability, exact density-specific finding
+  identity, block and ignore behavior, and fail-closed maximum-density
+  handling. No project board or proprietary source is used.
+- **Selection:** Run
+  `tests/test_fabrication_raster_resolution_stability.py` with `design_lint`,
+  `evidence_lint`, and `pcb_lint`; run the full fabrication evidence selection
+  with `KICAD_RUN_NATIVE_ARTIFACT_CONNECTIVITY=1` for exact-version KiCad
+  10.0.0 and 10.0.5 coverage.
+- **Local validation (2026-11-18):** Focused raster and connectivity tests
+  passed 31 tests; full fabrication evidence passed 338 tests, including
+  Docker-backed KiCad 10.0.0 and 10.0.5 fixtures. Architecture and pytest
+  marker selections passed 32 tests. Scoped CI passed formatting, Ruff, both
+  Alphus profiles, Rumdl, mdrepo, module-size checks, Linux and Windows
+  Pyright, wheel/sdist builds, installed-wheel checks, and inventory,
+  verification, and playtest against the separate public template checkout.
+
 ## Completion and release gate
 
 A backlog item is complete only when its evidence adapter and exact version

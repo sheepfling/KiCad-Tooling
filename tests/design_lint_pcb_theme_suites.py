@@ -19,6 +19,7 @@ PCB_THEME_SUITES = (
     "test_fabrication_gerber_command_validation.py",
     "test_fabrication_gerber_region_closure.py",
     "test_fabrication_raster_phase_stability.py",
+    "test_fabrication_raster_resolution_stability.py",
     "test_fabrication_gerber_aperture_values.py",
     "test_fabrication_excellon_coordinate_validation.py",
     "test_fabrication_excellon_coordinate_int_range.py",

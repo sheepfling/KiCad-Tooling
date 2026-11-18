@@ -44,7 +44,7 @@ def test_missing_end_marker_blocks_source_bound_drill_analysis(tmp_path: Path) -
         FabricationConnectivitySettings(),
     )
 
-    assert result.analyzer_version == "37"
+    assert result.analyzer_version == "38"
     assert result.status == "UNSUPPORTED"
     assert "missing terminal M30" in result.unsupported_reasons[0]
     assert result.findings == ()
