@@ -5238,6 +5238,12 @@ Current catalog audit: 420 covered, 0 not applicable, 0 unreviewed.
   PCB-theme architecture selection passed 22 tests. Repository formatting,
   Ruff, Alphus module-boundary and shared-utility profiles, and markdown checks
   also passed.
+  Hosted acceptance for `v0.5.3rc918` passed GitHub Actions run
+  `44427115524`: all 3 scoped tests, formatting, Ruff, both Alphus profiles,
+  Rumdl, mdrepo, module-size preflight, Linux and Windows Pyright, wheel/sdist
+  builds, installed-wheel checks, and the separate public-template playtest
+  passed. Package publication and preview jobs were skipped under prerelease
+  policy.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
