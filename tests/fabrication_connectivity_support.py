@@ -102,3 +102,24 @@ def write_synthetic_fabrication(
             "%TF.FileFunction,Copper,L2,Inr*%\nM02*\n", encoding="utf-8"
         )
     return board, fabrication
+
+
+def write_trapezoid_land_coverage_fault(directory: Path) -> tuple[Path, Path]:
+    """Write a synthetic board/export pair with an unreviewed trapezoid land."""
+    directory.mkdir(parents=True, exist_ok=True)
+    board, fabrication = write_synthetic_fabrication(directory)
+    source = board.read_text(encoding="utf-8")
+    original_pad = '(pad "2" smd circle (at 2 0) (size 1 1)'
+    trapezoid_pad = '(pad "2" smd trapezoid (at 2 0) (size 1 1) (rect_delta 0.2 0)'
+    assert source.count(original_pad) == 1
+    board.write_text(source.replace(original_pad, trapezoid_pad, 1), encoding="utf-8")
+
+    ipc = fabrication / "board.d356"
+    contents = ipc.read_text(encoding="utf-8")
+    old_contact = format_ipc_contact("327", "SIGNAL", "J1", "2", 1, 7.0)
+    trapezoid_contact = format_ipc_contact(
+        "327", "SIGNAL", "J1", "2", 1, 7.0, size_x_mm=1.0, size_y_mm=1.0
+    )
+    assert contents.count(old_contact) == 1
+    ipc.write_text(contents.replace(old_contact, trapezoid_contact, 1), encoding="utf-8")
+    return board, fabrication

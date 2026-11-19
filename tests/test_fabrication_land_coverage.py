@@ -14,8 +14,8 @@ from kicad_tooling.hwrepo.fabrication_connectivity_models import (
 from kicad_tooling.hwrepo.fabrication_contact_land import source_land_assessment
 from kicad_tooling.hwrepo.fabrication_contact_source import SourceComponentPad
 from tests.fabrication_connectivity_support import (
-    format_ipc_contact,
     write_synthetic_fabrication,
+    write_trapezoid_land_coverage_fault,
 )
 
 pytestmark = [pytest.mark.design_lint, pytest.mark.evidence_lint, pytest.mark.pcb_lint]
@@ -116,23 +116,6 @@ def test_source_land_assessment_reports_each_eligible_unmatched_geometry_class()
     )
 
 
-def _make_trapezoid_source(board: Path, fabrication: Path) -> None:
-    source = board.read_text(encoding="utf-8")
-    original_pad = '(pad "2" smd circle (at 2 0) (size 1 1)'
-    trapezoid_pad = '(pad "2" smd trapezoid (at 2 0) (size 1 1) (rect_delta 0.2 0)'
-    assert source.count(original_pad) == 1
-    board.write_text(source.replace(original_pad, trapezoid_pad, 1), encoding="utf-8")
-
-    ipc = fabrication / "board.d356"
-    contents = ipc.read_text(encoding="utf-8")
-    old_contact = format_ipc_contact("327", "SIGNAL", "J1", "2", 1, 7.0)
-    trapezoid_contact = format_ipc_contact(
-        "327", "SIGNAL", "J1", "2", 1, 7.0, size_x_mm=1.0, size_y_mm=1.0
-    )
-    assert contents.count(old_contact) == 1
-    ipc.write_text(contents.replace(old_contact, trapezoid_contact, 1), encoding="utf-8")
-
-
 def test_matching_source_contact_with_unhandled_pad_shape_no_longer_passes(
     tmp_path: Path,
 ) -> None:
@@ -146,9 +129,7 @@ def test_matching_source_contact_with_unhandled_pad_shape_no_longer_passes(
     assert control.findings == ()
 
     fault_dir = tmp_path / "trapezoid-source"
-    fault_dir.mkdir()
-    board, artifacts = write_synthetic_fabrication(fault_dir)
-    _make_trapezoid_source(board, artifacts)
+    board, artifacts = write_trapezoid_land_coverage_fault(fault_dir)
 
     report = analyze_fabrication_connectivity(board, artifacts, settings)
     repeated = analyze_fabrication_connectivity(board, artifacts, settings)

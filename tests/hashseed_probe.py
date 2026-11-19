@@ -352,6 +352,8 @@ REPORT_ORDER = (
     "pcb_required_fitted_reference_fitted_control",
     "pcb_board_only_mounting_hole_candidate",
     "pcb_board_only_matched_inventory_control",
+    "fabrication_land_coverage_fault",
+    "fabrication_land_coverage_control",
     "pcb_dnp_board_only_mismatch",
     "pcb_dnp_schematic_only_mismatch",
     "pcb_dnp_fitted_control",

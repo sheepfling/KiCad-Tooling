@@ -5029,8 +5029,8 @@ Current catalog audit: 420 covered, 0 not applicable, 0 unreviewed.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v96. The cross-process probe supports themed report
-  selectors and retains the complete 347-report inventory gate. Fault/control
+- **Status:** Implemented v97. The cross-process probe supports themed report
+  selectors and retains the complete 366-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -5224,6 +5224,20 @@ Current catalog audit: 420 covered, 0 not applicable, 0 unreviewed.
   reports to the same three-process comparison. The split `-5V_1` / `-5V_2`
   case retains `net.numbered_power_rails`; the common-net control is quiet, and
   the current report inventory contains 345 entries.
+  The v97 extension adds full source-bound fabrication-connectivity reports
+  for a trapezoid-land geometry review and a matching standard-land control.
+  The reports bind the board and fabrication artifact digests; only the
+  IPC-D-356 export differs among the fabrication artifacts. Three independently
+  hash-seeded processes preserve the
+  `SOURCE_LAND_GEOMETRY_UNREVIEWED` finding and quiet control. The inventory
+  audit found 364 registered reports before this extension, while the pinned
+  assertion was stale at 347; it now checks all 366 reports. This extends
+  serialization stability coverage and does not add a fabrication rule or
+  establish copper continuity.
+  On 2026-11-18, the focused synthetic, inventory, marker, collection, and
+  PCB-theme architecture selection passed 22 tests. Repository formatting,
+  Ruff, Alphus module-boundary and shared-utility profiles, and markdown checks
+  also passed.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized
