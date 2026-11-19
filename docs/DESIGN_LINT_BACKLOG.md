@@ -5029,8 +5029,8 @@ Current catalog audit: 420 covered, 0 not applicable, 0 unreviewed.
 
 #### LINT-080 — Cross-process hash-seed determinism for lint reports
 
-- **Status:** Implemented v97. The cross-process probe supports themed report
-  selectors and retains the complete 366-report inventory gate. Fault/control
+- **Status:** Implemented v98. The cross-process probe supports themed report
+  selectors and retains the complete 368-report inventory gate. Fault/control
   and applicability reports cover
   synthetic DB9 returns, same-net two-pin diodes, fuses, and SPST switches,
   direct and parallel-resistor output-driven LED faults with a series-resistor
@@ -5244,6 +5244,16 @@ Current catalog audit: 420 covered, 0 not applicable, 0 unreviewed.
   builds, installed-wheel checks, and the separate public-template playtest
   passed. Package publication and preview jobs were skipped under prerelease
   policy.
+  The v98 extension adds complete source-bound reports for a missing SMD land
+  flash with route copper still crossing its center and a matching intact-land
+  control. Board, IPC-D-356, drill, and other artifact hashes remain identical;
+  only the F.Cu Gerber digest changes. Three independently hash-seeded
+  processes preserve `SOURCE_LAND_FLASH_MISSING` for J1-2 on F.Cu and a quiet
+  control, growing the checked inventory from 366 to 368. This extends report
+  determinism evidence for LINT-578; it does not alter the fabrication rule.
+  Local validation on 2026-11-18 passed 58 focused tests across land matching,
+  connectivity analysis, both land-report hash-seed families, the full report
+  inventory, marker/collection checks, and PCB-theme architecture.
   The test
   runs the shared typed services in three isolated Python processes, verifies
   that their runtime hash secrets differ, and compares complete serialized

@@ -18,6 +18,7 @@ HASHSEED_REPORT_FAMILIES = (
     "pcb_return_paths",
     "pcb_component_inventory",
     "fabrication_land_coverage",
+    "fabrication_land_flash",
     "pcb_touch_pad_clearance",
     "pcb_mechanical_edge_clearance",
     "connector_scope_singletons",

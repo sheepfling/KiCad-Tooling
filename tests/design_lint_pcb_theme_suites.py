@@ -15,6 +15,7 @@ PCB_THEME_SUITES = (
     "test_fabrication_connectivity.py",
     "test_fabrication_connectivity_native.py",
     "test_design_lint_determinism_fabrication_land_coverage.py",
+    "test_design_lint_determinism_fabrication_land_flash.py",
     "test_fabrication_excellon_end_marker.py",
     "test_fabrication_gerber_end_marker.py",
     "test_fabrication_gerber_command_validation.py",

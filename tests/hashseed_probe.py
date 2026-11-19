@@ -354,6 +354,8 @@ REPORT_ORDER = (
     "pcb_board_only_matched_inventory_control",
     "fabrication_land_coverage_fault",
     "fabrication_land_coverage_control",
+    "fabrication_land_flash_fault",
+    "fabrication_land_flash_control",
     "pcb_dnp_board_only_mismatch",
     "pcb_dnp_schematic_only_mismatch",
     "pcb_dnp_fitted_control",

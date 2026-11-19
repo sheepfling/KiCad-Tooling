@@ -123,3 +123,18 @@ def write_trapezoid_land_coverage_fault(directory: Path) -> tuple[Path, Path]:
     assert contents.count(old_contact) == 1
     ipc.write_text(contents.replace(old_contact, trapezoid_contact, 1), encoding="utf-8")
     return board, fabrication
+
+
+def write_missing_source_land_flash_fault(directory: Path) -> tuple[Path, Path]:
+    """Omit one SMD land flash while leaving route copper across the contact."""
+    directory.mkdir(parents=True, exist_ok=True)
+    board, fabrication = write_synthetic_fabrication(directory)
+    gerber = fabrication / "board-F_Cu.gbr"
+    contents = gerber.read_text(encoding="utf-8")
+    paired_land_flashes = "D15*X5000000Y-5000000D03*X7000000Y-5000000D03*\n"
+    retained_land_flash = "D15*X5000000Y-5000000D03*\n"
+    assert contents.count(paired_land_flashes) == 1
+    gerber.write_text(
+        contents.replace(paired_land_flashes, retained_land_flash, 1), encoding="utf-8"
+    )
+    return board, fabrication
