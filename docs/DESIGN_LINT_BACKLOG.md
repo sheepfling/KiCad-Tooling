@@ -5254,9 +5254,17 @@ Current catalog audit: 420 covered, 0 not applicable, 0 unreviewed.
   Local validation on 2026-11-18 passed 58 focused tests across land matching,
   connectivity analysis, both land-report hash-seed families, the full report
   inventory, marker/collection checks, and PCB-theme architecture.
-  The test
-  runs the shared typed services in three isolated Python processes, verifies
-  that their runtime hash secrets differ, and compares complete serialized
+  The focused native land-flash fixture was also run locally in the
+  network-disabled Docker lane on pinned KiCad 10.0.0 and 10.0.5; both version
+  cases passed, including restored-land controls, route-copper-masked faults,
+  block policy, and exact-fingerprint ignores. Hosted tag `v0.5.3rc919` passed
+  run `44430569188`:
+  36 scoped tests, formatting, Ruff, both Alphus profiles, Rumdl, mdrepo,
+  module-size preflight, Linux and Windows Pyright, wheel/sdist builds,
+  installed-wheel checks, and the separate public-template playtest all passed.
+  Package publication and preview jobs were skipped under prerelease policy.
+  The test runs the shared typed services in three isolated Python processes,
+  verifies that their runtime hash secrets differ, and compares complete serialized
   design-lint reports plus typed contact-rating and grounding check results
   byte-for-byte.
 - **Priority:** P0 determinism foundation. Input-reordering metamorphic tests
